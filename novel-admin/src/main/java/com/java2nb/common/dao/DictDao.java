@@ -9,7 +9,7 @@ import java.util.Map;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * 字典表
+ * Bảng từ điển
  * 
  * @author xiongxy
  * @email 1179705413@qq.com

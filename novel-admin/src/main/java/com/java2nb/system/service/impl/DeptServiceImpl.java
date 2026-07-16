@@ -69,7 +69,7 @@ public class DeptServiceImpl implements DeptService {
             tree.setState(state);
             trees.add(tree);
         }
-        // 默认顶级菜单为０，根据数据库实际情况调整
+        // Menu cấp cao nhất mặc định là 0; điều chỉnh theo dữ liệu thực tế
         Tree<DeptDO> t = BuildTree.build(trees);
         return t;
     }
@@ -77,7 +77,7 @@ public class DeptServiceImpl implements DeptService {
     @Override
     public boolean checkDeptHasUser(Long deptId) {
         // TODO Auto-generated method stub
-        //查询部门以及此部门的下级部门
+        // Truy vấn phòng ban và các phòng ban cấp dưới
         int result = sysDeptMapper.getDeptUserNumber(deptId);
         return result == 0 ? true : false;
     }
@@ -91,9 +91,9 @@ public class DeptServiceImpl implements DeptService {
     List<Long> treeMenuList(List<DeptDO> menuList, long pid) {
         List<Long> childIds = new ArrayList<>();
         for (DeptDO mu : menuList) {
-            //遍历出父id等于参数的id，add进子节点集合
+            // Duyệt các ID có ID cha bằng tham số và thêm vào tập nút con
             if (mu.getParentId() == pid) {
-                //递归遍历下一级
+                // Duyệt đệ quy cấp dưới
                 treeMenuList(menuList, mu.getDeptId());
                 childIds.add(mu.getDeptId());
             }

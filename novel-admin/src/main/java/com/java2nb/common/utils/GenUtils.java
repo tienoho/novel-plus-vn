@@ -21,7 +21,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 /**
- * 代码生成器   工具类
+ * Lớp tiện ích sinh mã
  */
 public class GenUtils {
 
@@ -50,28 +50,28 @@ public class GenUtils {
 
 
     /**
-     * 生成代码
+     * Sinh mã
      */
 
 
     public static void generatorCode(Map<String, String> table,
                                      List<Map<String, String>> columns, ZipOutputStream zip) {
-        /*//封装模板数据
+        /*// Đóng gói dữ liệu mẫu
         Map<String, Object> map = new HashMap<>(16);
 
 
-        //配置信息
+        // Thông tin cấu hình
         Configuration config = getConfig();
-        //表信息
+        // Thông tin bảng
         TableDO tableDO = new TableDO();
         tableDO.setTableName(table.get("tableName"));
         tableDO.setComments(table.get("tableComment"));
-        //表名转换成Java类名
+        // Chuyển tên bảng thành tên lớp Java
         String className = tableToJava(tableDO.getTableName(), config.getString("tablePrefix"), config.getString("autoRemovePre"));
         tableDO.setClassName(className);
         tableDO.setClassname(StringUtils.uncapitalize(className));
 
-        //列信息
+        // Thông tin cột
         List<ColumnDO> columsList = new ArrayList<>();
         for (Map<String, String> column : columns) {
             ColumnDO columnDO = new ColumnDO();
@@ -80,12 +80,12 @@ public class GenUtils {
             columnDO.setComments(column.get("columnComment"));
             columnDO.setExtra(column.get("extra"));
 
-            //列名转换成Java属性名
+            // Chuyển tên cột thành tên thuộc tính Java
             String attrName = columnToJava(columnDO.getColumnName());
             columnDO.setAttrName(attrName);
             columnDO.setAttrname(StringUtils.uncapitalize(attrName));
 
-            //列的数据类型，转换成Java类型
+            //Chuyển kiểu dữ liệu cột thành kiểu Java
             String attrType = config.getString(columnDO.getDataType(), "unknowType");
             switch (attrType) {
                 case "BigDecimal": {
@@ -104,7 +104,7 @@ public class GenUtils {
 
             columnDO.setAttrType(attrType);
 
-            //是否主键
+            // Có phải khóa chính
             if ("PRI".equalsIgnoreCase(column.get("columnKey")) && tableDO.getPk() == null) {
                 tableDO.setPk(columnDO);
             }
@@ -113,12 +113,12 @@ public class GenUtils {
         }
         tableDO.setColumns(columsList);
 
-        //没主键，则第一个字段为主键
+        // Nếu không có khóa chính, dùng trường đầu tiên làm khóa chính
         if (tableDO.getPk() == null) {
             tableDO.setPk(tableDO.getColumns().get(0));
         }
 
-        //设置velocity资源加载器
+        // Cấu hình bộ nạp tài nguyên Velocity
         Properties prop = new Properties();
         prop.put("file.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
         Velocity.init(prop);
@@ -137,10 +137,10 @@ public class GenUtils {
         map.put("datetime", DateUtils.format(new Date(), DateUtils.DATE_TIME_PATTERN));
         VelocityContext context = new VelocityContext(map);
 
-        //获取模板列表
+        // Lấy danh sách mẫu
         List<String> templates = getTemplates();
         for (String template : templates) {
-            //渲染模板
+            // Kết xuất mẫu
             StringWriter sw = new StringWriter();
             Template tpl = Velocity.getTemplate(template, "UTF-8");
             tpl.merge(context, sw);
@@ -148,7 +148,7 @@ public class GenUtils {
             try {
                 String fileName = getFileName(template, tableDO.getClassname(), tableDO.getClassName(), config.getString("package"));
                 if (zip != null) {
-                    //添加到zip
+                    // Thêm vào tệp zip
                     zip.putNextEntry(new ZipEntry(fileName));
                     IOUtils.write(sw.toString(), zip, "UTF-8");
                     IOUtils.closeQuietly(sw);
@@ -169,21 +169,21 @@ public class GenUtils {
                     fos.close();
                 }
             } catch (IOException e) {
-                throw new RuntimeException("渲染模板失败，表名：" + tableDO.getTableName(), e);
+                throw new RuntimeException(Messages.getDefault("error.templateRender", tableDO.getTableName()), e);
             }
         }*/
     }
 
 
     /**
-     * 列名转换成Java属性名
+     * Chuyển tên cột thành tên thuộc tính Java
      */
     public static String columnToJava(String columnName) {
         return WordUtils.capitalizeFully(columnName, new char[]{'_'}).replace("_", "");
     }
 
     /**
-     * 表名转换成Java类名
+     * Chuyển tên bảng thành tên lớp Java
      */
     public static String tableToJava(String tableName, String tablePrefix, String autoRemovePre) {
         if (Constant.AUTO_REOMVE_PRE.equals(autoRemovePre)) {
@@ -197,18 +197,18 @@ public class GenUtils {
     }
 
     /**
-     * 获取配置信息
+     * Lấy thông tin cấu hình
      */
     public static Configuration getConfig() {
         try {
             return new PropertiesConfiguration("generator.properties");
         } catch (ConfigurationException e) {
-            throw new RuntimeException("获取配置文件失败，", e);
+            throw new RuntimeException(Messages.getDefault("error.configRead"), e);
         }
     }
 
     /**
-     * 获取文件名
+     * Lấy tên tệp
      */
     public static String getFileName(String template, String classname, String className, String packageName) {
         String moduleName = packageName.substring(packageName.lastIndexOf(".") + 1);
@@ -291,17 +291,17 @@ public class GenUtils {
     }
 
     public static void generatorCode(Map<String, String> table, GenColumnsDO pkColumn, List<GenColumnsDO> list) {
-        //封装模板数据
+        // Đóng gói dữ liệu mẫu
         Map<String, Object> map = new HashMap<>(16);
 
 
-        //配置信息
+        // Thông tin cấu hình
         Configuration config = getConfig();
-        //表信息
+        // Thông tin bảng
         TableDO tableDO = new TableDO();
         tableDO.setTableName(table.get("tableName"));
         tableDO.setComments(table.get("tableComment"));
-        //表名转换成Java类名
+        // Chuyển tên bảng thành tên lớp Java
         String className = tableToJava(tableDO.getTableName(), config.getString("tablePrefix"), config.getString("autoRemovePre"));
         tableDO.setClassName(className);
         tableDO.setClassname(StringUtils.uncapitalize(className));
@@ -325,7 +325,7 @@ public class GenUtils {
         list.add(0,pkColumn);
         tableDO.setColumns(list);
 
-        //设置velocity资源加载器
+        // Cấu hình bộ nạp tài nguyên Velocity
         Properties prop = new Properties();
         prop.put("file.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
         Velocity.init(prop);
@@ -344,10 +344,10 @@ public class GenUtils {
         map.put("datetime", DateUtils.format(new Date(), DateUtils.DATE_TIME_PATTERN));
         VelocityContext context = new VelocityContext(map);
 
-        //获取模板列表
+        // Lấy danh sách mẫu
         List<String> templates = getTemplates();
         for (String template : templates) {
-            //渲染模板
+            // Kết xuất mẫu
             StringWriter sw = new StringWriter();
             Template tpl = Velocity.getTemplate(template, "UTF-8");
             tpl.merge(context, sw);
@@ -369,7 +369,7 @@ public class GenUtils {
                 IOUtils.write(sw.toString(), fos, "UTF-8");
                 fos.close();
             } catch (IOException e) {
-                throw new RuntimeException("渲染模板失败，表名：" + tableDO.getTableName(), e);
+                throw new RuntimeException(Messages.getDefault("error.templateRender", tableDO.getTableName()), e);
             }
         }
     }

@@ -37,11 +37,11 @@ public class GeneratorServiceImpl implements GeneratorService {
     @Override
     public void generatorCode(String[] tableNames) {
         for (String tableName : tableNames) {
-            //查询表信息
+            // Truy vấn thông tin bảng
             Map<String, String> table = generatorMapper.get(tableName);
-            //查询列信息
+            // Truy vấn thông tin cột
             List<Map<String, String>> columns = generatorMapper.listColumns(tableName);
-            //生成代码
+            // Sinh mã
             GenUtils.generatorCode(table, columns, null);
         }
     }
@@ -51,11 +51,11 @@ public class GeneratorServiceImpl implements GeneratorService {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         ZipOutputStream zip = new ZipOutputStream(outputStream);
         for (String tableName : tableNames) {
-            //查询表信息
+            // Truy vấn thông tin bảng
             Map<String, String> table = generatorMapper.get(tableName);
-            //查询列信息
+            // Truy vấn thông tin cột
             List<Map<String, String>> columns = generatorMapper.listColumns(tableName);
-            //生成代码
+            // Sinh mã
             GenUtils.generatorCode(table, columns, zip);
         }
         IOUtils.closeQuietly(zip);
@@ -71,7 +71,7 @@ public class GeneratorServiceImpl implements GeneratorService {
         query.put("order", "asc");
         List<GenColumnsDO> columnList = genColumnsDao.list(query);
         if (columnList.size() == 0) {
-            //查询列信息
+            // Truy vấn thông tin cột
             List<Map<String, String>> columns = generatorMapper.listColumns(tableName);
 
             int columnSort = 0;
@@ -106,9 +106,9 @@ public class GeneratorServiceImpl implements GeneratorService {
         genColumnsDao.deleteByTableName(tableName);
         list.remove(0);
         genColumnsDao.saveBatch(list);
-        //查询表信息
+        // Truy vấn thông tin bảng
         Map<String, String> table = generatorMapper.get(tableName);
-        //生成代码
+        // Sinh mã
         GenUtils.generatorCode(table,pkColumn, list);
 
 

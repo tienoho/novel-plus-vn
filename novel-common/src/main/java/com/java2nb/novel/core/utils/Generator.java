@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 代码生成器
+ * Bộ sinh mã
  *
  * @author 11797
  */
@@ -19,20 +19,20 @@ public class Generator {
 
     @SneakyThrows
     public static void main(String[] args) {
-        //MBG 执行过程中的警告信息
+        //Thông tin cảnh báo trong quá trình chạy MBG
         List<String> warnings = new ArrayList<>();
-        //读取我们的 MBG 配置文件
+        //Đọc tệp cấu hình MBG
         InputStream is = Generator.class.getResourceAsStream("/mybatis/generatorConfig.xml");
         ConfigurationParser cp = new ConfigurationParser(warnings);
         Configuration config = cp.parseConfiguration(is);
         is.close();
-        //当生成的代码重复时，不要覆盖原代码
+        //Không ghi đè mã cũ khi mã sinh ra bị trùng
         DefaultShellCallback callback = new DefaultShellCallback(false);
-        //创建 MBG
+        //Tạo MBG
         MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config, callback, warnings);
-        //执行生成代码
+        //Thực thi sinh mã
         myBatisGenerator.generate(null);
-        //输出警告信息
+        //Xuất thông tin cảnh báo
         for (String warning : warnings) {
             System.out.println(warning);
         }

@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 作家邀请码表
+ * Bảng mã mời tác giả
  * 
  * @author xiongxy
  * @email 1179705413@qq.com

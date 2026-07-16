@@ -8,8 +8,8 @@ import org.apache.ibatis.annotations.Param;
 public interface FrontNewsMapper extends NewsMapper {
 
     /**
-     * 增加新闻阅读量
-     * @param newsId 新闻ID
+     * Tăng lượt đọc tin tức
+     * @param newsId ID tin tức
      * */
     void addReadCount(@Param("newsId") Integer newsId);
 

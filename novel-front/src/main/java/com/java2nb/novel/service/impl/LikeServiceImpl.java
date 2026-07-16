@@ -31,7 +31,7 @@ public class LikeServiceImpl implements LikeService {
 
     @PostConstruct
     public void init() {
-        // Lua 脚本保证原子性操作
+        // Lua script bảo đảm thao tác nguyên tử
         String script = """
                 local key = KEYS[1]
                 local userId = ARGV[1]

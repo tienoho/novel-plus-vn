@@ -1,134 +1,160 @@
+# Novel Plus
+
 <p align="center">
-    <a href="https://cloud.tencent.com/act/cps/redirect?redirect=2446&cps_key=736e609d66e0ac4e57813316cec6fd0b&from=console"><img src="https://youdoc.github.io/img/tencent.jpg" alt="AD" ></a>
-</p>
-<p align="center">
-    <a href='https://github.com/201206030/novel-plus'><img alt="Github stars" src="https://img.shields.io/github/stars/201206030/novel-plus?logo=github"></a>
-    <a href='https://github.com/201206030/novel-plus'><img alt="Github forks" src="https://img.shields.io/github/forks/201206030/novel-plus?logo=github"></a>
-    <a href='https://gitee.com/novel_dev_team/novel-plus'><img alt="Gitee stars" src="https://gitee.com/novel_dev_team/novel-plus/badge/star.svg?theme=gitee"></a>
-    <a href='https://gitee.com/novel_dev_team/novel-plus'><img alt="Gitee forks" src="https://gitee.com/novel_dev_team/novel-plus/badge/fork.svg?theme=gitee"></a>
-    <a href='https://github.com/201206030/novel-plus/releases'><img alt="GitHub downloads" src="https://img.shields.io/github/downloads/201206030/novel-plus/total.svg"></a>
-    <a href='https://hub.docker.com/u/201206030'><img alt="Docker pull" src="https://img.shields.io/docker/pulls/201206030/novel-front"></a>
+  <a href="https://github.com/201206030/novel-plus"><img alt="GitHub stars" src="https://img.shields.io/github/stars/201206030/novel-plus?logo=github"></a>
+  <a href="https://github.com/201206030/novel-plus"><img alt="GitHub forks" src="https://img.shields.io/github/forks/201206030/novel-plus?logo=github"></a>
+  <a href="https://github.com/201206030/novel-plus/releases"><img alt="Lượt tải GitHub" src="https://img.shields.io/github/downloads/201206030/novel-plus/total.svg"></a>
+  <a href="https://hub.docker.com/u/201206030"><img alt="Lượt kéo Docker" src="https://img.shields.io/docker/pulls/201206030/novel-front"></a>
 </p>
 
-<p align="center">
-      👉 <a href='https://novel.xxyopen.com'>官网</a>  |  👉 <a href='http://117.72.165.13:8888'>演示站点</a>  |  👉 <a href='https://docs.xxyopen.com/course/novelplus/1.html'>安装教程</a>
-</p> 
+Novel Plus là hệ thống quản lý và đọc truyện đa nền tảng, hỗ trợ giao diện máy tính và thiết bị di động. Dự án gồm cổng đọc, khu vực tác giả, trang quản trị nền tảng và trình quản lý thu thập dữ liệu.
 
-## 项目介绍
+Các chức năng chính gồm đề xuất và tìm kiếm tác phẩm, bảng xếp hạng, đọc chương, bình luận, tủ sách, lịch sử đọc, quản lý tác giả, nạp Xu, mua chương, tin tức, báo cáo thống kê, nhiều giao diện, nhiều nguồn thu thập và hỗ trợ sáng tác bằng AI.
 
-novel-plus 是一个多端（PC、WAP）阅读，功能完善的原创文学 CMS
-系统。由前台门户系统、作家后台管理系统、平台后台管理系统和爬虫管理系统等多个子系统构成，包括小说推荐、作品检索、小说排行、小说阅读、小说评论、会员中心、作家专区等功能，支持自定义多模版、可拓展的多种小说内容存储方式（内置数据库分表存储和
-TXT 文本存储）、阅读主题切换、多爬虫源自动采集和更新数据、AI写作、会员充值、订阅模式、新闻发布和实时统计报表。
+## Liên kết
 
-## 项目地址
+- Mã nguồn: [GitHub](https://github.com/201206030/novel-plus)
+- Bản phát hành: [GitHub Releases](https://github.com/201206030/novel-plus/releases)
+- Tài liệu gốc: [docs.xxyopen.com](https://docs.xxyopen.com/course/novelplus/1.html)
+- Trang giới thiệu: [novel.xxyopen.com](https://novel.xxyopen.com)
 
-- 学习版：[GitHub](https://github.com/201206030/novel) ｜ [码云](https://gitee.com/novel_dev_team/novel)
-  ｜ [保姆级教程](https://docs.xxyopen.com) 
-- **应用版**：[GitHub](https://github.com/201206030/novel-plus) ｜ [码云](https://gitee.com/novel_dev_team/novel-plus) ｜ [演示站点](http://117.72.165.13:8888)
-- 微服务版：[GitHub](https://github.com/201206030/novel-cloud) ｜ [码云](https://gitee.com/novel_dev_team/novel-cloud)
+## Cấu trúc dự án
 
-## 项目结构
-
-```
-novel-plus -- 父工程
-├── novel-common -- 通用模块
-├── novel-front -- 前台门户&作家后台
-├── novel-crawl -- 爬虫
-├── novel-admin -- 管理后台
-└── templates -- 前端模版
+```text
+novel-plus
+├── novel-common   # Mô hình dữ liệu, cấu hình và tiện ích dùng chung
+├── novel-front    # Cổng đọc, giao diện di động và khu vực tác giả
+├── novel-crawl    # Quản lý nguồn và tác vụ thu thập dữ liệu
+├── novel-admin    # Trang quản trị nền tảng
+├── templates      # Nguồn của các theme green, orange, dark và blue
+├── config         # Cấu hình dùng khi triển khai
+└── doc/sql        # SQL khởi tạo và migration tăng dần
 ```
 
-## 技术选型
+## Công nghệ
 
-| 技术                  | 说明                  
-|---------------------|---------------------
-| Spring Boot         | Spring 应用快速开发脚手架    
-| Spring AI           | Spring 官方 AI 框架     
-| MyBatis             | 持久层 ORM 框架          
-| MyBatis Dynamic SQL | Mybatis 动态 sql      
-| PageHelper          | MyBatis 分页插件        
-| MyBatis Generator   | 持久层代码生成插件           
-| Sharding-JDBC       | 代码层分库分表中间件          
-| JJWT                | JWT 登录支持            
-| Spring Security     | 安全框架                
-| Apache Shiro        | 安全框架                
-| Redis               | 缓存方案                
-| Aliyun OSS          | 阿里云对象存储服务（图片存储备选方案） 
-| Lombok              | 简化对象封装工具            
-| Docker              | 应用容器引擎              
-| MySQL               | 数据库服务               
-| Thymeleaf           | 模板引擎                
-| Layui               | 前端 UI 框架            
+| Công nghệ | Mục đích |
+|---|---|
+| Java 21 | Nền tảng chạy |
+| Spring Boot 3 | `novel-front`, `novel-crawl` và các mô-đun dùng chung |
+| Spring Boot 2.7 | `novel-admin` |
+| Thymeleaf | Kết xuất giao diện máy chủ |
+| MyBatis / MyBatis Dynamic SQL | Truy cập dữ liệu |
+| ShardingSphere-JDBC | Phân mảnh cơ sở dữ liệu |
+| Redis | Bộ nhớ đệm và trạng thái phiên |
+| MySQL | Cơ sở dữ liệu |
+| Spring AI | Viết, biên tập nội dung và sinh bìa |
+| Apache Shiro / Spring Security | Xác thực và phân quyền |
+| Docker | Đóng gói triển khai |
 
-## 项目截图
+## Yêu cầu môi trường
 
-### 绿色主题模版
+- JDK 21
+- Maven 3.9 trở lên
+- MySQL 8
+- Redis
+- Node.js để chạy kiểm tra cú pháp JavaScript first-party
 
-[![点击查看大图](https://www.xxyopen.com/images/green_novel.png)](https://www.xxyopen.com/images/green_novel.png)
-[![点击查看大图](https://www.xxyopen.com/images/resource/os/novel-plus/green3.png)](https://www.xxyopen.com/images/resource/os/novel-plus/green3.png)
-[![点击查看大图](https://www.xxyopen.com/images/resource/os/novel-plus/green2.png)](https://www.xxyopen.com/images/resource/os/novel-plus/green2.png)
-[![点击查看大图](https://www.xxyopen.com/images/resource/os/novel-plus/crawler.png)](https://www.xxyopen.com/images/resource/os/novel-plus/crawler.png)
+Các dịch vụ OSS, Alipay, AI và nguồn thu thập là tùy chọn; chỉ bật khi đã cấu hình thông tin tích hợp tương ứng.
 
-## 演示视频
+## Khởi tạo cơ sở dữ liệu
 
-https://www.bilibili.com/video/BV18e41197xs
+1. Tạo một cơ sở dữ liệu MySQL mới với bộ ký tự `utf8mb4`.
+2. Chạy [doc/sql/novel_plus.sql](doc/sql/novel_plus.sql) để tạo cấu trúc và dữ liệu mặc định.
+3. Chạy lần lượt các migration có ngày mới hơn phiên bản SQL khởi tạo.
+4. Với bản Việt hóa, chạy [doc/sql/20260712_vi_localization.sql](doc/sql/20260712_vi_localization.sql).
 
-## AI 功能
+Migration Việt hóa chỉ cập nhật giá trị tiếng Trung mặc định khi khớp chính xác. Các giá trị đã được quản trị viên tùy chỉnh được giữ nguyên và migration có thể chạy lại an toàn.
 
-novel-plus 5.x 已集成 Spring 官方最新发布的 Spring AI 框架，并推出多项 AI 功能：
+## Cấu hình
 
-1. v5.0.0 版本在小说章节发布页面的文本编辑器中集成了多项智能编辑功能，包括 AI 扩写、缩写、续写及文本润色等。这些功能的设计灵感来源于百家号文章编辑器中的 AI 助手。
-2. v5.1.0 版本在小说发布页面，新增 AI 生成封面图功能。若作家未上传自定义封面图，系统将根据小说信息自动生成封面图。
+Các tệp cấu hình chính:
 
-目前，AI 功能仍处于实验阶段，仅实现了基础的核心功能。我们非常重视用户的实际使用体验和反馈，未来将根据用户需求和使用情况，持续优化和调整该功能。如果用户反馈积极，我们计划进一步开发更高级的 AI 功能，例如自动生成有声小说、智能情节推荐等，以全面提升 novel-plus 的创作能力和用户体验。
+- `novel-common/src/main/resources/application-common-*.yml`: cơ sở dữ liệu, Redis và cấu hình dùng chung.
+- `novel-front/src/main/resources/application-*.yml`: cổng đọc, thanh toán, OSS và AI.
+- `novel-crawl/src/main/resources/application.yml`: trình thu thập.
+- `novel-admin/src/main/resources/application-*.yml`: trang quản trị.
 
-我们将持续关注 AI 技术的发展，并致力于将其与小说创作场景深度融合，为用户带来更智能、更便捷的创作工具。
+Không ghi khóa API, mật khẩu hoặc khóa bí mật thật vào Git. Dùng biến môi trường hoặc tệp cấu hình triển khai nằm ngoài kho mã nguồn.
 
-novel-plus 项目默认使用的是第三方大模型服务平台[硅基流动](https://cloud.siliconflow.cn/i/DOgMRH9S)提供的 API（兼容 OpenAI 的相关接口，可直接通过 Spring AI 框架调用），采用的 AI 模型有对话模型`deepseek-ai/DeepSeek-R1-0528-Qwen3-8B`（DeepSeek-R1 的蒸馏版本，免费使用）和生图模型`Kwai-Kolors/Kolors`（快手 Kolors 团队开发的文本到图像生成模型，免费使用）。只需注册一个硅基流动账号，创建一个 API 密钥，并将其添加到 novel-plus 项目 novel-front 模块的 yaml 配置文件中，即可体验 novel-plus 项目的 AI 写作功能。
+## Biên dịch và kiểm thử
+
+Biên dịch reactor chính bằng JDK 21:
+
+```bash
+mvn clean test
+```
+
+`novel-admin` dùng Spring Boot 2.7 và có thể kiểm tra riêng:
+
+```bash
+mvn -f novel-admin/pom.xml clean test
+```
+
+Các kiểm tra i18n xác minh:
+
+- catalog `vi_VN` và `zh_CN` có cùng key;
+- không có key trùng;
+- Java, template và JavaScript first-party không chứa chuỗi Trung ngoài allowlist có giải thích;
+- locale mặc định cố định là `vi-VN`.
+
+## Chạy ứng dụng
+
+Sau khi cấu hình cơ sở dữ liệu và Redis, có thể chạy từng ứng dụng bằng Maven:
+
+```bash
+mvn -pl novel-front -am spring-boot:run
+mvn -pl novel-crawl -am spring-boot:run
+mvn -f novel-admin/pom.xml spring-boot:run
+```
+
+Kiểm tra lại cổng trong tệp YAML của từng ứng dụng trước khi truy cập.
+
+## Theme
+
+Thư mục `templates/<theme>` là nguồn theme. `novel-front` cung cấp lớp template nền khi đóng gói, còn theme được chọn là lớp ghi đè. Các theme hỗ trợ:
+
+- `green`
+- `orange`
+- `dark`
+- `blue`
+
+Tiếng Việt là ngôn ngữ hiển thị mặc định. Catalog tiếng Trung chỉ được giữ làm fallback nội bộ; giao diện chưa cung cấp bộ chọn ngôn ngữ.
+
+## AI
+
+Novel Plus hỗ trợ mở rộng, rút gọn, viết tiếp, trau chuốt nội dung và sinh ảnh bìa. Prompt first-party yêu cầu đầu ra tiếng Việt tự nhiên.
+
+Ví dụ cấu hình dùng endpoint tương thích OpenAI:
 
 ```yaml
 spring:
   ai:
     openai:
-      image:
-        enabled: true
-        base-url: https://api.siliconflow.cn
-        api-key: sk-rrrupturhdofbiqzjutduuiceecpvfqlnvmgcyiaipbdikoi
-        options:
-          model: Kwai-Kolors/Kolors
-          response_format: URL
-      api-key: sk-rrrupturhdofbiqzjutduuiceecpvfqlnvmgcyiaipbdikoi
-      base-url: https://api.siliconflow.cn
+      base-url: ${AI_BASE_URL}
+      api-key: ${AI_API_KEY}
       chat:
         options:
-          model: deepseek-ai/DeepSeek-R1-0528-Qwen3-8B
+          model: ${AI_CHAT_MODEL}
+      image:
+        enabled: true
+        options:
+          model: ${AI_IMAGE_MODEL}
 ```
 
-⚠️ novel-plus 项目默认使用的都是免费 AI 模型，生成效果有限。如果对生成内容有更高的要求，建议选用付费的 AI 模型。
+Chất lượng và chi phí phụ thuộc nhà cung cấp và mô hình được cấu hình.
 
-## 增值服务
+## Nguyên tắc dữ liệu
 
-👉 [了解详情](https://novel.xxyopen.com/service.htm)
+- Đơn vị tiền nội bộ hiển thị là **Xu**.
+- Không tự động dịch tên tác phẩm, tên tác giả, nội dung chương, bình luận người dùng hoặc dữ liệu do crawler thu thập.
+- Endpoint, JSON field, permission code, enum lưu DB và tên bảng/cột được giữ nguyên.
+- Dữ liệu tích hợp bắt buộc bằng tiếng Trung phải nằm trong allowlist và có lý do.
 
-## 微信公众号
+## Tuyên bố miễn trừ trách nhiệm
 
-发布最新更新动态、最新前端模版、最新爬虫规则、文档教程等。
+Chức năng thu thập dữ liệu chỉ nhằm phục vụ kiểm thử và nhập dữ liệu hợp pháp. Người vận hành phải tuân thủ bản quyền, điều khoản của nguồn dữ liệu và pháp luật áp dụng. Tác giả dự án không chịu trách nhiệm cho việc sử dụng hệ thống vào mục đích vi phạm pháp luật.
 
-![](https://youdoc.github.io/img/qrcode_for_gh.jpg)
+## Giấy phép và đóng góp
 
-## 赞赏支持
-
-开源项目不易，若此项目能得到你的青睐，那么你可以赞赏支持作者持续开发与维护。
-
-- 服务器的费用也是一笔开销
-- 编写更完备的文档教程
-- 发布更多前端模版和爬虫规则
-- 一杯咖啡
-
-![](https://s1.ax1x.com/2020/10/31/BUQJwq.png)
-
-## 免责声明
-
-本项目提供的爬虫工具仅用于采集项目初期的测试数据，请勿用于商业盈利。 用户使用本系统从事任何违法违规的事情，一切后果由用户自行承担，作者不承担任何责任。
-
-
+Hãy xem thông tin giấy phép trong kho mã nguồn. Khi đóng góp, vui lòng chạy test, kiểm tra cú pháp JavaScript và `git diff --check` trước khi gửi thay đổi.

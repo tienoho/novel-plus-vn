@@ -10,7 +10,7 @@
 //import org.springframework.stereotype.Service;
 //
 ///**
-// * 以静态变量保存Spring ApplicationContext, 可在任何代码任何地方任何时候取出ApplicaitonContext.
+// * Lưu Spring ApplicationContext trong biến tĩnh để có thể truy cập ở mọi nơi.
 // *
 // */
 //@Service
@@ -22,7 +22,7 @@
 //	private static Logger logger = LoggerFactory.getLogger(SpringContextHolder.class);
 //
 //	/**
-//	 * 取得存储在静态变量中的ApplicationContext.
+//	 * Lấy ApplicationContext lưu trong biến tĩnh.
 //	 */
 //	public static ApplicationContext getApplicationContext() {
 //		assertContextInjected();
@@ -30,7 +30,7 @@
 //	}
 //
 //	/**
-//	 * 从静态变量applicationContext中取得Bean, 自动转型为所赋值对象的类型.
+//	 * Lấy Bean từ applicationContext tĩnh và tự động ép sang kiểu đích.
 //	 */
 //	@SuppressWarnings("unchecked")
 //	public static <T> T getBean(String name) {
@@ -39,7 +39,7 @@
 //	}
 //
 //	/**
-//	 * 从静态变量applicationContext中取得Bean, 自动转型为所赋值对象的类型.
+//	 * Lấy Bean từ applicationContext tĩnh và tự động ép sang kiểu đích.
 //	 */
 //	public static <T> T getBean(Class<T> requiredType) {
 //		assertContextInjected();
@@ -47,17 +47,17 @@
 //	}
 //
 //	/**
-//	 * 清除SpringContextHolder中的ApplicationContext为Null.
+//	 * Đặt ApplicationContext trong SpringContextHolder thành null.
 //	 */
 //	public static void clearHolder() {
 //		if (logger.isDebugEnabled()) {
-//			logger.debug("清除SpringContextHolder中的ApplicationContext:" + applicationContext);
+//			logger.debug("Xóa ApplicationContext khỏi SpringContextHolder: " + applicationContext);
 //		}
 //		applicationContext = null;
 //	}
 //
 //	/**
-//	 * 实现ApplicationContextAware接口, 注入Context到静态变量中.
+//	 * Triển khai ApplicationContextAware để đưa Context vào biến tĩnh.
 //	 */
 //	@Override
 //	public void setApplicationContext(ApplicationContext applicationContext) {
@@ -65,7 +65,7 @@
 //	}
 //
 //	/**
-//	 * 实现DisposableBean接口, 在Context关闭时清理静态变量.
+//	 * Triển khai DisposableBean để dọn biến tĩnh khi Context đóng.
 //	 */
 //	@Override
 //	public void destroy() throws Exception {
@@ -73,10 +73,10 @@
 //	}
 //
 //	/**
-//	 * 检查ApplicationContext不为空.
+//	 * Kiểm tra ApplicationContext không rỗng.
 //	 */
 //	private static void assertContextInjected() {
 //		Validate.validState(applicationContext != null,
-//				"applicaitonContext属性未注入, 请在applicationContext.xml中定义SpringContextHolder.");
+//				"Thuộc tính applicationContext chưa được inject; hãy khai báo SpringContextHolder trong applicationContext.xml.");
 //	}
 //}

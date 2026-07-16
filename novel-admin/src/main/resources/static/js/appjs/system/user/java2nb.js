@@ -1,5 +1,5 @@
 $(function(){
-	//初始化icheck插件
+	//Khởi tạo plugin iCheck
 	$(".i-checks").iCheck({
 		checkboxClass: 'icheckbox_square-green',
 		radioClass: 'iradio_square-green'
@@ -15,7 +15,7 @@ $(function(){
 		$('#confirm_password').prop('type', 'password');
 	});
 });
-/*头像裁剪*/
+/*Cắt ảnh đại diện*/
 (function (factory) {
   if (typeof define === 'function' && define.amd) {
     define(['jquery'], factory);

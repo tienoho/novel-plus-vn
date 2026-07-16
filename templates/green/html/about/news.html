@@ -1,18 +1,18 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="vi">
 <head th:replace="common/header :: common_head(~{::title},~{::meta},~{::link},~{})">
-    <title th:text="'新闻公共_'+${application.website.name}"></title>
-    <meta name="keywords" content="新闻公告,小说,小说网,言情小说,都市小说,玄幻小说,穿越小说,青春小说,总裁豪门小说,网络小说,免费小说,全本小说,原创网络文学"/>
+    <title th:text="#{news.title}+'_'+${application.website.name}"></title>
+    <meta name="keywords" th:content="#{news.title}+','+#{book.seo.list.keywords}"/>
     <meta name="description"
-          th:content="${application.website.name}+'小说每日更新小说连载,小说排行榜,提供言情小说,都市小说,玄幻小说,穿越小说,青春小说,总裁豪门小说,网络小说,免费小说,全本小说,首发小说,最新章节免费小说阅读,精彩尽在'+${application.website.name}+'小说！'"/>
+          th:content="#{book.seo.list.description(${application.website.name})}"/>
     <link rel="stylesheet" href="/css/about.css"/>
 </head>
 <body class="body">
 
 <div th:replace="common/top :: top('')">
 </div>
-<!--主体 start-->
+<!-- Bắt đầu nội dung chính. -->
 <div class="main box_center cf">
 
 
@@ -32,14 +32,15 @@
 
 
 </div>
-<!--主体 end-->
+<!-- Kết thúc nội dung chính. -->
 
 <div th:replace="common/footer :: footer">
 </div>
 v
 <div th:replace="common/js :: js"></div>
 <script src="/javascript/bookdetail.js" type="text/javascript"></script>
-<script language="javascript" type="text/javascript">
+<script language="javascript" type="text/javascript" th:inline="javascript">
+    const networkErrorText = /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng';
     search(1, 5);
 
     function search(curr, limit) {
@@ -66,21 +67,21 @@ v
                         layui.use('laypage', function () {
                             var laypage = layui.laypage;
 
-                            //执行一个laypage实例
+                            // Khởi tạo phân trang Layui.
                             laypage.render({
-                                elem: 'newsPage' //注意，这里的 test1 是 ID，不用加 # 号
-                                , count: data.data.total //数据总数，从服务端得到,
+                                elem: 'newsPage' // ID phần tử, không thêm dấu #.
+                                , count: data.data.total // Tổng số bản ghi từ máy chủ.
                                 , curr: data.data.pageNum
                                 , limit: data.data.pageSize
                                 , jump: function (obj, first) {
 
 
-                                    //obj包含了当前分页的所有参数，比如：
-                                    console.log(obj.curr); //得到当前页，以便向服务端请求对应页的数据。
-                                    console.log(obj.limit); //得到每页显示的条数
+                                    // obj chứa các tham số phân trang hiện tại.
+                                    console.log(obj.curr); // Trang hiện tại.
+                                    console.log(obj.limit); // Số bản ghi mỗi trang.
 
 
-                                    //首次不执行
+                                    // Không gọi lại trong lần khởi tạo đầu tiên.
                                     if (!first) {
                                         search(obj.curr, obj.limit);
                                     } else {
@@ -99,7 +100,7 @@ v
 
             },
             error: function () {
-                layer.alert('网络异常');
+                layer.alert(networkErrorText);
             }
         })
 
@@ -107,6 +108,5 @@ v
 </script>
 </body>
 </html>
-
 
 

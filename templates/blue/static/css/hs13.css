@@ -494,7 +494,7 @@
     margin: 0 2px;
     color: #ccc;
     font-size: 15px;
-    font-family: "宋体";
+    font-family: SimSun;
 }
 .box3 .latest-news ul li a {
     margin-left: 10px;
@@ -579,7 +579,7 @@
     margin: 0 2px;
     color: #ccc;
     font-size: 15px;
-    font-family: "宋体";
+    font-family: SimSun;
 }
 .box3 .hot-book ul li a {
     font-size: 15px;
@@ -940,7 +940,7 @@
     margin-right: 10px;
 }
 
-/*排行榜*/
+/* Bảng xếp hạng */
 .top-nav {
     float: left;
     padding: 20px;
@@ -2931,7 +2931,7 @@
     color: #fe7031;
 }
 .side-bar .new-book ul li em {
-    font-family: "宋体";
+    font-family: SimSun;
     color: #999;
 }
 .side-bar .hot-tags {
@@ -3765,7 +3765,7 @@
     width: 760px;
 }
 
-/**章节换源**/
+/** Đổi nguồn chương **/
 .source-list {
     float: right;
     width: 200px;
@@ -3851,7 +3851,7 @@
     text-align: center;
     margin: 0 auto;
 }
-/**临时书架**/
+/** Tủ sách tạm thời **/
 .bookshelf-list .title {
     border-right: 0;
     border-bottom: 1px solid #d8d8d8;

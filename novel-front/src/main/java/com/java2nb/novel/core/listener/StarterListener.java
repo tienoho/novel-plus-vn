@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 
 /**
- * 启动监听器
+ * Bộ lắng nghe khởi động
  *
  * @author xiongxiaoyang
  */

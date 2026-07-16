@@ -34,7 +34,7 @@ public class DataPermInterceptor implements Interceptor {
         super();
     }
 
-    //插件运行的代码，它将代替原有的方法
+    // Mã chạy của plugin sẽ thay thế phương thức gốc
     @Override
     public Object intercept(Invocation invocation) throws Throwable {
         Object[] args = invocation.getArgs();
@@ -142,7 +142,7 @@ public class DataPermInterceptor implements Interceptor {
         return invocation.proceed();
     }
 
-    // 拦截类型StatementHandler
+    // Chặn kiểu StatementHandler
     @Override
     public Object plugin(Object target) {
         return Plugin.wrap(target, this);

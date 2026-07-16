@@ -10,7 +10,7 @@
         }
         else {
             layer.open({
-                content: '请先登录',
+                content: novelMessage('loginFirst', 'Vui lòng đăng nhập trước'),
                 style: BookDetail.msgStyle,
                 time: 2
             });
@@ -19,51 +19,51 @@
     startSupport: function () {
         var rStr = '<a class="closePopup" href="javascript:void(0);" onclick="javascript:uFans.closeBox();"></a>';
         rStr += '<div class="popupTit">';
-        rStr += '	<h3>我要捧场作品</h3>';
+        rStr += '	<h3>' + novelMessage('supportTitle', 'Ủng hộ tác phẩm') + '</h3>';
         rStr += '</div>';
         rStr += '<div class="propsList cf">';
         rStr += '	<ul>';
         rStr += '		<li vals="100">';
         rStr += '			<a class="propWrap" href="javascript:void(0);">';
         rStr += '				<i class="icon_check"></i>';
-        rStr += '				<span class="propsBox">100屋币</span>';
+        rStr += '				<span class="propsBox">100 ' + novelMessage('currency', 'Xu') + '</span>';
         rStr += '			</a>';
         rStr += '		</li>';
         rStr += '		<li class="on"  vals="500">';
         rStr += '			<a class="propWrap" href="javascript:void(0);">';
         rStr += '				<i class="icon_check"></i>';
-        rStr += '				<span class="propsBox">500屋币</span>';
+        rStr += '				<span class="propsBox">500 ' + novelMessage('currency', 'Xu') + '</span>';
         rStr += '			</a>';
         rStr += '		</li>';
         rStr += '		<li vals="2000">';
         rStr += '			<a class="propWrap" href="javascript:void(0);">';
         rStr += '				<i class="icon_check"></i>';
-        rStr += '				<span class="propsBox">2000屋币</span>';
+        rStr += '				<span class="propsBox">2000 ' + novelMessage('currency', 'Xu') + '</span>';
         rStr += '			</a>';
         rStr += '		</li>';
         rStr += '		<li vals="5000">';
         rStr += '			<a class="propWrap" href="javascript:void(0);">';
         rStr += '				<i class="icon_check"></i>';
-        rStr += '				<span class="propsBox">5000屋币</span>';
+        rStr += '				<span class="propsBox">5000 ' + novelMessage('currency', 'Xu') + '</span>';
         rStr += '			</a>';
         rStr += '		</li>';
         rStr += '		<li vals="10000">';
         rStr += '			<a class="propWrap" href="javascript:void(0);">';
         rStr += '				<i class="icon_check"></i>';
-        rStr += '				<span class="propsBox">10000屋币</span>';
+        rStr += '				<span class="propsBox">10000 ' + novelMessage('currency', 'Xu') + '</span>';
         rStr += '			</a>';
         rStr += '		</li>';
         rStr += '		<li vals="100000">';
         rStr += '			<a class="propWrap" href="javascript:void(0);">';
         rStr += '				<i class="icon_check"></i>';
-        rStr += '				<span class="propsBox">100000屋币</span>';
+        rStr += '				<span class="propsBox">100000 ' + novelMessage('currency', 'Xu') + '</span>';
         rStr += '			</a>';
         rStr += '		</li>';
         rStr += '	</ul>';
         rStr += '</div>';
-        rStr += '<p class="have_num">当前剩余<span class="red">' + spmymoney + '</span>屋币&nbsp;&nbsp;本次捧场<span class="red" id="pcTotal">500</span>屋币<a class="red" href="../pay/" >[充值]</a></p>';
-        rStr += '<p><textarea class="popup_text" id="sendSupportNote"   placeholder="感谢您的捧场，留句话鼓励作者吧！"></textarea></p>';
-        rStr += '<p class="tc"><a class="btn_red btn_send_pc" href="javascript:void(0);" onclick="javascript:uFans.SendSupport();">立即捧场</a></p>';
+        rStr += '<p class="have_num">' + novelMessage('supportBalance', 'Số dư hiện tại') + ': <span class="red">' + spmymoney + '</span> ' + novelMessage('currency', 'Xu') + '&nbsp;&nbsp;' + novelMessage('supportCurrent', 'Lần này ủng hộ') + ': <span class="red" id="pcTotal">500</span> ' + novelMessage('currency', 'Xu') + ' <a class="red" href="../pay/">[' + novelMessage('supportRecharge', 'Nạp Xu') + ']</a></p>';
+        rStr += '<p><textarea class="popup_text" id="sendSupportNote" placeholder="' + novelMessage('supportPlaceholder', 'Cảm ơn bạn đã ủng hộ. Hãy để lại lời nhắn động viên tác giả!') + '"></textarea></p>';
+        rStr += '<p class="tc"><a class="btn_red btn_send_pc" href="javascript:void(0);" onclick="javascript:uFans.SendSupport();">' + novelMessage('supportNow', 'Ủng hộ ngay') + '</a></p>';
         $("#showPC").html(rStr);
         $("#showPC").show();
         $(".maskBox").show();
@@ -85,7 +85,7 @@
             var clearSendNote = sendNote.replace(/[\ |\~|\`|\!|\@|\#|\$|\%|\^|\&|\*|\(|\)|\-|\_|\+|\=|\||\\|\[|\]|\{|\}|\;|\:|\"|\'|\,|\<|\.|\>|\/|\?]/g, "");
             if (sendNote == "") {
                 layer.open({
-                    content: '感谢您的捧场，留句话鼓励作者吧！',
+                    content: novelMessage('supportPlaceholder', 'Cảm ơn bạn đã ủng hộ. Hãy để lại lời nhắn động viên tác giả!'),
                     style: BookDetail.msgStyle,
                     time: 2
                 });
@@ -94,7 +94,7 @@
             if (clearSendNote.length<5)
             {
                 layer.open({
-                    content: '评论最少5个字符！',
+                    content: novelMessage('supportMinLength', 'Lời nhắn phải có ít nhất 5 ký tự.'),
                     style: BookDetail.msgStyle,
                     time: 2
                 });
@@ -105,7 +105,7 @@
             }
             else {
                 layer.open({
-                    content: '屋币余额不足',
+                    content: novelMessage('supportInsufficient', 'Số dư Xu không đủ.'),
                     style: BookDetail.msgStyle,
                     time: 2
                 });
@@ -113,7 +113,7 @@
         }
         else {
             layer.open({
-                content: '请先登录',
+                content: novelMessage('loginFirst', 'Vui lòng đăng nhập trước'),
                 style: BookDetail.msgStyle,
                 time: 2
             });
@@ -128,16 +128,16 @@
         $(".maskBox").show();
         var rStr = '<a class="closePopup" href="javascript:void(0);" onclick="javascript:uFans.closeBox();"></a>';
         rStr += '<div class="popupTit">';
-        rStr += '	<h3>消息提示</h3>';
+        rStr += '	<h3>' + novelMessage('supportMessage', 'Thông báo') + '</h3>';
         rStr += '</div>';
         if (noteClass == 'pc') {
-            rStr += '<div class="tipWrap suc_txt_pc">捧场作品成功！</div>';
+            rStr += '<div class="tipWrap suc_txt_pc">' + novelMessage('supportSuccess', 'Ủng hộ tác phẩm thành công.') + '</div>';
         }
         else {
-            rStr += '<div class="tipWrap suc_txt_flw">点赞作品成功！</div>';
+            rStr += '<div class="tipWrap suc_txt_flw">' + novelMessage('supportLikeSuccess', 'Thích tác phẩm thành công.') + '</div>';
         }
         rStr += '<div class="tc">';
-        rStr += '	<a href="javascript:void(0);" class="btn_red btn_sure"  onclick="javascript:uFans.closeBox();">确定</a>';
+        rStr += '	<a href="javascript:void(0);" class="btn_red btn_sure" onclick="javascript:uFans.closeBox();">' + novelMessage('confirm', 'Đồng ý') + '</a>';
         rStr += '</div>';
         $("#showNote").html(rStr);
         $("#showNote").show();

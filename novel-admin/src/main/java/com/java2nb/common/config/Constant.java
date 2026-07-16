@@ -2,21 +2,21 @@ package com.java2nb.common.config;
 
 public class Constant {
 
-    //演示系统账户
+    // Tài khoản hệ thống trình diễn
     public static String DEMO_ACCOUNT = "test";
-    //自动去除表前缀
+    // Tự động bỏ tiền tố bảng
     public static String AUTO_REOMVE_PRE = "true";
-    //停止计划任务
+    // Dừng tác vụ theo lịch
     public static String STATUS_RUNNING_STOP = "stop";
-    //开启计划任务
+    // Bật tác vụ theo lịch
     public static String STATUS_RUNNING_START = "start";
-    //通知公告阅读状态-未读
+    // Trạng thái đọc thông báo - chưa đọc
     public static String OA_NOTIFY_READ_NO = "0";
-    //通知公告阅读状态-已读
+    // Trạng thái đọc thông báo - đã đọc
     public static int OA_NOTIFY_READ_YES = 1;
-    //部门根节点id
+    // ID nút gốc phòng ban
     public static Long DEPT_ROOT_ID = 0L;
-    //缓存方式
+    // Phương thức bộ nhớ đệm
     public static String CACHE_TYPE_REDIS = "redis";
 
     public static String LOG_ERROR = "error";

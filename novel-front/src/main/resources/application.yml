@@ -10,41 +10,41 @@ jwt:
   secret: novel!#20191230
   expiration: 604800
 
-#缓存管理密码
+#Mật khẩu quản lý bộ nhớ đệm
 cache:
   manager:
     password: novel@2020117
 
 
-# 防止XSS攻击
+# Chống tấn công XSS
 xss:
-  # 过滤开关
+  # Công tắc lọc
   enabled: true
-  # 排除链接（多个用逗号分隔）
+  # Đường dẫn loại trừ (nhiều giá trị cách nhau bằng dấu phẩy)
   excludes: /system/notice/*
-  # 匹配链接 （多个用逗号分隔）
+  # Đường dẫn cần lọc (nhiều giá trị cách nhau bằng dấu phẩy)
   urlPatterns: /book/addCommentReply,/book/addBookComment,/user/addFeedBack,/author/addBook,/author/addBookContent,/author/updateBookContent,/author/register.html
 
 
 author:
   income:
-    #税率(扣税后所得比率)
+    #Tỷ lệ thu nhập sau thuế
     tax-rate: 0.9
-    #分佣比例
+    #Tỷ lệ chia doanh thu
     share-proportion: 0.7
-    #兑换比率(人民币)
+    #Tỷ lệ quy đổi (CNY)
     exchange-proportion: 0.01
 
-#小说章节定价规则
+#Quy tắc định giá chương
 book:
   price:
-    #字数
+    #Số chữ
     word-count: 1000
-    #价值(屋币)
+    #Giá trị (Xu)
     value: 5
 
 
---- #--------------------- Spring AI 配置----------------------
+--- #--------------------- Cấu hình Spring AI ----------------------
 spring:
   ai:
     openai:

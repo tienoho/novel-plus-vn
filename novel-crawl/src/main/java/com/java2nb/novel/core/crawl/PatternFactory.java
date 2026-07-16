@@ -13,7 +13,7 @@ public class PatternFactory {
     private static final Map<String, Pattern> PATTERN_CACHED_MAP = new HashMap<>();
 
     /**
-     * 根据正则表达式获取一个预编译的Pattern对象
+     * Lấy đối tượng Pattern đã biên dịch từ biểu thức chính quy
      */
     public static Pattern getPattern(String regex) {
         Pattern pattern = PATTERN_CACHED_MAP.get(regex);

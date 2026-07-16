@@ -21,12 +21,12 @@ import java.util.Iterator;
 @Slf4j
 public class ImageUtils {
     /***
-     * 剪裁图片
-     * @param file 图片
-     * @param x  起点横坐标
-     * @param y  纵坐标
-     * @param w  长
-     * @param h  高
+     * Cắt ảnh
+     * @param file ảnh
+     * @param x tọa độ x bắt đầu
+     * @param y tọa độ y
+     * @param w chiều rộng
+     * @param h chiều cao
      * @throws IOException
      * @date 2019-09-25 15:09:21
      */
@@ -35,7 +35,7 @@ public class ImageUtils {
         Iterator iterator = ImageIO.getImageReadersByFormatName(prefix);
         try {
             ImageReader reader = (ImageReader)iterator.next();
-            //转换成输入流
+            // Chuyển thành luồng đầu vào
             InputStream in = file.getInputStream();
             ImageInputStream iis = ImageIO.createImageInputStream(in);
             reader.setInput(iis, true);
@@ -51,9 +51,9 @@ public class ImageUtils {
         return null;
     }
     /***
-     * 图片旋转指定角度
-     * @param bufferedimage 图像
-     * @param degree      角度
+     * Xoay ảnh theo góc chỉ định
+     * @param bufferedimage ảnh
+     * @param degree góc
      * @return
      * @date 2019-09-25 15:09:21
      */

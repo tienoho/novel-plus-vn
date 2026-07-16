@@ -25,7 +25,7 @@ fieldset, img {
 body {
     background: #f5f5f5;
     color: #333;
-    font: 12px/1.5 PingFangSC-Regular, HelveticaNeue-Light, 'Helvetica Neue Light', 'Microsoft YaHei', sans-serif, "宋体";
+    font: 12px/1.5 PingFangSC-Regular, HelveticaNeue-Light, 'Helvetica Neue Light', 'Microsoft YaHei', sans-serif, SimSun;
     text-align: left
 }
 
@@ -955,7 +955,7 @@ i.vip_b {
     padding: 10px;
 
 
-    /*新增样式*/
+    /* Kiểu mới */
     width: 100%;
     box-sizing: border-box;
     border: 1px solid #eee;

@@ -13,115 +13,115 @@ import java.util.List;
 public interface CrawlService {
 
     /**
-     * 新增爬虫源
-     * @param source 爬虫源提交的数据对象
+     * Thêm nguồn thu thập
+     * @param source Đối tượng dữ liệu nguồn thu thập được gửi lên
      * */
     void addCrawlSource(CrawlSource source);
 
     /**
-     * 修改爬虫源
+     * Cập nhật nguồn thu thập
      * @param source
      */
     void updateCrawlSource(CrawlSource source);
     /**
-     * 爬虫源分页列表
-     * @param page 当前页码
-     * @param pageSize 分页大小
-     *@return 爬虫源分页数据
+     * Danh sách nguồn thu thập có phân trang
+     * @param page Số trang hiện tại
+     * @param pageSize Kích thước trang
+     *@return Dữ liệu phân trang nguồn thu thập
      * */
     PageBean<CrawlSource> listCrawlByPage(int page, int pageSize);
 
     /**
-     * 开启或停止爬虫
-     * @param sourceId 爬虫源ID
-     * @param sourceStatus 状态，0关闭，1开启
+     * Bật hoặc dừng trình thu thập
+     * @param sourceId ID nguồn thu thập
+     * @param sourceStatus Trạng thái: 0 là tắt, 1 là bật
      * */
     void openOrCloseCrawl(Integer sourceId, Byte sourceStatus);
 
     /**
-     * 更新爬虫状态
-     * @param sourceId 爬虫源ID
-     * @param sourceStatus 状态，0关闭，1开启
+     * Cập nhật trạng thái trình thu thập
+     * @param sourceId ID nguồn thu thập
+     * @param sourceStatus Trạng thái: 0 là tắt, 1 là bật
      * */
     void updateCrawlSourceStatus(Integer sourceId, Byte sourceStatus);
 
     /**
-     * 采集并保存小说
+     * Thu thập và lưu truyện
      *
-     * @param catId    分类ID
-     * @param ruleBean 采集规则\
-     * @param sourceId 源ID
-     * @param bookId   小说ID
+     * @param catId    ID danh mục
+     * @param ruleBean Quy tắc thu thập
+     * @param sourceId ID nguồn
+     * @param bookId   ID truyện
      * @param task
-     * @return true:成功，false:失败
+     * @return true: thành công; false: thất bại
      */
     boolean parseBookAndSave(int catId, RuleBean ruleBean, Integer sourceId, String bookId, CrawlSingleTask task) throws InterruptedException;
 
     /**
-     * 根据爬虫状态查询爬虫源集合
-     * @param sourceStatus 状态，0关闭，1开启
-     * @return 返回爬虫源集合
+     * Truy vấn danh sách nguồn theo trạng thái thu thập
+     * @param sourceStatus Trạng thái: 0 là tắt, 1 là bật
+     * @return Danh sách nguồn thu thập trả về
      * */
     List<CrawlSource> queryCrawlSourceByStatus(Byte sourceStatus);
 
     /**
-     * 根据分类ID和规则解析分类列表
-     * @param catId 分类ID
-     * @param ruleBean 规则对象
-     * @param sourceId 爬虫源ID
+     * Phân tích danh sách danh mục theo ID và quy tắc
+     * @param catId ID danh mục
+     * @param ruleBean Đối tượng quy tắc
+     * @param sourceId ID nguồn thu thập
      */
     void parseBookList(int catId, RuleBean ruleBean, Integer sourceId);
 
 
     /**
-     * 查询爬虫源
-     * @param sourceId 源ID
-     * @return 源信息
+     * Truy vấn nguồn thu thập
+     * @param sourceId ID nguồn
+     * @return Thông tin nguồn
      * */
     CrawlSource queryCrawlSource(Integer sourceId);
 
     /**
-     * 新增单本采集任务
-     * @param singleTask 任务信息对象
+     * Thêm tác vụ thu thập từng truyện
+     * @param singleTask Đối tượng thông tin tác vụ
      * */
     void addCrawlSingleTask(CrawlSingleTask singleTask);
 
     /**
-     * 单本采集任务分页列表查询
-     * @param page 当前页码
-     * @param pageSize 分页大小
-     * @return 单本采集任务分页数据
+     * Truy vấn phân trang tác vụ thu thập từng truyện
+     * @param page Số trang hiện tại
+     * @param pageSize Kích thước trang
+     * @return Dữ liệu phân trang tác vụ thu thập từng truyện
      * */
     PageBean<CrawlSingleTask> listCrawlSingleTaskByPage(int page, int pageSize);
 
     /**
-     * 删除采集任务
-     * @param id 任务ID
+     * Xóa tác vụ thu thập
+     * @param id ID tác vụ
      * */
     void delCrawlSingleTask(Long id);
 
     /**
-     * 获取采集任务
-     * @return 采集任务
+     * Lấy tác vụ thu thập
+     * @return Tác vụ thu thập
      * */
     CrawlSingleTask getCrawlSingleTask();
 
     /**
-     * 更新单本采集任务
-     * @param task 采集任务
-     * @param status 采集状态
+     * Cập nhật tác vụ thu thập từng truyện
+     * @param task Tác vụ thu thập
+     * @param status Trạng thái thu thập
      * */
     void updateCrawlSingleTask(CrawlSingleTask task, Byte status);
 
     /**
-     * 获取采集规则详细
+     * Lấy chi tiết quy tắc thu thập
      * @param id
      * @return
      */
     CrawlSource getCrawlSource(Integer id);
 
     /**
-     * 采集任务进度查询
+     * Truy vấn tiến độ tác vụ thu thập
      * */
     Integer getTaskProgress(Long taskId);
 }

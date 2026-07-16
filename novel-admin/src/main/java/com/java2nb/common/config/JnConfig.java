@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix="java2nb")
 public class JnConfig {
-	//上传路径
+	//Đường dẫn tải lên
 	private String uploadPath;
 
 	private String username;

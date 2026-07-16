@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <meta charset="utf-8">
 <head th:include="include :: header"></head>
 <body class="gray-bg">
@@ -11,22 +11,22 @@
                     <div class="columns pull-left">
                         <button shiro:hasPermission="novel:bookContent:add" type="button"
                                 class="btn  btn-primary" onclick="add()">
-                            <i class="fa fa-plus" aria-hidden="true"></i>添加
+                            <i class="fa fa-plus" aria-hidden="true"></i><span th:text="#{common.add}">Thêm</span>
                         </button>
                         <button shiro:hasPermission="novel:bookContent:batchRemove" type="button"
                                 class="btn  btn-danger"
                                 onclick="batchRemove()">
-                            <i class="fa fa-trash" aria-hidden="true"></i>删除
+                            <i class="fa fa-trash" aria-hidden="true"></i><span th:text="#{common.deleteAction}">Xóa</span>
                         </button>
                     </div>
                     <div class="columns pull-right">
-                        <button class="btn btn-success" onclick="reLoad()">查询</button>
+                        <button class="btn btn-success" onclick="reLoad()" th:text="#{common.query}">Tra cứu</button>
                     </div>
 
                     <form id="searchForm">
                         <div class="columns pull-right col-md-2">
                             <input id="id" name="id" type="text" class="form-control"
-                                   placeholder="主键">
+                                   th:placeholder="#{common.primaryKey}" placeholder="Khóa chính">
                         </div>
                     </form>
 
@@ -37,7 +37,7 @@
         </div>
     </div>
 </div>
-<!--shiro控制bootstraptable行内按钮看见性 -->
+<!-- Shiro kiểm soát khả năng hiển thị nút thao tác trong Bootstrap Table. -->
 <div>
     <script type="text/javascript">
         var s_detail_h = 'hidden';

@@ -18,7 +18,7 @@ public class SerializeUtils {
     private static Logger logger = LoggerFactory.getLogger(SerializeUtils.class);
 
     /**
-     * 反序列化
+     * Giải tuần tự
      * @param bytes
      * @return
      */
@@ -55,7 +55,7 @@ public class SerializeUtils {
     }
 
     /**
-     * 序列化
+     * Tuần tự hóa
      * @param object
      * @return
      */

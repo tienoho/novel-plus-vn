@@ -16,7 +16,7 @@ function loadDict(){
         var changeFunc = $(domEle).attr("dict-change-func");
         if (dictType) {
             var html = "";
-            // 加载数据
+            // Tải dữ liệu
             for (var i = 0; i < dictList.length; i++) {
                 if (dictList[i].type == dictType) {
                     html += '<option value="' + dictList[i].value + '">' + dictList[i].name + '</option>'
@@ -29,7 +29,7 @@ function loadDict(){
             });
             $(domEle).val(dictValue);
             $(domEle).trigger("chosen:updated");
-            // 点击事件
+            // Sự kiện nhấp
             $(domEle).on('change', function (e, params) {
                 if(changeFunc) {
                     eval(changeFunc + '()');
@@ -53,7 +53,7 @@ function loadDict(){
 
 function formatDict(dictType, value) {
     var name = "";
-    // 加载数据
+    // Tải dữ liệu
     for (var i = 0; i < dictList.length; i++) {
 
         if (dictList[i].type == dictType && dictList[i].value == value) {

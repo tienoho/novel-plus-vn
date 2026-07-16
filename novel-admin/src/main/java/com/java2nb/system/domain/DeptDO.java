@@ -5,7 +5,7 @@ import java.io.Serializable;
 
 
 /**
- * 部门管理
+ * Quản lý phòng ban
  * 
  * @author xiongxy
  * @email 1179705413@qq.com
@@ -16,71 +16,71 @@ public class DeptDO implements Serializable {
 	
 	//
 	private Long deptId;
-	//上级部门ID，一级部门为0
+	//ID phòng ban cha; phòng ban cấp một là 0
 	private Long parentId;
-	//部门名称
+	// Tên phòng ban
 	private String name;
-	//排序
+	// Thứ tự
 	private Integer orderNum;
-	//是否删除  -1：已删除  0：正常
+	// Trạng thái xóa: -1 đã xóa, 0 bình thường
 	private Integer delFlag;
 
 	/**
-	 * 设置：
+	 * Đặt:
 	 */
 	public void setDeptId(Long deptId) {
 		this.deptId = deptId;
 	}
 	/**
-	 * 获取：
+	 * Lấy:
 	 */
 	public Long getDeptId() {
 		return deptId;
 	}
 	/**
-	 * 设置：上级部门ID，一级部门为0
+	 * Đặt: ID phòng ban cha; phòng ban cấp một là 0
 	 */
 	public void setParentId(Long parentId) {
 		this.parentId = parentId;
 	}
 	/**
-	 * 获取：上级部门ID，一级部门为0
+	 * Lấy: ID phòng ban cha; phòng ban cấp một là 0
 	 */
 	public Long getParentId() {
 		return parentId;
 	}
 	/**
-	 * 设置：部门名称
+	 * Đặt: tên phòng ban
 	 */
 	public void setName(String name) {
 		this.name = name;
 	}
 	/**
-	 * 获取：部门名称
+	 * Lấy: tên phòng ban
 	 */
 	public String getName() {
 		return name;
 	}
 	/**
-	 * 设置：排序
+	 * Đặt: thứ tự
 	 */
 	public void setOrderNum(Integer orderNum) {
 		this.orderNum = orderNum;
 	}
 	/**
-	 * 获取：排序
+	 * Lấy: thứ tự
 	 */
 	public Integer getOrderNum() {
 		return orderNum;
 	}
 	/**
-	 * 设置：是否删除  -1：已删除  0：正常
+	 * Đặt: trạng thái xóa: -1 đã xóa, 0 bình thường
 	 */
 	public void setDelFlag(Integer delFlag) {
 		this.delFlag = delFlag;
 	}
 	/**
-	 * 获取：是否删除  -1：已删除  0：正常
+	 * Lấy: trạng thái xóa: -1 đã xóa, 0 bình thường
 	 */
 	public Integer getDelFlag() {
 		return delFlag;

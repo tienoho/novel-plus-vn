@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY novel-front.jar /app/
 
-# 默认关闭 ShardingSphere，保证旧版本兼容
+# Tắt ShardingSphere mặc định để tương thích phiên bản cũ
 ENV JDBC_DRIVER=com.mysql.cj.jdbc.Driver
 
 ENTRYPOINT ["sh","-c","exec java \

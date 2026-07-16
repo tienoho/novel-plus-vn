@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 
 /**
- * 错误页面配置
+ * Cấu hình trang lỗi
  * @author xiongxiaoyang
  */
 @Configuration
@@ -15,10 +15,10 @@ public class ErrorPageConfig implements ErrorPageRegistrar {
 
     @Override
     public void registerErrorPages(ErrorPageRegistry registry) {
-        /*1.错误类型为404，默认显示404.html网页*/
+        /*1. Lỗi 404 mặc định hiển thị trang 404.html*/
         ErrorPage e404 = new ErrorPage(HttpStatus.NOT_FOUND, "/404.html");
         /**
-        TODO 2.错误类型为500，表示服务器响应错误，默认显示/500.html网页
+        TODO 2. Lỗi 500 là lỗi phản hồi máy chủ, mặc định hiển thị /500.html.
         */
         registry.addErrorPages(e404);
     }

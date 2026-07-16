@@ -1,6 +1,6 @@
 var UserPay = {
-    czData: [[30, "3000屋币"], [50, "5000屋币"], [100, "10000屋币"], [200, "20000屋币"], [500, "50000屋币"], [365, "全站包年阅读"] ],
-    czPayPalData: [[20, "10000屋币"], [50, "25000屋币"], [100, "50000屋币"], [80, "全站包年阅读"]],
+    czData: [[30, "3000 " + novelMessage('currency', 'Xu')], [50, "5000 " + novelMessage('currency', 'Xu')], [100, "10000 " + novelMessage('currency', 'Xu')], [200, "20000 " + novelMessage('currency', 'Xu')], [500, "50000 " + novelMessage('currency', 'Xu')], [365, novelMessage('annualReading', 'Gói đọc toàn trang một năm')]],
+    czPayPalData: [[20, "10000 " + novelMessage('currency', 'Xu')], [50, "25000 " + novelMessage('currency', 'Xu')], [100, "50000 " + novelMessage('currency', 'Xu')], [80, novelMessage('annualReading', 'Gói đọc toàn trang một năm')]],
     sendPay: function () {
         $("#payform").submit();
     }
@@ -10,7 +10,7 @@ $(function () {
     $("#ulPayType li").click(function () {
 
         if($(this).attr("valp")==2){
-            layer.alert("微信支付暂未开通，敬请期待");
+            layer.alert(novelMessage('wechatUnavailable', 'Thanh toán WeChat chưa được hỗ trợ.'));
         }
 
         return ;
@@ -43,7 +43,7 @@ $(function () {
         $(this).addClass("on");
         if ($(this).attr("vals") > 0) {
             $("#pValue").val($(this).attr("vals"));
-            $("#showTotal").html('￥' + $(this).attr("vals") + '元');
+            $("#showTotal").html('CNY ' + $(this).attr("vals"));
             for (var i = 0; i < UserPay.czData.length; i++) {
                 if (UserPay.czData[i][0] == $(this).attr("vals")) {
                     $("#showRemark").html(UserPay.czData[i][1]);
@@ -57,7 +57,7 @@ $(function () {
         $(this).addClass("on");
         if ($(this).attr("vals") > 0) {
             $("#pValue").val($(this).attr("vals"));
-            $("#showPayPalTotal").html($(this).attr("vals") + '美元');
+            $("#showPayPalTotal").html('USD ' + $(this).attr("vals"));
             for (var i = 0; i < UserPay.czData.length; i++) {
                 if (UserPay.czPayPalData[i][0] == $(this).attr("vals")) {
                     $("#showPayPalRemark").html(UserPay.czPayPalData[i][1]);

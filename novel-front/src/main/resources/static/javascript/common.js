@@ -6,11 +6,15 @@ var needLoginPath = ['/user/favorites.html', '/user/comment.html', '/user/feedba
 var isLogin = false;
 var url = window.location.search;
 
-//key(需要检索的键）
+function novelMessage(key, fallback) {
+    return window.NovelI18n && window.NovelI18n[key] ? window.NovelI18n[key] : fallback;
+}
+
+// Lấy giá trị query theo tên key.
 function getSearchString(key) {
     var str = url;
-    str = str.substring(1, str.length); // 获取URL中?之后的字符（去掉第一位的问号）
-    // 以&分隔字符串，获得类似name=xiaoli这样的元素数组
+    str = str.substring(1, str.length); // Bỏ dấu ? ở đầu query.
+    // Tách query thành các cặp tên/giá trị.
     var arr = str.split("&");
 
     for (var i = 0; i < arr.length; i++) {
@@ -40,7 +44,7 @@ function searchByK(k) {
 $("#searchKey").keypress(function (even) {
     if (even.which == 13) {
         even.stopPropagation();
-        //enter键按下
+        // Gửi tìm kiếm khi nhấn Enter.
         searchByK();
     }
 });
@@ -58,7 +62,7 @@ if (!token) {
         location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
     }
 
-    $(".user_link").html("<i class=\"line mr20\">|</i><a href=\"/user/login.html\"  class=\"mr15\">登录</a><a href=\"/user/register.html\" >注册</a>");
+    $(".user_link").html("<i class=\"line mr20\">|</i><a href=\"/user/login.html\" class=\"mr15\">" + novelMessage('login', 'Đăng nhập') + "</a><a href=\"/user/register.html\">" + novelMessage('register', 'Đăng ký') + "</a>");
 } else {
     $.ajax({
         type: "POST",
@@ -69,7 +73,7 @@ if (!token) {
             if (data.code == 200) {
                 $(".user_link").html("<i class=\"line mr20\">|</i>" +
                     "<a href=\"/user/userinfo.html\"  class=\"mr15\">" + data.data.nickName + "</a>" +
-                    "<a href=\"javascript:logout()\" >退出</a>");
+                    "<a href=\"javascript:logout()\">" + novelMessage('logout', 'Đăng xuất') + "</a>");
                 ;
                 if ("/user/login.html" == window.location.pathname) {
                     var orginUrl = getSearchString("originUrl");
@@ -86,11 +90,11 @@ if (!token) {
                 if (needLoginPath.indexOf(window.location.pathname) != -1) {
                     location.href = '/user/login.html';
                 }
-                $(".user_link").html("<i class=\"line mr20\">|</i><a href=\"/user/login.html\"  class=\"mr15\">登录</a><a href=\"/user/register.html\" >注册</a>");
+                $(".user_link").html("<i class=\"line mr20\">|</i><a href=\"/user/login.html\" class=\"mr15\">" + novelMessage('login', 'Đăng nhập') + "</a><a href=\"/user/register.html\">" + novelMessage('register', 'Đăng ký') + "</a>");
             }
         },
         error: function () {
-            layer.alert('网络异常');
+            layer.alert(novelMessage('networkError', 'Không thể kết nối mạng'));
         }
 
     });
@@ -131,11 +135,11 @@ function isImg(str) {
 }
 
 
-//校验图片上传
+// Kiểm tra tệp ảnh trước khi tải lên.
 function checkPicUpload(file) {
 
     if (!isImg(file.value.substr(file.value.lastIndexOf(".")))) {
-        layer.alert('只能上传图片格式的文件！');
+        layer.alert(novelMessage('imageOnly', 'Chỉ được tải lên tệp hình ảnh.'));
         return false;
     }
     var fileSize = 0;
@@ -148,9 +152,9 @@ function checkPicUpload(file) {
     } else {
         fileSize = file.files[0].size;
     }
-    fileSize = Math.round(fileSize / 1024 * 100) / 100; //单位为KB
+    fileSize = Math.round(fileSize / 1024 * 100) / 100; // Đơn vị KB.
     if (fileSize >= 1024) {
-        layer.alert('上传的图片大小不能超过1M！');
+        layer.alert(novelMessage('imageMax1M', 'Kích thước ảnh không được vượt quá 1 MB.'));
         return false;
     }
     return true;

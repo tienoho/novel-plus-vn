@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 字典表
+ * Bảng từ điển
  * @author xiongxy
  * @email 1179705413@qq.com
  * @date 2019-09-29 18:28:07
@@ -39,7 +39,7 @@ public class DictController extends BaseController {
 	@GetMapping("/list")
 	@RequiresPermissions("common:dict:dict")
 	public PageBean list(@RequestParam Map<String, Object> params) {
-		// 查询列表数据
+		// Truy vấn dữ liệu danh sách
 		Query query = new Query(params);
 		List<DictDO> dictList = dictService.list(query);
 		int total = dictService.count(query);
@@ -62,14 +62,14 @@ public class DictController extends BaseController {
 	}
 
 	/**
-	 * 保存
+	 * Lưu
 	 */
 	@ResponseBody
 	@PostMapping("/save")
 	@RequiresPermissions("common:dict:add")
 	public R save(DictDO dict) {
 		if (Constant.DEMO_ACCOUNT.equals(getUsername())) {
-			return R.error(1, "演示系统不允许修改,完整体验请部署程序");
+			return R.error(1, messages.get("error.demoReadOnly"));
 		}
 		if (dictService.save(dict) > 0) {
 			return R.ok();
@@ -78,28 +78,28 @@ public class DictController extends BaseController {
 	}
 
 	/**
-	 * 修改
+	 * Sửa
 	 */
 	@ResponseBody
 	@RequestMapping("/update")
 	@RequiresPermissions("common:dict:edit")
 	public R update(DictDO dict) {
 		if (Constant.DEMO_ACCOUNT.equals(getUsername())) {
-			return R.error(1, "演示系统不允许修改,完整体验请部署程序");
+			return R.error(1, messages.get("error.demoReadOnly"));
 		}
 		dictService.update(dict);
 		return R.ok();
 	}
 
 	/**
-	 * 删除
+	 * Xóa
 	 */
 	@PostMapping("/remove")
 	@ResponseBody
 	@RequiresPermissions("common:dict:remove")
 	public R remove(Long id) {
 		if (Constant.DEMO_ACCOUNT.equals(getUsername())) {
-			return R.error(1, "演示系统不允许修改,完整体验请部署程序");
+			return R.error(1, messages.get("error.demoReadOnly"));
 		}
 		if (dictService.remove(id) > 0) {
 			return R.ok();
@@ -108,14 +108,14 @@ public class DictController extends BaseController {
 	}
 
 	/**
-	 * 删除
+	 * Xóa
 	 */
 	@PostMapping("/batchRemove")
 	@ResponseBody
 	@RequiresPermissions("common:dict:batchRemove")
 	public R remove(@RequestParam("ids[]") Long[] ids) {
 		if (Constant.DEMO_ACCOUNT.equals(getUsername())) {
-			return R.error(1, "演示系统不允许修改,完整体验请部署程序");
+			return R.error(1, messages.get("error.demoReadOnly"));
 		}
 		dictService.batchRemove(ids);
 		return R.ok();
@@ -127,7 +127,7 @@ public class DictController extends BaseController {
 		return dictService.listType();
 	};
 
-	// 类别已经指定增加
+	// Loại đã được chỉ định để thêm
 	@GetMapping("/add/{type}/{description}")
 	@RequiresPermissions("common:dict:add")
 	String addD(Model model, @PathVariable("type") String type, @PathVariable("description") String description) {
@@ -139,7 +139,7 @@ public class DictController extends BaseController {
 	@ResponseBody
 	@GetMapping("/list/{type}")
 	public List<DictDO> listByType(@PathVariable("type") String type) {
-		// 查询列表数据
+		// Truy vấn dữ liệu danh sách
 		Map<String, Object> map = new HashMap<>(16);
 		map.put("type", type);
 		List<DictDO> dictList = dictService.list(map);

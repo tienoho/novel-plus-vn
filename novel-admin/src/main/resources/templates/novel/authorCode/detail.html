@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <meta charset="utf-8">
 <head th:include="include :: header"></head>
 <body class="gray-bg">
@@ -12,7 +12,7 @@
                 <input id="id" name="id" th:value="${authorCode.id}"
                        type="hidden">
                                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">邀请码：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.author.inviteCode}+'：'">Mã mời:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${authorCode.inviteCode}">
@@ -22,7 +22,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">有效时间：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.authorCode.validUntil}+'：'">Thời hạn hiệu lực:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${authorCode.validityTime}==null?null:${#dates.format(authorCode.validityTime,'yyyy-MM-dd HH:mm:ss')}">
@@ -31,7 +31,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">是否使用过，0：未使用，1:使用过：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.authorCode.used}+'：'">Đã sử dụng (0: chưa dùng, 1: đã dùng):</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${authorCode.isUse}">
@@ -41,7 +41,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">创建时间：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.audit.createdAt}+'：'">Thời gian tạo:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${authorCode.createTime}==null?null:${#dates.format(authorCode.createTime,'yyyy-MM-dd HH:mm:ss')}">
@@ -50,7 +50,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">创建人ID：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.audit.createdById}+'：'">ID người tạo:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${authorCode.createUserId}">

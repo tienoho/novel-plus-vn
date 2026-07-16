@@ -9,7 +9,7 @@ import java.util.Date;
 
 
 /**
- * 小说表
+ * Bảng tác phẩm
  *
  * @author xiongxy
  * @email 1179705413@qq.com
@@ -20,434 +20,434 @@ public class BookDO implements Serializable {
     private static final long serialVersionUID = 1L;
 
 
-    //主键
-    //java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-    //所以通过序列化成字符串来解决
+    // Khóa chính
+    // Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+    // Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
     @JsonSerialize(using = LongToStringSerializer.class)
     private Long id;
-    //作品方向，0：男频，1：女频'
+    //Định hướng tác phẩm: 0 nam, 1 nữ
     private Integer workDirection;
-    //分类ID
+    // ID danh mục
     private Integer catId;
-    //分类名
+    // Tên danh mục
     private String catName;
-    //小说封面
+    // Bìa tác phẩm
     private String picUrl;
-    //小说名
+    // Tên tác phẩm
     private String bookName;
-    //作者id
-    //java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-    //所以通过序列化成字符串来解决
+    //ID tác giả
+    // Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+    // Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
     @JsonSerialize(using = LongToStringSerializer.class)
     private Long authorId;
-    //作者名
+    //Tên tác giả
     private String authorName;
-    //书籍描述
+    //Mô tả tác phẩm
     private String bookDesc;
-    //评分，预留字段
+    // Điểm đánh giá, trường dự phòng
     private Float score;
-    //书籍状态，0：连载中，1：已完结
+    //Trạng thái tác phẩm: 0 đang ra, 1 hoàn thành
     private Integer bookStatus;
-    //点击量
-    //java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-    //所以通过序列化成字符串来解决
+    // Lượt xem
+    // Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+    // Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
     @JsonSerialize(using = LongToStringSerializer.class)
     private Long visitCount;
-    //总字数
+    // Tổng số chữ
     private Integer wordCount;
-    //评论数
+    // Số bình luận
     private Integer commentCount;
-    //昨日订阅数
+    // Số lượt đăng ký hôm qua
     private Integer yesterdayBuy;
-    //最新目录ID
-    //java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-    //所以通过序列化成字符串来解决
+    // ID mục lục mới nhất
+    // Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+    // Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
     @JsonSerialize(using = LongToStringSerializer.class)
     private Long lastIndexId;
-    //最新目录名
+    // Tên mục lục mới nhất
     private String lastIndexName;
-    //最新目录更新时间
+    // Thời gian cập nhật mục lục mới nhất
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date lastIndexUpdateTime;
-    //是否收费，1：收费，0：免费
+    // Thu phí: 1 có, 0 miễn phí
     private Integer isVip;
-    //状态，0：入库，1：上架
+    // Trạng thái: 0 nhập kho, 1 phát hành
     private Integer status;
-    //更新时间
+    // Thời gian cập nhật
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date updateTime;
-    //创建时间
+    // Thời gian tạo
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
-    //爬虫源站ID
+    // ID nguồn thu thập
     private Integer crawlSourceId;
-    //抓取的源站小说ID
+    // ID tác phẩm tại nguồn thu thập
     private String crawlBookId;
-    //最后一次的抓取时间
+    // Thời gian thu thập gần nhất
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date crawlLastTime;
-    //是否已停止更新，0：未停止，1：已停止
+    // Đã dừng cập nhật: 0 chưa, 1 đã dừng
     private Integer crawlIsStop;
 
     /**
-     * 设置：主键
+     * Đặt: khóa chính
      */
     public void setId(Long id) {
         this.id = id;
     }
 
     /**
-     * 获取：主键
+     * Lấy: khóa chính
      */
     public Long getId() {
         return id;
     }
 
     /**
-     * 设置：作品方向，0：男频，1：女频'
+     * Đặt: định hướng tác phẩm: 0 nam, 1 nữ
      */
     public void setWorkDirection(Integer workDirection) {
         this.workDirection = workDirection;
     }
 
     /**
-     * 获取：作品方向，0：男频，1：女频'
+     * Lấy: định hướng tác phẩm: 0 nam, 1 nữ
      */
     public Integer getWorkDirection() {
         return workDirection;
     }
 
     /**
-     * 设置：分类ID
+     * Đặt: ID danh mục
      */
     public void setCatId(Integer catId) {
         this.catId = catId;
     }
 
     /**
-     * 获取：分类ID
+     * Lấy: ID danh mục
      */
     public Integer getCatId() {
         return catId;
     }
 
     /**
-     * 设置：分类名
+     * Đặt: tên danh mục
      */
     public void setCatName(String catName) {
         this.catName = catName;
     }
 
     /**
-     * 获取：分类名
+     * Lấy: tên danh mục
      */
     public String getCatName() {
         return catName;
     }
 
     /**
-     * 设置：小说封面
+     * Đặt: bìa tác phẩm
      */
     public void setPicUrl(String picUrl) {
         this.picUrl = picUrl;
     }
 
     /**
-     * 获取：小说封面
+     * Lấy: bìa tác phẩm
      */
     public String getPicUrl() {
         return picUrl;
     }
 
     /**
-     * 设置：小说名
+     * Đặt: tên tác phẩm
      */
     public void setBookName(String bookName) {
         this.bookName = bookName;
     }
 
     /**
-     * 获取：小说名
+     * Lấy: tên tác phẩm
      */
     public String getBookName() {
         return bookName;
     }
 
     /**
-     * 设置：作者id
+     * Đặt: ID tác giả
      */
     public void setAuthorId(Long authorId) {
         this.authorId = authorId;
     }
 
     /**
-     * 获取：作者id
+     * Lấy: ID tác giả
      */
     public Long getAuthorId() {
         return authorId;
     }
 
     /**
-     * 设置：作者名
+     * Đặt: tên tác giả
      */
     public void setAuthorName(String authorName) {
         this.authorName = authorName;
     }
 
     /**
-     * 获取：作者名
+     * Lấy: tên tác giả
      */
     public String getAuthorName() {
         return authorName;
     }
 
     /**
-     * 设置：书籍描述
+     * Đặt: mô tả tác phẩm
      */
     public void setBookDesc(String bookDesc) {
         this.bookDesc = bookDesc;
     }
 
     /**
-     * 获取：书籍描述
+     * Lấy: mô tả tác phẩm
      */
     public String getBookDesc() {
         return bookDesc;
     }
 
     /**
-     * 设置：评分，预留字段
+     * Đặt: điểm đánh giá, trường dự phòng
      */
     public void setScore(Float score) {
         this.score = score;
     }
 
     /**
-     * 获取：评分，预留字段
+     * Lấy: điểm đánh giá, trường dự phòng
      */
     public Float getScore() {
         return score;
     }
 
     /**
-     * 设置：书籍状态，0：连载中，1：已完结
+     * Đặt: trạng thái tác phẩm: 0 đang ra, 1 hoàn thành
      */
     public void setBookStatus(Integer bookStatus) {
         this.bookStatus = bookStatus;
     }
 
     /**
-     * 获取：书籍状态，0：连载中，1：已完结
+     * Lấy: trạng thái tác phẩm: 0 đang ra, 1 hoàn thành
      */
     public Integer getBookStatus() {
         return bookStatus;
     }
 
     /**
-     * 设置：点击量
+     * Đặt: lượt xem
      */
     public void setVisitCount(Long visitCount) {
         this.visitCount = visitCount;
     }
 
     /**
-     * 获取：点击量
+     * Lấy: lượt xem
      */
     public Long getVisitCount() {
         return visitCount;
     }
 
     /**
-     * 设置：总字数
+     * Đặt: tổng số chữ
      */
     public void setWordCount(Integer wordCount) {
         this.wordCount = wordCount;
     }
 
     /**
-     * 获取：总字数
+     * Lấy: tổng số chữ
      */
     public Integer getWordCount() {
         return wordCount;
     }
 
     /**
-     * 设置：评论数
+     * Đặt: số bình luận
      */
     public void setCommentCount(Integer commentCount) {
         this.commentCount = commentCount;
     }
 
     /**
-     * 获取：评论数
+     * Lấy: số bình luận
      */
     public Integer getCommentCount() {
         return commentCount;
     }
 
     /**
-     * 设置：昨日订阅数
+     * Đặt: số lượt đăng ký hôm qua
      */
     public void setYesterdayBuy(Integer yesterdayBuy) {
         this.yesterdayBuy = yesterdayBuy;
     }
 
     /**
-     * 获取：昨日订阅数
+     * Lấy: số lượt đăng ký hôm qua
      */
     public Integer getYesterdayBuy() {
         return yesterdayBuy;
     }
 
     /**
-     * 设置：最新目录ID
+     * Đặt: ID mục lục mới nhất
      */
     public void setLastIndexId(Long lastIndexId) {
         this.lastIndexId = lastIndexId;
     }
 
     /**
-     * 获取：最新目录ID
+     * Lấy: ID mục lục mới nhất
      */
     public Long getLastIndexId() {
         return lastIndexId;
     }
 
     /**
-     * 设置：最新目录名
+     * Đặt: tên mục lục mới nhất
      */
     public void setLastIndexName(String lastIndexName) {
         this.lastIndexName = lastIndexName;
     }
 
     /**
-     * 获取：最新目录名
+     * Lấy: tên mục lục mới nhất
      */
     public String getLastIndexName() {
         return lastIndexName;
     }
 
     /**
-     * 设置：最新目录更新时间
+     * Đặt: thời gian cập nhật mục lục mới nhất
      */
     public void setLastIndexUpdateTime(Date lastIndexUpdateTime) {
         this.lastIndexUpdateTime = lastIndexUpdateTime;
     }
 
     /**
-     * 获取：最新目录更新时间
+     * Lấy: thời gian cập nhật mục lục mới nhất
      */
     public Date getLastIndexUpdateTime() {
         return lastIndexUpdateTime;
     }
 
     /**
-     * 设置：是否收费，1：收费，0：免费
+     * Đặt: thu phí: 1 có, 0 miễn phí
      */
     public void setIsVip(Integer isVip) {
         this.isVip = isVip;
     }
 
     /**
-     * 获取：是否收费，1：收费，0：免费
+     * Lấy: thu phí: 1 có, 0 miễn phí
      */
     public Integer getIsVip() {
         return isVip;
     }
 
     /**
-     * 设置：状态，0：入库，1：上架
+     * Đặt: trạng thái: 0 nhập kho, 1 phát hành
      */
     public void setStatus(Integer status) {
         this.status = status;
     }
 
     /**
-     * 获取：状态，0：入库，1：上架
+     * Lấy: trạng thái: 0 nhập kho, 1 phát hành
      */
     public Integer getStatus() {
         return status;
     }
 
     /**
-     * 设置：更新时间
+     * Đặt: thời gian cập nhật
      */
     public void setUpdateTime(Date updateTime) {
         this.updateTime = updateTime;
     }
 
     /**
-     * 获取：更新时间
+     * Lấy: thời gian cập nhật
      */
     public Date getUpdateTime() {
         return updateTime;
     }
 
     /**
-     * 设置：创建时间
+     * Đặt: thời gian tạo
      */
     public void setCreateTime(Date createTime) {
         this.createTime = createTime;
     }
 
     /**
-     * 获取：创建时间
+     * Lấy: thời gian tạo
      */
     public Date getCreateTime() {
         return createTime;
     }
 
     /**
-     * 设置：爬虫源站ID
+     * Đặt: ID nguồn thu thập
      */
     public void setCrawlSourceId(Integer crawlSourceId) {
         this.crawlSourceId = crawlSourceId;
     }
 
     /**
-     * 获取：爬虫源站ID
+     * Lấy: ID nguồn thu thập
      */
     public Integer getCrawlSourceId() {
         return crawlSourceId;
     }
 
     /**
-     * 设置：抓取的源站小说ID
+     * Đặt: ID tác phẩm tại nguồn thu thập
      */
     public void setCrawlBookId(String crawlBookId) {
         this.crawlBookId = crawlBookId;
     }
 
     /**
-     * 获取：抓取的源站小说ID
+     * Lấy: ID tác phẩm tại nguồn thu thập
      */
     public String getCrawlBookId() {
         return crawlBookId;
     }
 
     /**
-     * 设置：最后一次的抓取时间
+     * Đặt: thời gian thu thập gần nhất
      */
     public void setCrawlLastTime(Date crawlLastTime) {
         this.crawlLastTime = crawlLastTime;
     }
 
     /**
-     * 获取：最后一次的抓取时间
+     * Lấy: thời gian thu thập gần nhất
      */
     public Date getCrawlLastTime() {
         return crawlLastTime;
     }
 
     /**
-     * 设置：是否已停止更新，0：未停止，1：已停止
+     * Đặt: đã dừng cập nhật: 0 chưa, 1 đã dừng
      */
     public void setCrawlIsStop(Integer crawlIsStop) {
         this.crawlIsStop = crawlIsStop;
     }
 
     /**
-     * 获取：是否已停止更新，0：未停止，1：已停止
+     * Lấy: đã dừng cập nhật: 0 chưa, 1 đã dừng
      */
     public Integer getCrawlIsStop() {
         return crawlIsStop;

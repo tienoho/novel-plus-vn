@@ -2,7 +2,7 @@ name: Create novel-plus Maven Release with ZIPs
 
 on:
   push:
-    # 匹配所有以'v'开头的标签
+    # Khớp mọi tag bắt đầu bằng 'v'.
     tags:
       - 'v*'
 
@@ -18,7 +18,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '21'
-          # 可选，默认是 temurin，也可以选择其他发行版
+          # Có thể chọn bản phân phối khác; mặc định dùng Temurin.
           distribution: 'temurin'
 
       - name: Build project with Maven
@@ -30,14 +30,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
         with:
-          # 使用 tag_name 而不是 github.ref
+          # Dùng tag_name thay cho github.ref.
           tag_name: ${{ github.ref_name }}
           release_name: novel-plus ${{ github.ref_name }}
           draft: false
           prerelease: false
 
 
-      # 使用 action 来替代直接 curl 进行上传
+      # Dùng action để tải lên thay vì gọi curl trực tiếp.
       - name: Upload sql.zip
         uses: actions/upload-release-asset@v1
         env:
@@ -79,14 +79,14 @@ jobs:
           asset_content_type: application/zip
 
 
-      # 登录 Docker Hub
+      # Đăng nhập Docker Hub.
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 构建并推送 novel-front 镜像
+      # Build và đẩy image novel-front.
       - name: Build and Push novel-front Docker Image
         uses: docker/build-push-action@v5
         with:
@@ -97,7 +97,7 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/novel-front:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/novel-front:${{ github.ref_name }}
 
-      # 构建并推送 novel-admin 镜像
+      # Build và đẩy image novel-admin.
       - name: Build and Push novel-admin Docker Image
         uses: docker/build-push-action@v5
         with:
@@ -108,7 +108,7 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/novel-admin:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/novel-admin:${{ github.ref_name }}
 
-      # 构建并推送 novel-crawl 镜像
+      # Build và đẩy image novel-crawl.
       - name: Build and Push novel-crawl Docker Image
         uses: docker/build-push-action@v5
         with:
@@ -119,12 +119,12 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/novel-crawl:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/novel-crawl:${{ github.ref_name }}
 
-      # 解压 SQL 文件
+      # Giải nén tệp SQL.
       - name: Unzip MySQL SQL File
         run: |
           unzip -o ./doc/sql/novel_plus_data.sql.zip -d ./doc/sql/
 
-      # 构建并推送 mysql-novel-plus 镜像
+      # Build và đẩy image mysql-novel-plus.
       - name: Build and Push mysql-novel-plus Docker Image
         uses: docker/build-push-action@v5
         with:

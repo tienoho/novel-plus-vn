@@ -29,7 +29,7 @@ public class CrawlController {
 
     private final CacheService cacheService;
     /**
-     * 新增爬虫源
+     * Thêm nguồn thu thập
      * */
     @PostMapping("addCrawlSource")
     public RestResult<Void> addCrawlSource(CrawlSource source){
@@ -40,7 +40,7 @@ public class CrawlController {
     }
 
     /**
-     * 爬虫源分页列表查询
+     * Truy vấn phân trang nguồn thu thập
      * */
     @GetMapping("listCrawlByPage")
     public RestResult<PageBean<CrawlSource>> listCrawlByPage(@RequestParam(value = "curr", defaultValue = "1") int page, @RequestParam(value = "limit", defaultValue = "10") int pageSize){
@@ -48,7 +48,7 @@ public class CrawlController {
         return RestResult.ok(crawlService.listCrawlByPage(page,pageSize));
     }
     /**
-     * 获取爬虫源
+     * Lấy nguồn thu thập
      * */
     @GetMapping("getCrawlSource/{id}")
     public RestResult<CrawlSource> getCrawlSource(@PathVariable("id") Integer id){
@@ -58,7 +58,7 @@ public class CrawlController {
     }
 
     /**
-     * 测试规则
+     * Kiểm thử quy tắc
      * @param rule
      * @param url
      * @param isRefresh
@@ -101,7 +101,7 @@ public class CrawlController {
         return RestResult.ok(resultMap);
     }
     /**
-     * 修改爬虫源
+     * Cập nhật nguồn thu thập
      * */
     @PostMapping("updateCrawlSource")
     public RestResult<Void> updateCrawlSource(CrawlSource source) {
@@ -110,7 +110,7 @@ public class CrawlController {
 
     }
     /**
-     * 开启或停止爬虫
+     * Bật hoặc dừng trình thu thập
      * */
     @PostMapping("openOrCloseCrawl")
     public RestResult<Void> openOrCloseCrawl(Integer sourceId,Byte sourceStatus){
@@ -121,7 +121,7 @@ public class CrawlController {
     }
 
     /**
-     * 新增单本采集任务
+     * Thêm tác vụ thu thập từng truyện
      * */
     @PostMapping("addCrawlSingleTask")
     public RestResult<Void> addCrawlSingleTask(CrawlSingleTask singleTask){
@@ -132,7 +132,7 @@ public class CrawlController {
     }
 
     /**
-     * 单本采集任务分页列表查询
+     * Truy vấn phân trang tác vụ thu thập từng truyện
      * */
     @GetMapping("listCrawlSingleTaskByPage")
     public RestResult<PageBean<CrawlSingleTask>> listCrawlSingleTaskByPage(@RequestParam(value = "curr", defaultValue = "1") int page, @RequestParam(value = "limit", defaultValue = "10") int pageSize){
@@ -141,7 +141,7 @@ public class CrawlController {
     }
 
     /**
-     * 删除采集任务
+     * Xóa tác vụ thu thập
      * */
     @DeleteMapping("delCrawlSingleTask/{id}")
     public RestResult<Void> delCrawlSingleTask(@PathVariable("id") Long id){
@@ -152,7 +152,7 @@ public class CrawlController {
     }
 
     /**
-     * 采集任务进度查询
+     * Truy vấn tiến độ tác vụ thu thập
      * */
     @GetMapping("getTaskProgress/{id}")
     public RestResult<Integer> getTaskProgress(@PathVariable("id") Long id){

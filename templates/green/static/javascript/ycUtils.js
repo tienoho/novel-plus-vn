@@ -16,7 +16,7 @@ $.extend($.fn.validatebox.defaults.rules, {
                 cache: false,
                 success: function (result) {
                     if (result.data) {
-                        $.fn.validatebox.defaults.rules.checkPenName.message = '笔名已存在,请重新输入';
+                        $.fn.validatebox.defaults.rules.checkPenName.message = novelMessage('penNameExists', 'Bút danh đã tồn tại, vui lòng chọn tên khác.');
                         bool = false;
                     } else {
                         $.fn.validatebox.defaults.rules.checkPenName.message = '';

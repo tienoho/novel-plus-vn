@@ -14,13 +14,13 @@ import java.time.Duration;
 public class IpUtil {
 
     /**
-     * 获取真实IP
+     * Lấy IP thực
      *
-     * @param request 请求体
-     * @return 真实IP
+     * @param request yêu cầu HTTP
+     * @return IP thực
      */
     public static String getRealIp(HttpServletRequest request) {
-        // 这个一般是Nginx反向代理设置的参数
+        // Tham số này thường do reverse proxy Nginx thiết lập
         String ip = request.getHeader("X-Real-IP");
         if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
             ip = request.getHeader("X-Forwarded-For");
@@ -34,7 +34,7 @@ public class IpUtil {
         if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
             ip = request.getRemoteAddr();
         }
-        // 处理多IP的情况（只取第一个IP）
+        // Xử lý nhiều IP bằng cách lấy IP đầu tiên
         if (ip != null && ip.contains(",")) {
             String[] ipArray = ip.split(",");
             ip = ipArray[0];
@@ -43,7 +43,7 @@ public class IpUtil {
     }
 
     /**
-     * 获取本机公网IP
+     * Lấy IP công khai của máy
      */
     public static String getPublicIP() {
         try {
@@ -60,7 +60,7 @@ public class IpUtil {
                 return new ObjectMapper().readTree(response.body()).get("origin").asText();
             }
         } catch (Exception e) {
-            log.error("获取本机公网IP异常", e);
+            log.error("Không thể lấy địa chỉ IP công khai của máy", e);
         }
         return null;
     }

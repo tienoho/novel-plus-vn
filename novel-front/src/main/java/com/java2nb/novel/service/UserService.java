@@ -19,161 +19,161 @@ import java.util.List;
 public interface UserService {
 
     /**
-     * 用户注册
-     * @param user 用户注册信息类
-     * @return jwt载体信息类
+     * Đăng ký người dùng
+     * @param user thông tin đăng ký người dùng
+     * @return thông tin JWT
      * */
     UserDetails register(User user);
 
     /**
-     * 用户登录
-     * @param user 用户登录信息类
-     * @return jwt载体信息类
+     * Đăng nhập người dùng
+     * @param user thông tin đăng nhập người dùng
+     * @return thông tin JWT
      * */
     UserDetails login(User user);
 
     /**
-     * 查询小说是否已加入书架
-     * @param userId 用户ID
-     * @param bookId 小说ID
-     * @return true:已加入书架，未加入书架
+     * Truy vấn trạng thái tác phẩm trong tủ sách
+     * @param userId ID người dùng
+     * @param bookId ID tác phẩm
+     * @return true nếu đã thêm vào tủ sách, false nếu chưa
      * */
     Boolean queryIsInShelf(Long userId, Long bookId);
 
     /**
-     * 加入书架
-     * @param userId 用户ID
-     * @param bookId 小说ID
-     * @param preContentId 阅读的内容ID
+     * Thêm vào tủ sách
+     * @param userId ID người dùng
+     * @param bookId ID tác phẩm
+     * @param preContentId ID nội dung đang đọc
      * */
     void addToBookShelf(Long userId, Long bookId, Long preContentId);
 
     /**
-     * 移出书架
-     * @param userId 用户ID
-     * @param bookId 小说ID
+     * Xóa khỏi tủ sách
+     * @param userId ID người dùng
+     * @param bookId ID tác phẩm
      * */
     void removeFromBookShelf(Long userId, Long bookId);
 
     /**
-     * 查询书架
-     * @param userId 用户ID
+     * Truy vấn tủ sách
+     * @param userId ID người dùng
      * @param page
      * @param pageSize
-     * @return 书架分页信息
+     * @return thông tin phân trang tủ sách
      * */
     PageBean<BookShelfVO> listBookShelfByPage(Long userId, int page, int pageSize);
 
     /**
-     * 添加阅读记录
-     * @param userId 用户id
-     * @param bookId 书籍id
-     * @param preContentId 阅读的目录id
+     * Thêm lịch sử đọc
+     * @param userId ID người dùng
+     * @param bookId ID tác phẩm
+     * @param preContentId ID mục lục đang đọc
      * */
     void addReadHistory(Long userId, Long bookId, Long preContentId);
 
     /**
-     * 添加反馈
-     * @param userId 用户id
-     * @param content 反馈内容
+     * Thêm phản hồi
+     * @param userId ID người dùng
+     * @param content nội dung phản hồi
      * */
     void addFeedBack(Long userId, String content);
 
     /**
-     * 分页查询我的反馈列表
-     * @param userId 用户ID
-     * @param page 页码
-     * @param pageSize 分页大小
-     * @return 反馈分页数据
+     * Truy vấn phân trang danh sách phản hồi của tôi
+     * @param userId ID người dùng
+     * @param page số trang
+     * @param pageSize kích thước trang
+     * @return dữ liệu phân trang phản hồi
      * */
     PageBean<UserFeedback> listUserFeedBackByPage(Long userId, int page, int pageSize);
 
     /**
-     * 查询个人信息
-     * @param userId 用户id
-     * @return 用户信息
+     * Truy vấn thông tin cá nhân
+     * @param userId ID người dùng
+     * @return thông tin người dùng
      * */
     User userInfo(Long userId);
 
     /**
-     * 分页查询阅读记录
-     * @param userId 用户id
-     * @param page 页码
-     * @param pageSize 分页大小
-     * @return 分页数据
+     * Truy vấn phân trang lịch sử đọc
+     * @param userId ID người dùng
+     * @param page số trang
+     * @param pageSize kích thước trang
+     * @return dữ liệu phân trang
      * */
     PageBean<BookReadHistoryVO> listReadHistoryByPage(Long userId, int page, int pageSize);
 
     /**
-     * 更新个人信息
-     * @param userId 用户id
-     * @param user 需要更新的信息
+     * Cập nhật thông tin cá nhân
+     * @param userId ID người dùng
+     * @param user thông tin cần cập nhật
      * */
     void updateUserInfo(Long userId, User user);
 
     /**
-     * 更新密码
-     * @param userId 用户id
-     * @param oldPassword 旧密码
-     * @param newPassword 新密码
+     * Cập nhật mật khẩu
+     * @param userId ID người dùng
+     * @param oldPassword mật khẩu cũ
+     * @param newPassword mật khẩu mới
      * */
     void updatePassword(Long userId, String oldPassword, String newPassword);
 
 
     /**
-     * 增加用户余额
-     * @param userId 用户ID
-     * @param amount 增加的余额 */
+     * Tăng số dư người dùng
+     * @param userId ID người dùng
+     * @param amount số dư cần tăng */
     void addAmount(Long userId, int amount);
 
     /**
-     * 判断用户是否购买过该小说章节
-     * @param userId 用户ID
-     * @param bookIndexId 章节目录ID
-     * @return true:购买过，false:没购买
+     * Kiểm tra người dùng đã mua chương hay chưa
+     * @param userId ID người dùng
+     * @param bookIndexId ID mục lục chương
+     * @return true nếu đã mua, false nếu chưa
      * */
     boolean queryIsBuyBookIndex(Long userId, Long bookIndexId);
 
     /**
-     * 购买小说章节
-     * @param userId 用户ID
-     * @param buyRecord 购买信息
+     * Mua chương tác phẩm
+     * @param userId ID người dùng
+     * @param buyRecord thông tin mua hàng
      * */
     void buyBookIndex(Long userId, UserBuyRecord buyRecord);
 
     /**
-     * 查询作品时间段内的订阅人数
-     * @param bookId 作品ID
-     * @param startTime 开始时间
-     * @param endTime 结束时间
-     * @return 订阅人数
+     * Truy vấn số người đăng ký tác phẩm trong khoảng thời gian
+     * @param bookId ID tác phẩm
+     * @param startTime thời gian bắt đầu
+     * @param endTime thời gian kết thúc
+     * @return số người đăng ký
      */
     int queryBuyMember(Long bookId, Date startTime, Date endTime);
 
     /**
-     * 查询作品时间段内的订阅次数
-     * @param bookId 作品ID
-     * @param startTime 开始时间
-     * @param endTime 结束时间
-     * @return 订阅次数
+     * Truy vấn số lượt đăng ký tác phẩm trong khoảng thời gian
+     * @param bookId ID tác phẩm
+     * @param startTime thời gian bắt đầu
+     * @param endTime thời gian kết thúc
+     * @return số lượt đăng ký
      */
     int queryBuyCount(Long bookId, Date startTime, Date endTime);
 
     /**
-     * 查询作品时间段内的订阅总额（屋币）
-     * @param bookId 作品ID
-     * @param startTime 开始时间
-     * @param endTime 结束时间
-     * @return 订阅总额（屋币）
+     * Truy vấn tổng Xu đăng ký tác phẩm trong khoảng thời gian
+     * @param bookId ID tác phẩm
+     * @param startTime thời gian bắt đầu
+     * @param endTime thời gian kết thúc
+     * @return tổng Xu đăng ký
      */
     int queryBuyAccount(Long bookId, Date startTime, Date endTime);
 
     /**
-     * 查询作者时间段内的订阅人数
-     * @param bookIds z作者的所有作品ID
-     * @param startTime 开始时间
-     * @param endTime 结束时间
-     * @return 订阅人数
+     * Truy vấn số người đăng ký của tác giả trong khoảng thời gian
+     * @param bookIds toàn bộ ID tác phẩm của tác giả
+     * @param startTime thời gian bắt đầu
+     * @param endTime thời gian kết thúc
+     * @return số người đăng ký
      */
     int queryBuyTotalMember(List<Long> bookIds, Date startTime, Date endTime);
 }

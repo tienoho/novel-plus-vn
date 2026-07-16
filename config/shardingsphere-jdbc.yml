@@ -1,12 +1,12 @@
 mode:
-  # 单机模式
+  # Chế độ đơn máy
   type: Standalone
-  # 元数据持久化
+  # Lưu bền metadata
   repository:
-    # 数据库持久化
+    # Lưu bền vào cơ sở dữ liệu
     type: JDBC
 
-# 数据源配置
+# Cấu hình nguồn dữ liệu
 dataSources:
   ds_1:
     dataSourceClassName: com.zaxxer.hikari.HikariDataSource
@@ -20,34 +20,34 @@ dataSources:
     url: jdbc:mysql://localhost:3306/information_schema?allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
     username: root
     password: test123456
-# 规则配置
+# Cấu hình quy tắc
 rules:
   - !SINGLE
     tables:
       - "*.*"
   - !SHARDING
-    tables: # 数据分片规则配置
+    tables: # Cấu hình quy tắc phân mảnh dữ liệu
       book_content:
-        # 分库策略，缺省表示使用默认分库策略
+        # Chiến lược phân cơ sở dữ liệu; để trống dùng chiến lược mặc định
         actualDataNodes: ds_${1}.book_content${0..9}
-        # 分表策略
+        # Chiến lược phân bảng
         tableStrategy:
           standard:
-            # 分片列名称
+            # Tên cột phân mảnh
             shardingColumn: index_id
-            # 分片算法名称
+            # Tên thuật toán phân mảnh
             shardingAlgorithmName: bookContentSharding
 
     shardingAlgorithms:
       bookContentSharding:
-        # 行表达式分片算法，使用 Groovy 的表达式，提供对 SQL 语句中的 = 和 IN 的分片操作支持
+        # Thuật toán phân mảnh biểu thức dòng bằng Groovy, hỗ trợ toán tử = và IN trong SQL
         type: INLINE
         props:
-          # 分片算法的行表达式
+          # Biểu thức dòng của thuật toán phân mảnh
           algorithm-expression: book_content${index_id % 10}
 
 
 
 props:
-  # 是否在日志中打印 SQL
+  # In SQL trong log hay không
   sql-show: true

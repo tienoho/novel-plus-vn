@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <meta charset="utf-8">
 <head th:include="include :: header"></head>
 <body class="gray-bg">
@@ -12,7 +12,7 @@
                 <input id="id" name="id" th:value="${category.id}"
                        type="hidden">
                                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">分类名：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.category.name}+'：'">Tên danh mục:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${category.name}">
@@ -22,7 +22,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">排序：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.category.sort}+'：'">Thứ tự:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${category.sort}">
@@ -32,7 +32,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.audit.createdBy}+'：'">Người tạo:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${category.createUserId}">
@@ -42,7 +42,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.audit.createdAt}+'：'">Thời gian tạo:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${category.createTime}==null?null:${#dates.format(category.createTime,'yyyy-MM-dd HH:mm:ss')}">
@@ -51,7 +51,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.audit.updatedBy}+'：'">Người cập nhật:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${category.updateUserId}">
@@ -61,7 +61,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.audit.updatedAt}+'：'">Thời gian cập nhật:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${category.updateTime}==null?null:${#dates.format(category.updateTime,'yyyy-MM-dd HH:mm:ss')}">

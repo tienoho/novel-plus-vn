@@ -2,6 +2,7 @@ package com.java2nb.novel.core.schedule;
 
 import com.java2nb.novel.core.bean.DiskInfo;
 import com.java2nb.novel.core.config.DiskMonitorProperties;
+import com.java2nb.novel.core.i18n.Messages;
 import com.java2nb.novel.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,11 +31,13 @@ public class DiskMonitorSchedule {
 
     private final EmailService emailService;
 
+    private final Messages messages;
+
     private final AtomicBoolean criticalAlertSent = new AtomicBoolean(false);
 
     @Scheduled(fixedDelayString = "#{1000 * 60 * ${disk-monitor.interval-minutes}}")
     public void checkDiskUsage() {
-        log.info("🔍 开始检查磁盘使用情况...");
+        log.info("🔍 {}", messages.get("crawl.log.diskCheck"));
 
         File[] roots = File.listRoots();
         List<DiskInfo> diskInfos = new ArrayList<>();
@@ -56,7 +59,7 @@ public class DiskMonitorSchedule {
         if (criticalDetected) {
             if (criticalAlertSent.compareAndSet(false, true)) {
                 sendAlertEmail("CRITICAL", diskInfos);
-                log.error("🚨 磁盘使用率 ≥ 95%，10秒后终止进程...");
+                log.error("🚨 {}", messages.get("crawl.log.diskCritical"));
                 try {
                     Thread.sleep(10000);
                 } catch (InterruptedException e) {
@@ -89,10 +92,10 @@ public class DiskMonitorSchedule {
 
     private String getAlertLevelText(String level) {
         return switch (level) {
-            case "CRITICAL" -> "严重";
-            case "WARNING" -> "警告";
-            case "INFO" -> "提示";
-            default -> "通知";
+            case "CRITICAL" -> messages.get("crawl.disk.level.critical");
+            case "WARNING" -> messages.get("crawl.disk.level.warning");
+            case "INFO" -> messages.get("crawl.disk.level.info");
+            default -> messages.get("crawl.disk.level.notice");
         };
     }
 
@@ -107,12 +110,9 @@ public class DiskMonitorSchedule {
 
     private String getActionText(String level) {
         return switch (level) {
-            case "CRITICAL" ->
-                "⚠️ 检测到任一磁盘使用率 ≥ 95%，为防止系统崩溃，系统已自动<strong style='color:#d32f2f'>关闭爬虫程序</strong>。";
-            case "WARNING" ->
-                "📌 建议：<strong style='color:#f57c00'>请立即暂停爬虫程序</strong>，防止磁盘写满导致服务中断。";
-            case "INFO" ->
-                "📌 提示：磁盘使用率已较高，请关注爬虫数据写入情况。";
+            case "CRITICAL" -> messages.get("crawl.disk.action.critical");
+            case "WARNING" -> messages.get("crawl.disk.action.warning");
+            case "INFO" -> messages.get("crawl.disk.action.info");
             default -> "";
         };
     }
@@ -128,10 +128,10 @@ public class DiskMonitorSchedule {
 
     private String getSubject(String level) {
         return switch (level) {
-            case "CRITICAL" -> "🚨 严重告警：磁盘使用率超 95%，爬虫已关闭";
-            case "WARNING" -> "⚠️ 警告：磁盘使用率超 90%，请暂停爬虫";
-            case "INFO" -> "💡 提示：磁盘使用率超 85%";
-            default -> "磁盘使用率告警";
+            case "CRITICAL" -> messages.get("crawl.disk.subject.critical");
+            case "WARNING" -> messages.get("crawl.disk.subject.warning");
+            case "INFO" -> messages.get("crawl.disk.subject.info");
+            default -> messages.get("crawl.disk.subject.default");
         };
     }
 

@@ -15,7 +15,7 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * SpringSecurity配置
+ * Cấu hình Spring Security
  *
  * @author Administrator
  */
@@ -48,21 +48,21 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // 禁用 CSRF
+                .csrf(csrf -> csrf.disable()) // Tắt CSRF
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/css/**", "/favicon.ico").permitAll() // 允许访问静态资源
-                        .anyRequest().hasRole("ADMIN") // 其他请求需要 ADMIN 角色
+                        .requestMatchers("/css/**", "/favicon.ico").permitAll() // Cho phép truy cập tài nguyên tĩnh
+                        .anyRequest().hasRole("ADMIN") // Các yêu cầu khác cần vai trò ADMIN
                 )
                 .formLogin(form -> form
-                        .loginPage("/login.html") // 自定义登录页面
-                        .loginProcessingUrl("/login") // 登录处理 URL
+                        .loginPage("/login.html") // Trang đăng nhập tùy chỉnh
+                        .loginProcessingUrl("/login") // URL xử lý đăng nhập
                         .permitAll()
                 )
                 .logout(logout -> logout
-                        .logoutUrl("/logout") // 登出 URL
-                        .logoutSuccessUrl("/") // 登出成功后跳转的页面
+                        .logoutUrl("/logout") // URL đăng xuất
+                        .logoutSuccessUrl("/") // Trang chuyển đến sau khi đăng xuất thành công
                 )
-                .httpBasic(Customizer.withDefaults()); // 启用 HTTP Basic 认证
+                .httpBasic(Customizer.withDefaults()); // Bật xác thực HTTP Basic
 
         return http.build();
     }

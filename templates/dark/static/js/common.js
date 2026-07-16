@@ -15,7 +15,7 @@ Array.prototype.remove = function (val) {
 var token = localStorage.getItem("token");
 if (token) {
     $.get("/user/isLogin", {"token": token}, function (data) {
-        if (data.code != 1) {//未登录
+        if (data.code != 1) {// Chưa đăng nhập
             localStorage.removeItem("token");
         }
     })

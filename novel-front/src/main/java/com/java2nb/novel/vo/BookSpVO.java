@@ -6,7 +6,7 @@ import lombok.Data;
 import java.util.Date;
 
 /**
- * 小说搜索参数
+ * Tham số tìm kiếm tác phẩm
  * @author 11797
  */
 @Data

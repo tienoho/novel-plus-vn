@@ -51,7 +51,7 @@ public class RedisCache<K, V> implements Cache<K, V> {
     }
 
     /**
-     * 通过一个JedisManager实例构造RedisCache
+     * Tạo RedisCache bằng một phiên bản JedisManager
      */
     public RedisCache(RedisManager cache){
         if (cache == null) {
@@ -76,7 +76,7 @@ public class RedisCache<K, V> implements Cache<K, V> {
     }
 
     /**
-     * 获得byte[]型的key
+     * Lấy khóa kiểu byte[]
      * @param key
      * @return
      */
@@ -91,7 +91,7 @@ public class RedisCache<K, V> implements Cache<K, V> {
 
     @Override
     public V get(K key) throws CacheException {
-        logger.debug("根据key从Redis中获取对象 key [" + key + "]");
+        logger.debug("Lấy đối tượng từ Redis theo khóa [" + key + "]");
         try {
             if (key == null) {
                 return null;
@@ -109,7 +109,7 @@ public class RedisCache<K, V> implements Cache<K, V> {
 
     @Override
     public V put(K key, V value) throws CacheException {
-        logger.debug("根据key从存储 key [" + key + "]");
+        logger.debug("Lưu đối tượng theo khóa [" + key + "]");
         try {
             cache.set(getByteKey(key), SerializeUtils.serialize(value));
             return value;
@@ -120,7 +120,7 @@ public class RedisCache<K, V> implements Cache<K, V> {
 
     @Override
     public V remove(K key) throws CacheException {
-        logger.debug("从redis中删除 key [" + key + "]");
+        logger.debug("Xóa khóa khỏi Redis [" + key + "]");
         try {
             V previous = get(key);
             cache.del(getByteKey(key));
@@ -132,7 +132,7 @@ public class RedisCache<K, V> implements Cache<K, V> {
 
     @Override
     public void clear() throws CacheException {
-        logger.debug("从redis中删除所有元素");
+        logger.debug("Xóa toàn bộ phần tử khỏi Redis");
         try {
             cache.flushDB();
         } catch (Throwable t) {

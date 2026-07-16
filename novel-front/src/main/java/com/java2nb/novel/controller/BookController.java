@@ -40,7 +40,7 @@ public class BookController extends BaseController {
     private final LikeService likeService;
 
     /**
-     * 查询首页小说设置列表数据
+     * Truy vấn dữ liệu cấu hình tác phẩm trang chủ
      */
     @GetMapping("listBookSetting")
     public RestResult<Map<String, List<BookSettingVO>>> listBookSetting() {
@@ -48,7 +48,7 @@ public class BookController extends BaseController {
     }
 
     /**
-     * 查询首页点击榜单数据
+     * Truy vấn dữ liệu bảng lượt xem trang chủ
      */
     @GetMapping("listClickRank")
     public RestResult<List<Book>> listClickRank() {
@@ -56,7 +56,7 @@ public class BookController extends BaseController {
     }
 
     /**
-     * 查询首页新书榜单数据
+     * Truy vấn dữ liệu bảng tác phẩm mới trang chủ
      */
     @GetMapping("listNewRank")
     public RestResult<List<Book>> listNewRank() {
@@ -64,7 +64,7 @@ public class BookController extends BaseController {
     }
 
     /**
-     * 查询首页更新榜单数据
+     * Truy vấn dữ liệu bảng cập nhật trang chủ
      */
     @GetMapping("listUpdateRank")
     public RestResult<List<BookVO>> listUpdateRank() {
@@ -72,7 +72,7 @@ public class BookController extends BaseController {
     }
 
     /**
-     * 查询小说分类列表
+     * Truy vấn danh sách danh mục tác phẩm
      */
     @GetMapping("listBookCategory")
     public RestResult<List<BookCategory>> listBookCategory() {
@@ -80,7 +80,7 @@ public class BookController extends BaseController {
     }
 
     /**
-     * 分页搜索
+     * Tìm kiếm phân trang
      */
     @GetMapping("searchByPage")
     public RestResult<?> searchByPage(@Validated BookSpVO bookSP, @RequestParam(value = "curr", defaultValue = "1") int page,
@@ -89,7 +89,7 @@ public class BookController extends BaseController {
     }
 
     /**
-     * 查询小说详情信息
+     * Truy vấn thông tin chi tiết tác phẩm
      */
     @GetMapping("queryBookDetail/{id}")
     public RestResult<Book> queryBookDetail(@PathVariable("id") Long id) {
@@ -98,7 +98,7 @@ public class BookController extends BaseController {
 
 
     /**
-     * 查询小说排行信息
+     * Truy vấn thông tin xếp hạng tác phẩm
      */
     @GetMapping("listRank")
     public RestResult<List<Book>> listRank(@RequestParam(value = "type", defaultValue = "0") Byte type,
@@ -107,7 +107,7 @@ public class BookController extends BaseController {
     }
 
     /**
-     * 增加点击次数
+     * Tăng lượt xem
      */
     @PostMapping("addVisitCount")
     public RestResult<Void> addVisitCount(Long bookId) {
@@ -116,7 +116,7 @@ public class BookController extends BaseController {
     }
 
     /**
-     * 查询章节相关信息
+     * Truy vấn thông tin chương
      */
     @GetMapping("queryBookIndexAbout")
     public RestResult<Map<String, Object>> queryBookIndexAbout(Long bookId, Long lastBookIndexId) {
@@ -133,7 +133,7 @@ public class BookController extends BaseController {
     }
 
     /**
-     * 根据分类id查询同类推荐书籍
+     * Truy vấn tác phẩm cùng loại theo ID danh mục
      */
     @GetMapping("listRecBookByCatId")
     public RestResult<List<Book>> listRecBookByCatId(Integer catId) {
@@ -142,7 +142,7 @@ public class BookController extends BaseController {
 
 
     /**
-     * 分页查询书籍评论列表
+     * Truy vấn phân trang danh sách bình luận tác phẩm
      */
     @GetMapping("listCommentByPage")
     public RestResult<PageBean<BookCommentVO>> listCommentByPage(@RequestParam("bookId") Long bookId,
@@ -152,7 +152,7 @@ public class BookController extends BaseController {
     }
 
     /**
-     * 分页查询评论回复列表
+     * Truy vấn phân trang danh sách phản hồi bình luận
      */
     @GetMapping("listCommentReplyByPage")
     public RestResult<PageBean<BookCommentReplyVO>> listCommentReplyByPage(@RequestParam("commentId") Long commentId,
@@ -162,7 +162,7 @@ public class BookController extends BaseController {
     }
 
     /**
-     * 新增评价
+     * Thêm đánh giá
      */
     @PostMapping("addBookComment")
     public RestResult<?> addBookComment(BookComment comment, HttpServletRequest request) {
@@ -176,7 +176,7 @@ public class BookController extends BaseController {
     }
 
     /**
-     * 评价点赞/取消点赞
+     * Thích hoặc bỏ thích đánh giá
      */
     @PostMapping("toggleCommentLike")
     public RestResult<?> toggleCommentLike(Long commentId, HttpServletRequest request) {
@@ -188,7 +188,7 @@ public class BookController extends BaseController {
     }
 
     /**
-     * 评价点踩/取消点踩
+     * Không thích hoặc bỏ không thích đánh giá
      */
     @PostMapping("toggleCommentUnLike")
     public RestResult<?> toggleCommentUnLike(Long commentId, HttpServletRequest request) {
@@ -200,7 +200,7 @@ public class BookController extends BaseController {
     }
 
     /**
-     * 新增回复
+     * Thêm phản hồi
      */
     @PostMapping("addCommentReply")
     public RestResult<?> addCommentReply(BookCommentReply commentReply, HttpServletRequest request) {
@@ -214,7 +214,7 @@ public class BookController extends BaseController {
     }
 
     /**
-     * 回复点赞/取消点赞
+     * Thích hoặc bỏ thích phản hồi
      */
     @PostMapping("toggleReplyLike")
     public RestResult<?> toggleReplyLike(Long replyId, HttpServletRequest request) {
@@ -226,7 +226,7 @@ public class BookController extends BaseController {
     }
 
     /**
-     * 回复点赞/取消点赞
+     * Thích hoặc bỏ thích phản hồi
      */
     @PostMapping("toggleReplyUnLike")
     public RestResult<?> toggleReplyUnLike(Long replyId, HttpServletRequest request) {
@@ -238,7 +238,7 @@ public class BookController extends BaseController {
     }
 
     /**
-     * 根据小说ID查询小说前十条最新更新目录集合
+     * Truy vấn mười mục lục cập nhật mới nhất của tác phẩm theo ID tác phẩm
      */
     @GetMapping("queryNewIndexList")
     public RestResult<List<BookIndex>> queryNewIndexList(Long bookId) {
@@ -246,7 +246,7 @@ public class BookController extends BaseController {
     }
 
     /**
-     * 目录页
+     * Trang mục lục
      */
     @GetMapping("/queryIndexList")
     public RestResult<PageBean<BookIndex>> indexList(Long bookId,

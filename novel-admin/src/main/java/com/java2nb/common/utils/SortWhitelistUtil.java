@@ -5,22 +5,22 @@ import lombok.experimental.UtilityClass;
 import java.util.Set;
 
 /**
- * 排序字段和排序顺序的白名单工具类。
+ * Tiện ích danh sách cho phép cho trường và thứ tự sắp xếp.
  */
 @UtilityClass
 public class SortWhitelistUtil {
 
-    // 白名单字段
+    // Trường trong danh sách cho phép
     private static final Set<String> ALLOWED_COLUMNS = Set.of("id", "name", "order_num","index_num");
 
-    // 白名单排序方式
+    // Kiểu sắp xếp trong danh sách cho phép
     private static final Set<String> ALLOWED_ORDERS = Set.of("asc", "desc");
 
     /**
-     * 对排序字段进行白名单过滤和标准化。
+     * Lọc theo danh sách cho phép và chuẩn hóa trường sắp xếp.
      *
-     * @param column 原始字段名
-     * @return 安全的字段名，若非法则返回 null
+     * @param column tên trường gốc
+     * @return tên trường an toàn; trả null nếu không hợp lệ
      */
     public static String sanitizeColumn(String column) {
         if (column == null) return null;
@@ -29,10 +29,10 @@ public class SortWhitelistUtil {
     }
 
     /**
-     * 对排序方式进行白名单过滤和标准化。
+     * Lọc theo danh sách cho phép và chuẩn hóa kiểu sắp xếp.
      *
-     * @param order 原始排序方式
-     * @return 安全的排序方式（"asc" 或 "desc"），若非法则返回 null
+     * @param order kiểu sắp xếp gốc
+     * @return kiểu sắp xếp an toàn ("asc" hoặc "desc"); trả null nếu không hợp lệ
      */
     public static String sanitizeOrder(String order) {
         if (order == null) return null;

@@ -10,7 +10,7 @@ import java.util.Map;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * 角色
+ * Vai trò
  * @author xiongxy
  * @email 1179705413@qq.com
  * @date 2019-10-02 20:24:47

@@ -16,35 +16,35 @@ import lombok.Data;
 public class GenColumnsDO implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    //主键
-    //java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-    //所以通过序列化成字符串来解决
+    // Khóa chính
+    // Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+    // Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
     @JsonSerialize(using = LongToStringSerializer.class)
     private Long id;
-    //表名
+    // Tên bảng
     private String tableName;
-    //列名
+    // Tên cột
     private String columnName;
-    //列类型
+    //Kiểu cột
     private String columnType;
-    //映射java类型
+    // Ánh xạ kiểu Java
     private String javaType;
-    //列注释
+    //Chú thích cột
     private String columnComment;
-    //列排序（升序）
+    // Thứ tự cột (tăng dần)
     private Integer columnSort;
-    //列标签名
+    // Nhãn cột
     private String columnLabel;
-    //页面显示类型：1、文本框 2、下拉框 3、数值4、日期 5、文本域6、富文本 7、上传图片【单文件】 8、上传图片【多文件】9、上传文件【单文件】 10、上传文件【多文件】11、隐藏域 12、不显示
+    // Kiểu hiển thị: 1 ô văn bản, 2 danh sách thả xuống, 3 số, 4 ngày, 5 vùng văn bản, 6 văn bản phong phú, 7 tải một ảnh, 8 tải nhiều ảnh, 9 tải một tệp, 10 tải nhiều tệp, 11 trường ẩn, 12 không hiển thị
     private Integer pageType;
-    //是否必填
+    // Bắt buộc
     private Integer isRequired;
-    //页面显示为下拉时使用，字典类型从字典表中取出
+    // Dùng khi trang hiển thị dạng danh sách thả xuống; loại từ điển được lấy từ bảng từ điển
     private String dictType;
 
-    // 属性名称(第一个字母大写)，如：user_name => UserName
+    // Tên thuộc tính (chữ cái đầu viết hoa), ví dụ: user_name => UserName
     private String attrName;
-    // 属性名称(第一个字母小写)，如：user_name => userName
+    // Tên thuộc tính (chữ cái đầu viết thường), ví dụ: user_name => userName
     private String attrname;
 
     private String extra;

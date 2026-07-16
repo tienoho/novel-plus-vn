@@ -1,4 +1,4 @@
-#端口号
+#Cổng
 server:
   port: 8088
 spring:

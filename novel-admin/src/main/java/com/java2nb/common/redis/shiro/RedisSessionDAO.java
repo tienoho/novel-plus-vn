@@ -19,7 +19,7 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 
     private static Logger logger = LoggerFactory.getLogger(RedisSessionDAO.class);
     /**
-     * shiro-redis的session对象前缀
+     * Tiền tố đối tượng session của shiro-redis
      */
     private RedisManager redisManager;
 
@@ -95,7 +95,7 @@ public class RedisSessionDAO extends AbstractSessionDAO {
     }
 
     /**
-     * 获得byte[]型的key
+     * Lấy khóa kiểu byte[]
      * @param key
      * @return
      */
@@ -112,7 +112,7 @@ public class RedisSessionDAO extends AbstractSessionDAO {
         this.redisManager = redisManager;
 
         /**
-         * 初始化redisManager
+         * Khởi tạo redisManager
          */
         this.redisManager.init();
     }

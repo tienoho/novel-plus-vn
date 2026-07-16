@@ -8,22 +8,22 @@ public interface OrderService {
 
 
     /**
-     * 创建充值订单
+     * Tạo đơn nạp Xu
      *
-     * @param payChannel 支付渠道
-     * @param payAmount  支付金额
-     * @param userId     用户ID
-     * @return 商户订单号
+     * @param payChannel kênh thanh toán
+     * @param payAmount số tiền thanh toán
+     * @param userId ID người dùng
+     * @return mã đơn thương nhân
      */
     Long createPayOrder(Byte payChannel, Integer payAmount, Long userId);
 
 
     /**
-     * 更新订单状态
+     * Cập nhật trạng thái đơn hàng
      *
-     * @param outTradeNo 商户订单号
-     * @param tradeNo    支付宝/微信 订单号
-     * @param payStatus  支付状态
+     * @param outTradeNo mã đơn thương nhân
+     * @param tradeNo mã đơn Alipay/WeChat
+     * @param payStatus trạng thái thanh toán
      */
     void updatePayOrder(Long outTradeNo, String tradeNo, int payStatus);
 }

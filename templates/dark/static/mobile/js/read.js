@@ -1,13 +1,13 @@
 var checkbg = "#A7A7A7";
-var nr_body = document.getElementById("read");//页面body
-var huyandiv = document.getElementById("huyandiv");//护眼div
-var lightdiv = document.getElementById("lightdiv");//灯光div
-var fontfont = document.getElementById("fontfont");//字体div
-var fontbig = document.getElementById("fontbig");//大字体div
-var fontmiddle = document.getElementById("fontmiddle");//中字体div
-var fontsmall = document.getElementById("fontsmall");//小字体div
-var nr1 =  document.getElementById("chaptercontent");//内容div
-//内容页用户设置
+var nr_body = document.getElementById("read");// Phần tử body của trang đọc.
+var huyandiv = document.getElementById("huyandiv");// Nút bảo vệ mắt.
+var lightdiv = document.getElementById("lightdiv");// Nút bật/tắt đèn.
+var fontfont = document.getElementById("fontfont");// Vùng điều khiển phông chữ.
+var fontbig = document.getElementById("fontbig");// Cỡ chữ lớn.
+var fontmiddle = document.getElementById("fontmiddle");// Cỡ chữ vừa.
+var fontsmall = document.getElementById("fontsmall");// Cỡ chữ nhỏ.
+var nr1 = document.getElementById("chaptercontent");// Nội dung chương.
+// Lưu cài đặt đọc của người dùng.
 function nr_setbg(intype){
     var huyandiv = document.getElementById("huyandiv");
     var light = document.getElementById("lightdiv");
@@ -22,7 +22,7 @@ function nr_setbg(intype){
         }
     }
     if(intype == "light"){
-        if(light.innerHTML == "关灯"){
+        if(light.classList.contains("lightoff")){
             document.cookie="light=yes;path=/";
             set("light","yes");
         }
@@ -45,7 +45,7 @@ function nr_setbg(intype){
     }
 }
 
-//内容页读取设置
+// Đọc cài đặt màu nền.
 function getset(){
     var strCookie=document.cookie;
     var arrCookie=strCookie.split("; ");
@@ -73,7 +73,7 @@ function getset(){
 }
 
 
-//内容页读取设置
+// Đọc cài đặt cỡ chữ.
 function getset1(){
     var strCookie=document.cookie;
     var arrCookie=strCookie.split("; ");
@@ -103,12 +103,10 @@ function getset1(){
     }
 }
 
-//内容页应用设置
+// Áp dụng cài đặt cho trang đọc.
 function set(intype,p){
 
-    //var nr_title =  document.getElementById("top1");//文章标题
-    //var nr_title =  document.getElementById("nr_title");//文章标题
-    //var shuqian_2 = document.getElementById("shuqian_2");//书签链接
+    // Các phần tử tiêu đề/đánh dấu của giao diện cũ không còn được sử dụng.
 
     //var pt_prev =  document.getElementById("pt_prev1");
     //var pt_mulu =  document.getElementById("pt_mulu1");
@@ -118,17 +116,17 @@ function set(intype,p){
     //var pb_next =  document.getElementById("pb_next1");
 
 
-    //灯光
+    // Màu nền đọc.
     if(intype == "light"){
         if(p == "yes"){
-            //关灯
-            lightdiv.innerHTML = "开灯";
+            // Chuyển sang nền tối.
+            lightdiv.innerHTML = novelMessage('lightOn', 'Bật đèn');
             lightdiv.className="button lighton";
             nr_body.style.backgroundColor = "#000";
             //nr_title.style.color = "#ccc";
             nr1.style.color = "#999";
 
-            huyandiv.innerHTML = "护眼";
+            huyandiv.innerHTML = novelMessage('eyeCare', 'Bảo vệ mắt');
             huyandiv.className="button huyanon";
             //pt_prev.style.cssText = "background-color:#222;color:#0065B5;";
             //pt_mulu.style.cssText = "background-color:#222;color:#0065B5;";
@@ -139,8 +137,8 @@ function set(intype,p){
             //shuqian_2.style.color = "#999";
         }
         else if(p == "no"){
-            //开灯
-            lightdiv.innerHTML = "关灯";
+            // Chuyển sang nền sáng.
+            lightdiv.innerHTML = novelMessage('lightOff', 'Tắt đèn');
             lightdiv.className="button lightoff";
             nr_body.style.backgroundColor = "#fff";
             nr1.style.color = "#000";
@@ -153,12 +151,12 @@ function set(intype,p){
             //pb_next.style.cssText = "";
             //shuqian_2.style.color = "#000";
 
-            huyandiv.innerHTML = "护眼";
+            huyandiv.innerHTML = novelMessage('eyeCare', 'Bảo vệ mắt');
             huyandiv.className="button huyanon";
         }
         else if(p == "huyan"){
-            //护眼
-            lightdiv.innerHTML = "关灯";
+            // Chuyển sang nền bảo vệ mắt.
+            lightdiv.innerHTML = novelMessage('lightOff', 'Tắt đèn');
             lightdiv.className="button lightoff";
             huyandiv.className="button huyanoff";
             nr_body.style.backgroundColor = "#005716";
@@ -169,10 +167,9 @@ function set(intype,p){
             //pb_prev.style.cssText = "background-color:#0E7A18;color:#000;";
             //pb_mulu.style.cssText = "background-color:#0E7A18;color:#000;";
             //pb_next.style.cssText = "background-color:#0E7A18;color:#000;";
-            shuqian_2.style.color = "#000";
         }
     }
-    //字体
+    // Cỡ chữ.
     if(intype == "font"){
         fontsmall.className="sizebg";
         if(p == "big"){

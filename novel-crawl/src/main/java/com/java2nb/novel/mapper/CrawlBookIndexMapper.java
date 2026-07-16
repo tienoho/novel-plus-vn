@@ -10,7 +10,7 @@ public interface CrawlBookIndexMapper extends BookIndexMapper {
 
 
     /**
-     * 查询最后的章节
+     * Truy vấn chương cuối cùng
      * */
     BookIndex queryLastIndex(@Param("bookId") Long bookId);
 }

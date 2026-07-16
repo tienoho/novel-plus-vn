@@ -1,11 +1,11 @@
 var prefix = "/sys/menu"
 $(function() {
 	validateRule();
-	//打开图标列表
+	//Mở danh sách biểu tượng
     $("#ico-btn").click(function(){
         layer.open({
             type: 2,
-			title:'图标列表',
+			title: adminMessage('iconList', 'Danh sách biểu tượng'),
             content: '/fonts/FontIcoList.html',
             area: ['480px', '90%'],
             success: function(layero, index){
@@ -28,13 +28,13 @@ function submit01() {
 		data : $('#signupForm').serialize(),
 		async : false,
 		error : function(request) {
-			laryer.alert("Connection error");
+			layer.alert(adminMessage('connectionError', 'Lỗi kết nối'));
 		},
 		success : function(data) {
 			if (data.code == 0) {
-				parent.layer.msg("保存成功");
+				parent.layer.msg(adminMessage('saveSuccess', 'Lưu thành công'));
 				parent.reLoad();
-				var index = parent.layer.getFrameIndex(window.name); // 获取窗口索引
+				var index = parent.layer.getFrameIndex(window.name); // Lấy chỉ mục cửa sổ
 				parent.layer.close(index);
 
 			} else {
@@ -57,10 +57,10 @@ function validateRule() {
 		},
 		messages : {
 			name : {
-				required : icon + "请输入菜单名"
+				required : icon + adminMessage('menuNameRequired', 'Vui lòng nhập tên menu')
 			},
 			type : {
-				required : icon + "请选择菜单类型"
+				required : icon + adminMessage('menuTypeRequired', 'Vui lòng chọn loại menu')
 			}
 		}
 	})

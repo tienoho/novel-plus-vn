@@ -40,37 +40,37 @@ public class FileController {
     private String picSavePath;
 
     /**
-     * 生成验证码
+     * Tạo mã xác minh
      */
     @GetMapping(value = "getVerify")
     @SneakyThrows
     public void getVerify(HttpServletRequest request, HttpServletResponse response) {
-        //设置相应类型,告诉浏览器输出的内容为图片
+        //Đặt loại phản hồi để trình duyệt nhận nội dung là ảnh
         response.setContentType("image/jpeg");
-        //设置响应头信息，告诉浏览器不要缓存此内容
+        //Đặt header phản hồi để trình duyệt không lưu bộ nhớ đệm
         response.setHeader("Pragma", "No-cache");
         response.setHeader("Cache-Control", "no-cache");
         response.setDateHeader("Expire", 0);
         RandomValidateCodeUtil randomValidateCode = new RandomValidateCodeUtil();
-        //输出验证码图片方法
+        //Xuất ảnh mã xác minh
         String randomString = randomValidateCode.genRandCodeImage(response.getOutputStream());
-        //将生成的随机字符串保存到缓存中
+        //Lưu chuỗi ngẫu nhiên đã tạo vào bộ nhớ đệm
         cacheService.set(RandomValidateCodeUtil.RANDOM_CODE_KEY + ":" + IpUtil.getRealIp(request), randomString,
             60 * 5);
     }
 
     /**
-     * 图片上传
+     * Tải ảnh lên
      *
-     * - 当使用 `$.ajax`发起异步请求时 ，设置`dataType: "json"`会在请求头中自动添加`Accept: application/json`，表示客户端期望服务器返回
-     *   `JSON`格式的数据。
-     * - 当使用 `$.ajaxFileUpload` 上传文件时，它的行为与`$.ajax`不同，不会自动修改`Accept`请求头，即使设置了`dataType: "json"`，
-     *   `$.ajaxFileUpload`也不会在请求头中添加`Accept: application/json`。
+     * - Khi dùng `$.ajax`, đặt `dataType: "json"` sẽ tự thêm `Accept: application/json`, cho biết máy khách mong nhận
+     *   dữ liệu định dạng JSON.
+     * - `$.ajaxFileUpload` không tự thay đổi header `Accept` như `$.ajax`, kể cả khi đặt `dataType: "json"`,
+     *   `$.ajaxFileUpload` vẫn không thêm `Accept: application/json`.
      *
-     * Spring Boot 默认返回`JSON`格式的响应，但它支持内容协商，它会根据客户端请求的`Accept`头来决定返回的响应格式。
-     * 如果浏览器发送的请求中`Accept`头包含`application/xml`，并且 Spring Boot 支持`XML`格式响应的话，Spring Boot 会返回`XML`格式的响应。
-     * 但 Spring Boot 默认不支持`XML`格式的响应，当升级`Sharding-JDBC `版本后，自动引入了`jackson-dataformat-xml`依赖，才开始支持`XML`格式的响应，
-     * 由于`$.ajaxFileUpload`上传文件的默认`Accept`头包含`application/xml`，所以需要在后端上传文件接口处明确指定返回的数据类型为`application/json`。
+     * Spring Boot mặc định trả JSON nhưng dùng content negotiation để chọn định dạng theo header `Accept`.
+     * Nếu `Accept` chứa `application/xml` và Spring Boot hỗ trợ XML, phản hồi sẽ dùng XML.
+     * Spring Boot mặc định không hỗ trợ XML; sau khi nâng Sharding-JDBC, phụ thuộc `jackson-dataformat-xml` được đưa vào và bật hỗ trợ XML,
+     * Do `$.ajaxFileUpload` mặc định gửi `Accept` có `application/xml`, API tải tệp phải chỉ rõ phản hồi `application/json`.
      *
      */
     @SneakyThrows
@@ -94,7 +94,7 @@ public class FileController {
         }
         file.transferTo(saveFile);
         if (!FileUtil.isImage(saveFile)) {
-            //上传的文件不是图片
+            //Tệp tải lên không phải hình ảnh
             saveFile.delete();
             throw new BusinessException(ResponseStatus.FILE_NOT_IMAGE);
         }

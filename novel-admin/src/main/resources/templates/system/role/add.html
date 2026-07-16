@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <meta charset="utf-8">
 <head th:include="include::header"></head>
 <body class="gray-bg">
@@ -17,34 +17,34 @@
                         <input
                                 id="permIds" name="permIds" type="hidden">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">角色名：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.role.name}+'：'">Tên vai trò:</label>
                             <div class="col-sm-8">
                                 <input id="roleName" name="roleName" class="form-control"
                                        type="text">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">备注：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.role.remark}+'：'">Ghi chú:</label>
                             <div class="col-sm-8">
                                 <input id="remark" name="remark" class="form-control"
                                        type="text">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">菜单权限：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.role.menuPermission}+'：'">Quyền menu:</label>
                             <div class="col-sm-8">
                                 <div id="menuTree"></div>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">数据权限：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.role.dataPermission}+'：'">Quyền dữ liệu:</label>
                             <div class="col-sm-8">
                                 <div id="dataPermTree"></div>
                             </div>
                         </div>
                         <div class="form-group">
                             <div class="col-sm-8 col-sm-offset-3">
-                                <button type="submit" class="btn btn-primary">提交</button>
+                                <button type="submit" class="btn btn-primary" th:text="#{common.submit}">Gửi</button>
                             </div>
                         </div>
                     </form>

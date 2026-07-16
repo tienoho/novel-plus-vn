@@ -8,7 +8,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 线程池配置
+ * Cấu hình thread pool
  * @author xiongxiaoyang
  */
 @Configuration

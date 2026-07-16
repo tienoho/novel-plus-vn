@@ -15,7 +15,7 @@ import java.util.Date;
 
 
 /**
- * 新闻类别表
+ * Bảng danh mục tin tức
  * 
  * @author xiongxy
  * @email 1179705413@qq.com
@@ -25,23 +25,23 @@ public class CategoryDO implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	
-	//主键
+	// Khóa chính
 			private Integer id;
-	//分类名
+	// Tên danh mục
 			private String name;
-	//排序
+	// Thứ tự
 			private Integer sort;
 	//
-		//java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-	//所以通过序列化成字符串来解决
+		// Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+	// Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
 	@JsonSerialize(using = LongToStringSerializer.class)
 			private Long createUserId;
 	//
 			@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 		private Date createTime;
 	//
-		//java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-	//所以通过序列化成字符串来解决
+		// Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+	// Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
 	@JsonSerialize(using = LongToStringSerializer.class)
 			private Long updateUserId;
 	//
@@ -49,85 +49,85 @@ public class CategoryDO implements Serializable {
 		private Date updateTime;
 
 	/**
-	 * 设置：主键
+	 * Đặt: khóa chính
 	 */
 	public void setId(Integer id) {
 		this.id = id;
 	}
 	/**
-	 * 获取：主键
+	 * Lấy: khóa chính
 	 */
 	public Integer getId() {
 		return id;
 	}
 	/**
-	 * 设置：分类名
+	 * Đặt: tên danh mục
 	 */
 	public void setName(String name) {
 		this.name = name;
 	}
 	/**
-	 * 获取：分类名
+	 * Lấy: tên danh mục
 	 */
 	public String getName() {
 		return name;
 	}
 	/**
-	 * 设置：排序
+	 * Đặt: thứ tự
 	 */
 	public void setSort(Integer sort) {
 		this.sort = sort;
 	}
 	/**
-	 * 获取：排序
+	 * Lấy: thứ tự
 	 */
 	public Integer getSort() {
 		return sort;
 	}
 	/**
-	 * 设置：
+	 * Đặt:
 	 */
 	public void setCreateUserId(Long createUserId) {
 		this.createUserId = createUserId;
 	}
 	/**
-	 * 获取：
+	 * Lấy:
 	 */
 	public Long getCreateUserId() {
 		return createUserId;
 	}
 	/**
-	 * 设置：
+	 * Đặt:
 	 */
 	public void setCreateTime(Date createTime) {
 		this.createTime = createTime;
 	}
 	/**
-	 * 获取：
+	 * Lấy:
 	 */
 	public Date getCreateTime() {
 		return createTime;
 	}
 	/**
-	 * 设置：
+	 * Đặt:
 	 */
 	public void setUpdateUserId(Long updateUserId) {
 		this.updateUserId = updateUserId;
 	}
 	/**
-	 * 获取：
+	 * Lấy:
 	 */
 	public Long getUpdateUserId() {
 		return updateUserId;
 	}
 	/**
-	 * 设置：
+	 * Đặt:
 	 */
 	public void setUpdateTime(Date updateTime) {
 		this.updateTime = updateTime;
 	}
 	/**
-	 * 获取：
+	 * Lấy:
 	 */
 	public Date getUpdateTime() {
 		return updateTime;

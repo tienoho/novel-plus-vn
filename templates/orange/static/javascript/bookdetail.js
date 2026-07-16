@@ -8,12 +8,12 @@
     DescriptionMore: function (sClass) {
         if (sClass == "") {
             if ($("#pDesMore").html().length > 150) {
-                $("#divDescription").html($("#pDesMore").html().substring(0, 150) + "<a href=\"javascript:void(0);\" class=\"info_txt_more\" onclick=\"javascript:BookDetail.DescriptionMore('down');\">展开<img src=\"../images/arrow_d.png\" /></a>");
+                $("#divDescription").html($("#pDesMore").html().substring(0, 150) + "<a href=\"javascript:void(0);\" class=\"info_txt_more\" onclick=\"javascript:BookDetail.DescriptionMore('down');\">" + novelMessage('expand', 'Mở rộng') + "<img src=\"../images/arrow_d.png\" /></a>");
             } else {
                 $("#divDescription").html($("#pDesMore").html());
             }
         } else {
-            $("#divDescription").html($("#pDesMore").html() + "<a href=\"javascript:void(0);\"  class=\"info_txt_more\"  onclick=\"javascript:BookDetail.DescriptionMore('');\">收起<img src=\"../images/arrow_t.png\" /></a>");
+            $("#divDescription").html($("#pDesMore").html() + "<a href=\"javascript:void(0);\" class=\"info_txt_more\" onclick=\"javascript:BookDetail.DescriptionMore('');\">" + novelMessage('collapse', 'Thu gọn') + "<img src=\"../images/arrow_t.png\" /></a>");
         }
     },
     AddFavorites: function (BId, CId, layerStatus) {
@@ -25,16 +25,15 @@
             success: function (data) {
                 if (data.code == 200) {
                     if (layerStatus == 1) {
-                        $("#cFavs").html("<a class=\"ico_shelf\" href=\"javascript:void(0);\"><b>已收藏</b></a>");
+                        $("#cFavs").html("<a class=\"ico_shelf\" href=\"javascript:void(0);\"><b>" + novelMessage('inShelf', 'Đã lưu') + "</b></a>");
                         jQuery.cookie("u-faorites", "1");
-                    }
-                    else {
-                        $("#cFavs").html("<a class=\"btn_ora_white btn_addsj\" href=\"javascript:void(0);\">已在书架</a>");
+                    } else {
+                        $("#cFavs").html("<a class=\"btn_ora_white btn_addsj\" href=\"javascript:void(0);\">" + novelMessage('inShelf', 'Đã lưu') + "</a>");
                     }
 
 
                 } else if (data.code == 1001) {
-                    //未登录
+                    // Phiên đăng nhập đã hết hạn.
                     location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
 
                 } else {
@@ -43,7 +42,7 @@
 
             },
             error: function () {
-                layer.alert('网络异常');
+                layer.alert(novelMessage('networkError', 'Không thể kết nối mạng'));
             }
         })
     },
@@ -51,7 +50,7 @@
         if (jQuery.cookie("u-faorites") == null) {
         } else {
             if (jQuery.cookie("u-faorites") == "1") {
-                $("#cFavs").html("<a class=\"ico_shelf\" href=\"javascript:void(0);\"><b>已加书架</b></a>");
+                $("#cFavs").html("<a class=\"ico_shelf\" href=\"javascript:void(0);\"><b>" + novelMessage('inShelf', 'Đã lưu') + "</b></a>");
             }
         }
         /*BookDetail.SetWholeTip();*/
@@ -64,48 +63,48 @@
         if (mTotal != undefined) {
             var iTotal = parseInt(mTotal);
             if (iTotal < 500) {
-                return ["user_level1", "见习"];
+                return ["user_level1", novelMessage('levelTrainee', 'Thành viên mới')];
             } else if (iTotal < 2000) {
-                return ["user_level2", "学徒"];
+                return ["user_level2", novelMessage('levelApprentice', 'Học viên')];
             } else if (iTotal < 5000) {
-                return ["user_level3", "弟子"];
+                return ["user_level3", novelMessage('levelDisciple', 'Thành viên')];
             } else if (iTotal < 10000) {
-                return ["user_level4", "执事"];
+                return ["user_level4", novelMessage('levelOfficer', 'Quản sự')];
             } else if (iTotal < 20000) {
-                return ["user_level5", "舵主"];
+                return ["user_level5", novelMessage('levelHelmsman', 'Trưởng nhóm')];
             } else if (iTotal < 30000) {
-                return ["user_level6", "堂主"];
+                return ["user_level6", novelMessage('levelMaster', 'Quản lý')];
             } else if (iTotal < 40000) {
-                return ["user_level7", "护法"];
+                return ["user_level7", novelMessage('levelGuardian', 'Hộ pháp')];
             } else if (iTotal < 50000) {
-                return ["user_level8", "长老"];
+                return ["user_level8", novelMessage('levelElder', 'Trưởng lão')];
             } else if (iTotal < 70000) {
-                return ["user_level9", "掌门"];
+                return ["user_level9", novelMessage('levelLeader', 'Chưởng môn')];
             } else if (iTotal < 100000) {
-                return ["user_level10", "宗师"];
+                return ["user_level10", novelMessage('levelGrandmaster', 'Tông sư')];
             } else {
-                return ["user_level11", "盟主"];
+                return ["user_level11", novelMessage('levelChief', 'Minh chủ')];
             }
         } else {
-            return ["user_level1", "见习"];
+            return ["user_level1", novelMessage('levelTrainee', 'Thành viên mới')];
         }
     },
     SaveComment: function (cmtBId, cmtCId, cmtDetail) {
-        if(!isLogin){
-            layer.alert('请先登录');
+        if (!isLogin) {
+            layer.alert(novelMessage('loginFirst', 'Vui lòng đăng nhập trước'));
             return;
         }
         var cmtDetailTemp = cmtDetail.replace(/(^\s*)/g, "");
         if (cmtDetailTemp == '') {
-            layer.alert('评论内容必须填写');
+            layer.alert(novelMessage('commentRequired', 'Nội dung bình luận không được để trống.'));
             return;
         }
         if (cmtDetailTemp.length < 5) {
-            layer.alert('评论内容必须大于5个字');
+            layer.alert(novelMessage('commentMinLength', 'Bình luận phải có ít nhất 5 ký tự.'));
             return;
         }
         if (cmtDetail.length < 5) {
-            layer.alert('评论内容必须大于5个字');
+            layer.alert(novelMessage('commentMinLength', 'Bình luận phải có ít nhất 5 ký tự.'));
             return;
         }
         $.ajax({
@@ -116,11 +115,11 @@
             success: function (data) {
                 if (data.code == 200) {
                     $('#txtComment').val("")
-                    layer.alert('评价成功！');
+                    layer.alert(novelMessage('commentSuccess', 'Đăng bình luận thành công.'));
                     loadCommentList();
 
                 } else if (data.code == 1001) {
-                    //未登录
+                    // Phiên đăng nhập đã hết hạn.
                     location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
 
                 } else {
@@ -129,7 +128,53 @@
 
             },
             error: function () {
-                layer.alert('网络异常');
+                layer.alert(novelMessage('networkError', 'Không thể kết nối mạng'));
+            }
+        })
+
+
+    },
+
+    SaveCommentReply: function (cmtBId, cmtCId, cmtDetail) {
+        if (!isLogin) {
+            layer.alert(novelMessage('loginFirst', 'Vui lòng đăng nhập trước'));
+            return;
+        }
+        var cmtDetailTemp = cmtDetail.replace(/(^\s*)/g, "");
+        if (cmtDetailTemp == '') {
+            layer.alert(novelMessage('replyRequired', 'Nội dung trả lời không được để trống.'));
+            return;
+        }
+        if (cmtDetailTemp.length < 5) {
+            layer.alert(novelMessage('replyMinLength', 'Trả lời phải có ít nhất 5 ký tự.'));
+            return;
+        }
+        if (cmtDetail.length < 5) {
+            layer.alert(novelMessage('replyMinLength', 'Trả lời phải có ít nhất 5 ký tự.'));
+            return;
+        }
+        $.ajax({
+            type: "POST",
+            url: "/book/addCommentReply",
+            data: {'commentId': $("#commentId").val(), 'replyContent': cmtDetail},
+            dataType: "json",
+            success: function (data) {
+                if (data.code == 200) {
+                    $('#txtComment').val("")
+                    layer.alert(novelMessage('replySuccess', 'Gửi trả lời thành công.'));
+                    loadCommentList(1, 20);
+
+                } else if (data.code == 1001) {
+                    // Phiên đăng nhập đã hết hạn.
+                    location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
+
+                } else {
+                    layer.alert(data.msg);
+                }
+
+            },
+            error: function () {
+                layer.alert(novelMessage('networkError', 'Không thể kết nối mạng'));
             }
         })
 
@@ -187,7 +232,7 @@
         localStorage.setItem("fonts", fonts);
         $(".readBox").css("font-size", fonts + "px");
         $("#cFonts").html(fonts);
-        $("#ChapterBody").attr("class","article-content font"+fonts);
+        $("#ChapterBody").attr("class", "article-content font" + fonts);
         BookDetail.reShowCover();
     },
     SetBackUpColor: function (colorNum) {
@@ -287,16 +332,16 @@
         }
     },
     SetWholeTip: function () {
-        var str = '<li>1、此书为全网优质作品，按照整本定价折扣销售，购买之后可以阅读该书全部章节。</li>';
-        str += '<li>2、支付屋币即可阅读收费章节，没有屋币的需要先充值。</li>';
-        str += '<li>3、QQ、微信、微博3种账号之间的数据不互通，如果你发现充值成功但没有屋币到账，请切换账号查看是否充到了别的账号中。</li>';
+        var str = '<li>1. ' + novelMessage('purchaseNotice1', 'Sau khi mua, bạn có thể đọc toàn bộ chương.') + '</li>';
+        str += '<li>2. ' + novelMessage('purchaseNotice2', 'Dùng Xu để đọc chương trả phí.') + '</li>';
+        str += '<li>3. ' + novelMessage('purchaseNotice3', 'Dữ liệu giữa các tài khoản đăng nhập không dùng chung.') + '</li>';
         if ($("#HidIsWholeBook").val() == "1") {
             $(".tip_list").html(str);
         }
     },
     SetDZChapter: function (bId, cId, isDianZan) {
         if (isDianZan == 1) {
-            /*是点赞，设置点赞数+1和不可点状态*/
+            /* Khi thích, tăng bộ đếm và khóa thao tác lặp. */
             var dzData = parseInt($("#read_dz_bar a").text()) + 1;
             $("#read_dz_bar").html('<a class="read_dz on" href="javascript:void(0)"><i></i>' + dzData + '</a>');
         }

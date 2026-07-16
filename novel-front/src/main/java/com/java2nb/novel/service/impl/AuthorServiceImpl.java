@@ -6,6 +6,7 @@ import com.java2nb.novel.entity.AuthorIncome;
 import com.java2nb.novel.entity.AuthorIncomeDetail;
 import com.java2nb.novel.mapper.*;
 import com.java2nb.novel.service.AuthorService;
+import com.java2nb.novel.core.i18n.Messages;
 import io.github.xxyopen.model.page.PageBean;
 import io.github.xxyopen.model.page.builder.pagehelper.PageBuilder;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,8 @@ public class AuthorServiceImpl implements AuthorService {
 
     private final AuthorIncomeMapper authorIncomeMapper;
 
+    private final Messages messages;
+
 
     @Override
     public Boolean checkPenName(String penName) {
@@ -47,17 +50,17 @@ public class AuthorServiceImpl implements AuthorService {
     @Override
     public String register(Long userId, Author author) {
         Date currentDate = new Date();
-        //判断邀请码是否有效
+        //Kiểm tra mã mời có hợp lệ hay không
         if (authorCodeMapper.count(c ->
             c.where(AuthorCodeDynamicSqlSupport.inviteCode, isEqualTo(author.getInviteCode()))
                 .and(AuthorCodeDynamicSqlSupport.isUse, isEqualTo((byte) 0))
                 .and(AuthorCodeDynamicSqlSupport.validityTime, isGreaterThan(currentDate))) > 0) {
-            //邀请码有效
-            //保存作家信息
+            //Mã mời hợp lệ
+            //Lưu thông tin tác giả
             author.setUserId(userId);
             author.setCreateTime(currentDate);
             authorMapper.insertSelective(author);
-            //设置邀请码状态为已使用
+            //Đặt trạng thái mã mời thành đã dùng
             authorCodeMapper.update(update(authorCode)
                 .set(AuthorCodeDynamicSqlSupport.isUse)
                 .equalTo((byte) 1)
@@ -66,8 +69,8 @@ public class AuthorServiceImpl implements AuthorService {
                 .render(RenderingStrategies.MYBATIS3));
             return "";
         } else {
-            //邀请码无效
-            return "邀请码无效！";
+            //Mã mời không hợp lệ
+            return messages.get("author.invite.invalid");
         }
 
     }

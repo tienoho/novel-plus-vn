@@ -7,19 +7,19 @@ import lombok.Data;
 import java.util.List;
 
 /**
- * 章节数据封装bean
+ * Bean đóng gói dữ liệu chương
  * @author Administrator
  */
 @Data
 public class ChapterBean {
 
     /**
-     * 章节索引集合
+     * Danh sách chỉ mục chương
      * */
     List<BookIndex> bookIndexList;
 
     /**
-     * 章节内容集合
+     * Danh sách nội dung chương
      * */
     List<BookContent> bookContentList;
 }

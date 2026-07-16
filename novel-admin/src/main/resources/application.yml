@@ -21,7 +21,7 @@ spring:
   profiles:
     active: dev
   
-  #上传文件的最大值（100M）
+  #Kích thước tệp tải lên tối đa (100 MB)
   servlet:
     multipart:
       max-file-size: 100MB
@@ -32,7 +32,7 @@ spring:
 
 mybatis:
   configuration:
-    #自动将数据库带下划线的表字段值映射到Java类的驼峰字段上
+    #Tự ánh xạ cột có dấu gạch dưới sang thuộc tính camelCase của Java
     map-underscore-to-camel-case: true
   mapper-locations: mybatis/**/*Mapper.xml
   typeAliasesPackage: com.java2nb.**.domain

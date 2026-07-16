@@ -11,7 +11,7 @@ $(function() {
 	//			disable_search_threshold : 10
 	//		},
 	//		'.chosen-select-no-results' : {
-	//			no_results_text : '没有数据'
+	//			no_results_text : 'Không có dữ liệu'
 	//		},
 	//		'.chosen-select-width' : {
 	//			width : "95%"
@@ -27,7 +27,7 @@ function selectLoad() {
 	$.ajax({
 		url : '/common/dict/type',
 		success : function(data) {
-			//加载数据
+			//Tải dữ liệu
 			for (var i = 0; i < data.length; i++) {
 				html += '<option value="' + data[i].type + '">' + data[i].description + '</option>'
 			}
@@ -35,7 +35,7 @@ function selectLoad() {
 			$(".chosen-select").chosen({
 				maxHeight : 200
 			});
-			//点击事件
+			//Sự kiện nhấp
 			$('.chosen-select').on('change', function(e, params) {
 				console.log(params.selected);
 				var opt = {
@@ -53,118 +53,118 @@ function load() {
 	$('#exampleTable')
 		.bootstrapTable(
 			{
-				method : 'get', // 服务器数据的请求方式 get or post
-				url : prefix + "/list", // 服务器数据的加载地址
+				method : 'get', // Phương thức yêu cầu dữ liệu máy chủ: GET hoặc POST
+				url : prefix + "/list", // Địa chỉ tải dữ liệu từ máy chủ
 				//	showRefresh : true,
 				//	showToggle : true,
 				//	showColumns : true,
 				iconSize : 'outline',
 				toolbar : '#exampleToolbar',
-				striped : true, // 设置为true会有隔行变色效果
-				dataType : "json", // 服务器返回的数据类型
-				pagination : true, // 设置为true会在底部显示分页条
+				striped : true, // Đặt true để tô màu xen kẽ các dòng
+				dataType : "json", // Kiểu dữ liệu máy chủ trả về
+				pagination : true, // Đặt true để hiển thị thanh phân trang ở cuối
 				// queryParamsType : "limit",
-				// //设置为limit则会发送符合RESTFull格式的参数
-				singleSelect : false, // 设置为true将禁止多选
+				// //Đặt limit để gửi tham số theo định dạng RESTful
+				singleSelect : false, // Đặt true để tắt chọn nhiều dòng
 				// contentType : "application/x-www-form-urlencoded",
-				// //发送到服务器的数据编码类型
-				pageSize : 10, // 如果设置了分页，每页数据条数
-				pageNumber : 1, // 如果设置了分布，首页页码
-				//search : true, // 是否显示搜索框
-				showColumns : false, // 是否显示内容下拉框（选择显示的列）
-				sidePagination : "server", // 设置在哪里进行分页，可选值为"client" 或者 "server"
+				// //Kiểu mã hóa dữ liệu gửi tới máy chủ
+				pageSize : 10, // Số bản ghi mỗi trang khi bật phân trang
+				pageNumber : 1, // Số trang đầu tiên khi bật phân trang
+				//search : true, // Có hiển thị ô tìm kiếm hay không
+				showColumns : false, // Có hiển thị menu chọn cột hay không
+				sidePagination : "server", // Chọn phân trang ở client hoặc server
 				queryParams : function(params) {
 					return {
-						//说明：传入后台的参数包括offset开始索引，limit步长，sort排序列，order：desc或者,以及所有列的键值对
+						//Tham số gửi tới backend gồm offset, limit, sort, order và các cặp key/value của cột
 						limit : params.limit,
 						offset : params.offset,
 						// name:$('#searchName').val(),
 						type : $('#searchName').val(),
 					};
 				},
-				// //请求服务器数据时，你可以通过重写参数的方式添加一些额外的参数，例如 toolbar 中的参数 如果
-				// queryParamsType = 'limit' ,返回参数必须包含
-				// limit, offset, search, sort, order 否则, 需要包含:
+				// //Có thể ghi đè tham số để bổ sung dữ liệu khi yêu cầu máy chủ
+				// queryParamsType = 'limit' ,Dữ liệu trả về phải chứa
+				// limit, offset, search, sort, order nếu không cần chứa:
 				// pageSize, pageNumber, searchText, sortName,
 				// sortOrder.
-				// 返回false将会终止请求
+				// Trả về false để hủy yêu cầu
 				columns : [
 					{
 						checkbox : true
 					},
 					{
 						field : 'id',
-						title : '编号'
+						title : adminMessage('dictId', 'Mã')
 					},
 					{
 						field : 'name',
-						title : '标签名'
+						title : adminMessage('dictLabel', 'Nhãn')
 					},
 					{
 						field : 'value',
-						title : '数据值',
+						title : adminMessage('dictValue', 'Giá trị dữ liệu'),
 						width : '100px'
 					},
 					{
 						field : 'type',
-						title : '类型'
+						title : adminMessage('dictType', 'Loại')
 					},
 					{
 						field : 'description',
-						title : '描述'
+						title : adminMessage('dictDescription', 'Mô tả')
 					},
 					{
 						visible : false,
 						field : 'sort',
-						title : '排序（升序）'
+						title : adminMessage('dictSort', 'Thứ tự')
 					},
 					{
 						visible : false,
 						field : 'parentId',
-						title : '父级编号'
+						title : adminMessage('dictParentId', 'Mã cấp trên')
 					},
 					{
 						visible : false,
 						field : 'createBy',
-						title : '创建者'
+						title : adminMessage('dictCreatedBy', 'Người tạo')
 					},
 					{
 						visible : false,
 						field : 'createDate',
-						title : '创建时间'
+						title : adminMessage('createdAt', 'Thời gian tạo')
 					},
 					{
 						visible : false,
 						field : 'updateBy',
-						title : '更新者'
+						title : adminMessage('dictUpdatedBy', 'Người cập nhật')
 					},
 					{
 						visible : false,
 						field : 'updateDate',
-						title : '更新时间'
+						title : adminMessage('modifiedAt', 'Thời gian cập nhật')
 					},
 					{
 						visible : false,
 						field : 'remarks',
-						title : '备注信息'
+						title : adminMessage('dictRemark', 'Ghi chú')
 					},
 					{
 						visible : false,
 						field : 'delFlag',
-						title : '删除标记'
+						title : adminMessage('dictDeleted', 'Đánh dấu xóa')
 					},
 					{
-						title : '操作',
+						title : adminMessage('actions', 'Thao tác'),
 						field : 'id',
 						align : 'center',
 						formatter : function(value, row, index) {
-							var e = '<a class="btn btn-primary btn-sm ' + s_edit_h + '" href="#" mce_href="#" title="编辑" onclick="edit(\''
+							var e = '<a class="btn btn-primary btn-sm ' + s_edit_h + '" href="#" mce_href="#" title="' + adminMessage('edit', 'Sửa') + '" onclick="edit(\''
 								+ row.id
 								+ '\')"><i class="fa fa-edit"></i></a> ';
-							var d = '<a class="btn btn-warning btn-sm ' + s_remove_h + '" href="#" title="删除"  mce_href="#" onclick="remove(\''
+							var d = '<a class="btn btn-warning btn-sm ' + s_remove_h + '" href="#" title="' + adminMessage('deleteLabel', 'Xóa') + '"  mce_href="#" onclick="remove(\''
 								+ row.id
 								+ '\')"><i class="fa fa-remove"></i></a> ';
-							var f = '<a class="btn btn-success btn-sm ' + s_add_h + '" href="#" title="增加"  mce_href="#" onclick="addD(\''
+							var f = '<a class="btn btn-success btn-sm ' + s_add_h + '" href="#" title="' + adminMessage('add', 'Thêm') + '"  mce_href="#" onclick="addD(\''
 								+ row.type +'\',\''+row.description
 								+ '\')"><i class="fa fa-plus"></i></a> ';
 							return e + d +f;
@@ -183,26 +183,26 @@ function reLoad() {
 function add() {
 	layer.open({
 		type : 2,
-		title : '增加',
+		title : adminMessage('add', 'Thêm'),
 		maxmin : true,
-		shadeClose : false, // 点击遮罩关闭层
+		shadeClose : false, // Nhấp lớp phủ để đóng hộp thoại
 		area : [ '800px', '520px' ],
-		content : prefix + '/add' // iframe的url
+		content : prefix + '/add' // URL iframe
 	});
 }
 function edit(id) {
 	layer.open({
 		type : 2,
-		title : '编辑',
+		title : adminMessage('edit', 'Sửa'),
 		maxmin : true,
-		shadeClose : false, // 点击遮罩关闭层
+		shadeClose : false, // Nhấp lớp phủ để đóng hộp thoại
 		area : [ '800px', '520px' ],
-		content : prefix + '/edit/' + id // iframe的url
+		content : prefix + '/edit/' + id // URL iframe
 	});
 }
 function remove(id) {
-	layer.confirm('确定要删除选中的记录？', {
-		btn : [ '确定', '取消' ]
+	layer.confirm(adminMessage('deleteConfirm', 'Bạn có chắc muốn xóa bản ghi đã chọn?'), {
+		btn : [adminMessage('confirm', 'Đồng ý'), adminMessage('cancel', 'Hủy')]
 	}, function() {
 		$.ajax({
 			url : prefix + "/remove",
@@ -225,25 +225,25 @@ function remove(id) {
 function addD(type,description) {
 	layer.open({
 		type : 2,
-		title : '增加',
+		title : adminMessage('add', 'Thêm'),
 		maxmin : true,
-		shadeClose : false, // 点击遮罩关闭层
+		shadeClose : false, // Nhấp lớp phủ để đóng hộp thoại
 		area : [ '800px', '520px' ],
-		content : prefix + '/add/'+type+'/'+description // iframe的url
+		content : prefix + '/add/'+type+'/'+description // URL iframe
 	});
 }
 function batchRemove() {
-	var rows = $('#exampleTable').bootstrapTable('getSelections'); // 返回所有选择的行，当没有选择的记录时，返回一个空数组
+	var rows = $('#exampleTable').bootstrapTable('getSelections'); // Trả về các dòng đã chọn; trả mảng rỗng nếu chưa chọn
 	if (rows.length == 0) {
-		layer.msg("请选择要删除的数据");
+		layer.msg(adminMessage('batchDeleteEmpty', 'Vui lòng chọn dữ liệu cần xóa'));
 		return;
 	}
-	layer.confirm("确认要删除选中的'" + rows.length + "'条数据吗?", {
-		btn : [ '确定', '取消' ]
-	// 按钮
+	layer.confirm(adminFormat('batchDeleteConfirm', 'Bạn có chắc muốn xóa {0} bản ghi đã chọn?', rows.length), {
+		btn : [adminMessage('confirm', 'Đồng ý'), adminMessage('cancel', 'Hủy')]
+	// Nút
 	}, function() {
 		var ids = new Array();
-		// 遍历所有选择的行数据，取每条数据对应的ID
+		// Duyệt các dòng đã chọn và lấy ID tương ứng
 		$.each(rows, function(i, row) {
 			ids[i] = row['id'];
 		});

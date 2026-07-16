@@ -6,27 +6,27 @@ package com.java2nb.novel.utils;
 public class Constants {
 
     /**
-     * 本地图片保存前缀
+     * Tiền tố lưu ảnh cục bộ
      */
     public static final String LOCAL_PIC_PREFIX = "/localPic/";
 
     /**
-     * 访问量默认值
+     * Giá trị lượt xem mặc định
      */
     public static final Long VISIT_COUNT_DEFAULT = 100L;
 
     /**
-     * 爬取小说http请求中无效的内容长度
+     * Độ dài nội dung được xem là không hợp lệ trong yêu cầu HTTP thu thập truyện
      */
     public static final int INVALID_HTML_LENGTH = 1500;
 
     /**
-     * 爬取小说http请求失败重试次数
+     * Số lần thử lại khi yêu cầu HTTP thu thập truyện thất bại
      */
     public static final Integer HTTP_FAIL_RETRY_COUNT = 3;
 
     /**
-     * 爬虫默认编码
+     * Bảng mã mặc định của trình thu thập
      */
     public static final String CRAWL_DEFAULT_CHARSET = "UTF-8";
 }

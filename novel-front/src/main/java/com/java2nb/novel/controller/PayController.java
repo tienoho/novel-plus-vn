@@ -11,6 +11,7 @@ import com.alipay.api.response.AlipayTradeWapPayResponse;
 import com.java2nb.novel.core.bean.UserDetails;
 import com.java2nb.novel.core.config.AlipayProperties;
 import com.java2nb.novel.core.utils.ThreadLocalUtil;
+import com.java2nb.novel.core.i18n.Messages;
 import com.java2nb.novel.service.OrderService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -40,9 +41,11 @@ public class PayController extends BaseController {
 
     private final OrderService orderService;
 
+    private final Messages messages;
+
 
     /**
-     * 支付宝支付
+     * Thanh toán Alipay
      */
     @SneakyThrows
     @PostMapping("aliPay")
@@ -50,60 +53,60 @@ public class PayController extends BaseController {
 
         UserDetails userDetails = getUserDetails(request);
         if (userDetails == null) {
-            //未登录，跳转到登录页面
+            //Chưa đăng nhập, chuyển tới trang đăng nhập
             httpResponse.sendRedirect("/user/login.html?originUrl=/pay/index.html");
         } else {
-            //创建充值订单
+            //Tạo đơn nạp Xu
             Long outTradeNo = orderService.createPayOrder((byte) 1, payAmount, userDetails.getId());
-            //获得初始化的AlipayClient
+            //Lấy AlipayClient đã khởi tạo
             AlipayClient alipayClient = new DefaultAlipayClient(alipayConfig.getGatewayUrl(),
                 alipayConfig.getAppId(), alipayConfig.getMerchantPrivateKey(), "json", alipayConfig.getCharset(),
                 alipayConfig.getPublicKey(), alipayConfig.getSignType());
             String form;
             if (ThreadLocalUtil.getTemplateDir().contains("mobile")) {
-                // 手机站
+                // Trang di động
                 AlipayTradeWapPayRequest alipayRequest = new AlipayTradeWapPayRequest();
                 alipayRequest.setReturnUrl(alipayConfig.getReturnUrl());
-                //在公共参数中设置回跳和通知地址
+                //Đặt URL trả về và thông báo trong tham số chung
                 alipayRequest.setNotifyUrl(alipayConfig.getNotifyUrl());
-                /******必传参数******/
+                /****** Tham số bắt buộc ******/
                 JSONObject bizContent = new JSONObject();
-                //商户订单号，商家自定义，保持唯一性
+                //Mã đơn của thương nhân, tự đặt và phải duy nhất
                 bizContent.put("out_trade_no", outTradeNo);
-                //支付金额，最小值0.01元
+                //Số tiền thanh toán tối thiểu 0,01 CNY
                 bizContent.put("total_amount", payAmount);
-                //订单标题，不可使用特殊符号
-                bizContent.put("subject", "小说精品屋-plus");
+                //Tiêu đề đơn hàng không được chứa ký tự đặc biệt
+                bizContent.put("subject", messages.get("payment.alipay.subject"));
 
-                /******可选参数******/
-                //手机网站支付默认传值FAST_INSTANT_TRADE_PAY
+                /****** Tham số tùy chọn ******/
+                //Thanh toán web di động mặc định dùng QUICK_WAP_WAY
                 bizContent.put("product_code", "QUICK_WAP_WAY");
 
                 alipayRequest.setBizContent(bizContent.toString());
                 AlipayTradeWapPayResponse payResponse = alipayClient.pageExecute(alipayRequest);
                 form = payResponse.getBody();
             } else {
-                // 电脑站
-                //创建API对应的request
+                // Trang máy tính
+                //Tạo request tương ứng với API
                 AlipayTradePagePayRequest alipayRequest = new AlipayTradePagePayRequest();
                 alipayRequest.setReturnUrl(alipayConfig.getReturnUrl());
-                //在公共参数中设置回跳和通知地址
+                //Đặt URL trả về và thông báo trong tham số chung
                 alipayRequest.setNotifyUrl(alipayConfig.getNotifyUrl());
-                //填充业务参数
+                //Điền tham số nghiệp vụ
                 alipayRequest.setBizContent("{" +
                     "    \"out_trade_no\":\"" + outTradeNo + "\"," +
                     "    \"product_code\":\"FAST_INSTANT_TRADE_PAY\"," +
                     "    \"total_amount\":" + payAmount + "," +
-                    "    \"subject\":\"小说精品屋-plus\"" +
+                    "    \"subject\":\"" + messages.get("payment.alipay.subject") + "\"" +
                     "  }");
-                //调用SDK生成表单
+                //Gọi SDK để tạo biểu mẫu
                 AlipayTradePagePayResponse payResponse = alipayClient.pageExecute(alipayRequest);
                 form = payResponse.getBody();
 
             }
 
             httpResponse.setContentType("text/html;charset=utf-8");
-            //直接将完整的表单html输出到页面
+            //Xuất trực tiếp biểu mẫu HTML hoàn chỉnh ra trang
             httpResponse.getWriter().write(form);
             httpResponse.getWriter().flush();
             httpResponse.getWriter().close();
@@ -113,7 +116,7 @@ public class PayController extends BaseController {
     }
 
     /**
-     * 支付宝支付通知
+     * Thông báo thanh toán Alipay
      */
     @SneakyThrows
     @RequestMapping("aliPay/notify")
@@ -121,7 +124,7 @@ public class PayController extends BaseController {
 
         PrintWriter out = httpResponse.getWriter();
 
-        //获取支付宝POST过来的信息
+        //Lấy thông tin POST từ Alipay
         Map<String, String> params = new HashMap<>();
         Map<String, String[]> requestParams = request.getParameterMap();
         for (String name : requestParams.keySet()) {
@@ -134,32 +137,32 @@ public class PayController extends BaseController {
             params.put(name, valueStr);
         }
 
-        //验证签名
+        //Xác minh chữ ký
         boolean signVerified = AlipaySignature.rsaCheckV1(params, alipayConfig.getPublicKey(),
             alipayConfig.getCharset(), alipayConfig.getSignType());
 
         if (signVerified) {
-            //验证成功
-            //商户订单号
+            //Xác minh thành công
+            //Mã đơn thương nhân
             String outTradeNo = new String(request.getParameter("out_trade_no").getBytes(StandardCharsets.ISO_8859_1),
                 StandardCharsets.UTF_8);
 
-            //支付宝交易号
+            //Mã giao dịch Alipay
             String tradeNo = new String(request.getParameter("trade_no").getBytes(StandardCharsets.ISO_8859_1),
                 StandardCharsets.UTF_8);
 
-            //交易状态
+            //Trạng thái giao dịch
             String tradeStatus = new String(request.getParameter("trade_status").getBytes(StandardCharsets.ISO_8859_1),
                 StandardCharsets.UTF_8);
 
             if ("TRADE_SUCCESS".equals(tradeStatus)) {
-                //支付成功
+                //Thanh toán thành công
                 orderService.updatePayOrder(Long.parseLong(outTradeNo), tradeNo, 1);
             }
 
             out.println("success");
 
-        } else {//验证失败
+        } else {//Xác minh thất bại
             out.println("fail");
 
         }

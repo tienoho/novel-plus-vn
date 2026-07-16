@@ -17,27 +17,27 @@ public class RandomValidateCodeUtil {
 
 
     /**
-     * 放到session中的key
+     * Khóa lưu trong session
      */
     public static final String RANDOM_CODE_KEY = "randomValidateCodeKey";
     /**
-     * 随机产生只有数字的字符串 private String
+     * Chuỗi ngẫu nhiên chỉ gồm chữ số
      */
     private String randString = "0123456789";
     /**
-     * 图片宽
+     * Chiều rộng ảnh
      */
     private int width = 100;
     /**
-     * 图片高
+     * Chiều cao ảnh
      */
     private int height = 38;
     /**
-     * 干扰线数量
+     * Số đường nhiễu
      */
     private int lineSize = 40;
     /**
-     * 随机产生字符数量
+     * Số ký tự ngẫu nhiên
      */
     private int stringNum = 4;
 
@@ -46,14 +46,14 @@ public class RandomValidateCodeUtil {
     private Random random = new Random();
 
     /**
-     * 获得字体
+     * Lấy phông chữ
      */
     private Font getFont() {
         return new Font("Fixedsys", Font.ROMAN_BASELINE, 23);
     }
 
     /**
-     * 获得颜色
+     * Lấy màu
      */
     private Color getRandColor(int fc, int bc) {
         if (fc > 255) {
@@ -69,36 +69,36 @@ public class RandomValidateCodeUtil {
     }
 
     /**
-     * 生成随机码图片
+     * Tạo ảnh mã ngẫu nhiên
      */
     @SneakyThrows
     public String genRandCodeImage(OutputStream out) {
-        // BufferedImage类是具有缓冲区的Image类,Image类是用于描述图像信息的类
+        // BufferedImage là lớp Image có bộ đệm; Image mô tả thông tin ảnh
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_BGR);
-        // 产生Image对象的Graphics对象,改对象可以在图像上进行各种绘制操作
+        // Tạo Graphics của Image để thực hiện thao tác vẽ
         Graphics g = image.getGraphics();
-        //图片大小
+        //Kích thước ảnh
         g.fillRect(0, 0, width, height);
-        //字体大小
-        //字体颜色
+        //Cỡ chữ
+        //Màu chữ
         g.setColor(new Color(204, 204, 204));
-        // 绘制干扰线
+        // Vẽ đường nhiễu
         for (int i = 0; i <= lineSize; i++) {
             drowLine(g);
         }
-        // 绘制随机字符
+        // Vẽ ký tự ngẫu nhiên
         String randomString = "";
         for (int i = 1; i <= stringNum; i++) {
             randomString = drowString(g, randomString, i);
         }
         g.dispose();
-        // 将内存中的图片通过流动形式输出到客户端
+        // Truyền ảnh trong bộ nhớ tới máy khách bằng luồng
         ImageIO.write(image, "JPEG", out);
         return randomString;
     }
 
     /**
-     * 绘制字符串
+     * Vẽ chuỗi
      */
     private String drowString(Graphics g, String randomString, int i) {
         g.setFont(getFont());
@@ -113,7 +113,7 @@ public class RandomValidateCodeUtil {
     }
 
     /**
-     * 绘制干扰线
+     * Vẽ đường nhiễu
      */
     private void drowLine(Graphics g) {
         int x = random.nextInt(width);
@@ -124,7 +124,7 @@ public class RandomValidateCodeUtil {
     }
 
     /**
-     * 获取随机的字符
+     * Lấy ký tự ngẫu nhiên
      */
     public String getRandomString(int num) {
         return String.valueOf(randString.charAt(num));

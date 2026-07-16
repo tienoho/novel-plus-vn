@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 首页小说推荐
+ * Đề xuất tác phẩm trang chủ
  *
  * @author xiongxy
  * @email 1179705413@qq.com
@@ -40,12 +40,12 @@ public class BookSettingController {
         return "novel/bookSetting/bookSetting";
     }
 
-    @ApiOperation(value = "获取首页小说设置表列表", notes = "获取首页小说设置表列表")
+    @ApiOperation(value = "Lấy danh sách cấu hình tác phẩm trang chủ", notes = "Lấy danh sách cấu hình tác phẩm trang chủ")
     @ResponseBody
     @GetMapping("/list")
     @RequiresPermissions("novel:bookSetting:bookSetting")
     public R list(@RequestParam Map<String, Object> params) {
-        //查询列表数据
+        // Truy vấn dữ liệu danh sách
         Query query = new Query(params);
         List<BookSettingDO> bookSettingList = bookSettingService.list(query);
         int total = bookSettingService.count(query);
@@ -53,14 +53,14 @@ public class BookSettingController {
         return R.ok().put("data", pageBean);
     }
 
-    @ApiOperation(value = "新增首页小说设置表页面", notes = "新增首页小说设置表页面")
+    @ApiOperation(value = "Trang thêm cấu hình tác phẩm trang chủ", notes = "Trang thêm cấu hình tác phẩm trang chủ")
     @GetMapping("/add")
     @RequiresPermissions("novel:bookSetting:add")
     String add() {
         return "novel/bookSetting/add";
     }
 
-    @ApiOperation(value = "修改首页小说设置表页面", notes = "修改首页小说设置表页面")
+    @ApiOperation(value = "Trang sửa cấu hình tác phẩm trang chủ", notes = "Trang sửa cấu hình tác phẩm trang chủ")
     @GetMapping("/edit/{id}")
     @RequiresPermissions("novel:bookSetting:edit")
     String edit(@PathVariable("id") Long id, Model model) {
@@ -69,7 +69,7 @@ public class BookSettingController {
         return "novel/bookSetting/edit";
     }
 
-    @ApiOperation(value = "查看首页小说设置表页面", notes = "查看首页小说设置表页面")
+    @ApiOperation(value = "Trang chi tiết cấu hình tác phẩm trang chủ", notes = "Trang chi tiết cấu hình tác phẩm trang chủ")
     @GetMapping("/detail/{id}")
     @RequiresPermissions("novel:bookSetting:detail")
     String detail(@PathVariable("id") Long id, Model model) {
@@ -79,9 +79,9 @@ public class BookSettingController {
     }
 
     /**
-     * 保存
+     * Lưu
      */
-    @ApiOperation(value = "新增首页小说设置表", notes = "新增首页小说设置表")
+    @ApiOperation(value = "Thêm cấu hình tác phẩm trang chủ", notes = "Thêm cấu hình tác phẩm trang chủ")
     @ResponseBody
     @PostMapping("/save")
     @RequiresPermissions("novel:bookSetting:add")
@@ -93,9 +93,9 @@ public class BookSettingController {
     }
 
     /**
-     * 修改
+     * Sửa
      */
-    @ApiOperation(value = "修改首页小说设置表", notes = "修改首页小说设置表")
+    @ApiOperation(value = "Sửa cấu hình tác phẩm trang chủ", notes = "Sửa cấu hình tác phẩm trang chủ")
     @ResponseBody
     @RequestMapping("/update")
     @RequiresPermissions("novel:bookSetting:edit")
@@ -106,9 +106,9 @@ public class BookSettingController {
     }
 
     /**
-     * 删除
+     * Xóa
      */
-    @ApiOperation(value = "删除首页小说设置表", notes = "删除首页小说设置表")
+    @ApiOperation(value = "Xóa cấu hình tác phẩm trang chủ", notes = "Xóa cấu hình tác phẩm trang chủ")
     @PostMapping("/remove")
     @ResponseBody
     @RequiresPermissions("novel:bookSetting:remove")
@@ -120,9 +120,9 @@ public class BookSettingController {
     }
 
     /**
-     * 删除
+     * Xóa
      */
-    @ApiOperation(value = "批量删除首页小说设置表", notes = "批量删除首页小说设置表")
+    @ApiOperation(value = "Xóa hàng loạt cấu hình tác phẩm trang chủ", notes = "Xóa hàng loạt cấu hình tác phẩm trang chủ")
     @PostMapping("/batchRemove")
     @ResponseBody
     @RequiresPermissions("novel:bookSetting:batchRemove")

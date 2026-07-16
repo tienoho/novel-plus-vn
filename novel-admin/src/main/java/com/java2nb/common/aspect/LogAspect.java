@@ -18,6 +18,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import com.java2nb.common.utils.Messages;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
@@ -33,6 +34,8 @@ import com.java2nb.system.domain.UserDO;
 @Aspect
 @Component
 public class LogAspect {
+    @Autowired
+    private Messages messages;
     private static final Logger logger = LoggerFactory.getLogger(LogAspect.class);
 
     @Autowired
@@ -46,11 +49,11 @@ public class LogAspect {
     @Around("logPointCut()")
     public Object around(ProceedingJoinPoint point) throws Throwable {
         long beginTime = System.currentTimeMillis();
-        // 执行方法
+        // Phương thức thực thi
         Object result = point.proceed();
-        // 执行时长(毫秒)
+        // Thời gian thực thi (mili giây)
         long time = System.currentTimeMillis() - beginTime;
-        //异步保存日志
+        // Lưu log bất đồng bộ
         saveLog(point, time);
         return result;
     }
@@ -61,14 +64,14 @@ public class LogAspect {
         LogDO sysLog = new LogDO();
         Log syslog = method.getAnnotation(Log.class);
         if (syslog != null) {
-            // 注解上的描述
+            // Mô tả trên annotation
             sysLog.setOperation(syslog.value());
         }
-        // 请求的方法名
+        // Tên phương thức yêu cầu
         String className = joinPoint.getTarget().getClass().getName();
         String methodName = signature.getName();
         sysLog.setMethod(className + "." + methodName + "()");
-        // 请求的参数
+        // Tham số yêu cầu
         Object[] args = joinPoint.getArgs();
         try {
             String params = JSONUtils.beanToJson(args[0]).substring(0, 4999);
@@ -76,11 +79,11 @@ public class LogAspect {
         } catch (Exception e) {
 
         }
-        // 获取request
+        // Lấy request
         HttpServletRequest request = HttpContextUtils.getHttpServletRequest();
-        // 设置IP地址
+        // Đặt địa chỉ IP
         sysLog.setIp(IPUtils.getIpAddr(request));
-        // 用户名
+        // Tên người dùng
         UserDO currUser = ShiroUtils.getUser();
         if (null == currUser) {
             if (null != sysLog.getParams()) {
@@ -88,17 +91,17 @@ public class LogAspect {
                 sysLog.setUsername(sysLog.getParams());
             } else {
                 sysLog.setUserId(-1L);
-                sysLog.setUsername("获取用户信息为空");
+                sysLog.setUsername(messages.get("error.userInfoMissing"));
             }
         } else {
             sysLog.setUserId(ShiroUtils.getUserId());
             sysLog.setUsername(ShiroUtils.getUser().getUsername());
         }
         sysLog.setTime((int) time);
-        // 系统当前时间
+        // Thời gian hiện tại của hệ thống
         Date date = new Date();
         sysLog.setGmtCreate(date);
-        // 保存系统日志
+        // Lưu log hệ thống
         logService.save(sysLog);
     }
 }

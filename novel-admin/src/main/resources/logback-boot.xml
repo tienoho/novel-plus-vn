@@ -1,62 +1,62 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <!-- 彩色日志依赖的渲染类 -->
+    <!-- Lớp kết xuất dùng cho log màu -->
     <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter" />
     <conversionRule conversionWord="wex" converterClass="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter" />
     <conversionRule conversionWord="wEx" converterClass="org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter" />
-    <!-- 彩色日志格式 -->
+    <!-- Định dạng log màu -->
     <property name="CONSOLE_LOG_PATTERN" value="${CONSOLE_LOG_PATTERN:-%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}}" />
 
-    <!-- %m输出的信息,%p日志级别,%t线程名,%d日期,%c类的全名,%i索引【从数字0开始递增】,,, -->
-    <!-- appender是configuration的子节点，是负责写日志的组件。 -->
-    <!-- ConsoleAppender：把日志输出到控制台 -->
+    <!-- %m nội dung, %p cấp log, %t tên luồng, %d ngày, %c tên đầy đủ lớp, %i chỉ mục từ 0 -->
+    <!-- Appender là nút con của configuration và chịu trách nhiệm ghi log. -->
+    <!-- ConsoleAppender xuất log ra bảng điều khiển -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <!--
             <pattern>%d %p (%file:%line\)- %m%n</pattern>
              -->
             <pattern>${CONSOLE_LOG_PATTERN}</pattern>
-            <!-- 控制台也要使用UTF-8，不要使用GBK，否则会中文乱码 -->
+            <!-- Bảng điều khiển phải dùng UTF-8, không dùng GBK để tránh lỗi mã hóa -->
             <charset>UTF-8</charset>
         </encoder>
     </appender>
 
-    <!-- RollingFileAppender：滚动记录文件，先将日志记录到指定文件，当符合某个条件时，将日志记录到其他文件 -->
-    <!-- 以下的大概意思是：1.先按日期存日志，日期变了，将前一天的日志文件名重命名为XXX%日期%索引，新的日志仍然是demo.log -->
-    <!-- 2.如果日期没有发生变化，但是当前日志的文件大小超过1KB时，对当前日志进行分割 重命名 -->
+    <!-- RollingFileAppender ghi log cuộn; ghi vào tệp chỉ định rồi chuyển sang tệp khác khi thỏa điều kiện -->
+    <!-- 1. Lưu log theo ngày; khi đổi ngày, đổi tên tệp hôm trước theo mẫu XXX%ngày%chỉ_mục và tiếp tục ghi vào demo.log -->
+    <!-- 2. Nếu chưa đổi ngày nhưng tệp log vượt 1 KB, chia và đổi tên tệp hiện tại -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
 
         <File>logs/debug.log</File>
-        <!-- rollingPolicy:当发生滚动时，决定 RollingFileAppender 的行为，涉及文件移动和重命名。 -->
-        <!-- TimeBasedRollingPolicy： 最常用的滚动策略，它根据时间来制定滚动策略，既负责滚动也负责出发滚动 -->
+        <!-- rollingPolicy quyết định hành vi RollingFileAppender khi cuộn, gồm di chuyển và đổi tên tệp. -->
+        <!-- TimeBasedRollingPolicy là chính sách cuộn phổ biến dựa trên thời gian -->
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <!-- 活动文件的名字会根据fileNamePattern的值，每隔一段时间改变一次 -->
-            <!-- 文件名：logs/demo.2017-12-05.0.log -->
+            <!-- Tên tệp đang hoạt động thay đổi định kỳ theo fileNamePattern -->
+            <!-- Tên tệp: logs/demo.2017-12-05.0.log -->
             <fileNamePattern>logs/debug.%d.%i.log</fileNamePattern>
-            <!-- 每产生一个日志文件，该日志文件的保存期限为30天 -->
+            <!-- Mỗi tệp log được giữ trong 30 ngày -->
             <maxHistory>30</maxHistory>
             <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <!-- maxFileSize:这是活动文件的大小，默认值是10MB，测试时可改成1KB看效果 -->
+                <!-- maxFileSize là kích thước tệp hoạt động, mặc định 10 MB; có thể đặt 1 KB khi kiểm thử -->
                 <maxFileSize>10MB</maxFileSize>
             </timeBasedFileNamingAndTriggeringPolicy>
         </rollingPolicy>
         <encoder>
-            <!-- pattern节点，用来设置日志的输入格式 -->
+            <!-- Nút pattern đặt định dạng log -->
             <pattern>
                 %d %p (%file:%line\)- %m%n
             </pattern>
-            <!-- 记录日志的编码:此处设置字符集 - -->
+            <!-- Mã hóa log: đặt bộ ký tự tại đây - -->
             <charset>UTF-8</charset>
         </encoder>
     </appender>
-    <!-- 控制台输出日志级别 -->
+    <!-- Cấp log xuất ra bảng điều khiển -->
     <root level="INFO">
         <appender-ref ref="STDOUT" />
         <appender-ref ref="FILE" />
     </root>
-    <!-- 指定项目中某个包，当有日志操作行为时的日志记录级别 -->
-    <!-- com.maijinjie.springboot 为根包，也就是只要是发生在这个根包下面的所有日志操作行为的权限都是DEBUG -->
-    <!-- 级别依次为【从高到低】：FATAL > ERROR > WARN > INFO > DEBUG > TRACE -->
+    <!-- Đặt cấp ghi log cho một package trong dự án -->
+    <!-- com.maijinjie.springboot là package gốc; mọi thao tác log bên dưới dùng cấp DEBUG -->
+    <!-- Thứ tự cấp từ cao xuống thấp: FATAL > ERROR > WARN > INFO > DEBUG > TRACE -->
     <logger name="com.java2nb" level="DEBUG" additivity="false">
         <appender-ref ref="STDOUT" />
         <appender-ref ref="FILE" />

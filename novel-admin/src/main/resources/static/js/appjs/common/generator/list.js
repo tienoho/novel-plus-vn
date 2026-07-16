@@ -7,37 +7,37 @@ function load() {
 	$('#exampleTable')
 			.bootstrapTable(
 					{
-						method : 'get', // 服务器数据的请求方式 get or post
-						url : prefix + "/list", // 服务器数据的加载地址
+						method : 'get', // Phương thức yêu cầu dữ liệu máy chủ: GET hoặc POST
+						url : prefix + "/list", // Địa chỉ tải dữ liệu từ máy chủ
 						showRefresh : false,
 						showToggle : false,
 						showColumns : true,
 						iconSize : 'outline',
 						toolbar : '#exampleToolbar',
-						striped : true, // 设置为true会有隔行变色效果
-						dataType : "json", // 服务器返回的数据类型
-						pagination : true, // 设置为true会在底部显示分页条
+						striped : true, // Đặt true để tô màu xen kẽ các dòng
+						dataType : "json", // Kiểu dữ liệu máy chủ trả về
+						pagination : true, // Đặt true để hiển thị thanh phân trang ở cuối
 						// queryParamsType : "limit",
-						// //设置为limit则会发送符合RESTFull格式的参数
-						singleSelect : false, // 设置为true将禁止多选
+						// //Đặt limit để gửi tham số theo định dạng RESTful
+						singleSelect : false, // Đặt true để tắt chọn nhiều dòng
 						// contentType : "application/x-www-form-urlencoded",
-						// //发送到服务器的数据编码类型
-						pageSize : 10, // 如果设置了分页，每页数据条数
-						pageNumber : 1, // 如果设置了分布，首页页码
-						search : false, // 是否显示搜索框
-						showColumns : false, // 是否显示内容下拉框（选择显示的列）
-						sidePagination : "client", // 设置在哪里进行分页，可选值为"client" 或者
+						// //Kiểu mã hóa dữ liệu gửi tới máy chủ
+						pageSize : 10, // Số bản ghi mỗi trang khi bật phân trang
+						pageNumber : 1, // Số trang đầu tiên khi bật phân trang
+						search : false, // Có hiển thị ô tìm kiếm hay không
+						showColumns : false, // Có hiển thị menu chọn cột hay không
+						sidePagination : "client", // Chọn phân trang ở client hoặc server
 						// "server"
 						// queryParams : queryParams,
-						// //请求服务器数据时，你可以通过重写参数的方式添加一些额外的参数，例如 toolbar 中的参数 如果
-						// queryParamsType = 'limit' ,返回参数必须包含
-						// limit, offset, search, sort, order 否则, 需要包含:
+						// //Có thể ghi đè tham số để bổ sung dữ liệu khi yêu cầu máy chủ
+						// queryParamsType = 'limit' ,Dữ liệu trả về phải chứa
+						// limit, offset, search, sort, order nếu không cần chứa:
 						// pageSize, pageNumber, searchText, sortName,
 						// sortOrder.
-						// 返回false将会终止请求
+						// Trả về false để hủy yêu cầu
 						queryParams : function(params) {
 							return {
-								// 说明：传入后台的参数包括offset开始索引，limit步长，sort排序列，order：desc或者,以及所有列的键值对
+								// Tham số gửi tới backend gồm offset, limit, sort, order và các cặp key/value của cột
 								limit : params.limit,
 								offset : params.offset,
 								tableName : $('#tableName').val(),
@@ -48,8 +48,8 @@ function load() {
 									checkbox : true
 								},
 								{
-									field : 'tableName', // 列字段名
-									title : '表名称' // 列标题
+									field : 'tableName', // Tên field của cột
+									title : adminMessage('generatorTableName', 'Tên bảng') // Tiêu đề cột
 								},
 								{
 									field : 'engine',
@@ -57,21 +57,21 @@ function load() {
 								},
 								{
 									field : 'tableComment',
-									title : '表描述'
+									title : adminMessage('generatorTableDescription', 'Mô tả bảng')
 								},
 								{
 									field : 'createTime',
-									title : '创建时间'
+									title : adminMessage('createdAt', 'Thời gian tạo')
 								},
 								{
-									title : '操作',
+									title : adminMessage('actions', 'Thao tác'),
 									field : 'id',
 									align : 'center',
 									formatter : function(value, row, index) {
-										/*var d = '<a class="btn btn-primary btn-sm" href="#" mce_href="#" title="在线下载代码" onclick="downloadCode(\''
+										/*var d = '<a class="btn btn-primary btn-sm" href="#" mce_href="#" title="' + adminMessage('generatorDownloadOnline', 'Tải mã trực tuyến') + '" onclick="downloadCode(\''
 												+ row.tableName
 												+ '\')"><i class="fa fa-cloud-download"></i></a> ';*/
-										var g = '<a class="btn btn-primary btn-sm" href="#" mce_href="#" title="本地生成代码" onclick="columnEdit(\''
+										var g = '<a class="btn btn-primary btn-sm" href="#" mce_href="#" title="' + adminMessage('generatorGenerateLocal', 'Sinh mã cục bộ') + '" onclick="columnEdit(\''
 											+ row.tableName
 											+ '\')"><i class="fa fa-bug"></i></a> ';
 
@@ -87,8 +87,8 @@ function downloadCode(tableName) {
 	location.href = prefix + "/downLoadCode/" + tableName;
 }
 function genCode(tableName) {
-	layer.confirm('确定要在本地项目根路径下生成选中记录的代码？', {
-		btn : [ '确定', '取消' ]
+	layer.confirm(adminMessage('generatorConfirmLocal', 'Bạn có chắc muốn sinh mã cho bản ghi đã chọn trong thư mục gốc dự án cục bộ?'), {
+		btn : [adminMessage('confirm', 'Đồng ý'), adminMessage('cancel', 'Hủy')]
 	}, function() {
 		$.ajax({
 			url : prefix + "/genCode",
@@ -107,13 +107,13 @@ function genCode(tableName) {
 	})
 }
 function batchDownload() {
-	var rows = $('#exampleTable').bootstrapTable('getSelections'); // 返回所有选择的行，当没有选择的记录时，返回一个空数组
+	var rows = $('#exampleTable').bootstrapTable('getSelections'); // Trả về các dòng đã chọn; trả mảng rỗng nếu chưa chọn
 	if (rows.length == 0) {
-		layer.msg("请选择要生成代码的表");
+		layer.msg(adminMessage('generatorSelectTable', 'Vui lòng chọn bảng cần sinh mã'));
 		return;
 	}
 	var tables = new Array();
-	// 遍历所有选择的行数据，取每条数据对应的ID
+	// Duyệt các dòng đã chọn và lấy ID tương ứng
 	$.each(rows, function(i, row) {
 		tables[i] = row['tableName'];
 	});
@@ -121,18 +121,18 @@ function batchDownload() {
 }
 
 function batchCode() {
-	var rows = $('#exampleTable').bootstrapTable('getSelections'); // 返回所有选择的行，当没有选择的记录时，返回一个空数组
+	var rows = $('#exampleTable').bootstrapTable('getSelections'); // Trả về các dòng đã chọn; trả mảng rỗng nếu chưa chọn
 	if (rows.length == 0) {
-		layer.msg("请选择要生成代码的表");
+		layer.msg(adminMessage('generatorSelectTable', 'Vui lòng chọn bảng cần sinh mã'));
 		return;
 	}
 	var tables = new Array();
-	// 遍历所有选择的行数据，取每条数据对应的ID
+	// Duyệt các dòng đã chọn và lấy ID tương ứng
 	$.each(rows, function(i, row) {
 		tables[i] = row['tableName'];
 	});
-	layer.confirm('确定要在本地项目根路径下批量生成选中记录的代码？', {
-		btn : [ '确定', '取消' ]
+	layer.confirm(adminMessage('generatorConfirmBatch', 'Bạn có chắc muốn sinh mã hàng loạt cho các bản ghi đã chọn?'), {
+		btn : [adminMessage('confirm', 'Đồng ý'), adminMessage('cancel', 'Hủy')]
 	}, function() {
 		$.ajax({
 			url : prefix + "/batchCode",
@@ -153,10 +153,10 @@ function batchCode() {
 }
 
 function edit(){
-	console.log('打开配置页面');
+	console.log('Mở trang cấu hình');
 	layer.open({
 		type : 2,
-		title : '生成配置',
+		title : adminMessage('generatorConfig', 'Cấu hình sinh mã'),
 		maxmin : true,
 		shadeClose : false, 
 		area : [ '800px', '520px' ],
@@ -167,7 +167,7 @@ function edit(){
 function columnEdit(tableName){
 	layer.open({
 		type : 2,
-		title : '列配置',
+		title : adminMessage('generatorColumnConfig', 'Cấu hình cột'),
 		maxmin : true,
 		shadeClose : false,
 		area : [ '800px', '520px' ],

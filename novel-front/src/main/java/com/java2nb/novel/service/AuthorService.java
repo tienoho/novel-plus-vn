@@ -15,128 +15,128 @@ import java.util.List;
 public interface AuthorService {
 
     /**
-     * 校验笔名是否存在
+     * Kiểm tra bút danh có tồn tại hay không
      *
-     * @param penName 校验的笔名
-     * @return true：存在该笔名，false: 不存在该笔名
+     * @param penName bút danh cần kiểm tra
+     * @return true nếu bút danh tồn tại, false nếu không
      */
     Boolean checkPenName(String penName);
 
     /**
-     * 作家注册
+     * Đăng ký tác giả
      *
-     * @param userId 注册用户ID
-     * @param author 注册信息
-     * @return 返回错误信息
+     * @param userId ID người dùng đăng ký
+     * @param author thông tin đăng ký
+     * @return thông báo lỗi
      */
     String register(Long userId, Author author);
 
     /**
-     * 判断是否是作家
+     * Kiểm tra có phải tác giả hay không
      *
-     * @param userId 用户ID
-     * @return true：是作家，false: 不是作家
+     * @param userId ID người dùng
+     * @return true nếu là tác giả, false nếu không
      */
     Boolean isAuthor(Long userId);
 
     /**
-     * 查询作家信息
+     * Truy vấn thông tin tác giả
      *
-     * @param userId 用户ID
-     * @return 作家对象
+     * @param userId ID người dùng
+     * @return đối tượng tác giả
      */
     Author queryAuthor(Long userId);
 
     /**
-     * 查询作家列表
+     * Truy vấn danh sách tác giả
      *
-     * @param limit               查询条数
-     * @param maxAuthorCreateTime 最大申请时间
-     * @return 作家列表
+     * @param limit số bản ghi cần truy vấn
+     * @param maxAuthorCreateTime thời gian yêu cầu tối đa
+     * @return danh sách tác giả
      */
     List<Author> queryAuthorList(int limit, Date maxAuthorCreateTime);
 
     /**
-     * 查询收入日统计是否入库
+     * Kiểm tra thống kê thu nhập ngày đã được lưu hay chưa
      *
-     * @param bookId 作品ID
-     * @param date   收入时间
-     * @return true:已入库，false：未入库
+     * @param bookId ID tác phẩm
+     * @param date thời gian thu nhập
+     * @return true nếu đã lưu, false nếu chưa lưu
      */
     boolean queryIsStatisticsDaily(Long bookId, Date date);
 
 
     /**
-     * 保存日收入统计(按作品)
+     * Lưu thống kê thu nhập ngày theo tác phẩm
      *
-     * @param authorIncomeDetail 收入详情
+     * @param authorIncomeDetail chi tiết thu nhập
      */
     void saveDailyIncomeSta(AuthorIncomeDetail authorIncomeDetail);
 
 
     /**
-     * 查询月收入统计是否入库
+     * Truy vấn trạng thái lưu thống kê thu nhập tháng
      *
-     * @param bookId     作品ID
-     * @param incomeDate 收入时间
-     * @return true:已入库，false：未入库
+     * @param bookId ID tác phẩm
+     * @param incomeDate thời gian thu nhập
+     * @return true nếu đã lưu, false nếu chưa lưu
      */
     boolean queryIsStatisticsMonth(Long bookId, Date incomeDate);
 
     boolean queryIsStatisticsMonth(Long authorId, Long bookId, Date incomeDate);
 
     /**
-     * 查询时间段内总订阅额
+     * Truy vấn tổng số Xu đăng ký trong khoảng thời gian
      *
      * @param userId
-     * @param bookId    作品ID
-     * @param startTime 开始时间
-     * @param endTime   结束时间
-     * @return 订阅额（屋币）
+     * @param bookId ID tác phẩm
+     * @param startTime thời gian bắt đầu
+     * @param endTime thời gian kết thúc
+     * @return số Xu đăng ký
      */
     Long queryTotalAccount(Long userId, Long bookId, Date startTime, Date endTime);
 
 
     /**
-     * 保存月收入统计
+     * Lưu thống kê thu nhập tháng
      *
-     * @param authorIncome 收入详情
+     * @param authorIncome chi tiết thu nhập
      */
     void saveAuthorIncomeSta(AuthorIncome authorIncome);
 
     /**
-     * 查询收入日统计是否入库
+     * Kiểm tra thống kê thu nhập ngày đã được lưu hay chưa
      *
-     * @param authorId 作家ID
-     * @param bookId   作品ID
-     * @param date     收入时间
-     * @return true:已入库，false：未入库
+     * @param authorId ID tác giả
+     * @param bookId ID tác phẩm
+     * @param date thời gian thu nhập
+     * @return true nếu đã lưu, false nếu chưa lưu
      */
     boolean queryIsStatisticsDaily(Long authorId, Long bookId, Date date);
 
     /**
-     * 作家日收入统计数据分页列表查询
+     * Truy vấn phân trang thống kê thu nhập ngày của tác giả
      *
      * @param userId
-     * @param page      页码
-     * @param pageSize  分页大小
-     * @param bookId    小说ID
-     * @param startTime 开始时间
-     * @param endTime   结束时间
-     * @return 日收入统计数据分页数据
+     * @param page số trang
+     * @param pageSize kích thước trang
+     * @param bookId ID tác phẩm
+     * @param startTime thời gian bắt đầu
+     * @param endTime thời gian kết thúc
+     * @return dữ liệu phân trang thống kê thu nhập ngày
      */
     PageBean<AuthorIncomeDetail> listIncomeDailyByPage(int page, int pageSize, Long userId, Long bookId, Date startTime,
         Date endTime);
 
 
     /**
-     * 作家月收入统计数据分页列表查询
+     * Truy vấn phân trang thống kê thu nhập tháng của tác giả
      *
-     * @param page     页码
-     * @param pageSize 分页大小
-     * @param userId   用户ID
-     * @param bookId   小说ID
-     * @return 分页数据
+     * @param page số trang
+     * @param pageSize kích thước trang
+     * @param userId ID người dùng
+     * @param bookId ID tác phẩm
+     * @return dữ liệu phân trang
      */
     PageBean<AuthorIncome> listIncomeMonthByPage(int page, int pageSize, Long userId, Long bookId);
 }

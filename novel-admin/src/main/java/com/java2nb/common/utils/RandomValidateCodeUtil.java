@@ -17,28 +17,28 @@ import java.util.Random;
 public class RandomValidateCodeUtil {
 
 
-    public static final String RANDOMCODEKEY = "RANDOMVALIDATECODEKEY";//放到session中的key
-    private String randString = "0123456789";//随机产生只有数字的字符串 private String
-    //private String randString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";//随机产生只有字母的字符串
-    //private String randString = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";//随机产生数字与字母组合的字符串
-    private int width = 95;// 图片宽
-    private int height = 25;// 图片高
-    private int lineSize = 40;// 干扰线数量
-    private int stringNum = 4;// 随机产生字符数量
+    public static final String RANDOMCODEKEY = "RANDOMVALIDATECODEKEY";//Khóa lưu trong session
+    private String randString = "0123456789";//Chuỗi ngẫu nhiên chỉ gồm chữ số
+    //private String randString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";// Chuỗi ngẫu nhiên chỉ gồm chữ cái
+    //private String randString = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";// Chuỗi ngẫu nhiên gồm chữ số và chữ cái
+    private int width = 95;// Chiều rộng ảnh
+    private int height = 25;// Chiều cao ảnh
+    private int lineSize = 40;// Số đường nhiễu
+    private int stringNum = 4;// Số ký tự ngẫu nhiên
 
     private static final Logger logger = LoggerFactory.getLogger(RandomValidateCodeUtil.class);
 
     private Random random = new Random();
 
     /**
-     * 获得字体
+     * Lấy phông chữ
      */
     private Font getFont() {
         return new Font("Fixedsys", Font.CENTER_BASELINE, 18);
     }
 
     /**
-     * 获得颜色
+     * Lấy màu
      */
     private Color getRandColor(int fc, int bc) {
         if (fc > 255) {
@@ -54,41 +54,41 @@ public class RandomValidateCodeUtil {
     }
 
     /**
-     * 生成随机图片
+     * Tạo ảnh ngẫu nhiên
      */
     public void getRandcode(HttpServletRequest request, HttpServletResponse response) {
         HttpSession session = request.getSession();
-        // BufferedImage类是具有缓冲区的Image类,Image类是用于描述图像信息的类
+        // BufferedImage là lớp Image có bộ đệm; Image mô tả thông tin ảnh
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_BGR);
-        Graphics g = image.getGraphics();// 产生Image对象的Graphics对象,改对象可以在图像上进行各种绘制操作
-        g.fillRect(0, 0, width, height);//图片大小
-        g.setFont(new Font("Default", Font.ROMAN_BASELINE, 18));//字体大小
-        g.setColor(getRandColor(110, 133));//字体颜色
-        // 绘制干扰线
+        Graphics g = image.getGraphics();// Tạo đối tượng Graphics của Image để thực hiện thao tác vẽ trên ảnh
+        g.fillRect(0, 0, width, height);//Kích thước ảnh
+        g.setFont(new Font("Default", Font.ROMAN_BASELINE, 18));//Cỡ chữ
+        g.setColor(getRandColor(110, 133));//Màu chữ
+        // Vẽ đường nhiễu
         for (int i = 0; i <= lineSize; i++) {
             drowLine(g);
         }
-        // 绘制随机字符
+        // Vẽ ký tự ngẫu nhiên
         String randomString = "";
         for (int i = 1; i <= stringNum; i++) {
             randomString = drowString(g, randomString, i);
         }
         logger.info(randomString);
-        //将生成的随机字符串保存到session中
+        // Lưu chuỗi ngẫu nhiên đã tạo vào session
         session.removeAttribute(RANDOMCODEKEY);
         session.setAttribute(RANDOMCODEKEY, randomString);
         g.dispose();
         try {
-            // 将内存中的图片通过流动形式输出到客户端
+            // Truyền ảnh trong bộ nhớ tới máy khách bằng luồng
             ImageIO.write(image, "JPEG", response.getOutputStream());
         } catch (Exception e) {
-            logger.error("将内存中的图片通过流动形式输出到客户端失败>>>> ", e);
+            logger.error("Không thể truyền ảnh trong bộ nhớ tới máy khách >>>> ", e);
         }
 
     }
 
     /**
-     * 绘制字符串
+     * Vẽ chuỗi
      */
     private String drowString(Graphics g, String randomString, int i) {
         g.setFont(getFont());
@@ -103,7 +103,7 @@ public class RandomValidateCodeUtil {
     }
 
     /**
-     * 绘制干扰线
+     * Vẽ đường nhiễu
      */
     private void drowLine(Graphics g) {
         int x = random.nextInt(width);
@@ -114,7 +114,7 @@ public class RandomValidateCodeUtil {
     }
 
     /**
-     * 获取随机的字符
+     * Lấy ký tự ngẫu nhiên
      */
     public String getRandomString(int num) {
         return String.valueOf(randString.charAt(num));

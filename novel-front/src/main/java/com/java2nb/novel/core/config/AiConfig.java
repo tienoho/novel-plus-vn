@@ -8,7 +8,7 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
 /**
- * Ai 相关配置
+ * Cấu hình liên quan đến AI
  *
  * @author xiongxiaoyang
  * @date 2025/2/19
@@ -18,14 +18,14 @@ import org.springframework.web.client.RestClient;
 public class AiConfig {
 
     /**
-     * 配置自定义的 RestClientBuilder 对象
+     * Cấu hình đối tượng RestClientBuilder tùy chỉnh
      */
     @Bean
     public RestClient.Builder restClientBuilder() {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        // 连接超时时间
+        // Thời gian chờ kết nối
         factory.setConnectTimeout(5000);
-        // 读取超时时间
+        // Thời gian chờ đọc
         factory.setReadTimeout(60000);
         return RestClient.builder().requestFactory(factory);
     }

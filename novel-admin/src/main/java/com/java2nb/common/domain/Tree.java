@@ -14,41 +14,41 @@ import com.alibaba.fastjson.JSON;
  */
 public class Tree<T> {
 	/**
-	 * 节点ID
+	 * ID nút
 	 */
 	private String id;
 	/**
-	 * 显示节点文本
+	 * Văn bản hiển thị của nút
 	 */
 	private String text;
 	/**
-	 * 节点状态，open closed
+	 * Trạng thái nút: open/closed
 	 */
 	private Map<String, Object> state;
 	/**
-	 * 节点是否被选中 true false
+	 * Nút có được chọn hay không: true/false
 	 */
 	private boolean checked = false;
 	/**
-	 * 节点属性
+	 * Thuộc tính nút
 	 */
 	private Map<String, Object> attributes;
 
 	/**
-	 * 节点的子节点
+	 * Các nút con
 	 */
 	private List<Tree<T>> children = new ArrayList<Tree<T>>();
 
 	/**
-	 * 父ID
+	 * ID cha
 	 */
 	private String parentId;
 	/**
-	 * 是否有父节点
+	 * Có nút cha
 	 */
 	private boolean hasParent = false;
 	/**
-	 * 是否有子节点
+	 * Có nút con
 	 */
 	private boolean hasChildren = false;
 

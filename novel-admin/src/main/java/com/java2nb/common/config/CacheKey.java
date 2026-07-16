@@ -6,68 +6,68 @@ package com.java2nb.common.config;
 public interface CacheKey {
 
     /**
-     * 首页小说设置
+     * Cấu hình tác phẩm trang chủ
      */
     String INDEX_BOOK_SETTINGS_KEY = "indexBookSettingsKey:v2";
 
     /**
-     * 首页新闻
+     * Tin tức trang chủ
      */
     String INDEX_NEWS_KEY = "indexNewsKey";
 
     /**
-     * 首页点击榜单
+     * Bảng lượt xem trang chủ
      */
     String INDEX_CLICK_BANK_BOOK_KEY = "indexClickBankBookKey";
 
     /**
-     * 首页友情链接
+     * Liên kết bạn bè trang chủ
      */
     String INDEX_LINK_KEY = "indexLinkKey";
 
     /**
-     * 首页新书榜单
+     * Bảng tác phẩm mới trang chủ
      */
     String INDEX_NEW_BOOK_KEY = "indexNewBookKey";
 
 
     /**
-     * 首页更新榜单
+     * Bảng cập nhật trang chủ
      */
     String INDEX_UPDATE_BOOK_KEY = "indexUpdateBookKey";
 
     /**
-     * 模板目录保存key
+     * Khóa lưu thư mục mẫu
      */
     String TEMPLATE_DIR_KEY = "templateDirKey";
     ;
 
     /**
-     * 正在运行的爬虫线程存储KEY前缀
+     * Tiền tố khóa lưu luồng thu thập đang chạy
      */
     String RUNNING_CRAWL_THREAD_KEY_PREFIX = "runningCrawlTreadDataKeyPrefix";
 
     /**
-     * 上一次搜索引擎更新的时间
+     * Thời gian cập nhật công cụ tìm kiếm gần nhất
      */
     String ES_LAST_UPDATE_TIME = "esLastUpdateTime";
 
     /**
-     * 搜索引擎转换锁
+     * Khóa chuyển đổi công cụ tìm kiếm
      */
     String ES_TRANS_LOCK = "esTransLock";
 
     /**
-     * 上一次搜索引擎是否更新过小说点击量
+     * Công cụ tìm kiếm đã cập nhật lượt xem tác phẩm ở lần trước hay chưa
      */
     String ES_IS_UPDATE_VISIT = "esIsUpdateVisit";
 
     /**
-     * 累积的小说点击量
+     * Lượt xem tác phẩm tích lũy
      */
     String BOOK_ADD_VISIT_COUNT = "bookAddVisitCount";
     /**
-     * 测试爬虫规则缓存
+     * Bộ nhớ đệm kiểm thử quy tắc thu thập
      */
     String BOOK_TEST_PARSE = "testParse";
 }

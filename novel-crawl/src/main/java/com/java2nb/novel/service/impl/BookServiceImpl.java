@@ -83,12 +83,12 @@ public class BookServiceImpl implements BookService {
 
             if (bookIndexList.size() > 0) {
 
-                //保存小说主表
+                //Lưu bảng truyện chính
 
                 book.setCreateTime(new Date());
                 bookMapper.insertSelective(book);
 
-                //批量保存目录和内容
+                //Lưu hàng loạt mục lục và nội dung
                 bookIndexList.forEach(bookIndex -> {
                     bookIndex.setStorageType(storageType);
                 });
@@ -105,7 +105,7 @@ public class BookServiceImpl implements BookService {
     public List<Book> queryNeedUpdateBook(Date startDate, int limit) {
         List<Book> books = bookMapper.queryNeedUpdateBook(startDate, limit);
         if (books.size() > 0) {
-            //更新最后抓取时间为当前时间
+            //Cập nhật thời gian thu thập gần nhất thành thời gian hiện tại
             bookMapper.updateCrawlLastTime(books, new Date());
         }
         return books;
@@ -133,12 +133,12 @@ public class BookServiceImpl implements BookService {
 
 
             if (!existBookIndexMap.containsKey(bookIndex.getIndexNum())) {
-                //插入
+                //Thêm mới
                 bookIndex.setStorageType(storageType);
                 bookIndexMapper.insertSelective(bookIndex);
                 bookContentServiceMap.get(storageType).saveBookContent(bookContent, book.getId());
             } else {
-                //更新
+                //Cập nhật
                 bookIndexMapper.updateByPrimaryKeySelective(bookIndex);
                 bookContentServiceMap.get(existBookIndexMap.get(bookIndex.getIndexNum()).getStorageType()).updateBookContent(bookContent, book.getId());
             }
@@ -146,7 +146,7 @@ public class BookServiceImpl implements BookService {
 
         }
 
-        //更新小说主表
+        // Cập nhật bảng truyện chính.
         book.setBookName(null);
         book.setAuthorName(null);
         if (Constants.VISIT_COUNT_DEFAULT.equals(book.getVisitCount())) {

@@ -15,7 +15,7 @@ ul{
 .gg-font0{
 	font-size: 0;
 }
-/*表单通用的样式*/
+/* Kiểu dùng chung cho biểu mẫu */
 .gg-star{
 	color: red;
 	font-style: normal;
@@ -79,7 +79,7 @@ ul{
     color: #666;
 
 }
-/*头像裁剪上传部分*/
+/* Khu vực cắt và tải ảnh đại diện */
 .avatar-view {
   display: block;
   margin: 12% auto 5%;

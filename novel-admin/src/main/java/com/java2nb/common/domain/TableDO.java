@@ -5,25 +5,25 @@ import lombok.Data;
 import java.util.List;
 
 /**
- * 表数据
+ * Dữ liệu bảng
  *
  * @author chenshun
  * @email 1179705413@qq.com
  * @date 2019-09-25 15:09:21
  */
 public class TableDO {
-    //表的名称
+    // Tên bảng
     private String tableName;
-    //表的备注
+    // Ghi chú của bảng
     private String comments;
-    //表的主键
+    // Khóa chính của bảng
     private GenColumnsDO pk;
-    //表的列名(不包含主键)
+    // Tên cột của bảng (không gồm khóa chính)
     private List<GenColumnsDO> columns;
 
-    //类名(第一个字母大写)，如：sys_user => SysUser
+    // Tên lớp (chữ cái đầu viết hoa), ví dụ: sys_user => SysUser
     private String className;
-    //类名(第一个字母小写)，如：sys_user => sysUser
+    // Tên lớp (chữ cái đầu viết thường), ví dụ: sys_user => sysUser
     private String classname;
 
     public String getTableName() {

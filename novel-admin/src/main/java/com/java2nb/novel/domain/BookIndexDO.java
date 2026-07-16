@@ -15,7 +15,7 @@ import java.util.Date;
 
 
 /**
- * 小说目录表
+ * Bảng mục lục tác phẩm
  * 
  * @author xiongxy
  * @email 1179705413@qq.com
@@ -25,27 +25,27 @@ public class BookIndexDO implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	
-	//主键
-		//java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-	//所以通过序列化成字符串来解决
+	// Khóa chính
+		// Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+	// Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
 	@JsonSerialize(using = LongToStringSerializer.class)
 			private Long id;
-	//小说ID
-		//java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-	//所以通过序列化成字符串来解决
+	// ID tác phẩm
+		// Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+	// Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
 	@JsonSerialize(using = LongToStringSerializer.class)
 			private Long bookId;
-	//目录号
+	// Số mục lục
 			private Integer indexNum;
-	//目录名
+	// Tên mục lục
 			private String indexName;
-	//字数
+	// Số chữ
 			private Integer wordCount;
-	//是否收费，1：收费，0：免费
+	// Thu phí: 1 có, 0 miễn phí
 			private Integer isVip;
-	//章节费用（屋币）
+	// Phí chương (Xu)
 			private Integer bookPrice;
-	//存储方式
+	// Phương thức lưu trữ
 			private String storageType;
 	//
 			@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -55,121 +55,121 @@ public class BookIndexDO implements Serializable {
 		private Date updateTime;
 
 	/**
-	 * 设置：主键
+	 * Đặt: khóa chính
 	 */
 	public void setId(Long id) {
 		this.id = id;
 	}
 	/**
-	 * 获取：主键
+	 * Lấy: khóa chính
 	 */
 	public Long getId() {
 		return id;
 	}
 	/**
-	 * 设置：小说ID
+	 * Đặt: ID tác phẩm
 	 */
 	public void setBookId(Long bookId) {
 		this.bookId = bookId;
 	}
 	/**
-	 * 获取：小说ID
+	 * Lấy: ID tác phẩm
 	 */
 	public Long getBookId() {
 		return bookId;
 	}
 	/**
-	 * 设置：目录号
+	 * Đặt: số mục lục
 	 */
 	public void setIndexNum(Integer indexNum) {
 		this.indexNum = indexNum;
 	}
 	/**
-	 * 获取：目录号
+	 * Lấy: số mục lục
 	 */
 	public Integer getIndexNum() {
 		return indexNum;
 	}
 	/**
-	 * 设置：目录名
+	 * Đặt: tên mục lục
 	 */
 	public void setIndexName(String indexName) {
 		this.indexName = indexName;
 	}
 	/**
-	 * 获取：目录名
+	 * Lấy: tên mục lục
 	 */
 	public String getIndexName() {
 		return indexName;
 	}
 	/**
-	 * 设置：字数
+	 * Đặt: số chữ
 	 */
 	public void setWordCount(Integer wordCount) {
 		this.wordCount = wordCount;
 	}
 	/**
-	 * 获取：字数
+	 * Lấy: số chữ
 	 */
 	public Integer getWordCount() {
 		return wordCount;
 	}
 	/**
-	 * 设置：是否收费，1：收费，0：免费
+	 * Đặt: thu phí: 1 có, 0 miễn phí
 	 */
 	public void setIsVip(Integer isVip) {
 		this.isVip = isVip;
 	}
 	/**
-	 * 获取：是否收费，1：收费，0：免费
+	 * Lấy: thu phí: 1 có, 0 miễn phí
 	 */
 	public Integer getIsVip() {
 		return isVip;
 	}
 	/**
-	 * 设置：章节费用（屋币）
+	 * Đặt: phí chương (Xu)
 	 */
 	public void setBookPrice(Integer bookPrice) {
 		this.bookPrice = bookPrice;
 	}
 	/**
-	 * 获取：章节费用（屋币）
+	 * Lấy: phí chương (Xu)
 	 */
 	public Integer getBookPrice() {
 		return bookPrice;
 	}
 	/**
-	 * 设置：存储方式
+	 * Đặt: phương thức lưu trữ
 	 */
 	public void setStorageType(String storageType) {
 		this.storageType = storageType;
 	}
 	/**
-	 * 获取：存储方式
+	 * Lấy: phương thức lưu trữ
 	 */
 	public String getStorageType() {
 		return storageType;
 	}
 	/**
-	 * 设置：
+	 * Đặt:
 	 */
 	public void setCreateTime(Date createTime) {
 		this.createTime = createTime;
 	}
 	/**
-	 * 获取：
+	 * Lấy:
 	 */
 	public Date getCreateTime() {
 		return createTime;
 	}
 	/**
-	 * 设置：
+	 * Đặt:
 	 */
 	public void setUpdateTime(Date updateTime) {
 		this.updateTime = updateTime;
 	}
 	/**
-	 * 获取：
+	 * Lấy:
 	 */
 	public Date getUpdateTime() {
 		return updateTime;

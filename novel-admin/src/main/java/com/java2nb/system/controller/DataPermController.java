@@ -26,7 +26,7 @@ import com.java2nb.common.utils.Query;
 import com.java2nb.common.utils.R;
 
 /**
- * 数据权限管理
+ * Quản lý quyền dữ liệu
  *
  * @author xiongxy
  * @email 1179705413@qq.com
@@ -45,12 +45,12 @@ public class DataPermController {
         return "system/dataPerm/dataPerm";
     }
 
-    @ApiOperation(value = "获取数据权限管理列表", notes = "获取数据权限管理列表")
+    @ApiOperation(value = "Lấy danh sách quyền dữ liệu", notes = "Lấy danh sách quyền dữ liệu")
     @ResponseBody
     @GetMapping("/list")
     @RequiresPermissions("system:dataPerm:dataPerm")
     public R list(@RequestParam Map<String, Object> params) {
-        //查询列表数据
+        // Truy vấn dữ liệu danh sách
         Query query = new Query(params);
         List<DataPermDO> dataPermList = dataPermService.list(query);
         int total = dataPermService.count(query);
@@ -58,14 +58,14 @@ public class DataPermController {
         return R.ok().put("data", pageBean);
     }
 
-    @ApiOperation(value = "新增数据权限管理页面", notes = "新增数据权限管理页面")
+    @ApiOperation(value = "Trang thêm quyền dữ liệu", notes = "Trang thêm quyền dữ liệu")
     @GetMapping("/add")
     @RequiresPermissions("system:dataPerm:add")
     String add() {
         return "system/dataPerm/add";
     }
 
-    @ApiOperation(value = "修改数据权限管理页面", notes = "修改数据权限管理页面")
+    @ApiOperation(value = "Trang sửa quyền dữ liệu", notes = "Trang sửa quyền dữ liệu")
     @GetMapping("/edit/{id}")
     @RequiresPermissions("system:dataPerm:edit")
     String edit(@PathVariable("id") Long id, Model model) {
@@ -74,7 +74,7 @@ public class DataPermController {
         return "system/dataPerm/edit";
     }
 
-    @ApiOperation(value = "查看数据权限管理页面", notes = "查看数据权限管理页面")
+    @ApiOperation(value = "Trang chi tiết quyền dữ liệu", notes = "Trang chi tiết quyền dữ liệu")
     @GetMapping("/detail/{id}")
     @RequiresPermissions("system:dataPerm:detail")
     String detail(@PathVariable("id") Long id, Model model) {
@@ -84,9 +84,9 @@ public class DataPermController {
     }
 
     /**
-     * 保存
+     * Lưu
      */
-    @ApiOperation(value = "新增数据权限管理", notes = "新增数据权限管理")
+    @ApiOperation(value = "Thêm quyền dữ liệu", notes = "Thêm quyền dữ liệu")
     @ResponseBody
     @PostMapping("/save")
     @RequiresPermissions("system:dataPerm:add")
@@ -98,9 +98,9 @@ public class DataPermController {
     }
 
     /**
-     * 修改
+     * Sửa
      */
-    @ApiOperation(value = "修改数据权限管理", notes = "修改数据权限管理")
+    @ApiOperation(value = "Sửa quyền dữ liệu", notes = "Sửa quyền dữ liệu")
     @ResponseBody
     @RequestMapping("/update")
     @RequiresPermissions("system:dataPerm:edit")
@@ -110,9 +110,9 @@ public class DataPermController {
     }
 
     /**
-     * 删除
+     * Xóa
      */
-    @ApiOperation(value = "删除数据权限管理", notes = "删除数据权限管理")
+    @ApiOperation(value = "Xóa quyền dữ liệu", notes = "Xóa quyền dữ liệu")
     @PostMapping("/remove")
     @ResponseBody
     @RequiresPermissions("system:dataPerm:remove")
@@ -124,9 +124,9 @@ public class DataPermController {
     }
 
     /**
-     * 删除
+     * Xóa
      */
-    @ApiOperation(value = "批量删除数据权限管理", notes = "批量删除数据权限管理")
+    @ApiOperation(value = "Xóa hàng loạt quyền dữ liệu", notes = "Xóa hàng loạt quyền dữ liệu")
     @PostMapping("/batchRemove")
     @ResponseBody
     @RequiresPermissions("system:dataPerm:batchRemove")

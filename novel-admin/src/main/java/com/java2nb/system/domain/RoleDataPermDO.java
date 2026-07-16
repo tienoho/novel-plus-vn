@@ -15,7 +15,7 @@ import java.util.Date;
 
 
 /**
- * 角色与数据权限对应关系
+ * Quan hệ giữa vai trò và quyền dữ liệu
  * 
  * @author xiongxy
  * @email 1179705413@qq.com
@@ -26,53 +26,53 @@ public class RoleDataPermDO implements Serializable {
 
 	
 	//
-		//java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-	//所以通过序列化成字符串来解决
+		// Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+	// Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
 	@JsonSerialize(using = LongToStringSerializer.class)
 			private Long id;
-	//角色ID
-		//java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-	//所以通过序列化成字符串来解决
+	// ID vai trò
+		// Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+	// Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
 	@JsonSerialize(using = LongToStringSerializer.class)
 			private Long roleId;
-	//权限ID
-		//java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-	//所以通过序列化成字符串来解决
+	// ID quyền
+		// Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+	// Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
 	@JsonSerialize(using = LongToStringSerializer.class)
 			private Long permId;
 
 	/**
-	 * 设置：
+	 * Đặt:
 	 */
 	public void setId(Long id) {
 		this.id = id;
 	}
 	/**
-	 * 获取：
+	 * Lấy:
 	 */
 	public Long getId() {
 		return id;
 	}
 	/**
-	 * 设置：角色ID
+	 * Đặt: ID vai trò
 	 */
 	public void setRoleId(Long roleId) {
 		this.roleId = roleId;
 	}
 	/**
-	 * 获取：角色ID
+	 * Lấy: ID vai trò
 	 */
 	public Long getRoleId() {
 		return roleId;
 	}
 	/**
-	 * 设置：权限ID
+	 * Đặt: ID quyền
 	 */
 	public void setPermId(Long permId) {
 		this.permId = permId;
 	}
 	/**
-	 * 获取：权限ID
+	 * Lấy: ID quyền
 	 */
 	public Long getPermId() {
 		return permId;

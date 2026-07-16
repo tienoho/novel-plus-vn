@@ -10,7 +10,7 @@ import java.util.Map;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * 首页小说设置表
+ * Bảng cấu hình tác phẩm trang chủ
  * @author xiongxy
  * @email 1179705413@qq.com
  * @date 2023-04-18 10:01:13

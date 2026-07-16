@@ -37,17 +37,17 @@ public interface SysUserService {
 	Tree<DeptDO> getTree();
 
 	/**
-	 * 更新个人信息
+	 * Cập nhật thông tin cá nhân
 	 * @param userDO
 	 * @return
 	 */
 	int updatePersonal(UserDO userDO);
 
 	/**
-	 * 更新个人图片
-	 * @param file 图片
-	 * @param avatar_data 裁剪信息
-	 * @param userId 用户ID
+	 * Cập nhật ảnh cá nhân
+	 * @param file ảnh
+	 * @param avatar_data thông tin cắt ảnh
+	 * @param userId ID người dùng
 	 * @throws Exception
 	 */
     Map<String, Object> updatePersonalImg(MultipartFile file, String avatar_data, Long userId) throws Exception;

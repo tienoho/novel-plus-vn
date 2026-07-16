@@ -1,23 +1,23 @@
 package com.java2nb.common.domain;
 
 /**
- * 列的属性
+ * Thuộc tính cột
  * 
  * 
  */
 public class ColumnDO {
-	// 列名
+	// Tên cột
 	private String columnName;
-	// 列名类型
+	// Kiểu cột
 	private String dataType;
-	// 列名备注
+	// Ghi chú cột
 	private String comments;
 
-	// 属性名称(第一个字母大写)，如：user_name => UserName
+	// Tên thuộc tính (chữ cái đầu viết hoa), ví dụ: user_name => UserName
 	private String attrName;
-	// 属性名称(第一个字母小写)，如：user_name => userName
+	// Tên thuộc tính (chữ cái đầu viết thường), ví dụ: user_name => userName
 	private String attrname;
-	// 属性类型
+	// Kiểu thuộc tính
 	private String attrType;
 	// auto_increment
 	private String extra;

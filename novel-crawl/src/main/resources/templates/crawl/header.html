@@ -1,14 +1,26 @@
 <div th:fragment="header" class="header">
+    <script th:inline="javascript">
+        window.crawlCommonMessages = Object.freeze({
+            recentReading: /*[[#{reader.recent}]]*/ 'Đọc gần đây',
+            bookshelf: /*[[#{user.bookshelf}]]*/ 'Tủ sách của tôi',
+            viewAll: /*[[#{common.viewAll}]]*/ 'Xem tất cả',
+            emptyHistory: /*[[#{reader.history.empty}]]*/ 'Chưa có lịch sử đọc',
+            loginRequired: /*[[#{auth.login.required}]]*/ 'Vui lòng đăng nhập trước',
+            phoneCaptchaRequired: /*[[#{validation.phoneCaptcha.required}]]*/ 'Phải nhập số điện thoại và mã xác nhận',
+            smsResend: /*[[#{auth.sms.resend}]]*/ 'Gửi lại ({0})',
+            smsGetAgain: /*[[#{auth.sms.getAgain}]]*/ 'Lấy lại mã xác nhận'
+        });
+    </script>
     <div class="mainNav" id="mainNav">
         <div class="box_center cf"
              style="text-align: center;height: 44px;line-height: 48px;color: #fff;font-size: 16px;width: 100%">
 
-            小说精品屋爬虫管理
+            <span th:text="#{crawl.title}">Quản lý trình thu thập</span>
             <div style="text-align: center;height: 44px;line-height: 48px;font-size: 14px;float: right;padding-right: 20px">
                 <a style="color: #fff;"
                    href="/logout">
 
-                    退出
+                    <span th:text="#{auth.logout}">Đăng xuất</span>
                 </a>
             </div>
             <div style="float: right;margin-right:5px;margin-top: 15px">

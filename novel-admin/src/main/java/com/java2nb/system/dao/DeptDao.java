@@ -11,7 +11,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 /**
- * 部门管理
+ * Quản lý phòng ban
  * @author xiongxy
  * @email 1179705413@qq.com
  * @date 2019-10-03 15:35:39

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <meta charset="utf-8">
 <head th:include="include :: header"></head>
 <body class="gray-bg">
@@ -12,7 +12,7 @@
                         <input id="id" name="id" th:value="${genColumns.id}"
                                type="hidden">
                                                                                                                                         <div class="form-group">
-                                    <label class="col-sm-3 control-label">表名：</label>
+                                    <label class="col-sm-3 control-label" th:text="#{admin.column.tableName}+'：'">Tên bảng:</label>
                                     <div class="col-sm-8">
                                                                                     <input readonly id="tableName" name="tableName" class="form-control"
                                                    th:value="${genColumns.tableName}"
@@ -23,7 +23,7 @@
                                     </div>
                                 </div>
                                                                                                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">列名：</label>
+                                    <label class="col-sm-3 control-label" th:text="#{admin.column.name}+'：'">Tên cột:</label>
                                     <div class="col-sm-8">
                                                                                     <input readonly id="columnName" name="columnName" class="form-control"
                                                    th:value="${genColumns.columnName}"
@@ -34,7 +34,7 @@
                                     </div>
                                 </div>
                                                                                                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">列类型：</label>
+                                    <label class="col-sm-3 control-label" th:text="#{admin.column.type}+'：'">Kiểu cột:</label>
                                     <div class="col-sm-8">
                                                                                     <input readonly id="columnType" name="columnType" class="form-control"
                                                    th:value="${genColumns.columnType}"
@@ -45,7 +45,7 @@
                                     </div>
                                 </div>
                                                                                                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">映射java类型：</label>
+                                    <label class="col-sm-3 control-label" th:text="#{admin.column.javaType}+'：'">Kiểu Java ánh xạ:</label>
                                     <div class="col-sm-8">
                                                                                     <input readonly id="javaType" name="javaType" class="form-control"
                                                    th:value="${genColumns.javaType}"
@@ -56,7 +56,7 @@
                                     </div>
                                 </div>
                                                                                                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">列注释：</label>
+                                    <label class="col-sm-3 control-label" th:text="#{admin.column.comment}+'：'">Chú thích cột:</label>
                                     <div class="col-sm-8">
                                                                                     <input readonly id="columnComment" name="columnComment" class="form-control"
                                                    th:value="${genColumns.columnComment}"
@@ -67,7 +67,7 @@
                                     </div>
                                 </div>
                                                                                                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">列排序（升序）：</label>
+                                    <label class="col-sm-3 control-label" th:text="#{admin.column.sort}+'：'">Thứ tự cột (tăng dần):</label>
                                     <div class="col-sm-8">
                                                                                     <input readonly id="columnSort" name="columnSort" class="form-control"
                                                    th:value="${genColumns.columnSort}"
@@ -78,7 +78,7 @@
                                     </div>
                                 </div>
                                                                                                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">列标签名：</label>
+                                    <label class="col-sm-3 control-label" th:text="#{admin.column.label}+'：'">Nhãn cột:</label>
                                     <div class="col-sm-8">
                                                                                     <input readonly id="columnLabel" name="columnLabel" class="form-control"
                                                    th:value="${genColumns.columnLabel}"
@@ -89,7 +89,7 @@
                                     </div>
                                 </div>
                                                                                                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">页面显示类型：1、文本框 2、下拉框 3、数值4、日期 5、文本域6、富文本 7、上传图片【单文件】 8、上传图片【多文件】9、上传文件【单文件】 10、上传文件【多文件】：</label>
+                                    <label class="col-sm-3 control-label" th:text="#{admin.column.displayType.help}+'：'">Kiểu hiển thị: 1 ô nhập; 2 danh sách chọn; 3 số; 4 ngày; 5 vùng văn bản; 6 rich text; 7 một ảnh; 8 nhiều ảnh; 9 một tệp; 10 nhiều tệp:</label>
                                     <div class="col-sm-8">
                                                                                     <input readonly id="pageType" name="pageType" class="form-control"
                                                    th:value="${genColumns.pageType}"
@@ -100,7 +100,7 @@
                                     </div>
                                 </div>
                                                                                                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">是否必填：</label>
+                                    <label class="col-sm-3 control-label" th:text="#{admin.column.required}+'：'">Bắt buộc:</label>
                                     <div class="col-sm-8">
                                                                                     <input readonly id="isRequired" name="isRequired" class="form-control"
                                                    th:value="${genColumns.isRequired}"
@@ -111,7 +111,7 @@
                                     </div>
                                 </div>
                                                                                                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">页面显示为下拉时使用，字典类型从字典表中取出：</label>
+                                    <label class="col-sm-3 control-label" th:text="#{admin.column.dictType}+'：'">Loại từ điển dùng khi hiển thị danh sách chọn:</label>
                                     <div class="col-sm-8">
                                                                                     <input readonly id="dictType" name="dictType" class="form-control"
                                                    th:value="${genColumns.dictType}"

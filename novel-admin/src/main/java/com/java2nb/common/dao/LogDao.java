@@ -9,7 +9,7 @@ import java.util.Map;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * 系统日志
+ * Log hệ thống
  * @author xiongxy
  * @email 1179705413@qq.com
  * @date 2019-10-03 15:45:42

@@ -17,41 +17,41 @@ public class UserOnline {
     private String username;
 
     /**
-     * 用户主机地址
+     * Địa chỉ máy người dùng
      */
     private String host;
 
     /**
-     * 用户登录时系统IP
+     * IP hệ thống khi người dùng đăng nhập
      */
     private String systemHost;
 
     /**
-     * 用户浏览器类型
+     * Loại trình duyệt người dùng
      */
     private String userAgent;
 
     /**
-     * 在线状态
+     * Trạng thái trực tuyến
      */
     private String status = "on_line";
 
     /**
-     * session创建时间
+     * Thời gian tạo session
      */
     private Date startTimestamp;
     /**
-     * session最后访问时间
+     * Thời gian truy cập session gần nhất
      */
     private Date lastAccessTime;
 
     /**
-     * 超时时间
+     * Thời gian hết hạn
      */
     private Long timeout;
 
     /**
-     * 备份的当前用户会话
+     * Bản sao phiên người dùng hiện tại
      */
     private String onlineSession;
 

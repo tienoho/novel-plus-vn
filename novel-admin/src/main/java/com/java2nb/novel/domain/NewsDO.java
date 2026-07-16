@@ -15,7 +15,7 @@ import java.util.Date;
 
 
 /**
- * 新闻表
+ * Bảng tin tức
  * 
  * @author xiongxy
  * @email 1179705413@qq.com
@@ -25,154 +25,154 @@ public class NewsDO implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	
-	//主键
-		//java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-	//所以通过序列化成字符串来解决
+	// Khóa chính
+		// Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+	// Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
 	@JsonSerialize(using = LongToStringSerializer.class)
 			private Long id;
-	//类别ID
+	// ID loại
 			private Integer catId;
-	//分类名
+	// Tên danh mục
 			private String catName;
-	//来源
+	// Nguồn
 			private String sourceName;
-	//标题
+	// Tiêu đề
 			private String title;
-	//内容
+	// Nội dung
 			private String content;
-	//发布时间
+	// Thời gian đăng
 			@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 		private Date createTime;
-	//发布人ID
-		//java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-	//所以通过序列化成字符串来解决
+	// ID người đăng
+		// Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+	// Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
 	@JsonSerialize(using = LongToStringSerializer.class)
 			private Long createUserId;
-	//更新时间
+	// Thời gian cập nhật
 			@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 		private Date updateTime;
-	//更新人ID
-		//java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-	//所以通过序列化成字符串来解决
+	// ID người cập nhật
+		// Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+	// Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
 	@JsonSerialize(using = LongToStringSerializer.class)
 			private Long updateUserId;
 
 	/**
-	 * 设置：主键
+	 * Đặt: khóa chính
 	 */
 	public void setId(Long id) {
 		this.id = id;
 	}
 	/**
-	 * 获取：主键
+	 * Lấy: khóa chính
 	 */
 	public Long getId() {
 		return id;
 	}
 	/**
-	 * 设置：类别ID
+	 * Đặt: ID loại
 	 */
 	public void setCatId(Integer catId) {
 		this.catId = catId;
 	}
 	/**
-	 * 获取：类别ID
+	 * Lấy: ID loại
 	 */
 	public Integer getCatId() {
 		return catId;
 	}
 	/**
-	 * 设置：分类名
+	 * Đặt: tên danh mục
 	 */
 	public void setCatName(String catName) {
 		this.catName = catName;
 	}
 	/**
-	 * 获取：分类名
+	 * Lấy: tên danh mục
 	 */
 	public String getCatName() {
 		return catName;
 	}
 	/**
-	 * 设置：来源
+	 * Đặt: nguồn
 	 */
 	public void setSourceName(String sourceName) {
 		this.sourceName = sourceName;
 	}
 	/**
-	 * 获取：来源
+	 * Lấy: nguồn
 	 */
 	public String getSourceName() {
 		return sourceName;
 	}
 	/**
-	 * 设置：标题
+	 * Đặt: tiêu đề
 	 */
 	public void setTitle(String title) {
 		this.title = title;
 	}
 	/**
-	 * 获取：标题
+	 * Lấy: tiêu đề
 	 */
 	public String getTitle() {
 		return title;
 	}
 	/**
-	 * 设置：内容
+	 * Đặt: nội dung
 	 */
 	public void setContent(String content) {
 		this.content = content;
 	}
 	/**
-	 * 获取：内容
+	 * Lấy: nội dung
 	 */
 	public String getContent() {
 		return content;
 	}
 	/**
-	 * 设置：发布时间
+	 * Đặt: thời gian đăng
 	 */
 	public void setCreateTime(Date createTime) {
 		this.createTime = createTime;
 	}
 	/**
-	 * 获取：发布时间
+	 * Lấy: thời gian đăng
 	 */
 	public Date getCreateTime() {
 		return createTime;
 	}
 	/**
-	 * 设置：发布人ID
+	 * Đặt: ID người đăng
 	 */
 	public void setCreateUserId(Long createUserId) {
 		this.createUserId = createUserId;
 	}
 	/**
-	 * 获取：发布人ID
+	 * Lấy: ID người đăng
 	 */
 	public Long getCreateUserId() {
 		return createUserId;
 	}
 	/**
-	 * 设置：更新时间
+	 * Đặt: thời gian cập nhật
 	 */
 	public void setUpdateTime(Date updateTime) {
 		this.updateTime = updateTime;
 	}
 	/**
-	 * 获取：更新时间
+	 * Lấy: thời gian cập nhật
 	 */
 	public Date getUpdateTime() {
 		return updateTime;
 	}
 	/**
-	 * 设置：更新人ID
+	 * Đặt: ID người cập nhật
 	 */
 	public void setUpdateUserId(Long updateUserId) {
 		this.updateUserId = updateUserId;
 	}
 	/**
-	 * 获取：更新人ID
+	 * Lấy: ID người cập nhật
 	 */
 	public Long getUpdateUserId() {
 		return updateUserId;

@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * IP 地址定位配置类
+ * Lớp cấu hình định vị địa chỉ IP
  *
  * @author xiongxiaoyang
  * @date 2025/6/30
@@ -22,18 +22,18 @@ import java.io.InputStream;
 public class IpLocationConfig {
 
     /**
-     * 使用 {@link Searcher} 实现高效的本地 IP 查询服务， 创建基于内存的 IP 地址查询对象，支持并发访问且仅需初始化一次。
+     * Dùng {@link Searcher} để truy vấn IP cục bộ hiệu quả; đối tượng tra cứu trong bộ nhớ hỗ trợ đồng thời và chỉ cần khởi tạo một lần.
      *
-     * <p>该方法会将 ip2region.xdb 数据库文件加载到内存中，
-     * 并构建一个线程安全的 {@link Searcher} 实例，可用于高效、并发的 IP 地址定位查询。</p>
+     * <p>Phương thức tải tệp cơ sở dữ liệu ip2region.xdb vào bộ nhớ,
+     * sau đó tạo {@link Searcher} an toàn luồng để định vị IP hiệu quả và đồng thời.</p>
      *
-     * <p>{@link Searcher} 实例是线程安全的，可以作为全局单例在整个应用中跨线程使用。</p>
+     * <p>{@link Searcher} an toàn luồng và có thể dùng làm singleton toàn cục.</p>
      *
-     * <p>通过配置 destroyMethod="close"，确保在 Spring 容器关闭时自动释放底层资源。</p>
+     * <p>Cấu hình destroyMethod="close" để tự giải phóng tài nguyên khi Spring container đóng.</p>
      */
     @Bean(destroyMethod = "close")
     public Searcher searcher() throws IOException {
-        // 1、从 classpath 加载整个 xdb 到内存。
+        // 1. Tải toàn bộ xdb từ classpath vào bộ nhớ.
         try (InputStream inputStream = new ClassPathResource("ip2region.xdb").getInputStream()) {
             File tempDbFile = File.createTempFile("ip2region", ".xdb");
             try (FileOutputStream outputStream = new FileOutputStream(tempDbFile)) {
@@ -43,11 +43,11 @@ public class IpLocationConfig {
                     outputStream.write(buffer, 0, bytesRead);
                 }
             }
-            // 确保程序退出时删除临时文件
+            // Bảo đảm xóa tệp tạm khi ứng dụng thoát
             tempDbFile.deleteOnExit();
             byte[] cBuff = Searcher.loadContentFromFile(tempDbFile.getPath());
 
-            // 2、使用上述的 cBuff 创建一个完全基于内存的查询对象。
+            // 2. Dùng cBuff để tạo đối tượng truy vấn hoàn toàn trong bộ nhớ.
             return Searcher.newWithBuffer(cBuff);
         }
     }

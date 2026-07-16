@@ -15,71 +15,71 @@ public interface BookService {
 
 
     /**
-     * 根据小说名和作者名查询是否存在
-     * @param bookName 小说名
-     * @param authorName 作者名
-     * @return 是否存在该小说名和作者名的小说
+     * Kiểm tra tồn tại theo tên truyện và tác giả
+     * @param bookName Tên truyện
+     * @param authorName Tên tác giả
+     * @return Truyện có cùng tên và tác giả có tồn tại hay không
      */
     boolean queryIsExistByBookNameAndAuthorName(String bookName, String authorName);
 
     /**
-     * 更新书籍的爬虫属性
-     * @param id 本站小说ID
-     * @param sourceId 爬虫源ID
-     * @param bookId 源站小说ID  */
+     * Cập nhật thuộc tính thu thập của truyện
+     * @param id ID truyện trong hệ thống
+     * @param sourceId ID nguồn thu thập
+     * @param bookId ID truyện trên website nguồn  */
     void updateCrawlProperties(Long id, Integer sourceId, String bookId);
 
     /**
-     * 通过分类ID查询分类名
-     * @param catId 分类ID
-     * @return 分类名
+     * Truy vấn tên danh mục theo ID
+     * @param catId ID danh mục
+     * @return Tên danh mục
      * */
     String queryCatNameByCatId(int catId);
 
     /**
-     * 保存小说表，目录表，内容表数据
-     * @param book 小说数据
-     * @param bookIndexList 目录集合
-     * @param bookContentList 内容集合
+     * Lưu dữ liệu bảng truyện, mục lục và nội dung
+     * @param book Dữ liệu truyện
+     * @param bookIndexList Danh sách mục lục
+     * @param bookContentList Danh sách nội dung
      * */
     void saveBookAndIndexAndContent(Book book, List<BookIndex> bookIndexList, List<BookContent> bookContentList);
 
     /**
-     * 查询需要更新的小说数据
+     * Truy vấn dữ liệu truyện cần cập nhật
      *
-     * @param startDate 最新更新时间的起始时间
-     * @param limit 查询条数
-     * @return 小说集合
+     * @param startDate Thời điểm bắt đầu của khoảng cập nhật gần nhất
+     * @param limit Số lượng bản ghi cần truy vấn
+     * @return Danh sách truyện
      * */
     List<Book> queryNeedUpdateBook(Date startDate, int limit);
 
     /**
-     * 查询已存在的章节
-     * @param bookId 小说ID
-     * @return 章节号和章节数据对映射map
+     * Truy vấn các chương đã tồn tại
+     * @param bookId ID truyện
+     * @return Map ánh xạ số chương sang dữ liệu chương
      * */
     Map<Integer,BookIndex> queryExistBookIndexMap(Long bookId);
 
     /**
-     * 更新小说表，目录表，内容表数据
-     * @param book 小说数据
-     * @param bookIndexList 目录集合
-     * @param bookContentList 内容集合
-     * @param existBookIndexMap  已存在的章节Map   */
+     * Cập nhật dữ liệu bảng truyện, mục lục và nội dung
+     * @param book Dữ liệu truyện
+     * @param bookIndexList Danh sách mục lục
+     * @param bookContentList Danh sách nội dung
+     * @param existBookIndexMap  Map các chương đã tồn tại   */
     void updateBookAndIndexAndContent(Book book,  List<BookIndex> bookIndexList, List<BookContent> bookContentList, Map<Integer, BookIndex> existBookIndexMap);
 
     /**
-     * 更新一下最后一次的抓取时间
-     * @param bookId 小说ID
+     * Cập nhật thời gian thu thập gần nhất
+     * @param bookId ID truyện
      * */
     @Deprecated
     void updateCrawlLastTime(Long bookId);
 
     /**
-     * 通过小说名和作者名查询已存在的书籍
-     * @param bookName 小说名
-     * @param authorName 作者名
-     * @return 小说对象
+     * Truy vấn truyện đã tồn tại theo tên truyện và tác giả
+     * @param bookName Tên truyện
+     * @param authorName Tên tác giả
+     * @return Đối tượng truyện
      * */
     Book queryBookByBookNameAndAuthorName(String bookName, String authorName);
 }

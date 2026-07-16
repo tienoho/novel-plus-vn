@@ -2,23 +2,23 @@
 a { color: #333 }
 a:hover, .redFont, .current, .bookNav a:hover, .textinfo a:hover { color: #f70 }
 .read_menu li a, .closePopup, .menu_left li a span, .menu_right li a span, .icon_check, .icon_yb { background: url(../images/icon_readpage.png) no-repeat }
-/* 阅读页背景 */
+/* Nền trang đọc */
 body { /*background-color: #4a4a4a;*/ color: #333; font-family: "Microsoft YaHei" }
 .topMain { box-shadow: 0 1px 4px rgba(0,0,0,.1); filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=#66ffffff,endColorstr=#66ffffff); background: none; background: rgba(255,255,255,.4) }
 .read_style_6 .topMain { border-bottom: 1px solid #444; filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=#0cffffff,endColorstr=#0cffffff); background: rgba(255,255,255,.05) }
-/*颜色：浅黄白、护眼绿、粉色、浅黄、浅灰、夜间黑*/
+/* Màu: vàng trắng nhạt, xanh dịu mắt, hồng, vàng nhạt, xám nhạt, đen ban đêm */
 body, .read_style_1 { background-color: #ebe5d8 }
 .read_style_2 { background-color: #cbdec9 }
 .read_style_3 { background-color: #edd4d4 }
 .read_style_4 { background-color: #e0cfa3 }
 .read_style_5 { background-color: #d3d3d3 }
 .read_style_6 { background-color: #0e0f0f }
-.read_style_1 .textbox, .read_style_1 .read_menu li a, .read_style_1 .haveRead, .read_style_1 .nextPageBox a { background-color: rgb(244, 241, 234) }/*浅黄白*/
-.read_style_2 .textbox, .read_style_2 .read_menu li a, .read_style_2 .haveRead, .read_style_2 .nextPageBox a { background-color: rgb(224, 235, 223) }/*护眼绿*/
-.read_style_3 .textbox, .read_style_3 .read_menu li a, .read_style_3 .haveRead, .read_style_3 .nextPageBox a { background-color: rgb(244, 229, 229) }/*粉色*/
-.read_style_4 .textbox, .read_style_4 .read_menu li a, .read_style_4 .haveRead, .read_style_4 .nextPageBox a { background-color: rgb(236, 226, 200) }/*浅黄*/
-.read_style_5 .textbox, .read_style_5 .read_menu li a, .read_style_5 .haveRead, .read_style_5 .nextPageBox a { background-color: rgb(229, 229, 229) }/*浅灰*/
-.read_style_6 .textbox, .read_style_6 .read_menu li a, .read_style_6 .haveRead, .read_style_6 .nextPageBox a { background-color: rgb(39, 39, 39) }/*夜间黑*/
+.read_style_1 .textbox, .read_style_1 .read_menu li a, .read_style_1 .haveRead, .read_style_1 .nextPageBox a { background-color: rgb(244, 241, 234) }/* Vàng trắng nhạt */
+.read_style_2 .textbox, .read_style_2 .read_menu li a, .read_style_2 .haveRead, .read_style_2 .nextPageBox a { background-color: rgb(224, 235, 223) }/* Xanh dịu mắt */
+.read_style_3 .textbox, .read_style_3 .read_menu li a, .read_style_3 .haveRead, .read_style_3 .nextPageBox a { background-color: rgb(244, 229, 229) }/* Hồng */
+.read_style_4 .textbox, .read_style_4 .read_menu li a, .read_style_4 .haveRead, .read_style_4 .nextPageBox a { background-color: rgb(236, 226, 200) }/* Vàng nhạt */
+.read_style_5 .textbox, .read_style_5 .read_menu li a, .read_style_5 .haveRead, .read_style_5 .nextPageBox a { background-color: rgb(229, 229, 229) }/* Xám nhạt */
+.read_style_6 .textbox, .read_style_6 .read_menu li a, .read_style_6 .haveRead, .read_style_6 .nextPageBox a { background-color: rgb(39, 39, 39) }/* Đen ban đêm */
 .read_style_1 .textbox, .read_style_1 .read_menu li a, .read_style_1 .haveRead, .read_style_1 .nextPageBox a { background-color: rgba(255, 255, 255,.45) }
 .read_style_2 .textbox, .read_style_2 .read_menu li a, .read_style_2 .haveRead, .read_style_2 .nextPageBox a, .read_style_3 .textbox, .read_style_3 .read_menu li a, .read_style_3 .haveRead, .read_style_3 .nextPageBox a, .read_style_4 .textbox, .read_style_4 .read_menu li a, .read_style_4 .haveRead, .read_style_4 .nextPageBox a, .read_style_5 .textbox, .read_style_5 .read_menu li a, .read_style_5 .haveRead, .read_style_5 .nextPageBox a { background-color: rgba(255, 255, 255,.4) }
 .read_style_6 .textbox, .read_style_6 .read_menu li a, .read_style_6 .haveRead, .read_style_6 .nextPageBox a { background-color: rgba(255, 255, 255,.1) }
@@ -33,7 +33,7 @@ body, .read_style_1 { background-color: #ebe5d8 }
 .read_style_6 .bookNav, .read_style_6 .author_say, .read_style_6 .orderBox, .read_style_6 .payFoot { border-color: #444!important }
 .readBody { height: 100% }
 .readMain { margin: 0 auto; position: relative; z-index: 3; width: 900px }
-/* 左右菜单栏 */
+/* Thanh trình đơn hai bên */
 .menu_left { width: 60px; z-index: 20; position: absolute; top: 60px; left: 50%; margin-left: -511px }
 .menu_right { width: 60px; z-index: 20; position: absolute; bottom: 81px; right: 50%; margin-right: -511px; display: none }
 .read_menu li { box-shadow: 0 0 1px 0 rgba(0,0,0,.05); margin-bottom: 1px; width: 60px; position: relative }
@@ -55,7 +55,7 @@ body, .read_style_1 { background-color: #ebe5d8 }
 .menu_right li a.ico_goTop { background-position: -304px -56px }
 .menu_right li a.ico_pagePrev:hover, .menu_right li a.ico_pageNext:hover, .menu_right li a.ico_goTop:hover { background-image: none }
 .menu_right li a:hover i { display: block }
-/* 正文栏 */
+/* Khu vực nội dung */
 .textbox { border-radius: 2px; width: 98%; margin: 0 auto 20px; padding-bottom: 40px; box-shadow: 0 0 1px 0 rgba(0,0,0,.25); color: #111; }
 .bookNav { width: 99%; margin: 0 auto; padding: 18px 0 12px; line-height: 2.5; /*border-bottom: 1px dotted rgba(0,0,0,.1)*/ }
 .bookNav a { font: 12px/1 "Microsoft YaHei"; margin: 0 5px }
@@ -71,38 +71,38 @@ body, .read_style_1 { background-color: #ebe5d8 }
 .orderBox h3 { padding: 0 50px; font: 18px/1 "Microsoft YaHei"; margin: 25px 0 }
 .order_list { padding: 0 50px; line-height: 2.6; }
 .order_list .btns { padding: 20px 0 }
-/* 作者的话 */
+/* Lời tác giả */
 .author_say { margin: 35px auto 10px; width: 90%; min-height: 70px; border-radius: 3px; background: url(../images/author_say.png) no-repeat; border: 1px solid #e3e3e3/*rgba(0,0,0,.1)*/ }
 .say_bar { padding: 14px 14px 14px 74px; font-size: 14px }
-/* 翻页 */
+/* Chuyển trang */
 .nextPageBox { margin: 30px auto; text-align: center; width: 98% }
 .nextPageBox a { width: 26%; height: 58px; line-height: 58px; font-size: 18px; display: inline-block; border-radius: 3px; text-align: center; /*background: rgba(255,255,255,0.5);*/ opacity:.95; border: 1px solid rgba(0,0,0,.1); }
 .nextPageBox a.prev, .nextPageBox a.dir { margin-right: 40px }
 .nextPageBox a:hover { /*background: rgba(255,255,255,.8);*/ opacity:1; color: #333 }
 .read_style_6 .nextPageBox a { color:#999; border:none }
-/*固定悬浮图层*/
+/* Lớp nổi cố định */
 .readPopup { border: 1px solid #D9D9D9; border-radius: 3px; background: #FFF; box-shadow: 0 1px 2px #999; overflow: hidden; padding-bottom: 20px; z-index: 9999; position: fixed; left: 50%; top: 50% }
 .icon_check { position: absolute; width: 29px; height: 25px; right: -1px; top: -1px; z-index: 2; background-position: 0 -142px }
 .closePopup { position: absolute; top: 20px; right: 20px; width: 16px; height: 15px; background-posion: -43px -126px }
 .chapterBox { width: 600px; margin-left: -300px; margin-top: -260px }
 .chapterBox .scrollWrap { height: 540px }
-/*弹窗内容*/
+/* Nội dung hộp thoại */
 .popupTit h2 { text-align: center; letter-spacing: 15px; color: #333; font: 700 20px/30px "Microsoft Yahei"; margin: 30px 0 }
 .popupTit h3 { font-size: 16px; margin: 15px 20px }
 .scrollWrap { overflow-y: scroll; position: relative }
 .dirWrap { padding: 0 40px }
 .scrollWrap h3 { padding-left: 26px; font-size: 14px; background: #e6e6e6; height: 30px; line-height: 30px; font-weight: normal; position: relative; cursor: pointer; margin: 0 0 15px; border-radius: 3px }
 .readPopup .tc .btn_gray { margin-left: 30px }
-/* 目录 */
+/* Mục lục */
 .dirList { overflow: hidden; *zoom:1
 }
 .dirList li { float: left; width: 40%; padding-left: 26px; height: 40px; line-height: 40px; overflow: hidden; margin-right: 20px; *zoom:1
 }
 .dirList li a { float: left; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; width: 220px }
-/* 加书架 */
+/* Thêm vào tủ sách */
 .readTipBox { width: 400px; padding-bottom: 30px; margin-left: -200px; margin-top: -105px }
 .tipWrap { padding: 30px }
-/* 设置 */
+/* Cài đặt */
 .setupBox { width: 480px; margin-left: -240px; margin-top: -130px }
 .setupList { padding: 5px 40px }
 .setupList li { font-size: 14px; padding: 15px 0 }
@@ -125,12 +125,12 @@ body, .read_style_1 { background-color: #ebe5d8 }
 .setupList li.fontSize a.small { margin-left: 8px; border-right: none; border-radius: 3px 0 0 3px }
 .setupList li.fontSize a.big { border-left: none; border-radius: 0 3px 3px 0 }
 .setupList li.fontSize .current_font { display: inline-block; padding: 0 22px; border: 1px solid #D9D9D9; height: 28px; line-height: 28px; box-shadow: 0 1px 1px #ECECEC; vertical-align: middle }
-/* 手机阅读 */
+/* Đọc trên di động */
 .qrBox { width: 280px; margin-left: -140px; margin-top: -120px }
 .qrList { text-align: center; width: 166px; margin: 30px auto 15px }
 .qr_img { width: 160px; height: 160px; margin: 0 auto 10px; display: block }
 .qrCodeBox p { color: #999 }
-/*遮罩层*/
+/* Lớp phủ */
 .maskBox { position: fixed; left: 0; top: 0; z-index: 995; width: 100%; height: 100%; background: black; filter: alpha(opacity=20); opacity: 0.2; animation: mask 2s ease-out 0s 1 normal }
 @keyframes mask { 0% {
     filter:alpha(opacity=0);
@@ -167,7 +167,7 @@ body, .read_style_1 { background-color: #ebe5d8 }
 .read_style_6 .readBanner img, .read_style_6 .haveRead .items_img img { filter:alpha(opacity=80); opacity: .8 }
 :root .topMain { filter: none }
 
-/*全本订阅*/
+/* Mua trọn bộ */
 .order_bar { text-align:center; padding-bottom: 30px }
 .order_zj { width: 178px; padding:15px 0; margin:0 14px; display:inline-block; transition: width .3s; border: 1px solid #d8d8d8; background: rgba(255,255,255,.7);border-radius: 4px }
 .order_zj:hover { color:#333; background: rgba(255,255,255,.2); border-color:#d1d1d1 }

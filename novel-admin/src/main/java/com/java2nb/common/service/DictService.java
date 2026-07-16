@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 字典表
+ * Bảng từ điển
  * 
  * @author xiongxy
  * @email 1179705413@qq.com
@@ -34,20 +34,20 @@ public interface DictService {
 	String getName(String type,String value);
 
 	/**
-	 * 获取爱好列表
+	 * Lấy danh sách sở thích
 	 * @return
      * @param userDO
 	 */
 	List<DictDO> getHobbyList(UserDO userDO);
 
 	/**
-	 * 获取性别列表
+	 * Lấy danh sách giới tính
  	 * @return
 	 */
 	List<DictDO> getSexList();
 
 	/**
-	 * 根据type获取数据
+	 * Lấy dữ liệu theo loại
 	 * @param map
 	 * @return
 	 */

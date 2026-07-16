@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 /**
- * 网站信息表
+ * Bảng thông tin website
  *
  * @author xiongxy
  * @email 1179705413@qq.com
@@ -36,9 +36,9 @@ public class WebsiteInfoController {
     }
 
     /**
-     * 修改
+     * Sửa
      */
-    @ApiOperation(value = "修改网站信息表", notes = "修改网站信息表")
+    @ApiOperation(value = "Sửa thông tin website", notes = "Sửa thông tin website")
     @ResponseBody
     @RequestMapping("/update")
     @RequiresPermissions("novel:websiteInfo:edit")

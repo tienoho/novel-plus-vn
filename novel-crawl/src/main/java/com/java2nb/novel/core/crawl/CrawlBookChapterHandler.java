@@ -3,7 +3,7 @@ package com.java2nb.novel.core.crawl;
 import com.java2nb.novel.entity.Book;
 
 /**
- * 爬虫小说章节内容处理器
+ * Bộ xử lý nội dung chương truyện được thu thập
  * */
 public interface CrawlBookChapterHandler {
 

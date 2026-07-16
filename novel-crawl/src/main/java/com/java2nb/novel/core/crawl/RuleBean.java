@@ -6,7 +6,7 @@ import lombok.Data;
 import java.util.Map;
 
 /**
- * 爬虫解析规则bean
+ * Bean quy tắc phân tích dữ liệu thu thập
  *
  * @author Administrator
  */
@@ -14,18 +14,18 @@ import java.util.Map;
 public class RuleBean {
 
     /**
-     * 网页字符编码
+     * Bảng mã trang web
      */
     private String charset = Constants.CRAWL_DEFAULT_CHARSET;
 
 
     /**
-     * 小说更新列表url
+     * URL danh sách cập nhật truyện
      */
     private String updateBookListUrl;
 
     /**
-     * 分类列表页URL规则
+     * Quy tắc URL trang danh mục
      */
     private String bookListUrl;
 

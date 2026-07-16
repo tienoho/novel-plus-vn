@@ -1,22 +1,23 @@
-
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    <html xmlns="http://www.w3.org/1999/xhtml" lang="vi">
 <head>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
-        <title>作家管理系统-小说精品屋</title>
+        <title th:text="#{author.system}">Hệ thống quản lý tác giả</title>
         <link rel="stylesheet" href="/css/base.css?v=1"/>
-        <link rel="stylesheet" href="/css/user.css" />
+        <link rel="stylesheet" href="/css/user.css"/>
     </head>
 </head>
 <body class="">
 
 <div class="header">
     <div class="mainNav" id="mainNav">
-        <div class="box_center cf" style="text-align: center;height: 44px;line-height: 48px;color: #fff;font-size: 16px;">
+        <div class="box_center cf"
+             style="text-align: center;height: 44px;line-height: 48px;color: #fff;font-size: 16px;">
 
-            小说精品屋作家管理
+            <span th:text="#{author.system}">Hệ thống quản lý tác giả</span>
 
         </div>
     </div>
@@ -27,17 +28,18 @@
         <div class="my_l">
 
             <ul class="log_list">
-                <li><a class="link_4" href="/author/index.html">小说管理</a></li>
-                <li><a class="link_2 on" href="/author/author_income_detail.html">稿费收入</a></li>
-                <!-- <li><a class="link_1 " href="/user/userinfo.html">批量小说爬取</a></li>
-                 <li><a class="link_4 " href="/user/favorites.html">单本小说爬取</a></li>-->
+                <li><a class="link_4" href="/author/index.html" th:text="#{author.management}">Quản lý truyện</a></li>
+                <li><a class="link_2 on" href="/author/author_income_detail.html" th:text="#{author.income}">Thu nhập nhuận bút</a></li>
+                <!-- Các liên kết crawler cũ không được kích hoạt trong khu vực tác giả. -->
             </ul>
 
         </div>
         <div class="my_r">
             <div class="my_bookshelf">
                 <div class="title cf">
-                    <h2 class="fl ml10"><a href="/author/author_income_detail.html" class="red">订阅明细</a></h2><i class="fl ml20 mr20 font16">|</i><h2 class="fl"><a href="/author/author_income.html">稿费汇总</a></h2>
+                    <h2 class="fl ml10"><a href="/author/author_income_detail.html" class="red" th:text="#{author.income.details}">Chi tiết lượt mua</a></h2><i
+                        class="fl ml20 mr20 font16">|</i>
+                    <h2 class="fl"><a href="/author/author_income.html" th:text="#{author.income.summary}">Tổng hợp nhuận bút</a></h2>
                 </div>
 
                 <div id="divData" class="updateTable">
@@ -45,21 +47,20 @@
                         <thead>
                         <tr>
                             <th class="goread">
-                                日期
+                                <span th:text="#{author.income.date}">Ngày</span>
                             </th>
                             <th class="goread">
-                                订阅总额
+                                <span th:text="#{author.income.subscriptionTotal}">Tổng Xu đã mua</span>
                             </th>
                             <th class="goread">
-                                订阅次数
+                                <span th:text="#{author.income.subscriptionCount}">Số lần mua</span>
                             </th>
                             <th class="goread">
-                                订阅人数
+                                <span th:text="#{author.income.subscriberCount}">Số người mua</span>
                             </th>
                         </tr>
                         </thead>
                         <tbody id="bookList">
-
 
 
                         </tbody>
@@ -73,19 +74,19 @@
                         <tr>
 
                             <th class="name">
-                                爬虫源（已开启的爬虫源）
+                                Nguồn crawler đang bật
                             </th>
                             <th class="chapter">
-                                成功爬取数量（websocket实现）
+                                Số lượng thu thập thành công qua WebSocket
                             </th>
                             <th class="time">
-                            目标爬取数量
+                            Số lượng mục tiêu
                             </th>
                             <th class="goread">
-                                状态（正在运行，已停止）（一次只能运行一个爬虫源）
+                                Trạng thái (mỗi lần chỉ chạy một nguồn crawler)
                             </th>
                             <th class="goread">
-                                操作（启动，停止）
+                                Thao tác bắt đầu/dừng
                             </th>
                         </tr>
                         </thead>
@@ -111,15 +112,17 @@
 <script src="/javascript/user.js" type="text/javascript"></script>
 <script src="/javascript/common.js" type="text/javascript"></script>
 
-<script language="javascript" type="text/javascript">
+<script language="javascript" type="text/javascript" th:inline="javascript">
+    const currencyText = /*[[#{payment.currency}]]*/ 'Xu';
+    const networkErrorText = /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng';
     var bookId = getSearchString("bookId");
     search(1, 10);
 
     function search(curr, limit) {
 
-        var data = {'curr':curr,'limit':limit};
+        var data = {'curr': curr, 'limit': limit};
 
-        if(bookId){
+        if (bookId) {
             data.bookId = bookId;
         }
 
@@ -133,17 +136,17 @@
                     var bookList = data.data.list;
                     if (bookList.length > 0) {
                         var bookListHtml = "";
-                        for(var i=0;i<bookList.length;i++){
+                        for (var i = 0; i < bookList.length; i++) {
                             var book = bookList[i];
-                            bookListHtml+=(" <tr class=\"book_list\" >\n" +
+                            bookListHtml += (" <tr class=\"book_list\" >\n" +
                                 "                            <td class=\"goread\">\n" +
-                                "                                "+book.incomeDate+"</td>\n" +
+                                "                                " + book.incomeDate + "</td>\n" +
                                 "                            <td class=\"goread\" >"
-                                +book.incomeAccount+"</td>\n" +
+                                + book.incomeAccount + " " + currencyText + "</td>\n" +
                                 "                            <td class=\"goread\">\n" +
-                                "                                "+book.incomeCount+"\n" +
+                                "                                " + book.incomeCount + "\n" +
                                 "                            </td>\n" +
-                                "                            <td class=\"goread\">"+book.incomeNumber+
+                                "                            <td class=\"goread\">" + book.incomeNumber +
                                 "                            </td>\n" +
 
                                 " </tr>");
@@ -153,21 +156,21 @@
                         layui.use('laypage', function () {
                             var laypage = layui.laypage;
 
-                            //执行一个laypage实例
+                            // Khởi tạo phân trang Layui.
                             laypage.render({
-                                elem: 'shellPage' //注意，这里的 test1 是 ID，不用加 # 号
-                                , count: data.data.total //数据总数，从服务端得到,
+                                elem: 'shellPage' // ID phần tử, không thêm dấu #.
+                                , count: data.data.total // Tổng số bản ghi từ máy chủ.
                                 , curr: data.data.pageNum
                                 , limit: data.data.pageSize
                                 , jump: function (obj, first) {
 
 
-                                    //obj包含了当前分页的所有参数，比如：
-                                    console.log(obj.curr); //得到当前页，以便向服务端请求对应页的数据。
-                                    console.log(obj.limit); //得到每页显示的条数
+                                    // obj chứa các tham số phân trang hiện tại.
+                                    console.log(obj.curr); // Trang hiện tại.
+                                    console.log(obj.limit); // Số bản ghi mỗi trang.
 
 
-                                    //首次不执行
+                                    // Không gọi lại trong lần khởi tạo đầu tiên.
                                     if (!first) {
                                         search(obj.curr, obj.limit);
                                     } else {
@@ -181,28 +184,28 @@
 
 
                 } else if (data.code == 1001) {
-                    //未登录
+                    // Phiên đăng nhập đã hết hạn.
                     location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
 
-                }else {
+                } else {
                     layer.alert(data.msg);
                 }
 
             },
             error: function () {
-                layer.alert('网络异常');
+                layer.alert(networkErrorText);
             }
         })
 
     }
 
 
-    function updateBookStatus(bookId,status) {
+    function updateBookStatus(bookId, status) {
 
         $.ajax({
             type: "POST",
             url: "/author/updateBookStatus",
-            data: {'bookId':bookId,'status':status==0?1:0},
+            data: {'bookId': bookId, 'status': status == 0 ? 1 : 0},
             dataType: "json",
             success: function (data) {
                 if (data.code == 200) {
@@ -211,21 +214,18 @@
 
 
                 } else if (data.code == 1001) {
-                    //未登录
+                    // Phiên đăng nhập đã hết hạn.
                     location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
 
-                }else {
+                } else {
                     layer.alert(data.msg);
                 }
 
             },
             error: function () {
-                layer.alert('网络异常');
+                layer.alert(networkErrorText);
             }
         })
-
-
-
 
 
     }

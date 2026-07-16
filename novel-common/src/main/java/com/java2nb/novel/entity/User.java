@@ -14,26 +14,26 @@ public class User {
     private Long id;
 
 
-    @NotBlank(groups = {AddGroup.class}, message = "手机号不能为空！")
-    @Pattern(groups = {AddGroup.class}, regexp = "^1[3|4|5|6|7|8|9][0-9]{9}$", message = "手机号格式不正确！")
+    @NotBlank(groups = {AddGroup.class}, message = "{validation.user.phone.required}")
+    @Pattern(groups = {AddGroup.class}, regexp = "^1[3|4|5|6|7|8|9][0-9]{9}$", message = "{validation.user.phone.invalid}")
     @Null(groups = {UpdateGroup.class})
     @Generated("org.mybatis.generator.api.MyBatisGenerator")
     private String username;
 
-    @NotBlank(groups = {AddGroup.class}, message = "密码不能为空！")
+    @NotBlank(groups = {AddGroup.class}, message = "{validation.user.password.required}")
     @Null(groups = {UpdateGroup.class})
     @Generated("org.mybatis.generator.api.MyBatisGenerator")
     private String password;
 
     @Null(groups = {AddGroup.class})
     @Pattern(groups = {
-        UpdateGroup.class}, regexp = "[\u4E00-\u9FA5A-Za-z0-9_]{1,11}", message = "昵称格式不正确！")
+        UpdateGroup.class}, regexp = "[\u4E00-\u9FA5A-Za-z0-9_]{1,11}", message = "{validation.user.nickname.invalid}")
     @Generated("org.mybatis.generator.api.MyBatisGenerator")
     private String nickName;
 
     @Null(groups = {AddGroup.class})
     @Pattern(groups = {
-        UpdateGroup.class}, regexp = "^/localPic/\\d{4}/\\d{2}/\\d{2}/[A-Za-z0-9]+\\.(jpg|jpeg|swf|gif|png|JPG|JPEG|SWF|GIF|PNG)$", message = "只能上传图片格式的文件！")
+        UpdateGroup.class}, regexp = "^/localPic/\\d{4}/\\d{2}/\\d{2}/[A-Za-z0-9]+\\.(jpg|jpeg|swf|gif|png|JPG|JPEG|SWF|GIF|PNG)$", message = "{validation.user.photo.invalid}")
     @Generated("org.mybatis.generator.api.MyBatisGenerator")
     private String userPhoto;
 

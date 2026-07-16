@@ -15,151 +15,151 @@ import java.util.Map;
 public interface BookService {
 
     /**
-     * 查询首页小说设置列表数据
+     * Truy vấn dữ liệu cấu hình tác phẩm trang chủ
      *
      * @return
      */
     Map<String, List<BookSettingVO>> listBookSettingVO();
 
     /**
-     * 查询首页点击榜单数据
+     * Truy vấn dữ liệu bảng lượt xem trang chủ
      * @return
      * */
     List<Book> listClickRank();
 
     /**
-     * 查询首页新书榜单数据
-     * @return 小说列表
+     * Truy vấn dữ liệu bảng tác phẩm mới trang chủ
+     * @return danh sách tác phẩm
      * */
     List<Book> listNewRank();
 
     /**
-     * 查询首页更新榜单数据
+     * Truy vấn dữ liệu bảng cập nhật trang chủ
      * @return
      * */
     List<BookVO> listUpdateRank();
 
     /**
-     * 分页搜索
-     * @param params 搜索参数
-     * @param page 页码
-     * @param pageSize 分页大小
-     * @return 小说集合分页信息
+     * Tìm kiếm phân trang
+     * @param params tham số tìm kiếm
+     * @param page số trang
+     * @param pageSize kích thước trang
+     * @return thông tin phân trang tác phẩm
      * */
     PageBean<?> searchByPage(BookSpVO params, int page, int pageSize);
 
     /**
-     * 查询小说分类列表
-     * @return 分类集合
+     * Truy vấn danh sách danh mục tác phẩm
+     * @return tập danh mục
      * */
     List<BookCategory> listBookCategory();
 
     /**
-     * 查询小说详情信息
-     * @return 书籍信息
-     * @param id 书籍ID*/
+     * Truy vấn thông tin chi tiết tác phẩm
+     * @return thông tin tác phẩm
+     * @param id ID tác phẩm*/
     Book queryBookDetail(Long id);
 
     /**
-     * 查询目录列表
-     * @param bookId 书籍ID
-     * @param orderBy 排序
-     * @param page 查询页码
-     *@param pageSize 分页大小
-     *@return 目录集合
+     * Truy vấn danh sách mục lục
+     * @param bookId ID tác phẩm
+     * @param orderBy thứ tự sắp xếp
+     * @param page số trang truy vấn
+     *@param pageSize kích thước trang
+     *@return tập mục lục
      * */
     List<BookIndex> queryIndexList(Long bookId, String orderBy, Integer page, Integer pageSize);
 
 
     /**
-     * 查询目录
-     * @param bookIndexId 目录ID
-     * @return 目录信息
+     * Truy vấn mục lục
+     * @param bookIndexId ID mục lục
+     * @return thông tin mục lục
      * */
     BookIndex queryBookIndex(Long bookIndexId);
 
     /**
-     * 查询上一章节目录ID
-     * @param bookId 书籍ID
-     * @param indexNum 目录号
-     * @return 上一章节目录ID，没有则返回0
+     *Truy vấn ID mục lục chương trướcD
+     * @param bookId ID tác phẩm
+     * @param indexNum số mục lục
+     * @return ID mục lục chương trước, trả 0 nếu không có
      * */
     Long queryPreBookIndexId(Long bookId, Integer indexNum);
 
     /**
-     * 查询下一章目录ID
-     * @param bookId 书籍ID
-     * @param indexNum 目录号
-     * @return 下一章节目录ID，没有则返回0
+     *Truy vấn ID mục lục chương tiếp theoD
+     * @param bookId ID tác phẩm
+     * @param indexNum số mục lục
+     * @return ID mục lục chương tiếp theo, trả 0 nếu không có
      * */
     Long queryNextBookIndexId(Long bookId, Integer indexNum);
 
     /**
-     * 查询章节内容
-     * @param bookIndexId 目录ID
-     * @return 书籍内容
+     * Truy vấn nội dung chương
+     * @param bookIndexId ID mục lục
+     * @return nội dung tác phẩm
      * */
     @Deprecated
     BookContent queryBookContent(Long bookIndexId);
 
     /**
-     * 查询小说排行信息
-     * @param type 排行类型，0点击排行，1新书排行，2更新排行
-     * @param limit 查询条数
-     * @return 小说集合
+     * Truy vấn thông tin xếp hạng tác phẩm
+     * @param type loại xếp hạng: 0 lượt xem, 1 tác phẩm mới, 2 cập nhật
+     * @param limit số bản ghi cần truy vấn
+     * @return tập tác phẩm
      * */
     List<Book> listRank(Byte type, Integer limit);
 
     /**
-     * 增加点击次数
-     * @param bookId 书籍ID
-     * @param visitCount 点击量
+     * Tăng lượt xem
+     * @param bookId ID tác phẩm
+     * @param visitCount lượt xem
      * */
     void addVisitCount(Long bookId, Integer visitCount);
 
     /**
-     * 查询章节数
-     * @param bookId 书籍ID
-     * @return 章节数量
+     * Truy vấn số chương
+     * @param bookId ID tác phẩm
+     * @return số chương
      * */
     long queryIndexCount(Long bookId);
 
     /**
-     * 根据分类id查询同类推荐书籍
-     * @param catId 分类id
-     * @return 书籍集合
+     * Truy vấn tác phẩm cùng loại theo ID danh mục
+     * @param catId ID danh mục
+     * @return tập tác phẩm
      * */
     List<Book> listRecBookByCatId(Integer catId);
 
     /**
-     * 查询首章目录ID
-     * @param bookId 书籍ID
-     * @return 首章目录ID
+     *Truy vấn ID mục lục chương đầuD
+     * @param bookId ID tác phẩm
+     * @return ID mục lục chương đầu
      * */
     Long queryFirstBookIndexId(Long bookId);
 
     /**
-     *分页查询书籍评论列表
-     * @param userId 用户ID
-     * @param bookId 书籍ID
-     * @param page 页码
-     * @param pageSize 分页大小
-     * @return 评论分页数据
+     *Truy vấn phân trang danh sách bình luận tác phẩm
+     * @param userId ID người dùng
+     * @param bookId ID tác phẩm
+     * @param page số trang
+     * @param pageSize kích thước trang
+     * @return dữ liệu phân trang bình luận
      * */
     PageBean<BookCommentVO> listCommentByPage(Long userId, Long bookId, int page, int pageSize);
 
     /**
-     * 新增评价
-     * @param userId 用户ID
-     * @param comment 评论内容
+     * Thêm đánh giá
+     * @param userId ID người dùng
+     * @param comment nội dung bình luận
      * */
     void addBookComment(Long userId, BookComment comment);
 
     /**
-     * 通过作者名获取或创建作者Id
-     * @param authorName 作者名
-     * @param workDirection 作品方向
-     * @return 作者ID
+     *Lấy hoặc tạo ID tác giả theo tênd
+     * @param authorName tên tác giả
+     * @param workDirection định hướng tác phẩm
+     * @return ID tác giả
      * */
     @Deprecated
     Long getOrCreateAuthorIdByName(String authorName, Byte workDirection);
@@ -167,97 +167,97 @@ public interface BookService {
 
 
     /**
-     * 查询小说ID
-     * @param bookName 书名
-     * @param author 作者名
-     * @return 小说ID
+     *Truy vấn ID tác phẩmD
+     * @param bookName tên tác phẩm
+     * @param author tên tác giả
+     * @return ID tác phẩm
      * */
     Long queryIdByNameAndAuthor(String bookName, String author);
 
     /**
-     * 根据小说ID查询目录号集合
-     * @param bookId 小说ID
-     * @return 目录号集合
+     * Truy vấn tập số mục lục theo ID tác phẩm
+     * @param bookId ID tác phẩm
+     * @return tập số mục lục
      * */
     @Deprecated
     List<Integer> queryIndexNumByBookId(Long bookId);
 
     /**
-     * 查询网络图片的小说
+     * Truy vấn tác phẩm có ảnh mạng
      *
      * @param localPicPrefix
-     * @param limit 查询条数
-     * @return 返回小说集合
+     * @param limit số bản ghi cần truy vấn
+     * @return tập tác phẩm
      * */
     List<Book> queryNetworkPicBooks(String localPicPrefix, Integer limit);
 
 
     /**
-     * 更新爬取的小说网络图片到自己的存储介质（本地、OSS、fastDfs）
-     * @param picUrl 爬取的网络图片路径
-     * @param bookId 小说ID
+     * Cập nhật ảnh mạng của tác phẩm vào phương tiện lưu trữ của hệ thống (cục bộ, OSS, FastDFS)
+     * @param picUrl đường dẫn ảnh mạng đã thu thập
+     * @param bookId ID tác phẩm
      */
     void updateBookPicToLocal(String picUrl, Long bookId);
 
     /**
-     * 通过作者ID查询小说分页列表
-     * @param userId 用户ID
-     * @param page 页码
-     * @param pageSize 分页大小
-     * @return 小说分页数据
+     * Truy vấn phân trang tác phẩm theo ID tác giả
+     * @param userId ID người dùng
+     * @param page số trang
+     * @param pageSize kích thước trang
+     * @return dữ liệu phân trang tác phẩm
      * */
     PageBean<Book> listBookPageByUserId(Long userId, int page, int pageSize);
 
     /**
-     * 发布小说
-     * @param book 小说信息
-     * @param authorId 作家ID
-     * @param penName 作家笔名
+     * Xuất bản tác phẩm
+     * @param book thông tin tác phẩm
+     * @param authorId ID tác giả
+     * @param penName bút danh tác giả
      * */
     void addBook(Book book, Long authorId, String penName);
 
     /**
-     * 更新小说状态,上架或下架
-     * @param bookId 小说ID
-     * @param status 更新的状态
-     * @param authorId 作者ID
+     * Cập nhật trạng thái phát hành hoặc gỡ tác phẩm
+     * @param bookId ID tác phẩm
+     * @param status trạng thái cần cập nhật
+     * @param authorId ID tác giả
      * */
     void updateBookStatus(Long bookId, Byte status, Long authorId);
 
     /**
-     * 发布章节内容
-     * @param bookId 小说ID
-     * @param indexName 章节名
-     * @param content 章节内容
-     * @param isVip 是否收费
-     * @param authorId 作者ID   */
+     * Xuất bản nội dung chương
+     * @param bookId ID tác phẩm
+     * @param indexName tên chương
+     * @param content nội dung chương
+     * @param isVip có thu phí hay không
+     * @param authorId ID tác giả   */
     void addBookContent(Long bookId, String indexName, String content, Byte isVip, Long authorId);
 
 
     /**
-     * 根据更新时间分页查询书籍列表
-     * @param startDate 开始时间，包括该时间
-     * @param limit 查询数量
-     * @return 书籍列表
+     * Truy vấn phân trang tác phẩm theo thời gian cập nhật
+     * @param startDate thời gian bắt đầu, bao gồm mốc này
+     * @param limit số lượng cần truy vấn
+     * @return danh sách tác phẩm
      * */
     List<Book> queryBookByUpdateTimeByPage(Date startDate, int limit);
 
     /**
-     * 查询作品列表
-     * @param authorId 作家ID
-     * @return 作品列表
+     * Truy vấn danh sách tác phẩm
+     * @param authorId ID tác giả
+     * @return danh sách tác phẩm
      */
     List<Book> queryBookList(Long authorId);
 
     /**
-     * 删除章节
+     * Xóa chương
      * @param indexId
-     * @param authorId 作家ID
+     * @param authorId ID tác giả
      */
     void deleteIndex(Long indexId, Long authorId);
 
     /**
-     * 更新章节名
+     * Cập nhật tên chương
      * @param indexId
      * @param indexName
      * @param authorId
@@ -265,7 +265,7 @@ public interface BookService {
     void updateIndexName(Long indexId, String indexName, Long authorId);
 
     /**
-     * 查询章节内容
+     * Truy vấn nội dung chương
      * @param indexId
      * @param authorId
      * @return
@@ -273,7 +273,7 @@ public interface BookService {
     String queryIndexContent(Long indexId, Long authorId);
 
     /**
-     *  更新章节内容
+     *  Cập nhật nội dung chương
      * @param indexId
      * @param indexName
      * @param content
@@ -282,7 +282,7 @@ public interface BookService {
     void updateBookContent( Long indexId, String indexName, String content, Long authorId);
 
     /**
-     * 修改小说封面
+     * Sửa bìa tác phẩm
      * @param bookId
      * @param bookPic
      * @param authorId
@@ -290,14 +290,14 @@ public interface BookService {
     void updateBookPic(Long bookId, String bookPic, Long authorId);
 
     /**
-     * 查询AI生成图片
+     * Truy vấn ảnh do AI tạo
      */
     String queryAiGenPic(Long bookId);
 
     /**
-     * 新增回复
-     * @param userId 用户ID
-     * @param commentReply 回复内容
+     * Thêm phản hồi
+     * @param userId ID người dùng
+     * @param commentReply nội dung phản hồi
      * */
     void addBookCommentReply(Long userId, BookCommentReply commentReply);
 

@@ -18,7 +18,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * 作家日收入统计任务
+ * Tác vụ thống kê thu nhập hằng ngày của tác giả
  *
  * @author cd
  */
@@ -35,33 +35,33 @@ public class DailyIncomeStaSchedule {
 
 
     /**
-     * 每天凌晨0点统计上一天数据
+     * Thống kê dữ liệu ngày trước vào 0 giờ mỗi ngày
      */
     @Scheduled(cron = "0 0 0 * * ?")
     public void statistics() {
 
-        //获取昨天的日期时间
+        //Lấy ngày giờ hôm qua
         Date yesterday = DateUtil.getYesterday();
-        //获取昨天的开始时间
+        //Lấy thời điểm bắt đầu hôm qua
         Date startTime = DateUtil.getDateStartTime(yesterday);
-        //获取昨天的结束时间
+        //Lấy thời điểm kết thúc hôm qua
         Date endTime = DateUtil.getDateEndTime(yesterday);
 
-        //每次查询的作家数量
+        //Số tác giả mỗi lần truy vấn
         int needAuthorNumber = 10;
-        //查询出来的真实作家数量
+        //Số tác giả thực tế truy vấn được
         int realAuthorNumber;
-        //每次查询最大申请时间
+        //Khoảng thời gian yêu cầu tối đa mỗi lần truy vấn
         Date maxAuthorCreateTime = new Date();
         do {
-            //1.查询作家列表
+            //1. Truy vấn danh sách tác giả
             List<Author> authors = authorService.queryAuthorList(needAuthorNumber, maxAuthorCreateTime);
             realAuthorNumber = authors.size();
             for (Author author : authors) {
                 maxAuthorCreateTime = author.getCreateTime();
                 Long authorId = author.getId();
                 Long userId = author.getUserId();
-                //2.查询作家作品
+                //2. Truy vấn tác phẩm của tác giả
                 List<Book> books = bookService.queryBookList(authorId);
 
                 int buyTotalMember = 0;
@@ -72,7 +72,7 @@ public class DailyIncomeStaSchedule {
 
                     Long bookId = book.getId();
 
-                    //3.查询该作家作品昨日的订阅人数
+                    //3. Truy vấn số người đăng ký hôm qua cho tác phẩm của tác giả
                     int buyMember = userService.queryBuyMember(bookId, startTime, endTime);
 
                     int buyCount = 0;
@@ -81,16 +81,16 @@ public class DailyIncomeStaSchedule {
 
 
                     if (buyMember > 0) {
-                        //4.查询该作家作品昨日的订阅次数
+                        //4. Truy vấn số lượt đăng ký hôm qua cho tác phẩm của tác giả
                         buyCount = userService.queryBuyCount(bookId, startTime, endTime);
-                        //5.查询该作家作品昨日的订阅总额
+                        //5. Truy vấn tổng Xu đăng ký hôm qua cho tác phẩm của tác giả
                         buyAccount = userService.queryBuyAccount(bookId, startTime, endTime);
                     }
 
-                    //6.判断该作家作品昨日收入数据是否统计入库
+                    //6. Kiểm tra dữ liệu thu nhập hôm qua của tác phẩm đã được lưu hay chưa
                     boolean isStatistics = authorService.queryIsStatisticsDaily(bookId, yesterday);
                     if (!isStatistics) {
-                        //7.该作家作品昨日收入数据未统计入库,分作品统计数据入库
+                        //7. Nếu chưa lưu thu nhập hôm qua, lưu thống kê theo từng tác phẩm
                         AuthorIncomeDetail authorIncomeDetail = new AuthorIncomeDetail();
                         authorIncomeDetail.setAuthorId(authorId);
                         authorIncomeDetail.setUserId(userId);
@@ -110,15 +110,15 @@ public class DailyIncomeStaSchedule {
 
                 }
 
-                //8.判断该作家所有作品昨日收入数据是否统计入库
+                //8. Kiểm tra dữ liệu thu nhập hôm qua của mọi tác phẩm đã được lưu hay chưa
                 boolean isStatistics = authorService.queryIsStatisticsDaily(authorId,0L, yesterday);
                 if (!isStatistics) {
                     if (buyTotalCount > 0) {
-                        //总订阅次数大于0，则订阅人数也大于0
+                        //Nếu tổng lượt đăng ký lớn hơn 0 thì số người đăng ký cũng lớn hơn 0
                         buyTotalMember = userService.queryBuyTotalMember(bookIds, startTime, endTime);
                     }
 
-                    //9.作家所有作品昨日收入数据统计入库
+                    //9. Lưu thống kê thu nhập hôm qua cho mọi tác phẩm của tác giả
                     AuthorIncomeDetail authorIncomeAllDetail = new AuthorIncomeDetail();
                     authorIncomeAllDetail.setAuthorId(authorId);
                     authorIncomeAllDetail.setUserId(userId);

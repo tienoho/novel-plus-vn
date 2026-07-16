@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 新闻表
+ * Bảng tin tức
  *
  * @author xiongxy
  * @email 1179705413@qq.com
@@ -40,12 +40,12 @@ public class NewsController {
         return "novel/news/news";
     }
 
-    @ApiOperation(value = "获取新闻表列表", notes = "获取新闻表列表")
+    @ApiOperation(value = "Lấy danh sách bảng tin tức", notes = "Lấy danh sách bảng tin tức")
     @ResponseBody
     @GetMapping("/list")
     @RequiresPermissions("novel:news:news")
     public R list(@RequestParam Map<String, Object> params) {
-        //查询列表数据
+        // Truy vấn dữ liệu danh sách
         Query query = new Query(params);
         List<NewsDO> newsList = newsService.list(query);
         int total = newsService.count(query);
@@ -53,14 +53,14 @@ public class NewsController {
         return R.ok().put("data", pageBean);
     }
 
-    @ApiOperation(value = "新增新闻表页面", notes = "新增新闻表页面")
+    @ApiOperation(value = "Trang thêm bảng tin tức", notes = "Trang thêm bảng tin tức")
     @GetMapping("/add")
     @RequiresPermissions("novel:news:add")
     String add() {
         return "novel/news/add";
     }
 
-    @ApiOperation(value = "修改新闻表页面", notes = "修改新闻表页面")
+    @ApiOperation(value = "Trang sửa bảng tin tức", notes = "Trang sửa bảng tin tức")
     @GetMapping("/edit/{id}")
     @RequiresPermissions("novel:news:edit")
     String edit(@PathVariable("id") Long id, Model model) {
@@ -69,7 +69,7 @@ public class NewsController {
         return "novel/news/edit";
     }
 
-    @ApiOperation(value = "查看新闻表页面", notes = "查看新闻表页面")
+    @ApiOperation(value = "Trang chi tiết bảng tin tức", notes = "Trang chi tiết bảng tin tức")
     @GetMapping("/detail/{id}")
     @RequiresPermissions("novel:news:detail")
     String detail(@PathVariable("id") Long id, Model model) {
@@ -79,9 +79,9 @@ public class NewsController {
     }
 
     /**
-     * 保存
+     * Lưu
      */
-    @ApiOperation(value = "新增新闻表", notes = "新增新闻表")
+    @ApiOperation(value = "Thêm bảng tin tức", notes = "Thêm bảng tin tức")
     @ResponseBody
     @PostMapping("/save")
     @RequiresPermissions("novel:news:add")
@@ -94,9 +94,9 @@ public class NewsController {
     }
 
     /**
-     * 修改
+     * Sửa
      */
-    @ApiOperation(value = "修改新闻表", notes = "修改新闻表")
+    @ApiOperation(value = "Sửa bảng tin tức", notes = "Sửa bảng tin tức")
     @ResponseBody
     @RequestMapping("/update")
     @RequiresPermissions("novel:news:edit")
@@ -107,9 +107,9 @@ public class NewsController {
     }
 
     /**
-     * 删除
+     * Xóa
      */
-    @ApiOperation(value = "删除新闻表", notes = "删除新闻表")
+    @ApiOperation(value = "Xóa bảng tin tức", notes = "Xóa bảng tin tức")
     @PostMapping("/remove")
     @ResponseBody
     @RequiresPermissions("novel:news:remove")
@@ -122,9 +122,9 @@ public class NewsController {
     }
 
     /**
-     * 删除
+     * Xóa
      */
-    @ApiOperation(value = "批量删除新闻表", notes = "批量删除新闻表")
+    @ApiOperation(value = "Xóa hàng loạt bảng tin tức", notes = "Xóa hàng loạt bảng tin tức")
     @PostMapping("/batchRemove")
     @ResponseBody
     @RequiresPermissions("novel:news:batchRemove")

@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title th:utext="${book.bookName}+'小说最新章节免费阅读和下载'"></title>
+    <title th:text="#{reader.seo.detail.title(${book.bookName})}"></title>
 
-    <meta name="keywords" th:content="${book.bookName}+','+${book.bookName}+'最新章节,'+${book.bookName}+'免费阅读,'+${book.bookName}+'TXT下载'">
+    <meta name="keywords" th:content="#{reader.seo.detail.keywords(${book.bookName})}">
 
     <meta name="description"
-          th:content="${book.bookName}+'最新章节列表,'+${book.bookName}+'最新更新章节免费无广告无弹窗在线阅读,'+${book.bookName}+'小说TXT免费下载。'">
+          th:content="#{reader.seo.detail.description(${book.bookName})}">
 
 
 
@@ -133,12 +133,12 @@
 
     </div>
         <div style="position:relative;padding: 10px 20px" class="layui-col-xs8 layui-col-sm8 layui-col-md8 layui-col-lg8">
-            <a th:href="'javascript:searchBooks(\''+ ${book.authorName}+'\')'"><div style=";color: #4c6978;" th:utext="'作者：'+ ${book.authorName}"></div></a>
-            <a th:href="'/book/book_ranking.html?catId='+${book.catId}"><div style="margin-top: 5px;color: #4c6978;" th:text="'类别：'+ ${book.catName}"></div></a>
-            <div style="margin-top: 5px;color: #4c6978;" th:text="'状态：'+ ${book.bookStatus==0?'连载':'完结'}"></div>
-            <div style="margin-top: 5px;color: #4c6978;">更新：<i th:text="${#dates.format(book.lastIndexUpdateTime, 'yy-MM-dd')}"></i></div>
-            <div style="margin-top: 5px;color: #4c6978;">评分：<i style="font-weight:bold;color: red" th:text="${book.score} + '分'"></i></div>
-            <div style="margin-top: 5px;color: #4c6978;">点击：<i style="font-weight:bold;color: red" th:text="${book.visitCount}"></i></div>
+            <a th:href="'javascript:searchBooks(\''+ ${book.authorName}+'\')'"><div style="color: #4c6978;"><span th:text="#{book.author}+'：'">Tác giả:</span><span th:text="${book.authorName}"></span></div></a>
+            <a th:href="'/book/book_ranking.html?catId='+${book.catId}"><div style="margin-top: 5px;color: #4c6978;"><span th:text="#{book.category}+'：'">Danh mục:</span><span th:text="${book.catName}"></span></div></a>
+            <div style="margin-top: 5px;color: #4c6978;"><span th:text="#{book.status}+'：'">Trạng thái:</span><span th:if="${book.bookStatus==0}" th:text="#{book.status.serializing}">Đang ra</span><span th:unless="${book.bookStatus==0}" th:text="#{book.status.completed}">Đã hoàn thành</span></div>
+            <div style="margin-top: 5px;color: #4c6978;"><span th:text="#{reader.update}+'：'">Cập nhật:</span><i th:text="${#dates.format(book.lastIndexUpdateTime, 'dd-MM-yy')}"></i></div>
+            <div style="margin-top: 5px;color: #4c6978;"><span th:text="#{reader.score}+'：'">Điểm:</span><i style="font-weight:bold;color: red" th:text="${book.score}"></i></div>
+            <div style="margin-top: 5px;color: #4c6978;"><span th:text="#{book.visits}+'：'">Lượt xem:</span><i style="font-weight:bold;color: red" th:text="${book.visitCount}"></i></div>
 
 
         </div>
@@ -147,9 +147,9 @@
 
 
 <div style="text-align: center;height: 45px;line-height: 45px">
-    <a th:href="'/book/'+${book.id}+'/'+${firstBookIndexId}+'.html'"  type="button" class="layui-btn layui-btn-sm layui-btn-radius">开始阅读</a>
+    <a th:href="'/book/'+${book.id}+'/'+${firstBookIndexId}+'.html'" type="button" class="layui-btn layui-btn-sm layui-btn-radius" th:text="#{book.readNow}">Đọc ngay</a>
 <!--
-    <button type="button" onclick="downloadFile()" class="layui-btn layui-btn-sm layui-btn-radius layui-bg-normal">下载TXT</button>
+    <button type="button" onclick="downloadFile()" class="layui-btn layui-btn-sm layui-btn-radius layui-bg-normal" th:text="#{book.downloadTxt}">Tải TXT</button>
 -->
 </div>
 <p style="line-height: 23px;padding: 10px;font-size: 14px;color: #4c6978;" th:utext="${book.bookDesc}">
@@ -159,9 +159,9 @@
 <div class="layui-collapse">
     <div class="layui-colla-item" >
         <h2 class="layui-colla-title">
-            <span>最新章节</span>
+            <span th:text="#{book.latest}">Chương mới nhất</span>
             <span style="margin-left: 30px">
-                更新： <i th:text="${#dates.format(book.lastIndexUpdateTime, 'yy-MM-dd HH:mm:ss')}"></i>
+                <span th:text="#{reader.update}+'：'">Cập nhật:</span> <i th:text="${#dates.format(book.lastIndexUpdateTime, 'dd-MM-yy HH:mm:ss')}"></i>
             </span>
         </h2>
         <div class="layui-colla-content layui-show indexP layui-row" id="indexList">
@@ -173,7 +173,7 @@
 </div>
 <div style="height: 42px;color:#4c6978;line-height: 42px;padding-left: 30px;background: #f2f2f2" >
 
-    <a th:href="'/book/indexList-'+${book.id}+'.html'">查看完整目录</a>
+    <a th:href="'/book/indexList-'+${book.id}+'.html'" th:text="#{book.allCatalog}">Toàn bộ mục lục</a>
 </div>
 
 <!--
@@ -190,7 +190,7 @@
 <div th:replace="/common/js :: js">
 </div>
 <script>
-    //查询是否在书架
+    // Kiểm tra truyện đã có trong tủ sách hay chưa
     $.ajax({
         type: "GET",
         url: "/user/queryIsInShelf",
@@ -199,12 +199,12 @@
         success: function (data) {
             if (data.code == 200) {
                 if (data.data) {
-                    $("#cFavs").html("<button type=\"button\" id=\"cFavs\"  class=\"layui-btn layui-btn-sm layui-btn-radius layui-btn-warm\">已在书架</button>");
+                    $("#cFavs").html("<button type=\"button\" id=\"cFavs\" class=\"layui-btn layui-btn-sm layui-btn-radius layui-btn-warm\">" + novelMessage('book.inShelf', 'Đã lưu') + "</button>");
                 }
 
 
             } else if (data.code == 1001) {
-                //未登录
+                // Chưa đăng nhập
 
             } else {
                 layer.alert(data.msg);
@@ -212,11 +212,11 @@
 
         },
         error: function () {
-            layer.alert('网络异常');
+            layer.alert(novelMessage('auth.networkError', 'Không thể kết nối mạng'));
         }
     })
 
-    //查询最新目录集合
+    // Lấy danh sách chương mới nhất
     $.ajax({
         type: "GET",
         url: "/book/queryNewIndexList",
@@ -235,7 +235,7 @@
 
 
             } else if (data.code == 1001) {
-                //未登录
+                // Chưa đăng nhập
 
             } else {
                 layer.alert(data.msg);
@@ -243,7 +243,7 @@
 
         },
         error: function () {
-            layer.alert('网络异常');
+            layer.alert(novelMessage('auth.networkError', 'Không thể kết nối mạng'));
         }
     })
 
@@ -255,11 +255,11 @@
             dataType: "json",
             success: function (data) {
                 if (data.code == 200) {
-                        $("#cFavs").html("<button type=\"button\" id=\"cFavs\"  class=\"layui-btn layui-btn-sm layui-btn-radius layui-btn-warm\">已在书架</button>");
+                        $("#cFavs").html("<button type=\"button\" id=\"cFavs\" class=\"layui-btn layui-btn-sm layui-btn-radius layui-btn-warm\">" + novelMessage('book.inShelf', 'Đã lưu') + "</button>");
 
 
                 } else if (data.code == 1001) {
-                    //未登录
+                    // Chưa đăng nhập
                     location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
 
                 } else {
@@ -268,7 +268,7 @@
 
             },
             error: function () {
-                layer.alert('网络异常');
+                layer.alert(novelMessage('auth.networkError', 'Không thể kết nối mạng'));
             }
         })
 
@@ -306,7 +306,7 @@
                     layer.alert(data.desc);
                     if(data.code == 1) {
                         $('#collectButton').unbind("click");
-                        $("#collectButton").text("撤下书架");
+                        $("#collectButton").text(novelMessage('book.removeShelf', 'Xóa khỏi tủ sách'));
                         $("#collectButton").click(function () {
                             cancelToCollect();
                         });
@@ -329,7 +329,7 @@
                     layer.alert(data.desc);
                 if(data.code == 1) {
                     $('#collectButton').unbind("click");
-                    $("#collectButton").text("加入书架");
+                    $("#collectButton").text(novelMessage('book.addShelf', 'Thêm vào tủ sách'));
                     $("#collectButton").click(function () {
                         addToCollect();
                     });

@@ -15,7 +15,7 @@ public class XssStringJsonSerializer extends JsonSerializer<String> {
     }
 
     /**
-     * 假如有html代码是自己传来的,需要设定对应的name,不走StringEscapeUtils.escapeHtml4(value)过滤
+     * Nếu tự gửi mã HTML, cần cấu hình name tương ứng để bỏ qua bộ lọc StringEscapeUtils.escapeHtml4(value)
      */
     @Override
     public void serialize(String value, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)

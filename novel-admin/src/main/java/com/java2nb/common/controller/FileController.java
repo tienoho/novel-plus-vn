@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 文件上传
+ * Tải tệp lên
  *
  * @author xiongxy
  * @email 1179705413@qq.com
@@ -51,7 +51,7 @@ public class FileController extends BaseController {
     @GetMapping("/list")
     @RequiresPermissions("common:sysFile:sysFile")
     public PageBean list(@RequestParam Map<String, Object> params) {
-        // 查询列表数据
+        // Truy vấn dữ liệu danh sách
         Query query = new Query(params);
         List<FileDO> sysFileList = sysFileService.list(query);
         int total = sysFileService.count(query);
@@ -74,7 +74,7 @@ public class FileController extends BaseController {
     }
 
     /**
-     * 信息
+     * Thông tin
      */
     @RequestMapping("/info/{id}")
     @RequiresPermissions("common:info")
@@ -84,7 +84,7 @@ public class FileController extends BaseController {
     }
 
     /**
-     * 保存
+     * Lưu
      */
     @ResponseBody
     @PostMapping("/save")
@@ -97,7 +97,7 @@ public class FileController extends BaseController {
     }
 
     /**
-     * 修改
+     * Sửa
      */
     @RequestMapping("/update")
     @RequiresPermissions("common:update")
@@ -108,21 +108,21 @@ public class FileController extends BaseController {
     }
 
     /**
-     * 删除
+     * Xóa
      */
     @PostMapping("/remove")
     @ResponseBody
     // @RequiresPermissions("common:remove")
     public R remove(Long id, HttpServletRequest request) {
         if ("test".equals(getUsername())) {
-            return R.error(1, "演示系统不允许修改,完整体验请部署程序");
+            return R.error(1, messages.get("error.demoReadOnly"));
         }
         String fileName =
             jnConfig.getUploadPath() + sysFileService.get(id).getUrl().replace(Constant.UPLOAD_FILES_PREFIX, "");
         if (sysFileService.remove(id) > 0) {
             boolean b = FileUtil.deleteFile(fileName);
             if (!b) {
-                return R.error("数据库记录删除成功，文件删除失败");
+                return R.error(messages.get("error.fileDeletePartial"));
             }
             return R.ok();
         } else {
@@ -131,14 +131,14 @@ public class FileController extends BaseController {
     }
 
     /**
-     * 删除
+     * Xóa
      */
     @PostMapping("/batchRemove")
     @ResponseBody
     @RequiresPermissions("common:remove")
     public R remove(@RequestParam("ids[]") Long[] ids) {
         if ("test".equals(getUsername())) {
-            return R.error(1, "演示系统不允许修改,完整体验请部署程序");
+            return R.error(1, messages.get("error.demoReadOnly"));
         }
         sysFileService.batchRemove(ids);
         return R.ok();
@@ -148,7 +148,7 @@ public class FileController extends BaseController {
     @PostMapping("/upload")
     R upload(@RequestParam("file") MultipartFile file, HttpServletRequest request) {
         if ("test".equals(getUsername())) {
-            return R.error(1, "演示系统不允许修改,完整体验请部署程序");
+            return R.error(1, messages.get("error.demoReadOnly"));
         }
         Date date = new Date();
         String year = DateUtils.format(date, DateUtils.YEAR_PATTERN);
@@ -173,13 +173,13 @@ public class FileController extends BaseController {
     }
 
     /**
-     * 文件下载
+     * Tải tệp
      */
     @RequestMapping(value = "/download")
     public void fileDownload(String filePath, String fileName, HttpServletResponse resp) throws Exception {
         String realFilePath = jnConfig.getUploadPath() + filePath;
         InputStream in = new FileInputStream(realFilePath);
-        //设置响应头，对文件进行url编码
+        // Đặt header phản hồi và mã hóa URL cho tệp
         fileName = URLEncoder.encode(fileName, "UTF-8");
         resp.setHeader("Content-Disposition", "attachment;filename=" + fileName);
 

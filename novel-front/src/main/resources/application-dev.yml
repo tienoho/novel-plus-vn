@@ -5,20 +5,20 @@ spring:
 
 pic:
   save:
-    type: 1 #图片保存方式, 1不保存，使用爬取的网络图片 ，2保存在自己的存储介质
-    storage: local #存储介质，local：本地，OSS：阿里云对象存储
-    path: /Users/xiongxiaoyang/java/  #图片保存路径
+    type: 1 #Cách lưu ảnh: 1 không lưu, dùng ảnh nguồn; 2 lưu vào phương tiện của hệ thống
+    storage: local #Phương tiện lưu trữ: local cục bộ, OSS lưu trữ đối tượng Alibaba Cloud
+    path: /Users/xiongxiaoyang/java/  #Đường dẫn lưu ảnh
 
 
 
-#线程池配置
+#Cấu hình thread pool
 thread:
   pool:
-    #核心线程池数量
+    #Số luồng lõi
     core-pool-size: 10
-    #最大线程池数量
+    #Số luồng tối đa
     maximum-pool-size: 20
-    #线程超时时间（秒）
+    #Thời gian hết hạn luồng (giây)
     keep-alive-time: 10
-    #队列大小
+    #Kích thước hàng đợi
     queue-size: 100

@@ -5,7 +5,7 @@ $(function () {
     });
 });
 /**
- * 基本信息提交
+ * Gửi thông tin cơ bản
  */
 $("#base_save").click(function () {
     var hobbyStr = getHobbyStr();
@@ -18,11 +18,11 @@ $("#base_save").click(function () {
                 data : $('#basicInfoForm').serialize(),
                 async : false,
                 error : function(request) {
-                    laryer.alert("Connection error");
+                    layer.alert(adminMessage('connectionError', 'Lỗi kết nối'));
                 },
                 success : function(data) {
                     if (data.code == 0) {
-                        parent.layer.msg("更新成功");
+                        parent.layer.msg(adminMessage('updateSuccess', 'Cập nhật thành công'));
                     } else {
                         parent.layer.alert(data.msg)
                     }
@@ -40,11 +40,11 @@ $("#pwd_save").click(function () {
             data : $('#modifyPwd').serialize(),
             async : false,
             error : function(request) {
-                parent.laryer.alert("Connection error");
+                parent.layer.alert(adminMessage('connectionError', 'Lỗi kết nối'));
             },
             success : function(data) {
                 if (data.code == 0) {
-                    parent.layer.alert("更新密码成功");
+                    parent.layer.alert(adminMessage('updateSuccess', 'Cập nhật thành công'));
                     $("#photo_info").click();
                 } else {
                     parent.layer.alert(data.msg)

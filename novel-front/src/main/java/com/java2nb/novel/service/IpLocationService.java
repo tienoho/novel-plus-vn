@@ -1,12 +1,12 @@
 package com.java2nb.novel.service;
 
 /**
- * IP 地址定位服务类
+ * Dịch vụ định vị địa chỉ IP
  *
- * <p>该服务用于实现 IP 地址到地理位置的查询功能，
- * 包括国家、省份、城市等信息。</p>
+ * <p>Dịch vụ truy vấn vị trí địa lý theo địa chỉ IP,
+ * bao gồm quốc gia, tỉnh và thành phố.</p>
  *
- * <p>此类设计为 Spring 管理的 Service Bean，支持在 Controller 或其他 Service 中注入使用。</p>
+ * <p>Lớp là Service Bean do Spring quản lý và có thể inject vào Controller hoặc Service khác.</p>
  *
  * @author xiongxiaoyang
  * @date 2025/6/30
@@ -14,10 +14,10 @@ package com.java2nb.novel.service;
 public interface IpLocationService {
 
     /**
-     * 根据 IP 地址查询地理位置信息
+     * Truy vấn vị trí địa lý theo địa chỉ IP
      *
-     * @param ip 待查询的 IP 地址（IPv4）
-     * @return 如果是中国 IP，返回省份；否则返回国家
+     * @param ip địa chỉ IP cần truy vấn (IPv4)
+     * @return tỉnh nếu là IP Trung Quốc; nếu không thì quốc gia
      */
     String getLocation(String ip);
 

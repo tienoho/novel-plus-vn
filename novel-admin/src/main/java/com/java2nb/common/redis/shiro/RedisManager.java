@@ -40,7 +40,7 @@ public class RedisManager {
     }
 
     /**
-     * 初始化方法
+     * Phương thức khởi tạo
      */
     public void init() {
         if (jedisPool == null) {

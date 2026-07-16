@@ -13,29 +13,29 @@ import java.util.List;
 public interface NewsService {
 
     /**
-     * 查询首页新闻
+     * Truy vấn tin tức trang chủ
      * @return
      * */
     List<News> listIndexNews();
 
     /**
-     * 查询新闻
-     * @param newsId 新闻id
-     * @return 新闻
+     * Truy vấn tin tức
+     * @param newsId ID tin tức
+     * @return tin tức
      * */
     News queryNewsInfo(Long newsId);
 
     /**
-     * 分页查询新闻列表
-     * @param page 页码
-     * @param pageSize 分页大小
-     * @return 新闻分页数据
+     * Truy vấn phân trang danh sách tin tức
+     * @param page số trang
+     * @param pageSize kích thước trang
+     * @return dữ liệu phân trang tin tức
      * */
     PageBean<News> listByPage(int page, int pageSize);
 
     /**
-     * 增加新闻阅读量
-     * @param newsId 新闻ID
+     * Tăng lượt đọc tin tức
+     * @param newsId ID tin tức
      * */
     void addReadCount(Integer newsId);
 }

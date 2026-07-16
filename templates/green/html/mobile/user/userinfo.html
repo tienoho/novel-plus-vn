@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
 
     <meta charset="utf-8">
@@ -68,7 +68,7 @@
 <body>
 <div id="body">
 
-    <!-- 你的HTML代码 -->
+    <!-- Nội dung trung tâm người dùng. -->
     <div style="height: 50px;line-height: 50px;text-align: center"
          class="layui-header header header-doc  layui-bg-cyan">
 
@@ -76,7 +76,7 @@
             <a href="javascript:history.go(-1)">
                 <i style="font-size: 20px;color: #fff;" class="layui-icon">&#xe65c;</i></a>
         </div>
-        <b class="layui-icon">用户中心</b>
+        <b class="layui-icon" th:text="#{user.center}">Tài khoản của tôi</b>
         <div style="width:10%;float: right;margin-right: 10px"><a href="/">
             <i style="font-size: 20px;color: #fff;" class="layui-icon">&#xe68e;</i>
         </a>
@@ -86,8 +86,8 @@
     <div class="layui-colla-item">
 
         <div class="layui-container" style="padding: 50px;text-align: center">
-            <img id="imgLogo" class="user_big_head" src="/images/man.png">
-            <div style="padding: 10px;font-size: 18px"><span id="my_name">梦入神机</span>
+            <img id="imgLogo" class="user_big_head" src="/images/man.png" th:alt="#{user.center}">
+            <div style="padding: 10px;font-size: 18px"><span id="my_name">--</span>
                 <svg id="boyIcon" style="display: none" t="1693635090733" class="icon" viewBox="0 0 1024 1024"
                      version="1.1"
                      xmlns="http://www.w3.org/2000/svg"
@@ -103,7 +103,7 @@
                           fill="#d4237a" p-id="3687"></path>
                 </svg>
             </div>
-            <div style="padding: 5px;">账户余额：<span id="accountBalance" style="color: #3eaf7c">3000</span> 屋币</div>
+            <div style="padding: 5px;"><span th:text="#{payment.balance}+': '">Số dư: </span><span id="accountBalance" style="color: #3eaf7c">0</span> <span th:text="#{payment.currency}">Xu</span></div>
 
         </div>
     </div>
@@ -130,7 +130,7 @@
                           fill="#3eaf7c" p-id="4084"></path>
                 </svg>
             </div>
-            <div style="float: left; margin-left: 20px">充值</div>
+            <div style="float: left; margin-left: 20px" th:text="#{site.recharge}">Nạp Xu</div>
             <div style="float: right; margin-right: 20px"><i style="font-size: 14px;color:#666"
                                                              class="layui-icon">&#xe602;</i>
             </div>
@@ -149,7 +149,7 @@
                           p-id="3654" fill="#3eaf7c"></path>
                 </svg>
             </div>
-            <div style="float: left; margin-left: 20px">我的书架</div>
+            <div style="float: left; margin-left: 20px" th:text="#{user.bookshelf}">Tủ sách</div>
             <div style="float: right; margin-right: 20px"><i style="font-size: 14px;color:#666"
                                                              class="layui-icon">&#xe602;</i>
             </div>
@@ -169,7 +169,7 @@
                           fill="#3eaf7c" p-id="1878"></path>
                 </svg>
             </div>
-            <div style="float: left; margin-left: 20px">阅读历史</div>
+            <div style="float: left; margin-left: 20px" th:text="#{user.history}">Lịch sử đọc</div>
             <div style="float: right; margin-right: 20px"><i style="font-size: 14px;color:#666"
                                                              class="layui-icon">&#xe602;</i>
             </div>
@@ -184,7 +184,7 @@
             <i style="font-size: 25px;padding-right: 20px;color:#3eaf7c"
                class="layui-icon">&#xe611;
             </i>
-            我的书评
+            Bình luận của tôi
             <div style="float: right; margin-right: 20px"><i style="font-size: 14px;color:#666"
                                                              class="layui-icon">&#xe602;</i>
             </div>
@@ -198,7 +198,7 @@
         <blockquote class="layui-elem-quote"
                     style="background-color:#fafafa;border-left:0px;margin-top:10px;margin-bottom: 10px;text-align: center;padding:15px 10px;color: #3eaf7c;font-size: 16px">
 
-            退出登录
+            <span th:text="#{site.logout}">Đăng xuất</span>
         </blockquote>
     </a>
 
@@ -212,9 +212,9 @@
 </div>
 
 
-<script>
+<script th:inline="javascript">
 
-    //查询用户信息
+    // Tải thông tin người dùng.
     $.ajax({
         type: "get",
         url: "/user/userInfo",
@@ -242,7 +242,7 @@
                 $("#accountBalance").html(data.data.accountBalance);
 
             } else if (data.code == 1001) {
-                //未登录
+                // Chuyển đến trang đăng nhập khi phiên đã hết hạn.
                 location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
 
             } else {
@@ -251,7 +251,7 @@
 
         },
         error: function () {
-            layer.alert('网络异常');
+            layer.alert(/*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng');
         }
     })
 

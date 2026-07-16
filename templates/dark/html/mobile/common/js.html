@@ -1,3 +1,19 @@
-<script th:fragment="js" src="/mobile/js/jquery-1.9.1.js"></script>
-<script th:fragment="js" src="/mobile/js/common.js"></script>
-<script th:fragment="js" src="/mobile/layui/layui.all.js"></script>
+<th:block th:fragment="js">
+    <script th:inline="javascript">
+        window.NovelI18n = Object.assign(window.NovelI18n || {}, {
+            login: /*[[#{site.login}]]*/ 'Đăng nhập',
+            register: /*[[#{site.register}]]*/ 'Đăng ký',
+            logout: /*[[#{site.logout}]]*/ 'Đăng xuất',
+            networkError: /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng',
+            imageOnly: /*[[#{validation.imageOnly}]]*/ 'Chỉ được tải lên tệp hình ảnh.',
+            imageMax1M: /*[[#{validation.imageMax1M}]]*/ 'Kích thước ảnh không được vượt quá 1 MB.',
+            lightOn: /*[[#{reader.lightOn}]]*/ 'Bật đèn',
+            lightOff: /*[[#{reader.lightOff}]]*/ 'Tắt đèn',
+            eyeCare: /*[[#{reader.eyeCare}]]*/ 'Bảo vệ mắt',
+            favoriteUnsupported: /*[[#{browser.favoriteUnsupported}]]*/ 'Trình duyệt này không hỗ trợ lưu tự động. Hãy nhấn Ctrl+D để lưu trang.'
+        });
+    </script>
+    <script src="/mobile/js/jquery-1.9.1.js"></script>
+    <script src="/mobile/layui/layui.all.js"></script>
+    <script src="/mobile/js/common.js?v2"></script>
+</th:block>

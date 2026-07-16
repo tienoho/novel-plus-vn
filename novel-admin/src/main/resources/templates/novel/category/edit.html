@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <meta charset="utf-8">
 <head th:include="include :: header"></head>
 <body class="gray-bg">
@@ -12,7 +12,7 @@
                         <input id="id" name="id" th:value="${category.id}"
                                type="hidden">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">分类名：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.category.name}+'：'">Tên danh mục:</label>
                             <div class="col-sm-3">
                                 <input id="name" name="name"
                                        th:value="${category.name}"
@@ -21,7 +21,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">排序：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.category.sort}+'：'">Thứ tự:</label>
                             <div class="col-sm-2">
                                 <input id="sort" name="sort"
                                        th:value="${category.sort}"
@@ -31,7 +31,7 @@
                         </div>
                         <div class="form-group">
                             <div class="col-sm-8 col-sm-offset-3">
-                                <button type="submit" class="btn btn-primary">提交</button>
+                                <button type="submit" class="btn btn-primary" th:text="#{common.submit}">Gửi</button>
                             </div>
                         </div>
                     </form>

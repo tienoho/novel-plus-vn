@@ -84,16 +84,16 @@ var HeaderShowUtil = {
     headerShowHistory: function (obj) {
         if ($("#headerUserHistory").html().length < 10) {
             var rStr = '<div class="record_box">';
-            rStr += '					<div class="record_title" id="hdShowTitle"><a href="javascript:void(0);" class="record_tit1 on" onclick="javascript:HeaderShowUtil.headerShowHistoryLog(this);">最近阅读</a><a href="javascript:void(0);" class="record_tit2" onclick="javascript:HeaderShowUtil.headerShowFavLog(this);">我的书架</a></div>';
+            rStr += '					<div class="record_title" id="hdShowTitle"><a href="javascript:void(0);" class="record_tit1 on" onclick="javascript:HeaderShowUtil.headerShowHistoryLog(this);">' + headerMessage('recentReading', 'Đọc gần đây') + '</a><a href="javascript:void(0);" class="record_tit2" onclick="javascript:HeaderShowUtil.headerShowFavLog(this);">' + headerMessage('bookshelf', 'Tủ sách') + '</a></div>';
             rStr += '					<div class="record_list record_list1" id="hdShowHistory">';
             rStr += '						<ul>';
             rStr += '						</ul>';
-            rStr += '						<a class="all" href="/" >查看全部</a>';
+            rStr += '						<a class="all" href="/" >' + headerMessage('viewAll', 'Xem tất cả') + '</a>';
             rStr += '					</div>';
             rStr += '					<div class="record_list record_list2" style="display:none" id="hsShowFav">';
             rStr += '						<ul>';
             rStr += '						</ul>';
-            rStr += '						<a class="all" href="/" >查看全部</a>';
+            rStr += '						<a class="all" href="/" >' + headerMessage('viewAll', 'Xem tất cả') + '</a>';
             rStr += '					</div>';
             rStr += '					<p class="sp"></p>';
             rStr += '				</div>';
@@ -132,7 +132,7 @@ var HeaderShowUtil = {
 
         }
         else {
-            $("#hdShowHistory ul").html("<li>暂无看书历史</li>");
+            $("#hdShowHistory ul").html("<li>" + headerMessage('noHistory', 'Chưa có lịch sử đọc') + "</li>");
         }
     },
     headerShowFavLog: function (obj) {
@@ -145,9 +145,12 @@ var HeaderShowUtil = {
         if (uname != undefined && uname != "") {
         }
         else {
-            rStr = '<li><a href="/user/login.html">请先登录</a></li>';
+            rStr = '<li><a href="/user/login.html">' + headerMessage('loginFirst', 'Vui lòng đăng nhập trước') + '</a></li>';
             $("#hsShowFav ul").html(rStr);
         }
 
     }
+}
+function headerMessage(key, fallback) {
+    return window.NovelI18n && window.NovelI18n[key] ? window.NovelI18n[key] : fallback;
 }

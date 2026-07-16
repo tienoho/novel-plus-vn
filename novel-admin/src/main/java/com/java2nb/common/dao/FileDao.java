@@ -9,7 +9,7 @@ import java.util.Map;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * 文件上传
+ * Tải tệp lên
  * @author xiongxy
  * @email 1179705413@qq.com
  * @date 2019-10-03 15:45:42

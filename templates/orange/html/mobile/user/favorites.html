@@ -1,17 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
-<!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title th:text="${application.website.name}+'列表'"></title>
+    <title th:text="${application.website.name}+' - '+#{user.bookshelf}"></title>
 
     <meta name="keywords"
-          th:content="${application.website.name}+',精品小说,弹幕网站,弹幕,弹幕小说网站,免费小说,小说阅读,小说排行,轻小说,txt小说下载,电子书下载,动漫轻小说,日本轻小说'">
+          th:content="${application.website.name}+','+#{book.seo.list.keywords}">
 
     <meta name="description"
-          th:content="${application.website.name}+'是国内优秀的小说弹幕网站,'+${application.website.name}+'提供海量热门网络小说,日本轻小说,国产轻小说,动漫小说,轻小说在线阅读和TXT小说下载,致力于网络精品小说的收集,智能计算小说评分,打造小说精品排行榜,致力于无广告无弹窗的小说阅读环境。'">
+          th:content="#{book.seo.list.description(${application.website.name})}">
 
 
     <div th:include="mobile/common/css :: css"></div>
@@ -19,6 +17,22 @@
     </div>
 
     <style type="text/css">
+
+        body {
+
+            -webkit-user-select: none; /* Chrome, Safari, Opera */
+
+
+            -moz-user-select: none; /* Firefox */
+
+
+            -ms-user-select: none; /* Internet Explorer/Edge */
+
+
+            user-select: none; /* Non-prefixed version, currently supported by Chrome, Opera, and Firefox */
+
+
+        }
 
 
         .line-limit-length {
@@ -61,10 +75,21 @@
             width: 130px;
             height: 180px;
         }
+
+        #tipLayer {
+            display: none;
+            position: absolute;
+            background-color: rgba(255, 0, 0, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            z-index: 1000;
+        }
+
     </style>
 </head>
 <body>
-
 
 <input type="hidden" id="limit" th:value="${limit}"/>
 <input type="hidden" id="curr" th:value="${curr}"/>
@@ -83,20 +108,24 @@
         <a href="javascript:history.go(-1)">
             <i style="font-size: 20px;color: #fff;" class="layui-icon">&#xe65c;</i></a>
     </div>
-    <b class="layui-icon">我的书架</b>
+    <b class="layui-icon" th:text="#{user.bookshelf}">Tủ sách</b>
     <div style="width:10%;float: right;margin-right: 10px"><a href="/">
         <i style="font-size: 20px;color: #fff;" class="layui-icon">&#xe68e;</i>
     </a>
     </div>
 </div>
 <div id="body">
-<div id="bookList">
+    <div id="bookList">
 
 
-</div>
+    </div>
+    <div id="tipLayer"
+         style="display:none; position:absolute; background-color:rgba(255, 0, 0, 0.8); color:white; padding:5px; border-radius:3px; cursor:pointer;">
+        <span th:text="#{book.removeShelf}">Xóa khỏi tủ sách</span>
+    </div>
 
 
-<div id="books" style="text-align: center;"></div>
+    <div id="books" style="text-align: center;"></div>
 
 </div>
 <div th:replace="mobile/common/footer :: footer">
@@ -104,21 +133,30 @@
 
 <a name="buttom"></a>
 </body>
-
 <div th:replace="mobile/common/js :: js"></div>
 
-<script>
-    $("#body").css("min-height",($(window).height() - 110)+"px")
+<script th:inline="javascript">
 
-    search(1,20);
+    const authorLabel = /*[[#{book.author}]]*/ 'Tác giả';
+    const categoryLabel = /*[[#{book.category}]]*/ 'Danh mục truyện';
+    const statusLabel = /*[[#{book.status}]]*/ 'Trạng thái';
+    const serializingLabel = /*[[#{book.status.serializing}]]*/ 'Đang ra';
+    const completedLabel = /*[[#{book.status.completed}]]*/ 'Đã hoàn thành';
+    const updatedLabel = /*[[#{reader.updated}]]*/ 'Cập nhật';
+    const descriptionLabel = /*[[#{book.description}]]*/ 'Giới thiệu';
+    const networkErrorText = /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng';
 
-    function search(curr,limit) {
+    var timeout, isLongPress = false;
+
+    search(1, 20);
+
+    function search(curr, limit) {
 
 
         $.ajax({
             type: "get",
             url: "/user/listBookShelfByPage",
-            data: {'curr':curr,'limit':limit},
+            data: {'curr': curr, 'limit': limit},
             dataType: "json",
             success: function (data) {
                 if (data.code == 200) {
@@ -132,31 +170,25 @@
                             book.bookDesc = book.bookDesc.substring(0,end);
                         }*/
 
-                        if(book.bookDesc){
-                            book.bookDesc = book.bookDesc.replace(/<[^>]+>/g,"").replace(/\s+/g,"").replace(/&nbsp;/g,"");
+                        if (book.bookDesc) {
+                            book.bookDesc = book.bookDesc.replace(/<[^>]+>/g, "").replace(/\s+/g, "").replace(/&nbsp;/g, "");
                         }
 
-                        bookListHtml += ("<div class=\"layui-row\" style=\"margin-bottom:10px;padding:10px;background: #f2f2f2\">\n" +
-                            "        <a href='/book/"+book.bookId+"/"+book.preContentId+".html'>\n" +
+                        bookListHtml += ("<div id='" + book.bookId + "' onclick='read(\"" + book.bookId + "\",\"" + book.preContentId + "\")' class=\"item layui-row\" style=\"margin-bottom:10px;padding:10px;background: #f2f2f2\">\n" +
                             "            <div class=\"layui-col-xs6 layui-col-sm3 layui-col-md2 layui-col-lg2\" style=\"text-align: center\">\n" +
                             "                <img style='width: 130px;height: 180px' align=\"center\"\n" +
-                            "                     src=\""+book.picUrl+"\"/>\n" +
-                            "\n" +
+                            "                     src=\"" + book.picUrl + "\"/>\n" +
                             "            </div>\n" +
-                            "        </a>\n" +
+                            "        \n" +
                             "        <div style=\"padding: 10px\" class=\"layui-col-xs6 layui-col-sm8 layui-col-md8 layui-col-lg8\">\n" +
-                            "            <a href='/book/"+book.bookId+"/"+book.preContentId+".html'>\n" +
-                            "                <div class=\"line-limit-length\" style=\";color: #000;font-size: 15px\">"+book.bookName+"</div>\n" +
-                            "            </a>\n" +
+                            "                <div class=\"line-limit-length\" style=\";color: #000;font-size: 15px\">" + book.bookName + "</div>\n" +
                             "            <div style=\";color: #4c6978;float: right;\"><i style=\"color: red\"></i></div>\n" +
-                            "            <a href='/book/"+book.bookId+"/"+book.preContentId+".html'>\n" +
-                            "                <div style=\";color: #a6a6a6;\" class=\"line-limit-length\">作者："+book.authorName+"</div>\n" +
-                            "            </a>\n" +
-                            "            <div style=\"margin-top: 5px;color: #a6a6a6;\">类别："+book.catName+"</div>\n" +
-                            "            <div style=\"margin-top: 5px;color: #a6a6a6;\">状态："+(book.bookStatus==0?'连载':'完结')+"</div>\n" +
-                            "            <div style=\"margin-top: 5px;color: #a6a6a6;\">更新：<i style='color: red'>"+book.lastIndexUpdateTime.substr(0,11)+"</i>\n" +
+                            "                <div style=\"color: #a6a6a6;\" class=\"line-limit-length\">" + authorLabel + ": " + book.authorName + "</div>\n" +
+                            "            <div style=\"margin-top: 5px;color: #a6a6a6;\">" + categoryLabel + ": " + book.catName + "</div>\n" +
+                            "            <div style=\"margin-top: 5px;color: #a6a6a6;\">" + statusLabel + ": " + (book.bookStatus == 0 ? serializingLabel : completedLabel) + "</div>\n" +
+                            "            <div style=\"margin-top: 5px;color: #a6a6a6;\">" + updatedLabel + ": <i style='color: red'>" + book.lastIndexUpdateTime.substr(0, 11) + "</i>\n" +
                             "            </div>\n" +
-                            "            <div style=\"margin-top: 5px;color: #a6a6a6;\">简介："+(book.bookDesc?(book.bookDesc.length>15?(book.bookDesc.substr(0,15)+"..."):book.bookDesc):book.bookDesc)+"</div>\n" +
+                            "            <div style=\"margin-top: 5px;color: #a6a6a6;\">" + descriptionLabel + ": " + (book.bookDesc ? (book.bookDesc.length > 15 ? (book.bookDesc.substr(0, 15) + "...") : book.bookDesc) : '') + "</div>\n" +
                             "\n" +
                             "\n" +
                             "        </div>\n" +
@@ -165,24 +197,59 @@
                     }
                     $("#bookList").html(bookListHtml);
 
+
+                    $(".item").on('touchstart', function (e) {
+                        var element = $(this);
+                        // Xóa bộ hẹn giờ còn tồn tại.
+                        clearTimeout(timeout);
+                        isLongPress = false;
+
+                        // Lấy vị trí điểm chạm.
+                        var touch = e.originalEvent.touches[0];
+
+                        // Mở menu nhấn giữ sau 500 ms.
+                        timeout = setTimeout(function () {
+                            e.preventDefault();
+                            showTip(touch, element);
+                        }, 1000);
+                    }).on('touchend', function (e) {
+                        if (!isLongPress) {
+                            // Nếu không nhấn giữ, xử lý như một lần nhấn bình thường.
+                            clearTimeout(timeout);
+                        }
+                    }).on('touchmove', function () {
+                        clearTimeout(timeout);
+                        hideTip();
+                    }).on('contextmenu', function (e) {
+                        e.preventDefault();
+                    });
+
+                    $('#tipLayer').click(function () {
+                        // Xóa phần tử tương ứng khi xác nhận trong menu.
+                        removeFromBookShelf($(this).data('target').attr("id"));
+                        $(this).data('target').remove();
+                        hideTip();
+                    });
+
+
                     layui.use('laypage', function () {
                         var laypage = layui.laypage;
 
-                        //执行一个laypage实例
+                        // Khởi tạo phân trang Layui.
                         laypage.render({
-                            elem: 'books' //注意，这里的 test1 是 ID，不用加 # 号
-                            , count: data.data.total //数据总数，从服务端得到,
+                            elem: 'books' // ID phần tử, không thêm dấu #.
+                            , count: data.data.total // Tổng số bản ghi từ máy chủ.
                             , curr: data.data.pageNum
                             , limit: data.data.pageSize
                             , jump: function (obj, first) {
 
 
-                                //obj包含了当前分页的所有参数，比如：
-                                console.log(obj.curr); //得到当前页，以便向服务端请求对应页的数据。
-                                console.log(obj.limit); //得到每页显示的条数
+                                // obj chứa các tham số phân trang hiện tại.
+                                console.log(obj.curr); // Trang hiện tại.
+                                console.log(obj.limit); // Số bản ghi mỗi trang.
 
 
-                                //首次不执行
+                                // Không gọi lại trong lần khởi tạo đầu tiên.
                                 if (!first) {
                                     search(obj.curr, obj.limit);
                                 } else {
@@ -197,10 +264,27 @@
 
             },
             error: function () {
-                layer.alert('网络异常');
+                layer.alert(networkErrorText);
             }
         })
 
+    }
+
+    function showTip(touchEvent, element) {
+        isLongPress = true;
+        // Đặt vị trí menu theo điểm chạm.
+        $('#tipLayer')
+            .css({
+                top: touchEvent.pageY - 100, // Dịch menu lên trên điểm chạm.
+                left: touchEvent.pageX - ($('#tipLayer').outerWidth() / 2)
+            })
+            .data('target', element) // Lưu phần tử đích cho thao tác tiếp theo.
+            .show();
+    }
+
+    function hideTip() {
+        isLongPress = false;
+        $('#tipLayer').hide().removeData('target'); // Ẩn menu và xóa dữ liệu đích.
     }
 
 
@@ -248,20 +332,35 @@
         searchByAllCondition(1, 20, keywords);
     }
 
+    function read(bookId, contentId) {
+        if (isLongPress) {
+            return false;
+        }
+        location.href = '/book/' + bookId + "/" + contentId + ".html"
+        hideTip();
+    }
+
 </script>
 <script>
 
 
+    function removeFromBookShelf(bookId) {
 
+        $.ajax({
+            type: "delete",
+            url: "/user/removeFromBookShelf/" + bookId,
+            data: {},
+            dataType: "json",
+            success: function (data) {
+                if (data.code == 200) {
+                    $("#shelf" + bookId).remove();
+                }
+            }
+        });
 
-    function toMyCollect() {
-        var token = localStorage.getItem("token");
-        if (token) {
-            window.location.href = "/book/search?token=" + token;
-        } else {
-            window.location.href = "/user/login.html";
-        }
     }
+
+
 </script>
 
 

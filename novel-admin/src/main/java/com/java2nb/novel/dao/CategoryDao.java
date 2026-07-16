@@ -10,7 +10,7 @@ import java.util.Map;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * 新闻类别表
+ * Bảng danh mục tin tức
  * @author xiongxy
  * @email 1179705413@qq.com
  * @date 2020-12-01 10:03:41

@@ -19,6 +19,7 @@ import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 
 import com.java2nb.common.utils.ShiroUtils;
+import com.java2nb.common.utils.Messages;
 import com.java2nb.system.dao.SysUserDao;
 import com.java2nb.system.domain.UserDO;
 import com.java2nb.system.service.MenuService;
@@ -47,28 +48,29 @@ public class UserRealm extends AuthorizingRealm {
         String password = new String((char[]) token.getCredentials());
 
         SysUserDao userMapper = ApplicationContextRegister.getBean(SysUserDao.class);
-        // 查询用户信息
+        Messages messages = ApplicationContextRegister.getBean(Messages.class);
+        // Truy vấn thông tin người dùng
         UserDO user = userMapper.list(map).get(0);
 
-        // 账号不存在
+        // Tài khoản không tồn tại
         if (user == null) {
-            throw new UnknownAccountException("账号或密码不正确");
+            throw new UnknownAccountException(messages.get("auth.login.failed"));
         }
 
-        // 密码错误
+        // Mật khẩu sai
         if (!password.equals(user.getPassword())) {
-            throw new IncorrectCredentialsException("账号或密码不正确");
+            throw new IncorrectCredentialsException(messages.get("auth.login.failed"));
         }
 
-        // 账号锁定
+        // Tài khoản bị khóa
         if (user.getStatus() == 0) {
-            throw new LockedAccountException("账号已被锁定,请联系管理员");
+            throw new LockedAccountException(messages.get("error.accountLocked"));
         }
 
-        //查询下级部门
+        // Truy vấn phòng ban cấp dưới
         DeptDao deptDao = ApplicationContextRegister.getBean(DeptDao.class);
         user.setSupDeptIds(deptDao.getDeptIdsByParentId(user.getDeptId()));
-        //查询数据权限
+        // Truy vấn quyền dữ liệu
         DataPermDao dataPermDao = ApplicationContextRegister.getBean(DataPermDao.class);
         List<DataPermDO> dataPerms = dataPermDao.selectDataPermsByUserId(user.getUserId());
         Map<String, List<DataPermDO>> permsMap = new HashMap<>();

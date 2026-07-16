@@ -11,49 +11,49 @@ public class UserDO implements Serializable {
     private static final long serialVersionUID = 1L;
     //
     private Long userId;
-    // 用户名
+    // Tên người dùng
     private String username;
-    // 用户真实姓名
+    // Tên thật người dùng
     private String name;
-    // 密码
+    // Mật khẩu
     private String password;
-    // 部门
+    // Phòng ban
     private Long deptId;
-    //下级部门
+    //Phòng ban cấp dưới
     private String supDeptIds;
     private String deptName;
-    // 邮箱
+    // Email
     private String email;
-    // 手机号
+    // Số điện thoại
     private String mobile;
-    // 状态 0:禁用，1:正常
+    // Trạng thái: 0 vô hiệu hóa, 1 bình thường
     private Integer status;
-    // 创建用户id
+    // ID người tạo
     private Long userIdCreate;
-    // 创建时间
+    // Thời gian tạo
     private Date gmtCreate;
-    // 修改时间
+    // Thời gian sửa
     private Date gmtModified;
-    //角色
+    // Vai trò
     private List<Long> roleIds;
-    //数据权限(table_name->dataPerms)
+    // Quyền dữ liệu (table_name -> dataPerms)
     private Map<String,List<DataPermDO>> dataPerms;
-    //性别
+    // Giới tính
     private Long sex;
-    //出身日期
+    // Ngày sinh
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date birth;
-    //图片ID
+    // ID ảnh
     private Long picId;
-    //现居住地
+    // Nơi ở hiện tại
     private String liveAddress;
-    //爱好
+    // Sở thích
     private String hobby;
-    //省份
+    // Tỉnh
     private String province;
-    //所在城市
+    // Thành phố
     private String city;
-    //所在地区
+    // Khu vực
     private String district;
 
     public String getSupDeptIds() {

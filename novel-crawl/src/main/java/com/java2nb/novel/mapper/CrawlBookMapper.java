@@ -12,24 +12,24 @@ import java.util.List;
 public interface CrawlBookMapper extends BookMapper {
 
     /**
-     * 查询需要更新的小说数据
-     * @param startDate 最新更新时间的起始时间
-     * @param limit 查询条数
-     * @return 小说集合
+     * Truy vấn dữ liệu truyện cần cập nhật
+     * @param startDate Thời điểm bắt đầu của khoảng cập nhật gần nhất
+     * @param limit Số lượng bản ghi cần truy vấn
+     * @return Danh sách truyện
      * */
     List<Book> queryNeedUpdateBook(@Param("startDate") Date startDate, @Param("limit") int limit);
 
     /**
-     * 查询小说总字数
-     * @param bookId 小说ID
-     * @return 小说总字数
+     * Truy vấn tổng số chữ của truyện
+     * @param bookId ID truyện
+     * @return Tổng số chữ của truyện
      * */
     Integer queryTotalWordCount(@Param("bookId") Long bookId);
 
     /**
-     * 批量更新小说最后抓取时间
-     * @param books 需要更新的小说集合
-     * @param currentDate 当前时间
+     * Cập nhật hàng loạt thời gian thu thập gần nhất của truyện
+     * @param books Danh sách truyện cần cập nhật
+     * @param currentDate Thời gian hiện tại
      * */
     void updateCrawlLastTime(@Param("books") List<Book> books,@Param("currentDate") Date currentDate);
 }

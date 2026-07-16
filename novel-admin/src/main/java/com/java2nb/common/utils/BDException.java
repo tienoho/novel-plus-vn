@@ -1,7 +1,7 @@
 package com.java2nb.common.utils;
 
 /**
- * 自定义异常
+ * Ngoại lệ tùy chỉnh
  * 
  */
 public class BDException extends RuntimeException {

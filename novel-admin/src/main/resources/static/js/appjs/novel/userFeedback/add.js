@@ -2,31 +2,31 @@ var E = window.wangEditor;
 $("[id^='contentEditor']").each(function (index, ele) {
     var relName = $(ele).attr("id").substring(13);
     var editor = new E('#contentEditor' + relName);
-// 自定义菜单配置
+// Cấu hình menu tùy chỉnh
     editor.customConfig.menus = [
-        'head',  // 标题
-        'bold',  // 粗体
-        'fontSize',  // 字号
-        'fontName',  // 字体
-        'italic',  // 斜体
-        'underline',  // 下划线
-        'strikeThrough',  // 删除线
-        'foreColor',  // 文字颜色
-        //'backColor',  // 背景颜色
-        //'link',  // 插入链接
-        'list',  // 列表
-        'justify',  // 对齐方式
-        'quote',  // 引用
-        'emoticon',  // 表情
-        'image',  // 插入图片
-        //'table',  // 表格
-        //'video',  // 插入视频
-        //'code',  // 插入代码
-        'undo',  // 撤销
-        'redo'  // 重复
+        'head',  // Tiêu đề
+        'bold',  // In đậm
+        'fontSize',  // Cỡ chữ
+        'fontName',  // Phông chữ
+        'italic',  // In nghiêng
+        'underline',  // Gạch chân
+        'strikeThrough',  // Gạch ngang
+        'foreColor',  // Màu chữ
+        //'backColor',  // Màu nền
+        //'link',  // Chèn liên kết
+        'list',  // Danh sách
+        'justify',  // Căn lề
+        'quote',  // Trích dẫn
+        'emoticon',  // Biểu tượng cảm xúc
+        'image',  // Chèn ảnh
+        //'table',  // Bảng
+        //'video',  // Chèn video
+        //'code',  // Chèn mã nguồn
+        'undo',  // Hoàn tác
+        'redo'  // Làm lại
     ];
     editor.customConfig.onchange = function (html) {
-        // html 即变化之后的内容
+        // HTML sau khi nội dung thay đổi
         $("#" + relName).val(html);
     }
     editor.customConfig.uploadImgShowBase64 = true;
@@ -38,10 +38,10 @@ $("[id^='picImage']").each(function (index, ele) {
     var relName = $(ele).attr("id").substring(8);
     layui.use('upload', function () {
         var upload = layui.upload;
-        //执行实例
+        //Khởi tạo
         var uploadInst = upload.render({
-            elem: '#picImage' + relName, //绑定元素
-            url: '/common/sysFile/upload', //上传接口
+            elem: '#picImage' + relName, //Phần tử liên kết
+            url: '/common/sysFile/upload', //API tải lên
             size: 1000,
             accept: 'file',
             done: function (r) {
@@ -75,16 +75,16 @@ function save() {
         cache: true,
         type: "POST",
         url: "/novel/userFeedback/save",
-        data: $('#signupForm').serialize(),// 你的formid
+        data: $('#signupForm').serialize(),// ID biểu mẫu
         async: false,
         error: function (request) {
-            parent.layer.alert("Connection error");
+            parent.layer.alert(adminMessage('connectionError', 'Lỗi kết nối'));
         },
         success: function (data) {
             if (data.code == 0) {
-                parent.layer.msg("操作成功");
+                parent.layer.msg(adminMessage('operationSuccess', 'Thao tác thành công'));
                 parent.reLoad();
-                var index = parent.layer.getFrameIndex(window.name); // 获取窗口索引
+                var index = parent.layer.getFrameIndex(window.name); // Lấy chỉ mục cửa sổ
                 parent.layer.close(index);
 
             } else {

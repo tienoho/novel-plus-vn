@@ -4,30 +4,30 @@ import com.java2nb.novel.core.cache.CacheKey;
 import com.java2nb.novel.core.cache.CacheService;
 
 /**
- * 模板操作工具类
+ * Tiện ích thao tác mẫu
  * @author Administrator
  */
 public class ThreadLocalUtil {
 
     /**
-     * 存储当前线程访问的模板目录
+     * Lưu thư mục mẫu của luồng hiện tại
      * */
     private static final ThreadLocal<String> templateDir = new ThreadLocal<>();
 
     /**
-     * 存储当前会话的sessionID
+     * Lưu session ID hiện tại
      * */
     private static final ThreadLocal<String> clientId = new ThreadLocal<>();
 
     /**
-     * 设置当前应该访问的模板目录
+     * Đặt thư mục mẫu hiện tại
      * */
     public static void setTemplateDir(String dir){
         templateDir.set(dir);
     }
 
     /**
-     * 获取当前应该访问的模板路径前缀
+     * Lấy tiền tố đường dẫn mẫu hiện tại
      * */
     public static String getTemplateDir(){
         CacheService cacheService = SpringUtil.getBean(CacheService.class);
@@ -39,7 +39,7 @@ public class ThreadLocalUtil {
     }
     
     /**
-     * 设置当前访问线程的客户端ID
+     *Đặt ID máy khách của luồng hiện tạiD
      * */
     public static void setClientId(String id){
         clientId.set(id);

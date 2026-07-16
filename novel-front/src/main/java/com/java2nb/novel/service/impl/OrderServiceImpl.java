@@ -64,10 +64,10 @@ public class OrderServiceImpl implements OrderService {
         OrderPay orderPay = orderPayMapper.selectOne(selectStatement).orElse(null);
 
         if (orderPay.getPayStatus().intValue() == 2) {
-            //待支付订单处理
+            //Xử lý đơn hàng đang chờ thanh toán
             if (payStatus == 1) {
-                //支付成功
-                //1.更新订单状态为成功
+                //Thanh toán thành công
+                //1. Cập nhật trạng thái đơn hàng thành công
                 UpdateStatementProvider updateStatement = update(OrderPayDynamicSqlSupport.orderPay)
                     .set(OrderPayDynamicSqlSupport.tradeNo).equalTo(tradeNo)
                     .set(OrderPayDynamicSqlSupport.payStatus).equalTo((byte) 1)
@@ -78,8 +78,8 @@ public class OrderServiceImpl implements OrderService {
                     .render(RenderingStrategies.MYBATIS3);
                 int updateRow = orderPayMapper.update(updateStatement);
                 if (updateRow > 0) {
-                    //更新成功
-                    //2.增加用户余额
+                    //Cập nhật thành công
+                    //2. Tăng số dư người dùng
                     userService.addAmount(orderPay.getUserId(), orderPay.getTotalAmount() * 100);
                 }
 

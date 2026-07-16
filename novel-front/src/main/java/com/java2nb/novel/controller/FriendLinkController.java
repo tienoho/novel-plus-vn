@@ -24,7 +24,7 @@ public class FriendLinkController {
     private final FriendLinkService friendLinkService;
 
     /**
-     * 查询首页友情链接
+     * Truy vấn liên kết bạn bè trang chủ
      * */
     @GetMapping("listIndexLink")
     public RestResult<List<FriendLink>> listIndexLink(){

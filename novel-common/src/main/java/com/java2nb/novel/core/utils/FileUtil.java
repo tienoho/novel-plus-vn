@@ -4,6 +4,7 @@ import io.github.xxyopen.util.UUIDUtil;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+import com.java2nb.novel.core.i18n.Messages;
 import org.apache.commons.codec.Charsets;
 import org.apache.hc.client5.http.utils.DateUtils;
 import org.springframework.core.io.Resource;
@@ -27,7 +28,7 @@ import java.util.Date;
 import java.util.Objects;
 
 /**
- * 文件操作工具类
+ * Lớp tiện ích thao tác tệp
  *
  * @author 11797
  */
@@ -36,13 +37,13 @@ import java.util.Objects;
 public class FileUtil {
 
     /**
-     * 网络图片转本地
+     * Lưu ảnh mạng về hệ thống
      */
     public String network2Local(String picSrc, String picSavePath, String visitPrefix) {
         InputStream input = null;
         OutputStream out = null;
         try {
-            //本地图片保存
+            //Lưu ảnh cục bộ
             HttpHeaders headers = new HttpHeaders();
             HttpEntity<String> requestEntity = new HttpEntity<>(null, headers);
             ResponseEntity<Resource> resEntity = RestTemplates.newInstance(Charsets.ISO_8859_1.name())
@@ -93,10 +94,10 @@ public class FileUtil {
 
 
     /**
-     * 判断文件是否为图片
+     * Kiểm tra tệp có phải hình ảnh hay không
      *
-     * @param file 需要判断的文件
-     * @return true:是图片，false:不是图片
+     * @param file tệp cần kiểm tra
+     * @return true nếu là ảnh, false nếu không phải ảnh
      */
     @SneakyThrows
     public boolean isImage(File file) {
@@ -123,7 +124,7 @@ public class FileUtil {
 
         } catch (Exception e) {
             log.error(e.getMessage(), e);
-            throw new RuntimeException("文件写入失败");
+            throw new RuntimeException(Messages.getDefault("error.file.write"));
         } finally {
             closeStream(null, out);
         }
@@ -131,10 +132,10 @@ public class FileUtil {
     }
 
     /**
-     * 下载文件
+     * Tải tệp
      *
-     * @param downloadUrl 下载的URL
-     * @param savePath    保存的路径
+     * @param downloadUrl URL cần tải
+     * @param savePath đường dẫn lưu
      */
     @SneakyThrows
     public void downloadFile(String downloadUrl, String savePath) {

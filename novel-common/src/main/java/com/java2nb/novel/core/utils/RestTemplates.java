@@ -44,7 +44,7 @@ public class RestTemplates {
 
         TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
 
-        //忽略证书
+        //Bỏ qua chứng chỉ
         SSLContext sslContext = SSLContexts.custom()
             .loadTrustMaterial(null, acceptingTrustStrategy)
             .build();
@@ -57,20 +57,20 @@ public class RestTemplates {
             .build();
         PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager(registry);
 
-        //连接池的最大连接数，0代表不限；如果取0，需要考虑连接泄露导致系统崩溃的后果
+        //Số kết nối tối đa của pool; 0 là không giới hạn nhưng cần cân nhắc rò rỉ kết nối
         connectionManager.setMaxTotal(1000);
-        //每个路由的最大连接数,如果只调用一个地址,可以将其设置为最大连接数
+        //Số kết nối tối đa mỗi route; nếu chỉ gọi một địa chỉ có thể đặt bằng tổng kết nối tối đa
         connectionManager.setDefaultMaxPerRoute(300);
 
         HttpClientBuilder clientBuilder = HttpClients.custom();
-        // 禁用 Cookie 管理
+        // Tắt quản lý Cookie
         clientBuilder.disableCookieManagement();
         if (Objects.nonNull(httpProxyProperties) && Boolean.TRUE.equals(httpProxyProperties.getEnabled())) {
             HttpHost proxy = new HttpHost(httpProxyProperties.getIp(), httpProxyProperties.getPort());
             clientBuilder.setProxy(proxy);
             if (StringUtils.isNotBlank(httpProxyProperties.getUsername()) && StringUtils.isNotBlank(
                 httpProxyProperties.getPassword())) {
-                // 创建CredentialsProvider实例并添加代理认证信息
+                // Tạo CredentialsProvider và thêm thông tin xác thực proxy
                 BasicCredentialsProvider provider = new BasicCredentialsProvider();
                 UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(
                     httpProxyProperties.getUsername(), httpProxyProperties.getPassword().toCharArray());

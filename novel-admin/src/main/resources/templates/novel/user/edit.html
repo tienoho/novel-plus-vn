@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <meta charset="utf-8">
 <head th:include="include :: header"></head>
 <body class="gray-bg">
@@ -12,7 +12,7 @@
                         <input id="id" name="id" th:value="${user.id}"
                                type="hidden">
                                                                                                                                         <div class="form-group">
-                                                                            <label class="col-sm-3 control-label">登录名：</label>
+                                                                            <label class="col-sm-3 control-label" th:text="#{admin.novelUser.username}+'：'">Tên đăng nhập:</label>
                                                                         <div class="col-sm-8">
                                                                                     <input id="username" name="username"
                                                    th:value="${user.username}"
@@ -21,7 +21,7 @@
                                                                             </div>
                                 </div>
                                                                                                                 <div class="form-group">
-                                                                            <label class="col-sm-3 control-label">登录密码：</label>
+                                                                            <label class="col-sm-3 control-label" th:text="#{admin.novelUser.password}+'：'">Mật khẩu đăng nhập:</label>
                                                                         <div class="col-sm-8">
                                                                                     <input id="password" name="password"
                                                    th:value="${user.password}"
@@ -30,7 +30,7 @@
                                                                             </div>
                                 </div>
                                                                                                                 <div class="form-group">
-                                                                            <label class="col-sm-3 control-label">昵称：</label>
+                                                                            <label class="col-sm-3 control-label" th:text="#{admin.novelUser.nickname}+'：'">Biệt danh:</label>
                                                                         <div class="col-sm-8">
                                                                                     <input id="nickName" name="nickName"
                                                    th:value="${user.nickName}"
@@ -39,7 +39,7 @@
                                                                             </div>
                                 </div>
                                                                                                                 <div class="form-group">
-                                                                            <label class="col-sm-3 control-label">用户头像：</label>
+                                                                            <label class="col-sm-3 control-label" th:text="#{admin.novelUser.avatar}+'：'">Ảnh đại diện:</label>
                                                                         <div class="col-sm-8">
                                                                                     <input id="userPhoto" name="userPhoto"
                                                    th:value="${user.userPhoto}"
@@ -48,7 +48,7 @@
                                                                             </div>
                                 </div>
                                                                                                                 <div class="form-group">
-                                                                            <label class="col-sm-3 control-label">用户性别，0：男，1：女：</label>
+                                                                            <label class="col-sm-3 control-label" th:text="#{admin.novelUser.gender}+'：'">Giới tính (0: nam, 1: nữ):</label>
                                                                         <div class="col-sm-8">
                                                                                     <input id="userSex" name="userSex"
                                                    th:value="${user.userSex}"
@@ -57,7 +57,7 @@
                                                                             </div>
                                 </div>
                                                                                                                 <div class="form-group">
-                                                                            <label class="col-sm-3 control-label">账户余额：</label>
+                                                                            <label class="col-sm-3 control-label" th:text="#{admin.novelUser.balance}+'：'">Số dư (Xu):</label>
                                                                         <div class="col-sm-8">
                                                                                     <input id="accountBalance" name="accountBalance"
                                                    th:value="${user.accountBalance}"
@@ -66,7 +66,7 @@
                                                                             </div>
                                 </div>
                                                                                                                 <div class="form-group">
-                                                                            <label class="col-sm-3 control-label">用户状态，0：正常：</label>
+                                                                            <label class="col-sm-3 control-label" th:text="#{admin.novelUser.status}+'：'">Trạng thái người dùng (0: hoạt động):</label>
                                                                         <div class="col-sm-8">
                                                                                     <input id="status" name="status"
                                                    th:value="${user.status}"
@@ -75,7 +75,7 @@
                                                                             </div>
                                 </div>
                                                                                                                 <div class="form-group">
-                                                                            <label class="col-sm-3 control-label">创建时间：</label>
+                                                                            <label class="col-sm-3 control-label" th:text="#{admin.audit.createdAt}+'：'">Thời gian tạo:</label>
                                                                         <div class="col-sm-8">
                                                                                     <input type="text" class="laydate-icon layer-date form-control"
                                                    id="createTime"
@@ -86,7 +86,7 @@
                                                                             </div>
                                 </div>
                                                                                                                 <div class="form-group">
-                                                                            <label class="col-sm-3 control-label">更新时间：</label>
+                                                                            <label class="col-sm-3 control-label" th:text="#{admin.book.updatedAt}+'：'">Thời gian cập nhật:</label>
                                                                         <div class="col-sm-8">
                                                                                     <input type="text" class="laydate-icon layer-date form-control"
                                                    id="updateTime"
@@ -98,7 +98,7 @@
                                 </div>
                                                                             <div class="form-group">
                             <div class="col-sm-8 col-sm-offset-3">
-                                <button type="submit" class="btn btn-primary">提交</button>
+                                <button type="submit" class="btn btn-primary" th:text="#{common.submit}">Gửi</button>
                             </div>
                         </div>
                     </form>

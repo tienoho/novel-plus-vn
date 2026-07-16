@@ -1,17 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
-<!DOCTYPE html>
-<html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title th:text="${application.website.name}+'列表'"></title>
+    <title th:text="#{payment.title}+' - '+${application.website.name}"></title>
 
-    <meta name="keywords"
-          th:content="${application.website.name}+',精品小说,弹幕网站,弹幕,弹幕小说网站,免费小说,小说阅读,小说排行,轻小说,txt小说下载,电子书下载,动漫轻小说,日本轻小说'">
-
-    <meta name="description"
-          th:content="${application.website.name}+'是国内优秀的小说弹幕网站,'+${application.website.name}+'提供海量热门网络小说,日本轻小说,国产轻小说,动漫小说,轻小说在线阅读和TXT小说下载,致力于网络精品小说的收集,智能计算小说评分,打造小说精品排行榜,致力于无广告无弹窗的小说阅读环境。'">
+    <meta name="keywords" th:content="${application.website.keyword}">
+    <meta name="description" th:content="${application.website.description}">
 
 
     <div th:include="mobile/common/css :: css"></div>
@@ -59,6 +54,7 @@
             width: 130px;
             height: 180px;
         }
+
         .payHead {
             height: 36px;
             line-height: 36px;
@@ -68,6 +64,7 @@
             border-bottom: 1px solid #eaeaea;
             zoom: 1;
         }
+
         .pay_way li {
             text-align: center;
             cursor: pointer;
@@ -99,7 +96,7 @@
         <a href="javascript:history.go(-1)">
             <i style="font-size: 20px;color: #fff;" class="layui-icon">&#xe65c;</i></a>
     </div>
-    <b class="layui-icon">充值</b>
+    <b class="layui-icon" th:text="#{payment.title}">Nạp Xu</b>
     <div style="width:10%;float: right;margin-right: 10px"><a href="/">
         <i style="font-size: 20px;color: #fff;" class="layui-icon">&#xe68e;</i>
     </a>
@@ -108,39 +105,41 @@
 <div id="body" class="layui-row">
     <div class="payHead cf">
         <div class="fl">
-            充值账号：<span class="user_name" id="my_name">13560421324</span>&nbsp;&nbsp;&nbsp;&nbsp;余额：<em style="color: #f80" id="accountBalance">10</em> 屋币<!--<em class="red">+0</em>代金券-->
+            <span th:text="#{payment.account}+': '">Tài khoản nạp: </span><span class="user_name" id="my_name"></span>&nbsp;&nbsp;
+            <span th:text="#{payment.balance}+': '">Số dư: </span><em style="color: #3eaf7c" id="accountBalance">0</em>
+            <span th:text="#{payment.currency}">Xu</span>
         </div>
     </div>
-    <div id="payAmount" class="pay_way layui-row layui-col-space15" style="text-align: center;padding-top: 20px;">
-        <h5>选择充值金额</h5>
+    <div id="payAmount" class="pay_way layui-row" style="text-align: center;padding-top: 20px;">
+        <h5 th:text="#{payment.amount}">Chọn số tiền nạp</h5>
         <li vals="10" class="layui-col-xs4 layui-col-sm3 layui-col-md2">
             <div class="layui-panel">
-                <div ><strong>10元</strong><br><span class="pay_mn">1000屋币</span></div>
+                <div><strong>10 CNY</strong><br><span class="pay_mn">1000 Xu</span></div>
             </div>
         </li>
-        <li vals="30"  class="layui-col-xs4 layui-col-sm3 layui-col-md2">
+        <li vals="30" class="layui-col-xs4 layui-col-sm3 layui-col-md2">
             <div class="layui-panel">
-                <div ><strong>30元</strong><br><span class="pay_mn">3000屋币</span></div>
+                <div><strong>30 CNY</strong><br><span class="pay_mn">3000 Xu</span></div>
             </div>
         </li>
         <li vals="50" class="layui-col-xs4 layui-col-sm3 layui-col-md2">
             <div class="layui-panel">
-                <div ><strong>50元</strong><br><span class="pay_mn">5000屋币</span></div>
+                <div><strong>50 CNY</strong><br><span class="pay_mn">5000 Xu</span></div>
             </div>
         </li>
         <li vals="100" class="layui-col-xs4 layui-col-sm3 layui-col-md2">
             <div class="layui-panel">
-                <div ><strong>100元</strong><br><span class="pay_mn">10000屋币</span></div>
+                <div><strong>100 CNY</strong><br><span class="pay_mn">10000 Xu</span></div>
             </div>
         </li>
         <li vals="200" class="layui-col-xs4 layui-col-sm3 layui-col-md2">
             <div class="layui-panel">
-                <div ><strong>200元</strong><br><span class="pay_mn">20000屋币</span></div>
+                <div><strong>200 CNY</strong><br><span class="pay_mn">20000 Xu</span></div>
             </div>
         </li>
         <li vals="500" class="layui-col-xs4 layui-col-sm3 layui-col-md2">
             <div class="layui-panel">
-                <div ><strong>500元</strong><br><span class="pay_mn">50000屋币</span></div>
+                <div><strong>500 CNY</strong><br><span class="pay_mn">50000 Xu</span></div>
             </div>
         </li>
 
@@ -148,7 +147,7 @@
 
     <form action="/pay/aliPay" method="post" id="payform" name="payform">
 
-        <input type="hidden" id="pValue" name="payAmount"  />
+        <input type="hidden" id="pValue" name="payAmount"/>
     </form>
 
 
@@ -161,10 +160,9 @@
 
 <div th:replace="mobile/common/js :: js"></div>
 
-<script>
-    $("#body").css("min-height",($(window).height() - 100)+"px")
+<script th:inline="javascript">
 
-    //查询用户信息
+    // Truy vấn thông tin người dùng.
     $.ajax({
         type: "get",
         url: "/user/userInfo",
@@ -172,16 +170,16 @@
         dataType: "json",
         success: function (data) {
             if (data.code == 200) {
-                if(data.data.nickName){
+                if (data.data.nickName) {
                     $("#my_name").html(data.data.nickName);
-                }else{
+                } else {
                     $("#my_name").html(data.data.username);
                 }
 
                 $("#accountBalance").html(data.data.accountBalance);
 
             } else if (data.code == 1001) {
-                //未登录
+                // Chưa đăng nhập.
                 location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
 
             } else {
@@ -190,7 +188,7 @@
 
         },
         error: function () {
-            layer.alert('网络异常');
+            layer.alert(/*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng');
         }
     })
 
@@ -201,12 +199,10 @@
         $("#payform").submit();
 
 
-
     });
 
 
 </script>
-
 
 
 </html>

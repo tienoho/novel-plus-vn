@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <meta charset="utf-8">
 <head th:include="include :: header"></head>
 <body class="gray-bg">
@@ -11,24 +11,24 @@
 						<div class="columns pull-left">
 							<!--<button type="button" class="btn  btn-primary"
 									onclick="batchDownload()">
-								<i class="" aria-hidden="true"></i>批量下载
+								<i class="" aria-hidden="true"></i><span th:text="#{admin.generator.batchDownload}">Tải xuống hàng loạt</span>
 							</button>
                             <button type="button" class="btn  btn-success"
                                     onclick="batchCode()">
-                                <i class="" aria-hidden="true"></i>批量生成
+                                <i class="" aria-hidden="true"></i><span th:text="#{admin.generator.batchGenerate}">Sinh mã hàng loạt</span>
                             </button>-->
 							<button type="button" class="btn  btn-info"
 									onclick="edit()">
-								<i class="" aria-hidden="true"></i>生成配置
+								<i class="" aria-hidden="true"></i><span th:text="#{admin.generator.config}">Cấu hình sinh mã</span>
 							</button>
 						</div>
 						<div class="columns pull-right">
-							<button class="btn btn-success" onclick="reLoad()">查询</button>
+							<button class="btn btn-success" onclick="reLoad()" th:text="#{common.query}">Tra cứu</button>
 						</div>
 
 						<div class="columns pull-right col-md-2">
 							<input id="tableName" type="text" class="form-control"
-								   placeholder="表名">
+								   th:placeholder="#{admin.column.tableName}" placeholder="Tên bảng">
 						</div>
 					</div>
 					<table id="exampleTable" data-mobile-responsive="true">

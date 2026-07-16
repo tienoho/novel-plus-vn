@@ -7,39 +7,39 @@ function load() {
     $('#exampleTable')
         .bootstrapTable(
             {
-                method: 'get', // 服务器数据的请求方式 get or post
-                url: prefix + "/list", // 服务器数据的加载地址
+                method: 'get', // Phương thức yêu cầu dữ liệu máy chủ: GET hoặc POST
+                url: prefix + "/list", // Địa chỉ tải dữ liệu từ máy chủ
                 //	showRefresh : true,
                 //	showToggle : true,
                 //	showColumns : true,
                 iconSize: 'outline',
                 toolbar: '#exampleToolbar',
-                striped: true, // 设置为true会有隔行变色效果
-                dataType: "json", // 服务器返回的数据类型
-                pagination: true, // 设置为true会在底部显示分页条
+                striped: true, // Đặt true để tô màu xen kẽ các dòng
+                dataType: "json", // Kiểu dữ liệu máy chủ trả về
+                pagination: true, // Đặt true để hiển thị thanh phân trang ở cuối
                 // queryParamsType : "limit",
-                // //设置为limit则会发送符合RESTFull格式的参数
-                singleSelect: false, // 设置为true将禁止多选
+                // //Đặt limit để gửi tham số theo định dạng RESTful
+                singleSelect: false, // Đặt true để tắt chọn nhiều dòng
                 // contentType : "application/x-www-form-urlencoded",
-                // //发送到服务器的数据编码类型
-                pageSize: 10, // 如果设置了分页，每页数据条数
-                pageNumber: 1, // 如果设置了分布，首页页码
-                //search : true, // 是否显示搜索框
-                showColumns: false, // 是否显示内容下拉框（选择显示的列）
-                sidePagination: "server", // 设置在哪里进行分页，可选值为"client" 或者 "server"
+                // //Kiểu mã hóa dữ liệu gửi tới máy chủ
+                pageSize: 10, // Số bản ghi mỗi trang khi bật phân trang
+                pageNumber: 1, // Số trang đầu tiên khi bật phân trang
+                //search : true, // Có hiển thị ô tìm kiếm hay không
+                showColumns: false, // Có hiển thị menu chọn cột hay không
+                sidePagination: "server", // Chọn phân trang ở client hoặc server
                 queryParams: function (params) {
-                    //说明：传入后台的参数包括offset开始索引，limit步长，sort排序列，order：desc或者,以及所有列的键值对
+                    //Tham số gửi tới backend gồm offset, limit, sort, order và các cặp key/value của cột
                     var queryParams = getFormJson("searchForm");
                     queryParams.limit = params.limit;
                     queryParams.offset = params.offset;
                     return queryParams;
                 },
-                // //请求服务器数据时，你可以通过重写参数的方式添加一些额外的参数，例如 toolbar 中的参数 如果
-                // queryParamsType = 'limit' ,返回参数必须包含
-                // limit, offset, search, sort, order 否则, 需要包含:
+                // //Có thể ghi đè tham số để bổ sung dữ liệu khi yêu cầu máy chủ
+                // queryParamsType = 'limit' ,Dữ liệu trả về phải chứa
+                // limit, offset, search, sort, order nếu không cần chứa:
                 // pageSize, pageNumber, searchText, sortName,
                 // sortOrder.
-                // 返回false将会终止请求
+                // Trả về false để hủy yêu cầu
                 responseHandler: function (rs) {
 
                     if (rs.code == 0) {
@@ -51,7 +51,7 @@ function load() {
                 },
                 columns: [
                     {
-                        title: '序号',
+                        title: adminMessage('sequence', 'STT'),
                         formatter: function () {
                             return arguments[2] + 1;
                         }
@@ -59,24 +59,24 @@ function load() {
 
                     {
                         field: 'username',
-                        title: '手机号'
+                        title: adminMessage('novelUserPhone', 'Số điện thoại')
                     },
                     {
                         field: 'nickName',
-                        title: '昵称'
+                        title: adminMessage('novelUserNickname', 'Biệt danh')
                     },
 
                     {
                         field: 'userSex',
-                        title: '用户性别',
+                        title: adminMessage('novelUserGender', 'Giới tính'),
                         formatter: function (value, row, index) {
-                            return value === 0 ? '男' : value === 1 ? '女' : '未知';
+                            return value === 0 ? adminMessage('genderMale', 'Nam') : value === 1 ? adminMessage('genderFemale', 'Nữ') : adminMessage('genderUnknown', 'Không xác định');
                         }
                     },
 
                     {
                         field: 'accountBalance',
-                        title: '账户余额',
+                        title: adminMessage('novelUserBalance', 'Số dư (Xu)'),
                         formatter: function (value, row, index) {
                             return "¥" + value / 100;
                         }
@@ -85,7 +85,7 @@ function load() {
 
                     {
                         field: 'createTime',
-                        title: '注册时间'
+                        title: adminMessage('novelUserRegisteredAt', 'Thời gian đăng ký')
                     }
 
 
@@ -100,39 +100,39 @@ function reLoad() {
 function add() {
     layer.open({
         type: 2,
-        title: '增加',
+        title: adminMessage('add', 'Thêm'),
         maxmin: true,
-        shadeClose: false, // 点击遮罩关闭层
+        shadeClose: false, // Nhấp lớp phủ để đóng hộp thoại
         area: ['800px', '520px'],
-        content: prefix + '/add' // iframe的url
+        content: prefix + '/add' // URL iframe
     });
 }
 
 function detail(id) {
     layer.open({
         type: 2,
-        title: '详情',
+        title: adminMessage('detail', 'Chi tiết'),
         maxmin: true,
-        shadeClose: false, // 点击遮罩关闭层
+        shadeClose: false, // Nhấp lớp phủ để đóng hộp thoại
         area: ['800px', '520px'],
-        content: prefix + '/detail/' + id // iframe的url
+        content: prefix + '/detail/' + id // URL iframe
     });
 }
 
 function edit(id) {
     layer.open({
         type: 2,
-        title: '编辑',
+        title: adminMessage('edit', 'Sửa'),
         maxmin: true,
-        shadeClose: false, // 点击遮罩关闭层
+        shadeClose: false, // Nhấp lớp phủ để đóng hộp thoại
         area: ['800px', '520px'],
-        content: prefix + '/edit/' + id // iframe的url
+        content: prefix + '/edit/' + id // URL iframe
     });
 }
 
 function remove(id) {
-    layer.confirm('确定要删除选中的记录？', {
-        btn: ['确定', '取消']
+    layer.confirm(adminMessage('deleteConfirm', 'Bạn có chắc muốn xóa bản ghi đã chọn?'), {
+        btn: [adminMessage('confirm', 'Đồng ý'), adminMessage('cancel', 'Hủy')]
     }, function () {
         $.ajax({
             url: prefix + "/remove",
@@ -156,17 +156,17 @@ function resetPwd(id) {
 }
 
 function batchRemove() {
-    var rows = $('#exampleTable').bootstrapTable('getSelections'); // 返回所有选择的行，当没有选择的记录时，返回一个空数组
+    var rows = $('#exampleTable').bootstrapTable('getSelections'); // Trả về các dòng đã chọn; trả mảng rỗng nếu chưa chọn
     if (rows.length == 0) {
-        layer.msg("请选择要删除的数据");
+        layer.msg(adminMessage('batchDeleteEmpty', 'Vui lòng chọn dữ liệu cần xóa'));
         return;
     }
-    layer.confirm("确认要删除选中的'" + rows.length + "'条数据吗?", {
-        btn: ['确定', '取消']
-        // 按钮
+    layer.confirm(adminFormat('batchDeleteConfirm', 'Bạn có chắc muốn xóa {0} bản ghi đã chọn?', rows.length), {
+        btn: [adminMessage('confirm', 'Đồng ý'), adminMessage('cancel', 'Hủy')]
+        // Nút
     }, function () {
         var ids = new Array();
-        // 遍历所有选择的行数据，取每条数据对应的ID
+        // Duyệt các dòng đã chọn và lấy ID tương ứng
         $.each(rows, function (i, row) {
             ids[i] = row['id'];
         });

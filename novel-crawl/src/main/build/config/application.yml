@@ -1,75 +1,75 @@
-#端口号
+#Cổng
 server:
   port: 8083
 
 spring:
   data:
     redis:
-      #Redis服务器IP
+      #IP máy chủ Redis
       host: 127.0.0.1
-      #Redis服务器连接端口
+      #Cổng kết nối Redis
       port: 6379
-      #Redis服务器连接密码
+      #Mật khẩu kết nối Redis
       password: test123456
-      #连接超时时间（毫秒）
+      #Thời gian chờ kết nối (mili giây)
       timeout: 10000
 
-#登录用户名密码
+#Tên đăng nhập và mật khẩu
 admin:
   username: admin
   password: admin
 #
-##爬虫自动更新的线程数
-##建议小说数量不多或者正在运行新书入库爬虫的情况下设置为1即可
-##随着小说数量的增多可以逐渐增加，但建议不要超出CPU的线程数
+## Số luồng tự động cập nhật dữ liệu thu thập
+## Nên đặt là 1 khi số tác phẩm ít hoặc đang chạy tác vụ nhập tác phẩm mới
+## Có thể tăng theo số tác phẩm nhưng không nên vượt số luồng CPU
 crawl:
   update:
     thread: 1
 
-#小说内容保存配置
+#Cấu hình lưu nội dung tác phẩm
 content:
   save:
-    storage: db # 小说内容存储方式：db-数据库，txt-TXT文本
-    path: /Users/xiongxiaoyang/books  # 小说TXT文本保存路径
+    storage: db # Cách lưu nội dung: db cơ sở dữ liệu, txt văn bản TXT
+    path: /Users/xiongxiaoyang/books  # Đường dẫn lưu văn bản TXT của tác phẩm
 
-# HTTP 代理配置
+# Cấu hình proxy HTTP
 http:
   proxy:
-    # 是否开启 HTTP 代理，true-开启，false-不开启
+    # Bật proxy HTTP: true bật, false tắt
     enabled: false
-    # 代理 IP
+    # IP proxy
     ip: proxy.bestproxy.com
-    # 代理端口号
+    # Cổng proxy
     port: 2312
-    # 代理用户名
+    # Tên người dùng proxy
     username: bestproxy_u
-    # 代理密码
+    # Mật khẩu proxy
     password: bestproxy_p
 
 ---
 
-#邮箱服务器
+#Máy chủ email
 spring:
   mail:
     host: smtp.163.com
-    #发件人昵称
+    #Tên hiển thị người gửi
     nickname: novel-plus
-    #邮箱账户
+    #Tài khoản email
     username: xxyopen@163.com
-    #邮箱第三方授权码
+    #Mã ủy quyền email bên thứ ba
     password: novel123456
 
 
-# 磁盘监控配置
+# Cấu hình giám sát đĩa
 disk-monitor:
-  # 是否开启磁盘监控，true-开启，false-不启用
+  # Bật giám sát đĩa: true bật, false tắt
   enabled: false
-  # 磁盘监控间隔时间（分钟）
+  # Khoảng thời gian giám sát đĩa (phút)
   interval-minutes: 5
-  # 磁盘使用率阈值
+  # Ngưỡng sử dụng đĩa
   warning-threshold: 85.0
   severe-threshold: 90.0
   critical-threshold: 95.0
-  # 告警邮件接收人列表（支持多个邮箱）
+  # Danh sách email nhận cảnh báo (hỗ trợ nhiều địa chỉ)
   recipients: xxyopen@foxmail.com,12345678@qq.com
 

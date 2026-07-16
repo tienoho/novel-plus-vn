@@ -16,10 +16,10 @@ import java.util.Arrays;
 import java.util.Map;
 
 /**
- * 拦截所有 Mapper 接口的 list* 方法，对带有 @SanitizeMap 注解的 Map 参数进行排序字段和顺序的规范化处理。
+ * Chặn các phương thức list* của Mapper để chuẩn hóa trường và thứ tự sắp xếp trong tham số Map có @SanitizeMap.
  *
- * <p>主要防止 SQL 注入或非法排序字段、非法排序顺序的问题。
- * 例如对 sort 和 order 字段进行白名单过滤和标准化处理。</p>
+ * <p>Chủ yếu ngăn SQL injection, trường hoặc thứ tự sắp xếp không hợp lệ.
+ * Ví dụ, lọc theo danh sách cho phép và chuẩn hóa các trường sort và order.</p>
  */
 @Aspect
 @Component
@@ -27,18 +27,18 @@ import java.util.Map;
 public class MapSortValidationAspect {
 
     /**
-     * 拦截所有 Mapper 接口的 list* 方法（如 list(), listByPage 等）。
-     * 对带有 @SanitizeMap 注解的 Map 参数进行处理。
+     * Chặn các phương thức list* của Mapper (như list(), listByPage).
+     * Xử lý tham số Map có annotation @SanitizeMap.
      *
-     * <p>执行逻辑：</p>
+     * <p>Luồng xử lý:</p>
      * <ol>
-     *   <li>获取方法参数及注解信息</li>
-     *   <li>遍历所有参数，检查是否带有 @SanitizeMap 注解</li>
-     *   <li>如果参数是 Map 类型且有注解，则进行字段清理</li>
+     *   <li>Lấy tham số phương thức và thông tin annotation</li>
+     *   <li>Duyệt mọi tham số và kiểm tra annotation @SanitizeMap</li>
+     *   <li>Nếu tham số là Map có annotation thì làm sạch trường</li>
      * </ol>
      *
-     * @param joinPoint 切点信息
-     * @return 方法执行结果
+     * @param joinPoint thông tin join point
+     * @return kết quả thực thi phương thức
      */
     @SneakyThrows
     @Around("execution(* com.java2nb.*.dao.*Dao.list*(..))")

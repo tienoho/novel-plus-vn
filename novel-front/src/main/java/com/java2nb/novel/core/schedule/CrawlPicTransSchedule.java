@@ -1,6 +1,7 @@
 package com.java2nb.novel.core.schedule;
 
 import com.java2nb.novel.core.utils.Constants;
+import com.java2nb.novel.core.i18n.Messages;
 import com.java2nb.novel.entity.Book;
 import com.java2nb.novel.service.BookService;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +15,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 /**
- * 将爬取的网络图片转存为自己的存储介质（本地、OSS、fastDfs）任务
+ * Tác vụ chuyển ảnh mạng đã thu thập sang phương tiện lưu trữ của hệ thống (cục bộ, OSS, FastDFS)
  *
  * @author Administrator
  */
@@ -25,6 +26,7 @@ import java.util.List;
 public class CrawlPicTransSchedule {
 
     private final BookService bookService;
+    private final Messages messages;
 
     @Value("${pic.save.type}")
     private Integer picSaveType;
@@ -33,19 +35,19 @@ public class CrawlPicTransSchedule {
     private String picSavePath;
 
     /**
-     * 10分钟转一次
+     * Chuyển đổi mỗi 10 phút
      */
     @Scheduled(fixedRate = 1000 * 60 * 10)
     @SneakyThrows
     public void trans() {
 
-        log.info("Network2LocalPicSchedule。。。。。。。。。。。。");
+        log.info(messages.get("crawl.log.picTransferStarted"));
 
 
         List<Book> networkPicBooks = bookService.queryNetworkPicBooks(Constants.LOCAL_PIC_PREFIX,100);
         for (Book book : networkPicBooks) {
             bookService.updateBookPicToLocal(book.getPicUrl(), book.getId());
-            //3秒钟转化一张图片，10分钟转化200张
+            //Chuyển một ảnh mỗi 3 giây, tối đa 200 ảnh trong 10 phút
             Thread.sleep(3000);
         }
 

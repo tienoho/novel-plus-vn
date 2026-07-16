@@ -46,7 +46,7 @@ public class AuthorController extends BaseController {
     private final OpenAiChatModel chatModel;
 
     /**
-     * 校验笔名是否存在
+     * Kiểm tra bút danh đã tồn tại hay chưa.
      */
     @GetMapping("checkPenName")
     public RestResult<Boolean> checkPenName(String penName) {
@@ -55,7 +55,7 @@ public class AuthorController extends BaseController {
     }
 
     /**
-     * 作家发布小说分页列表查询
+     * Truy vấn phân trang tác phẩm của tác giả.
      */
     @GetMapping("listBookByPage")
     public RestResult<PageBean<Book>> listBookByPage(@RequestParam(value = "curr", defaultValue = "1") int page,
@@ -65,31 +65,31 @@ public class AuthorController extends BaseController {
     }
 
     /**
-     * 发布小说
+     * Xuất bản tác phẩm.
      */
     @PostMapping("addBook")
     public RestResult<Void> addBook(@RequestParam("bookDesc") String bookDesc, Book book, HttpServletRequest request) {
 
         Author author = checkAuthor(request);
 
-        //bookDesc不能使用book对象来接收，否则会自动去掉前面的空格
+        // Không nhận bookDesc qua đối tượng book để tránh tự động xóa khoảng trắng đầu dòng.
         book.setBookDesc(bookDesc
             .replaceAll("\\n", "<br>")
             .replaceAll("\\s", "&nbsp;"));
-        //发布小说
+        // Xuất bản tác phẩm.
         bookService.addBook(book, author.getId(), author.getPenName());
 
         return RestResult.ok();
     }
 
     /**
-     * 更新小说状态,上架或下架
+     * Cập nhật trạng thái phát hành của tác phẩm.
      */
     @PostMapping("updateBookStatus")
     public RestResult<Void> updateBookStatus(Long bookId, Byte status, HttpServletRequest request) {
         Author author = checkAuthor(request);
 
-        //更新小说状态,上架或下架
+        // Cập nhật trạng thái phát hành của tác phẩm.
         bookService.updateBookStatus(bookId, status, author.getId());
 
         return RestResult.ok();
@@ -97,14 +97,14 @@ public class AuthorController extends BaseController {
 
 
     /**
-     * 删除章节
+     * Xóa chương.
      */
     @DeleteMapping("deleteIndex/{indexId}")
     public RestResult<Void> deleteIndex(@PathVariable("indexId") Long indexId, HttpServletRequest request) {
 
         Author author = checkAuthor(request);
 
-        //删除章节
+        // Xóa chương.
         bookService.deleteIndex(indexId, author.getId());
 
         return RestResult.ok();
@@ -112,7 +112,7 @@ public class AuthorController extends BaseController {
 
 
     /**
-     * 发布章节内容
+     * Xuất bản nội dung chương.
      */
     @PostMapping("addBookContent")
     public RestResult<Void> addBookContent(Long bookId, String indexName, String content, Byte isVip,
@@ -121,14 +121,14 @@ public class AuthorController extends BaseController {
 
         content = content.replaceAll("\\n", "<br>")
             .replaceAll("\\s", "&nbsp;");
-        //发布章节内容
+        // Xuất bản nội dung chương.
         bookService.addBookContent(bookId, indexName, content, isVip, author.getId());
 
         return RestResult.ok();
     }
 
     /**
-     * 查询章节内容
+     * Truy vấn nội dung chương.
      */
     @GetMapping("queryIndexContent/{indexId}")
     public RestResult<String> queryIndexContent(@PathVariable("indexId") Long indexId, HttpServletRequest request) {
@@ -144,7 +144,7 @@ public class AuthorController extends BaseController {
     }
 
     /**
-     * 更新章节内容
+     * Cập nhật nội dung chương.
      */
     @PostMapping("updateBookContent")
     public RestResult<Void> updateBookContent(Long indexId, String indexName, String content,
@@ -153,14 +153,14 @@ public class AuthorController extends BaseController {
 
         content = content.replaceAll("\\n", "<br>")
             .replaceAll("\\s", "&nbsp;");
-        //更新章节内容
+        // Cập nhật nội dung chương.
         bookService.updateBookContent(indexId, indexName, content, author.getId());
 
         return RestResult.ok();
     }
 
     /**
-     * 修改小说封面
+     * Cập nhật ảnh bìa tác phẩm.
      */
     @PostMapping("updateBookPic")
     public RestResult<Void> updateBookPic(@RequestParam("bookId") Long bookId, @RequestParam("bookPic") String bookPic,
@@ -172,7 +172,7 @@ public class AuthorController extends BaseController {
 
 
     /**
-     * 作家日收入统计数据分页列表查询
+     * Truy vấn phân trang thu nhập theo ngày của tác giả.
      */
     @GetMapping("listIncomeDailyByPage")
     public RestResult<PageBean<AuthorIncomeDetail>> listIncomeDailyByPage(
@@ -190,7 +190,7 @@ public class AuthorController extends BaseController {
 
 
     /**
-     * 作家月收入统计数据分页列表查询
+     * Truy vấn phân trang thu nhập theo tháng của tác giả.
      */
     @GetMapping("listIncomeMonthByPage")
     public RestResult<PageBean<AuthorIncome>> listIncomeMonthByPage(
@@ -210,12 +210,12 @@ public class AuthorController extends BaseController {
             throw new BusinessException(ResponseStatus.NO_LOGIN);
         }
 
-        //查询作家信息
+        // Truy vấn thông tin tác giả.
         Author author = authorService.queryAuthor(userDetails.getId());
 
-        //判断作者状态是否正常
+        // Kiểm tra trạng thái tác giả.
         if (author.getStatus() == 1) {
-            //封禁状态，不能发布小说
+            // Tác giả bị khóa không được xuất bản tác phẩm.
             throw new BusinessException(ResponseStatus.AUTHOR_STATUS_FORBIDDEN);
         }
 
@@ -224,56 +224,50 @@ public class AuthorController extends BaseController {
 
     }
 
-    /**
-     * 查询AI生成图片
-     */
+    /** Truy vấn ảnh do AI tạo. */
     @GetMapping("queryAiGenPic")
     public RestResult<String> queryAiGenPic(@RequestParam("bookId") Long bookId) {
         return RestResult.ok(bookService.queryAiGenPic(bookId));
     }
 
-    /**
-     * AI扩写
-     */
+    /** Mở rộng nội dung bằng AI. */
     @PostMapping("ai/expand")
     public RestResult<String> expandText(@RequestParam("text") String text, @RequestParam("ratio") Double ratio) {
-        String prompt = "请将以下文本扩写为原长度的" + ratio / 100 + "倍：" + text;
+        String prompt = "Hãy mở rộng đoạn văn tiếng Việt sau lên khoảng " + ratio / 100
+            + " lần độ dài ban đầu. Giữ nguyên ý, giọng văn và tên riêng; chỉ trả về nội dung đã viết lại: " + text;
         return RestResult.ok(chatClient.prompt()
             .user(prompt)
             .call()
             .content());
     }
 
-    /**
-     * AI缩写
-     */
+    /** Rút gọn nội dung bằng AI. */
     @PostMapping("ai/condense")
     public RestResult<String> condenseText(@RequestParam("text") String text, @RequestParam("ratio") Integer ratio) {
-        String prompt = "请将以下文本缩写为原长度的" + 100 / ratio + "分之一：" + text;
+        String prompt = "Hãy rút gọn đoạn văn tiếng Việt sau còn khoảng 1/" + 100 / ratio
+            + " độ dài ban đầu. Giữ nguyên ý chính và tên riêng; chỉ trả về nội dung đã viết lại: " + text;
         return RestResult.ok(chatClient.prompt()
             .user(prompt)
             .call()
             .content());
     }
 
-    /**
-     * AI续写
-     */
+    /** Viết tiếp nội dung bằng AI. */
     @PostMapping("ai/continue")
     public RestResult<String> continueText(@RequestParam("text") String text, @RequestParam("length") Integer length) {
-        String prompt = "请续写以下文本，续写长度约为" + length + "字：" + text;
+        String prompt = "Hãy viết tiếp đoạn văn tiếng Việt sau với độ dài khoảng " + length
+            + " ký tự. Giữ nhất quán nhân vật, ngôi kể và giọng văn; chỉ trả về phần viết tiếp: " + text;
         return RestResult.ok(chatClient.prompt()
             .user(prompt)
             .call()
             .content());
     }
 
-    /**
-     * AI润色
-     */
+    /** Trau chuốt nội dung bằng AI. */
     @PostMapping("ai/polish")
     public RestResult<String> polishText(@RequestParam("text") String text) {
-        String prompt = "请润色优化以下文本，保持原意：" + text;
+        String prompt = "Hãy trau chuốt đoạn văn tiếng Việt sau cho tự nhiên, mạch lạc; giữ nguyên ý và tên riêng, "
+            + "chỉ trả về nội dung đã chỉnh sửa: " + text;
         return RestResult.ok(chatClient.prompt()
             .user(prompt)
             .call()
@@ -281,11 +275,12 @@ public class AuthorController extends BaseController {
     }
 
     /**
-     * AI扩写
+     * Mở rộng nội dung bằng AI theo luồng.
      */
     @GetMapping(value = "ai/stream/expand", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> streamExpandText(@RequestParam("text") String text, @RequestParam("ratio") Double ratio) {
-        String prompt = "请将以下文本扩写为原长度的" + ratio / 100 + "倍：" + text;
+        String prompt = "Hãy mở rộng đoạn văn tiếng Việt sau lên khoảng " + ratio / 100
+            + " lần độ dài ban đầu. Giữ nguyên ý, giọng văn và tên riêng; chỉ trả về nội dung đã viết lại: " + text;
         return chatClient.prompt()
             .user(prompt)
             .stream()
@@ -293,11 +288,12 @@ public class AuthorController extends BaseController {
     }
 
     /**
-     * AI缩写
+     * Rút gọn nội dung bằng AI theo luồng.
      */
     @GetMapping(value = "ai/stream/condense", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> streamCondenseText(@RequestParam("text") String text, @RequestParam("ratio") Integer ratio) {
-        String prompt = "请将以下文本缩写为原长度的" + 100 / ratio + "分之一：" + text;
+        String prompt = "Hãy rút gọn đoạn văn tiếng Việt sau còn khoảng 1/" + 100 / ratio
+            + " độ dài ban đầu. Giữ nguyên ý chính và tên riêng; chỉ trả về nội dung đã viết lại: " + text;
         return chatClient.prompt()
             .user(prompt)
             .stream()
@@ -305,11 +301,12 @@ public class AuthorController extends BaseController {
     }
 
     /**
-     * AI续写
+     * Viết tiếp nội dung bằng AI theo luồng.
      */
     @GetMapping(value = "ai/stream/continue", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> streamContinueText(@RequestParam("text") String text, @RequestParam("length") Integer length) {
-        String prompt = "请续写以下文本，续写长度约为" + length + "字：" + text;
+        String prompt = "Hãy viết tiếp đoạn văn tiếng Việt sau với độ dài khoảng " + length
+            + " ký tự. Giữ nhất quán nhân vật, ngôi kể và giọng văn; chỉ trả về phần viết tiếp: " + text;
         return chatClient.prompt()
             .user(prompt)
             .stream()
@@ -317,11 +314,12 @@ public class AuthorController extends BaseController {
     }
 
     /**
-     * AI润色
+     * Trau chuốt nội dung bằng AI theo luồng.
      */
     @GetMapping(value = "/ai/stream/polish", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> streamPolishText(@RequestParam("text") String text) {
-        String prompt = "请润色优化以下文本，保持原意：" + text;
+        String prompt = "Hãy trau chuốt đoạn văn tiếng Việt sau cho tự nhiên, mạch lạc; giữ nguyên ý và tên riêng, "
+            + "chỉ trả về nội dung đã chỉnh sửa: " + text;
         return chatClient.prompt()
             .user(prompt)
             .stream()

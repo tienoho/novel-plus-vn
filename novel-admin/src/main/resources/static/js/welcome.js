@@ -1,4 +1,4 @@
-//欢迎信息
+//Thông tin chào mừng
 
 layer.config({
     extend: ['extend/layer.ext.js', 'skin/moon/style.css'],
@@ -27,14 +27,21 @@ layer.ready(function () {
 
     function logs() {
         parent.layer.open({
-            title: '初见倾心，再见动情',
+            title: typeof adminMessage === 'function'
+                ? adminMessage('welcomeTitle', 'Chào mừng đến với Novel Plus')
+                : 'Chào mừng đến với Novel Plus',
             type: 1,
             area: ['700px', 'auto'],
             content: html,
-            btn: ['确定', '取消']
+            btn: [
+                typeof adminMessage === 'function' ? adminMessage('confirm', 'Đồng ý') : 'Đồng ý',
+                typeof adminMessage === 'function' ? adminMessage('cancel', 'Hủy') : 'Hủy'
+            ]
         });
     }
 
-    console.log('欢迎使用H+，如果您在使用的过程中有碰到问题，可以参考开发文档，感谢您的支持。');
+    console.log(typeof adminMessage === 'function'
+        ? adminMessage('welcomeMessage', 'Cảm ơn bạn đã sử dụng Novel Plus.')
+        : 'Cảm ơn bạn đã sử dụng Novel Plus.');
 
 });

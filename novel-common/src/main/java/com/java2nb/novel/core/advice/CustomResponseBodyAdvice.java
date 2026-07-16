@@ -15,8 +15,8 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 import java.util.Objects;
 
 /**
- * 在对 RestController 返回对象 json 序列化时，将所有 Long 类型转为 String 类型返回，避免前端数据精度丢失的问题
- * 取代 spring.jackson.generator.write-numbers-as-strings=true 配置，避免影响全局的 ObjectMapper
+ * Khi tuần tự hóa JSON từ RestController, chuyển Long thành String để tránh mất độ chính xác ở frontend
+ * Thay cấu hình spring.jackson.generator.write-numbers-as-strings=true để không ảnh hưởng ObjectMapper toàn cục
  *
  * @author xiongxiaoyang
  * */
@@ -35,13 +35,13 @@ public class CustomResponseBodyAdvice implements ResponseBodyAdvice<Object> {
 
     @Override
     public boolean supports(MethodParameter returnType, Class<? extends HttpMessageConverter<?>> converterType) {
-        // 返回 true 表示对所有 Controller 的响应都生效
+        // Trả true để áp dụng cho phản hồi của mọi Controller
         return true;
     }
 
     @Override
     public Object beforeBodyWrite(Object body, MethodParameter returnType, MediaType selectedContentType, Class<? extends HttpMessageConverter<?>> selectedConverterType, ServerHttpRequest request, ServerHttpResponse response) {
-        // 使用自定义的 ObjectMapper 序列化响应体
+        // Dùng ObjectMapper tùy chỉnh để tuần tự hóa phần thân phản hồi
         if(Objects.nonNull(body)) {
             return customObjectMapper.valueToTree(body);
         }else{

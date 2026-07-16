@@ -9,17 +9,17 @@ var load = function () {
                 id: 'menuId',
                 code: 'menuId',
                 parentCode: 'parentId',
-                type: "GET", // 请求数据的ajax类型
-                url: prefix + '/list', // 请求数据的ajax的url
-                ajaxParams: {sort:'order_num'}, // 请求数据的ajax的data属性
-                expandColumn: '1',// 在哪一列上面显示展开按钮
-                striped: true, // 是否各行渐变色
-                bordered: true, // 是否显示边框
-                expandAll: false, // 是否全部展开
+                type: "GET", // Loại yêu cầu AJAX
+                url: prefix + '/list', // URL yêu cầu AJAX
+                ajaxParams: {sort:'order_num'}, // Thuộc tính data của yêu cầu AJAX
+                expandColumn: '1',// Cột hiển thị nút mở rộng
+                striped: true, // Có tô màu xen kẽ các dòng hay không
+                bordered: true, // Có hiển thị đường viền hay không
+                expandAll: false, // Có mở rộng toàn bộ hay không
                 // toolbar : '#exampleToolbar',
                 columns: [
                     {
-                        title: '编号',
+                        title: adminMessage('menuId', 'Mã'),
                         field: 'menuId',
                         visible: false,
                         align: 'center',
@@ -27,14 +27,14 @@ var load = function () {
                         width: '5%'
                     },
                     {
-                        title: '名称',
+                        title: adminMessage('menuName', 'Tên menu'),
                         valign: 'center',
                         field: 'name',
                         width: '20%'
                     },
 
                     {
-                        title: '图标',
+                        title: adminMessage('menuIcon', 'Biểu tượng'),
                         field: 'icon',
                         align: 'center',
                         valign: 'center',
@@ -46,54 +46,54 @@ var load = function () {
                         }
                     },
                     {
-                        title: '类型',
+                        title: adminMessage('menuType', 'Loại'),
                         field: 'type',
                         align: 'center',
                         valign: 'center',
                         width : '10%',
                         formatter: function (item, index) {
                             if (item.type === 0) {
-                                return '<span class="label label-primary">目录</span>';
+                                return '<span class="label label-primary">' + adminMessage('menuDirectory', 'Thư mục') + '</span>';
                             }
                             if (item.type === 1) {
-                                return '<span class="label label-success">菜单</span>';
+                                return '<span class="label label-success">' + adminMessage('menuItem', 'Menu') + '</span>';
                             }
                             if (item.type === 2) {
-                                return '<span class="label label-warning">按钮</span>';
+                                return '<span class="label label-warning">' + adminMessage('menuButton', 'Nút') + '</span>';
                             }
                         }
                     },
                     {
-                        title: '地址',
+                        title: adminMessage('menuUrl', 'Địa chỉ'),
                         valign: 'center',
                         width : '20%',
                         field: 'url'
                     },
                     {
-                        title: '权限标识',
+                        title: adminMessage('menuPermission', 'Mã quyền'),
                         valign: 'center',
                         width : '20%',
                         field: 'perms'
                     },
                     {
-                        title: '操作',
+                        title: adminMessage('actions', 'Thao tác'),
                         field: 'id',
                         align: 'center',
                         valign: 'center',
                         formatter: function (item, index) {
                             var e = '<a class="btn btn-primary btn-sm '
                                 + s_edit_h
-                                + '" href="#" mce_href="#" title="编辑" onclick="edit(\''
+                                + '" href="#" mce_href="#" title="' + adminMessage('edit', 'Sửa') + '" onclick="edit(\''
                                 + item.menuId
                                 + '\')"><i class="fa fa-edit"></i></a> ';
                             var p = '<a class="btn btn-primary btn-sm '
                                 + s_add_h
-                                + '" href="#" mce_href="#" title="添加下级" onclick="add(\''
+                                + '" href="#" mce_href="#" title="' + adminMessage('menuAddChild', 'Thêm menu con') + '" onclick="add(\''
                                 + item.menuId
                                 + '\')"><i class="fa fa-plus"></i></a> ';
                             var d = '<a class="btn btn-warning btn-sm '
                                 + s_remove_h
-                                + '" href="#" title="删除"  mce_href="#" onclick="remove(\''
+                                + '" href="#" title="' + adminMessage('deleteLabel', 'Xóa') + '"  mce_href="#" onclick="remove(\''
                                 + item.menuId
                                 + '\')"><i class="fa fa-remove"></i></a> ';
                             return e + d + p;
@@ -109,17 +109,17 @@ function reLoad() {
 function add(pId) {
     layer.open({
         type: 2,
-        title: '增加菜单',
+        title: adminMessage('addMenu', 'Thêm menu'),
         maxmin: true,
-        shadeClose: false, // 点击遮罩关闭层
+        shadeClose: false, // Nhấp lớp phủ để đóng hộp thoại
         area: ['800px', '520px'],
-        content: prefix + '/add/' + pId // iframe的url
+        content: prefix + '/add/' + pId // URL iframe
     });
 }
 
 function remove(id) {
-    layer.confirm('确定要删除选中的记录？', {
-        btn: ['确定', '取消']
+    layer.confirm(adminMessage('deleteConfirm', 'Bạn có chắc muốn xóa bản ghi đã chọn?'), {
+        btn: [adminMessage('confirm', 'Đồng ý'), adminMessage('cancel', 'Hủy')]
     }, function () {
         $.ajax({
             url: prefix + "/remove",
@@ -129,7 +129,7 @@ function remove(id) {
             },
             success: function (data) {
                 if (data.code == 0) {
-                    layer.msg("删除成功");
+                    layer.msg(adminMessage('deleteSuccess', 'Xóa thành công'));
                     reLoad();
                 } else {
                     layer.msg(data.msg);
@@ -142,11 +142,11 @@ function remove(id) {
 function edit(id) {
     layer.open({
         type: 2,
-        title: '菜单修改',
+        title: adminMessage('editMenu', 'Sửa menu'),
         maxmin: true,
-        shadeClose: false, // 点击遮罩关闭层
+        shadeClose: false, // Nhấp lớp phủ để đóng hộp thoại
         area: ['800px', '520px'],
-        content: prefix + '/edit/' + id // iframe的url
+        content: prefix + '/edit/' + id // URL iframe
     });
 }
 

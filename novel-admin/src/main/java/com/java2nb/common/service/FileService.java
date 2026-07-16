@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 文件上传
+ * Tải tệp lên
  * 
  * @author xiongxy
  * @email 1179705413@qq.com
@@ -29,8 +29,8 @@ public interface FileService {
 	int batchRemove(Long[] ids);
 
 	/**
-	 * 判断一个文件是否存在
-	 * @param url FileDO中存的路径
+	 * Kiểm tra tệp có tồn tại hay không
+	 * @param url đường dẫn lưu trong FileDO
 	 * @return
 	 */
     Boolean isExist(String url);

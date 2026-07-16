@@ -24,16 +24,16 @@ function save() {
 		cache : true,
 		type : "POST",
 		url : "/sys/user/save",
-		data : $('#signupForm').serialize(),// 你的formid
+		data : $('#signupForm').serialize(),// ID biểu mẫu
 		async : false,
 		error : function(request) {
-			parent.layer.alert("Connection error");
+			parent.layer.alert(adminMessage('connectionError', 'Lỗi kết nối'));
 		},
 		success : function(data) {
 			if (data.code == 0) {
-				parent.layer.msg("操作成功");
+				parent.layer.msg(adminMessage('operationSuccess', 'Thao tác thành công'));
 				parent.reLoad();
-				var index = parent.layer.getFrameIndex(window.name); // 获取窗口索引
+				var index = parent.layer.getFrameIndex(window.name); // Lấy chỉ mục cửa sổ
 				parent.layer.close(index);
 
 			} else {
@@ -55,10 +55,10 @@ function validateRule() {
 				required : true,
 				minlength : 2,
 				remote : {
-					url : "/sys/user/exit", // 后台处理程序
-					type : "post", // 数据发送方式
-					dataType : "json", // 接受数据格式
-					data : { // 要传递的数据
+					url : "/sys/user/exit", // Chương trình xử lý backend
+					type : "post", // Phương thức gửi dữ liệu
+					dataType : "json", // Định dạng dữ liệu nhận
+					data : { // Dữ liệu cần truyền
 						username : function() {
 							return $("#username").val();
 						}
@@ -87,23 +87,23 @@ function validateRule() {
 		messages : {
 
 			name : {
-				required : icon + "请输入姓名"
+				required : icon + adminMessage('userNameRequired', 'Vui lòng nhập họ tên')
 			},
 			username : {
-				required : icon + "请输入您的用户名",
-				minlength : icon + "用户名必须两个字符以上",
-				remote : icon + "用户名已经存在"
+				required : icon + adminMessage('usernameRequired', 'Vui lòng nhập tên đăng nhập'),
+				minlength : icon + adminMessage('usernameMinlength', 'Tên đăng nhập phải có ít nhất 2 ký tự'),
+				remote : icon + adminMessage('usernameExists', 'Tên đăng nhập đã tồn tại')
 			},
 			password : {
-				required : icon + "请输入您的密码",
-				minlength : icon + "密码必须6个字符以上"
+				required : icon + adminMessage('passwordRequired', 'Vui lòng nhập mật khẩu'),
+				minlength : icon + adminMessage('passwordMinlength', 'Mật khẩu phải có ít nhất 6 ký tự')
 			},
 			confirm_password : {
-				required : icon + "请再次输入密码",
-				minlength : icon + "密码必须6个字符以上",
-				equalTo : icon + "两次输入的密码不一致"
+				required : icon + adminMessage('passwordConfirmRequired', 'Vui lòng nhập lại mật khẩu'),
+				minlength : icon + adminMessage('passwordMinlength', 'Mật khẩu phải có ít nhất 6 ký tự'),
+				equalTo : icon + adminMessage('passwordMismatch', 'Mật khẩu nhập lại không khớp')
 			},
-			email : icon + "请输入您的E-mail",
+			email : icon + adminMessage('emailRequired', 'Vui lòng nhập email'),
 		}
 	})
 }
@@ -111,7 +111,7 @@ function validateRule() {
 var openDept = function(){
 	layer.open({
 		type:2,
-		title:"选择部门",
+		title: adminMessage('departmentName', 'Phòng ban'),
 		area : [ '300px', '450px' ],
 		content:"/system/sysDept/treeView"
 	})

@@ -19,155 +19,155 @@ public class FriendLinkDO implements Serializable {
     private static final long serialVersionUID = 1L;
 
 
-    //主键
+    // Khóa chính
     private Integer id;
-    //链接名
+    // Tên liên kết
     private String linkName;
-    //链接url
+    // URL liên kết
     @URL
     private String linkUrl;
-    //排序号
+    // Số thứ tự
     private Integer sort;
-    //是否开启，0：不开启，1：开启
+    // Bật: 0 tắt, 1 bật
     private Integer isOpen;
-    //创建人id
-    //java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-    //所以通过序列化成字符串来解决
+    //ID người tạo
+    // Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+    // Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
     @JsonSerialize(using = LongToStringSerializer.class)
     private Long createUserId;
-    //创建时间
+    // Thời gian tạo
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
-    //更新者用户id
-    //java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-    //所以通过序列化成字符串来解决
+    // ID người cập nhật
+    // Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+    // Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
     @JsonSerialize(using = LongToStringSerializer.class)
     private Long updateUserId;
-    //更新时间
+    // Thời gian cập nhật
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date updateTime;
 
     /**
-     * 设置：主键
+     * Đặt: khóa chính
      */
     public void setId(Integer id) {
         this.id = id;
     }
 
     /**
-     * 获取：主键
+     * Lấy: khóa chính
      */
     public Integer getId() {
         return id;
     }
 
     /**
-     * 设置：链接名
+     * Đặt: tên liên kết
      */
     public void setLinkName(String linkName) {
         this.linkName = linkName;
     }
 
     /**
-     * 获取：链接名
+     * Lấy: tên liên kết
      */
     public String getLinkName() {
         return linkName;
     }
 
     /**
-     * 设置：链接url
+     * Đặt: URL liên kết
      */
     public void setLinkUrl(String linkUrl) {
         this.linkUrl = linkUrl;
     }
 
     /**
-     * 获取：链接url
+     * Lấy: URL liên kết
      */
     public String getLinkUrl() {
         return linkUrl;
     }
 
     /**
-     * 设置：排序号
+     * Đặt: số thứ tự
      */
     public void setSort(Integer sort) {
         this.sort = sort;
     }
 
     /**
-     * 获取：排序号
+     * Lấy: số thứ tự
      */
     public Integer getSort() {
         return sort;
     }
 
     /**
-     * 设置：是否开启，0：不开启，1：开启
+     * Đặt: bật: 0 tắt, 1 bật
      */
     public void setIsOpen(Integer isOpen) {
         this.isOpen = isOpen;
     }
 
     /**
-     * 获取：是否开启，0：不开启，1：开启
+     * Lấy: bật: 0 tắt, 1 bật
      */
     public Integer getIsOpen() {
         return isOpen;
     }
 
     /**
-     * 设置：创建人id
+     * Đặt: ID người tạo
      */
     public void setCreateUserId(Long createUserId) {
         this.createUserId = createUserId;
     }
 
     /**
-     * 获取：创建人id
+     * Lấy: ID người tạo
      */
     public Long getCreateUserId() {
         return createUserId;
     }
 
     /**
-     * 设置：创建时间
+     * Đặt: thời gian tạo
      */
     public void setCreateTime(Date createTime) {
         this.createTime = createTime;
     }
 
     /**
-     * 获取：创建时间
+     * Lấy: thời gian tạo
      */
     public Date getCreateTime() {
         return createTime;
     }
 
     /**
-     * 设置：更新者用户id
+     * Đặt: ID người cập nhật
      */
     public void setUpdateUserId(Long updateUserId) {
         this.updateUserId = updateUserId;
     }
 
     /**
-     * 获取：更新者用户id
+     * Lấy: ID người cập nhật
      */
     public Long getUpdateUserId() {
         return updateUserId;
     }
 
     /**
-     * 设置：更新时间
+     * Đặt: thời gian cập nhật
      */
     public void setUpdateTime(Date updateTime) {
         this.updateTime = updateTime;
     }
 
     /**
-     * 获取：更新时间
+     * Lấy: thời gian cập nhật
      */
     public Date getUpdateTime() {
         return updateTime;

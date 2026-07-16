@@ -48,7 +48,7 @@ public class SysUserController extends BaseController {
     @GetMapping("/list")
     @ResponseBody
     PageBean list(@RequestParam Map<String, Object> params) {
-        // 查询列表数据
+        // Truy vấn dữ liệu danh sách
         Query query = new Query(params);
         List<UserDO> sysUserList = userService.list(query);
         int total = userService.count(query);
@@ -57,7 +57,7 @@ public class SysUserController extends BaseController {
     }
 
     @RequiresPermissions("sys:user:add")
-    @Log("添加用户")
+    @Log("Thêm người dùng")
     @GetMapping("/add")
     String add(Model model) {
         List<RoleDO> roles = roleService.list();
@@ -66,7 +66,7 @@ public class SysUserController extends BaseController {
     }
 
     @RequiresPermissions("sys:user:edit")
-    @Log("编辑用户")
+    @Log("Sửa người dùng")
     @GetMapping("/edit/{id}")
     String edit(Model model, @PathVariable("id") Long id) {
         UserDO userDO = userService.get(id);
@@ -81,12 +81,12 @@ public class SysUserController extends BaseController {
     }
 
     @RequiresPermissions("sys:user:add")
-    @Log("保存用户")
+    @Log("Lưu người dùng")
     @PostMapping("/save")
     @ResponseBody
     R save(UserDO user) {
         if (Constant.DEMO_ACCOUNT.equals(getUsername())) {
-            return R.error(1, "演示系统不允许修改,完整体验请部署程序");
+            return R.error(1, messages.get("error.demoReadOnly"));
         }
         user.setPassword(MD5Utils.encrypt(user.getUsername(), user.getPassword()));
         if (userService.save(user) > 0) {
@@ -96,12 +96,12 @@ public class SysUserController extends BaseController {
     }
 
     @RequiresPermissions("sys:user:edit")
-    @Log("更新用户")
+    @Log("Cập nhật người dùng")
     @PostMapping("/update")
     @ResponseBody
     R update(UserDO user) {
         if (Constant.DEMO_ACCOUNT.equals(getUsername())) {
-            return R.error(1, "演示系统不允许修改,完整体验请部署程序");
+            return R.error(1, messages.get("error.demoReadOnly"));
         }
         if (userService.update(user) > 0) {
             return R.ok();
@@ -111,12 +111,12 @@ public class SysUserController extends BaseController {
 
 
     @RequiresPermissions("sys:user:edit")
-    @Log("更新用户")
+    @Log("Cập nhật người dùng")
     @PostMapping("/updatePeronal")
     @ResponseBody
     R updatePeronal(UserDO user) {
         if (Constant.DEMO_ACCOUNT.equals(getUsername())) {
-            return R.error(1, "演示系统不允许修改,完整体验请部署程序");
+            return R.error(1, messages.get("error.demoReadOnly"));
         }
         if (userService.updatePersonal(user) > 0) {
             return R.ok();
@@ -126,12 +126,12 @@ public class SysUserController extends BaseController {
 
 
     @RequiresPermissions("sys:user:remove")
-    @Log("删除用户")
+    @Log("Xóa người dùng")
     @PostMapping("/remove")
     @ResponseBody
     R remove(Long id) {
         if (Constant.DEMO_ACCOUNT.equals(getUsername())) {
-            return R.error(1, "演示系统不允许修改,完整体验请部署程序");
+            return R.error(1, messages.get("error.demoReadOnly"));
         }
         if (userService.remove(id) > 0) {
             return R.ok();
@@ -140,12 +140,12 @@ public class SysUserController extends BaseController {
     }
 
     @RequiresPermissions("sys:user:batchRemove")
-    @Log("批量删除用户")
+    @Log("Xóa nhiều người dùng")
     @PostMapping("/batchRemove")
     @ResponseBody
     R batchRemove(@RequestParam("ids[]") Long[] userIds) {
         if (Constant.DEMO_ACCOUNT.equals(getUsername())) {
-            return R.error(1, "演示系统不允许修改,完整体验请部署程序");
+            return R.error(1, messages.get("error.demoReadOnly"));
         }
         int r = userService.batchremove(userIds);
         if (r > 0) {
@@ -157,12 +157,12 @@ public class SysUserController extends BaseController {
     @PostMapping("/exit")
     @ResponseBody
     boolean exit(@RequestParam Map<String, Object> params) {
-        // 存在，不通过，false
+        // Nếu đã tồn tại thì không hợp lệ, trả false
         return !userService.exit(params);
     }
 
     @RequiresPermissions("sys:user:resetPwd")
-    @Log("请求更改用户密码")
+    @Log("Yêu cầu đổi mật khẩu người dùng")
     @GetMapping("/resetPwd/{id}")
     String resetPwd(@PathVariable("id") Long userId, Model model) {
 
@@ -172,12 +172,12 @@ public class SysUserController extends BaseController {
         return prefix + "/reset_pwd";
     }
 
-    @Log("提交更改用户密码")
+    @Log("Gửi yêu cầu đổi mật khẩu người dùng")
     @PostMapping("/resetPwd")
     @ResponseBody
     R resetPwd(UserVO userVO) {
         if (Constant.DEMO_ACCOUNT.equals(getUsername())) {
-            return R.error(1, "演示系统不允许修改,完整体验请部署程序");
+            return R.error(1, messages.get("error.demoReadOnly"));
         }
         try {
             userService.resetPwd(userVO, getUser());
@@ -189,12 +189,12 @@ public class SysUserController extends BaseController {
     }
 
     @RequiresPermissions("sys:user:resetPwd")
-    @Log("admin提交更改用户密码")
+    @Log("Quản trị viên gửi yêu cầu đổi mật khẩu người dùng")
     @PostMapping("/adminResetPwd")
     @ResponseBody
     R adminResetPwd(UserVO userVO) {
         if (Constant.DEMO_ACCOUNT.equals(getUsername())) {
-            return R.error(1, "演示系统不允许修改,完整体验请部署程序");
+            return R.error(1, messages.get("error.demoReadOnly"));
         }
         try {
             userService.adminResetPwd(userVO);
@@ -231,18 +231,18 @@ public class SysUserController extends BaseController {
     @PostMapping("/uploadImg")
     R uploadImg(@RequestParam("avatar_file") MultipartFile file, String avatar_data, HttpServletRequest request) {
         if ("test".equals(getUsername())) {
-            return R.error(1, "演示系统不允许修改,完整体验请部署程序");
+            return R.error(1, messages.get("error.demoReadOnly"));
         }
         Map<String, Object> result = new HashMap<>();
         try {
             result = userService.updatePersonalImg(file, avatar_data, getUserId());
         } catch (Exception e) {
-            return R.error("更新图像失败！");
+            return R.error(messages.get("error.avatarUpdateFailed"));
         }
         if (result != null && result.size() > 0) {
             return R.ok(result);
         } else {
-            return R.error("更新图像失败！");
+            return R.error(messages.get("error.avatarUpdateFailed"));
         }
     }
 }

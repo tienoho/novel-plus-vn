@@ -45,7 +45,7 @@ public class ShiroConfig {
     }
 
     /**
-     * ShiroDialect，为了在thymeleaf里使用shiro的标签的bean
+     * Bean ShiroDialect để dùng thẻ Shiro trong Thymeleaf
      *
      * @return
      */
@@ -85,9 +85,9 @@ public class ShiroConfig {
     @Bean
     public SecurityManager securityManager() {
         DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
-        //设置realm.
+        // Cấu hình realm.
         securityManager.setRealm(userRealm());
-        // 自定义缓存实现 使用redis
+        // Triển khai bộ nhớ đệm tùy chỉnh bằng Redis
         securityManager.setCacheManager(rediscacheManager());
         securityManager.setSessionManager(sessionManager());
         return securityManager;
@@ -100,7 +100,7 @@ public class ShiroConfig {
     }
 
     /**
-     * 开启shiro aop注解支持. 使用代理方式;所以需要开启代码支持;
+     * Bật hỗ trợ annotation AOP của Shiro bằng cơ chế proxy.
      *
      * @param securityManager
      * @return
@@ -113,7 +113,7 @@ public class ShiroConfig {
     }
 
     /**
-     * 配置shiro redisManager
+     * Cấu hình redisManager cho Shiro
      *
      * @return
      */
@@ -122,14 +122,14 @@ public class ShiroConfig {
         RedisManager redisManager = new RedisManager();
         redisManager.setHost(host);
         redisManager.setPort(port);
-        redisManager.setExpire(1800);// 配置缓存过期时间
+        redisManager.setExpire(1800);// Cấu hình thời gian hết hạn bộ nhớ đệm
         //redisManager.setTimeout(1800);
         redisManager.setPassword(password);
         return redisManager;
     }
 
     /**
-     * cacheManager 缓存 redis实现 使用的是shiro-redis开源插件
+     * CacheManager dùng Redis thông qua plugin nguồn mở shiro-redis
      *
      * @return
      */
@@ -141,7 +141,7 @@ public class ShiroConfig {
 
 
     /**
-     * RedisSessionDAO shiro sessionDao层的实现 通过redis 使用的是shiro-redis开源插件
+     * RedisSessionDAO triển khai lớp sessionDao của Shiro qua Redis bằng plugin shiro-redis
      */
     @Bean
     public RedisSessionDAO redisSessionDAO() {
@@ -156,7 +156,7 @@ public class ShiroConfig {
     }
 
     /**
-     * shiro session的管理
+     * Quản lý session Shiro
      */
     @Bean
     public DefaultWebSessionManager sessionManager() {

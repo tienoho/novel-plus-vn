@@ -15,7 +15,7 @@ import java.util.Date;
 
 
 /**
- * 网站信息表
+ * Bảng thông tin website
  * 
  * @author xiongxy
  * @email 1179705413@qq.com
@@ -25,182 +25,182 @@ public class WebsiteInfoDO implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	
-	//主键
-		//java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-	//所以通过序列化成字符串来解决
+	// Khóa chính
+		// Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+	// Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
 	@JsonSerialize(using = LongToStringSerializer.class)
 			private Long id;
-	//网站名
+	// Tên website
 			private String name;
-	//网站域名
+	// Tên miền website
 			private String domain;
-	//SEO关键词
+	// Từ khóa SEO
 			private String keyword;
-	//网站描述
+	// Mô tả website
 			private String description;
-	//站长QQ
+	// QQ của quản trị website
 			private String qq;
-	//网站logo图片（默认）
+	// Ảnh logo website (mặc định)
 			private String logo;
-	//网站logo图片（深色）
+	// Ảnh logo website (tối)
 			private String logoDark;
-	//创建时间
+	// Thời gian tạo
 			@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 		private Date createTime;
-	//创建人ID
-		//java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-	//所以通过序列化成字符串来解决
+	// ID người tạo
+		// Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+	// Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
 	@JsonSerialize(using = LongToStringSerializer.class)
 			private Long createUserId;
-	//更新时间
+	// Thời gian cập nhật
 			@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 		private Date updateTime;
-	//更新人ID
-		//java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-	//所以通过序列化成字符串来解决
+	// ID người cập nhật
+		// Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+	// Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
 	@JsonSerialize(using = LongToStringSerializer.class)
 			private Long updateUserId;
 
 	/**
-	 * 设置：主键
+	 * Đặt: khóa chính
 	 */
 	public void setId(Long id) {
 		this.id = id;
 	}
 	/**
-	 * 获取：主键
+	 * Lấy: khóa chính
 	 */
 	public Long getId() {
 		return id;
 	}
 	/**
-	 * 设置：网站名
+	 * Đặt: tên website
 	 */
 	public void setName(String name) {
 		this.name = name;
 	}
 	/**
-	 * 获取：网站名
+	 * Lấy: tên website
 	 */
 	public String getName() {
 		return name;
 	}
 	/**
-	 * 设置：网站域名
+	 * Đặt: tên miền website
 	 */
 	public void setDomain(String domain) {
 		this.domain = domain;
 	}
 	/**
-	 * 获取：网站域名
+	 * Lấy: tên miền website
 	 */
 	public String getDomain() {
 		return domain;
 	}
 	/**
-	 * 设置：SEO关键词
+	 * Đặt: từ khóa SEO
 	 */
 	public void setKeyword(String keyword) {
 		this.keyword = keyword;
 	}
 	/**
-	 * 获取：SEO关键词
+	 * Lấy: từ khóa SEO
 	 */
 	public String getKeyword() {
 		return keyword;
 	}
 	/**
-	 * 设置：网站描述
+	 * Đặt: mô tả website
 	 */
 	public void setDescription(String description) {
 		this.description = description;
 	}
 	/**
-	 * 获取：网站描述
+	 * Lấy: mô tả website
 	 */
 	public String getDescription() {
 		return description;
 	}
 	/**
-	 * 设置：站长QQ
+	 * Đặt: QQ của quản trị website
 	 */
 	public void setQq(String qq) {
 		this.qq = qq;
 	}
 	/**
-	 * 获取：站长QQ
+	 * Lấy: QQ của quản trị website
 	 */
 	public String getQq() {
 		return qq;
 	}
 	/**
-	 * 设置：网站logo图片（默认）
+	 * Đặt: ảnh logo website (mặc định)
 	 */
 	public void setLogo(String logo) {
 		this.logo = logo;
 	}
 	/**
-	 * 获取：网站logo图片（默认）
+	 * Lấy: ảnh logo website (mặc định)
 	 */
 	public String getLogo() {
 		return logo;
 	}
 	/**
-	 * 设置：网站logo图片（深色）
+	 * Đặt: ảnh logo website (tối)
 	 */
 	public void setLogoDark(String logoDark) {
 		this.logoDark = logoDark;
 	}
 	/**
-	 * 获取：网站logo图片（深色）
+	 * Lấy: ảnh logo website (tối)
 	 */
 	public String getLogoDark() {
 		return logoDark;
 	}
 	/**
-	 * 设置：创建时间
+	 * Đặt: thời gian tạo
 	 */
 	public void setCreateTime(Date createTime) {
 		this.createTime = createTime;
 	}
 	/**
-	 * 获取：创建时间
+	 * Lấy: thời gian tạo
 	 */
 	public Date getCreateTime() {
 		return createTime;
 	}
 	/**
-	 * 设置：创建人ID
+	 * Đặt: ID người tạo
 	 */
 	public void setCreateUserId(Long createUserId) {
 		this.createUserId = createUserId;
 	}
 	/**
-	 * 获取：创建人ID
+	 * Lấy: ID người tạo
 	 */
 	public Long getCreateUserId() {
 		return createUserId;
 	}
 	/**
-	 * 设置：更新时间
+	 * Đặt: thời gian cập nhật
 	 */
 	public void setUpdateTime(Date updateTime) {
 		this.updateTime = updateTime;
 	}
 	/**
-	 * 获取：更新时间
+	 * Lấy: thời gian cập nhật
 	 */
 	public Date getUpdateTime() {
 		return updateTime;
 	}
 	/**
-	 * 设置：更新人ID
+	 * Đặt: ID người cập nhật
 	 */
 	public void setUpdateUserId(Long updateUserId) {
 		this.updateUserId = updateUserId;
 	}
 	/**
-	 * 获取：更新人ID
+	 * Lấy: ID người cập nhật
 	 */
 	public Long getUpdateUserId() {
 		return updateUserId;

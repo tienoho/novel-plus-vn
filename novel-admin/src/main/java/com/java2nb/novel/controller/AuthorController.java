@@ -23,7 +23,7 @@ import com.java2nb.common.utils.Query;
 import com.java2nb.common.utils.R;
 
 /**
- * 作者表
+ * Bảng tác giả
  *
  * @author xiongxy
  * @email 1179705413@qq.com
@@ -42,12 +42,12 @@ public class AuthorController {
         return "novel/author/author";
     }
 
-    @ApiOperation(value = "获取作者表列表", notes = "获取作者表列表")
+    @ApiOperation(value = "Lấy danh sách bảng tác giả", notes = "Lấy danh sách bảng tác giả")
     @ResponseBody
     @GetMapping("/list")
     @RequiresPermissions("novel:author:author")
     public R list(@RequestParam Map<String, Object> params) {
-        //查询列表数据
+        // Truy vấn dữ liệu danh sách
         Query query = new Query(params);
         List<AuthorDO> authorList = authorService.list(query);
         int total = authorService.count(query);
@@ -55,14 +55,14 @@ public class AuthorController {
         return R.ok().put("data", pageBean);
     }
 
-    @ApiOperation(value = "新增作者表页面", notes = "新增作者表页面")
+    @ApiOperation(value = "Trang thêm bảng tác giả", notes = "Trang thêm bảng tác giả")
     @GetMapping("/add")
     @RequiresPermissions("novel:author:add")
     String add() {
         return "novel/author/add";
     }
 
-    @ApiOperation(value = "修改作者表页面", notes = "修改作者表页面")
+    @ApiOperation(value = "Trang sửa bảng tác giả", notes = "Trang sửa bảng tác giả")
     @GetMapping("/edit/{id}")
     @RequiresPermissions("novel:author:edit")
     String edit(@PathVariable("id") Long id, Model model) {
@@ -71,7 +71,7 @@ public class AuthorController {
         return "novel/author/edit";
     }
 
-    @ApiOperation(value = "查看作者表页面", notes = "查看作者表页面")
+    @ApiOperation(value = "Trang chi tiết bảng tác giả", notes = "Trang chi tiết bảng tác giả")
     @GetMapping("/detail/{id}")
     @RequiresPermissions("novel:author:detail")
     String detail(@PathVariable("id") Long id, Model model) {
@@ -81,9 +81,9 @@ public class AuthorController {
     }
 
     /**
-     * 保存
+     * Lưu
      */
-    @ApiOperation(value = "新增作者表", notes = "新增作者表")
+    @ApiOperation(value = "Thêm bảng tác giả", notes = "Thêm bảng tác giả")
     @ResponseBody
     @PostMapping("/save")
     @RequiresPermissions("novel:author:add")
@@ -95,9 +95,9 @@ public class AuthorController {
     }
 
     /**
-     * 修改
+     * Sửa
      */
-    @ApiOperation(value = "修改作者表", notes = "修改作者表")
+    @ApiOperation(value = "Sửa bảng tác giả", notes = "Sửa bảng tác giả")
     @ResponseBody
     @RequestMapping("/update")
     @RequiresPermissions("novel:author:edit")
@@ -107,9 +107,9 @@ public class AuthorController {
     }
 
     /**
-     * 删除
+     * Xóa
      */
-    @ApiOperation(value = "删除作者表", notes = "删除作者表")
+    @ApiOperation(value = "Xóa bảng tác giả", notes = "Xóa bảng tác giả")
     @PostMapping("/remove")
     @ResponseBody
     @RequiresPermissions("novel:author:remove")
@@ -121,9 +121,9 @@ public class AuthorController {
     }
 
     /**
-     * 删除
+     * Xóa
      */
-    @ApiOperation(value = "批量删除作者表", notes = "批量删除作者表")
+    @ApiOperation(value = "Xóa hàng loạt bảng tác giả", notes = "Xóa hàng loạt bảng tác giả")
     @PostMapping("/batchRemove")
     @ResponseBody
     @RequiresPermissions("novel:author:batchRemove")

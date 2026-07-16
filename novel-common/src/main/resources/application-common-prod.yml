@@ -5,13 +5,13 @@ spring:
     allow-bean-definition-overriding: true
   data:
     redis:
-      #Redis服务器IP
+      #IP máy chủ Redis
       host: 127.0.0.1
-      #Redis服务器连接端口
+      #Cổng kết nối Redis
       port: 6379
-      #Redis服务器连接密码
+      #Mật khẩu kết nối Redis
       password: test123456
-      #连接超时时间（毫秒）
+      #Thời gian chờ kết nối (mili giây)
       timeout: 10000
 
 logging:
@@ -23,17 +23,17 @@ logging:
 
 content:
   save:
-    storage: db #存储介质，db：数据库，file：txt文本
-    path: /Users/xiongxiaoyang/books  #txt小说文本保存路径
+    storage: db #Phương tiện lưu trữ: db cơ sở dữ liệu, file văn bản TXT
+    path: /Users/xiongxiaoyang/books  #Đường dẫn lưu nội dung tác phẩm TXT
 
-# HTTP 代理配置
+# Cấu hình proxy HTTP
 http:
   proxy:
-    # 是否开启 HTTP 代理，true-开启，false-不开启
+    # Bật proxy HTTP: true bật, false tắt
     enabled: false
-    # 代理 IP
+    # IP proxy
     ip: 40.83.102.86
-    # 代理端口号
+    # Cổng proxy
     port: 80
 
 

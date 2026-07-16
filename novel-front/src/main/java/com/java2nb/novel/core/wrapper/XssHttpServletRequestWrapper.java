@@ -4,7 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 
 /**
- * XSS过滤处理
+ * Xử lý lọc XSS
  *
  * @author Administrator
  */

@@ -15,17 +15,17 @@ $.validator.setDefaults({
 });
 
 function getAllSelectNodes() {
-	var ref = $('#menuTree').jstree(true); // 获得整个树
+	var ref = $('#menuTree').jstree(true); // Lấy toàn bộ cây
 
-	menuIds = ref.get_selected(); // 获得所有选中节点的，返回值为数组
+	menuIds = ref.get_selected(); // Lấy các nút đã chọn dưới dạng mảng
 
 	$("#menuTree").find(".jstree-undetermined").each(function(i, element) {
 		menuIds.push($(element).closest('.jstree-node').attr("id"));
 	});
 
-	ref = $('#dataPermTree').jstree(true); // 获得整个树
+	ref = $('#dataPermTree').jstree(true); // Lấy toàn bộ cây
 
-	permIds = ref.get_selected(); // 获得所有选中节点的，返回值为数组
+	permIds = ref.get_selected(); // Lấy các nút đã chọn dưới dạng mảng
 
 	$("#dataPermTree").find(".jstree-undetermined").each(function(i, element) {
 		permIds.push($(element).closest('.jstree-node').attr("id"));
@@ -84,17 +84,17 @@ function save() {
 		cache : true,
 		type : "POST",
 		url : "/sys/role/save",
-		data : role, // 你的formid
+		data : role, // ID biểu mẫu
 
 		async : false,
 		error : function(request) {
-			alert("Connection error");
+			alert(adminMessage('connectionError', 'Lỗi kết nối'));
 		},
 		success : function(data) {
 			if (data.code == 0) {
-				parent.layer.msg("操作成功");
+				parent.layer.msg(adminMessage('operationSuccess', 'Thao tác thành công'));
 				parent.reLoad();
-				var index = parent.layer.getFrameIndex(window.name); // 获取窗口索引
+				var index = parent.layer.getFrameIndex(window.name); // Lấy chỉ mục cửa sổ
 
 				parent.layer.close(index);
 
@@ -115,7 +115,7 @@ function validateRule() {
 		},
 		messages : {
 			roleName : {
-				required : icon + "请输入角色名"
+				required : icon + adminMessage('roleNameRequired', 'Vui lòng nhập tên vai trò')
 			}
 		}
 	});

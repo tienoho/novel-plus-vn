@@ -1,4 +1,4 @@
-<head th:fragment="header">
+<head th:fragment="header" lang="vi">
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title></title>
@@ -25,23 +25,307 @@
 </head>
 <div th:fragment="footer">
 	<script src="/js/jquery.min.js?v=2.1.4"></script>
+	<script th:inline="javascript">
+		window.AdminI18n = Object.assign(window.AdminI18n || {}, {
+			add: /*[[#{common.add}]]*/ 'Thêm',
+			edit: /*[[#{common.edit}]]*/ 'Sửa',
+			detail: /*[[#{common.detail}]]*/ 'Chi tiết',
+			deleteLabel: /*[[#{common.deleteAction}]]*/ 'Xóa',
+			actions: /*[[#{common.actions}]]*/ 'Thao tác',
+			sequence: /*[[#{common.sequence}]]*/ 'STT',
+			query: /*[[#{common.query}]]*/ 'Tra cứu',
+			reset: /*[[#{common.reset}]]*/ 'Đặt lại',
+			submit: /*[[#{common.submit}]]*/ 'Gửi',
+			select: /*[[#{common.select}]]*/ 'Vui lòng chọn',
+			confirm: /*[[#{common.confirm}]]*/ 'Đồng ý',
+			cancel: /*[[#{common.cancel}]]*/ 'Hủy',
+			operationSuccess: /*[[#{common.operationSuccess}]]*/ 'Thao tác thành công',
+			connectionError: /*[[#{common.connectionError}]]*/ 'Lỗi kết nối',
+			deleteConfirm: /*[[#{common.deleteConfirm}]]*/ 'Bạn có chắc muốn xóa bản ghi đã chọn?',
+			batchDeleteEmpty: /*[[#{common.batchDeleteEmpty}]]*/ 'Vui lòng chọn dữ liệu cần xóa',
+			batchDeleteConfirm: /*[[#{common.batchDeleteConfirm('{0}')}]]*/ 'Bạn có chắc muốn xóa {0} bản ghi đã chọn?',
+			loading: /*[[#{common.loading}]]*/ 'Đang tải dữ liệu, vui lòng chờ…',
+			noRecords: /*[[#{common.noRecords}]]*/ 'Không tìm thấy bản ghi phù hợp',
+			recordsPerPage: /*[[#{common.recordsPerPage('{0}')}]]*/ '{0} bản ghi mỗi trang',
+			showingRecords: /*[[#{common.showingRecords('{0}','{1}','{2}')}]]*/ 'Hiển thị từ {0} đến {1} trên tổng số {2} bản ghi',
+			searchRecords: /*[[#{common.searchRecords}]]*/ 'Tìm kiếm',
+			validationRequired: /*[[#{validation.required}]]*/ 'Trường này là bắt buộc.',
+			validationRemote: /*[[#{validation.remote}]]*/ 'Vui lòng sửa trường này.',
+			validationEmail: /*[[#{validation.email}]]*/ 'Vui lòng nhập địa chỉ email hợp lệ.',
+			validationUrl: /*[[#{validation.url}]]*/ 'Vui lòng nhập URL hợp lệ.',
+			validationDate: /*[[#{validation.date}]]*/ 'Vui lòng nhập ngày hợp lệ.',
+			validationNumber: /*[[#{validation.number}]]*/ 'Vui lòng nhập số hợp lệ.',
+			validationDigits: /*[[#{validation.digits}]]*/ 'Chỉ được nhập chữ số.',
+			validationEqualTo: /*[[#{validation.equalTo}]]*/ 'Vui lòng nhập lại cùng một giá trị.',
+			validationMaxlength: /*[[#{validation.maxlength('{0}')}]]*/ 'Vui lòng nhập không quá {0} ký tự.',
+			validationMinlength: /*[[#{validation.minlength('{0}')}]]*/ 'Vui lòng nhập ít nhất {0} ký tự.',
+			validationRangelength: /*[[#{validation.rangelength('{0}','{1}')}]]*/ 'Vui lòng nhập từ {0} đến {1} ký tự.',
+			validationRange: /*[[#{validation.range('{0}','{1}')}]]*/ 'Vui lòng nhập giá trị từ {0} đến {1}.',
+			validationMax: /*[[#{validation.max('{0}')}]]*/ 'Vui lòng nhập giá trị không lớn hơn {0}.',
+			validationMin: /*[[#{validation.min('{0}')}]]*/ 'Vui lòng nhập giá trị không nhỏ hơn {0}.'
+			,categoryName: /*[[#{admin.category.name}]]*/ 'Tên danh mục'
+			,categorySort: /*[[#{admin.category.sort}]]*/ 'Thứ tự'
+			,categoryNameRequired: /*[[#{admin.category.name.required}]]*/ 'Vui lòng nhập tên danh mục'
+			,userName: /*[[#{admin.user.name}]]*/ 'Họ tên'
+			,username: /*[[#{admin.user.username}]]*/ 'Tên đăng nhập'
+			,email: /*[[#{admin.user.email}]]*/ 'Email'
+			,phone: /*[[#{admin.user.phone}]]*/ 'Số điện thoại'
+			,status: /*[[#{admin.user.status}]]*/ 'Trạng thái'
+			,disabled: /*[[#{admin.user.disabled}]]*/ 'Đã khóa'
+			,normal: /*[[#{admin.user.normal}]]*/ 'Hoạt động'
+			,resetPassword: /*[[#{admin.user.resetPassword}]]*/ 'Đặt lại mật khẩu'
+			,addUser: /*[[#{admin.user.add}]]*/ 'Thêm người dùng'
+			,editUser: /*[[#{admin.user.edit}]]*/ 'Sửa người dùng'
+			,userNameRequired: /*[[#{admin.user.name.required}]]*/ 'Vui lòng nhập họ tên'
+			,usernameRequired: /*[[#{admin.user.username.required}]]*/ 'Vui lòng nhập tên đăng nhập'
+			,usernameMinlength: /*[[#{admin.user.username.minlength}]]*/ 'Tên đăng nhập phải có ít nhất 2 ký tự'
+			,usernameExists: /*[[#{admin.user.username.exists}]]*/ 'Tên đăng nhập đã tồn tại'
+			,passwordRequired: /*[[#{admin.user.password.required}]]*/ 'Vui lòng nhập mật khẩu'
+			,passwordMinlength: /*[[#{admin.user.password.minlength}]]*/ 'Mật khẩu phải có ít nhất 6 ký tự'
+			,passwordConfirmRequired: /*[[#{admin.user.passwordConfirm.required}]]*/ 'Vui lòng nhập lại mật khẩu'
+			,passwordMismatch: /*[[#{admin.user.passwordConfirm.mismatch}]]*/ 'Mật khẩu nhập lại không khớp'
+			,emailRequired: /*[[#{admin.user.email.required}]]*/ 'Vui lòng nhập email'
+			,roleName: /*[[#{admin.role.name}]]*/ 'Tên vai trò'
+			,roleRemark: /*[[#{admin.role.remark}]]*/ 'Ghi chú'
+			,rolePermission: /*[[#{admin.role.permission}]]*/ 'Quyền'
+			,addRole: /*[[#{admin.role.add}]]*/ 'Thêm vai trò'
+			,editRole: /*[[#{admin.role.edit}]]*/ 'Sửa vai trò'
+			,roleNameRequired: /*[[#{admin.role.name.required}]]*/ 'Vui lòng nhập tên vai trò'
+			,departmentName: /*[[#{admin.department.name}]]*/ 'Tên phòng ban'
+			,departmentSort: /*[[#{admin.department.sort}]]*/ 'Thứ tự'
+			,departmentAddChild: /*[[#{admin.department.addChild}]]*/ 'Thêm phòng ban con'
+			,departmentNameRequired: /*[[#{admin.department.name.required}]]*/ 'Vui lòng nhập tên phòng ban'
+			,menuId: /*[[#{admin.menu.id}]]*/ 'Mã'
+			,menuName: /*[[#{admin.menu.name}]]*/ 'Tên menu'
+			,menuIcon: /*[[#{admin.menu.icon}]]*/ 'Biểu tượng'
+			,menuType: /*[[#{admin.menu.type}]]*/ 'Loại'
+			,menuDirectory: /*[[#{admin.menu.directory}]]*/ 'Thư mục'
+			,menuItem: /*[[#{admin.menu.item}]]*/ 'Menu'
+			,menuButton: /*[[#{admin.menu.button}]]*/ 'Nút'
+			,menuUrl: /*[[#{admin.menu.url}]]*/ 'Địa chỉ'
+			,menuPermission: /*[[#{admin.menu.permission}]]*/ 'Mã quyền'
+			,menuAddChild: /*[[#{admin.menu.addChild}]]*/ 'Thêm menu con'
+			,addMenu: /*[[#{admin.menu.add}]]*/ 'Thêm menu'
+			,editMenu: /*[[#{admin.menu.edit}]]*/ 'Sửa menu'
+			,iconList: /*[[#{admin.menu.iconList}]]*/ 'Danh sách biểu tượng'
+			,menuNameRequired: /*[[#{admin.menu.name.required}]]*/ 'Vui lòng nhập tên menu'
+			,menuTypeRequired: /*[[#{admin.menu.type.required}]]*/ 'Vui lòng chọn loại menu'
+			,onlineHost: /*[[#{admin.online.host}]]*/ 'Máy khách'
+			,loginTime: /*[[#{admin.online.loginTime}]]*/ 'Thời gian đăng nhập'
+			,lastAccess: /*[[#{admin.online.lastAccess}]]*/ 'Truy cập gần nhất'
+			,expireTime: /*[[#{admin.online.expireTime}]]*/ 'Thời gian hết hạn'
+			,online: /*[[#{admin.online.online}]]*/ 'Trực tuyến'
+			,offline: /*[[#{admin.online.offline}]]*/ 'Ngoại tuyến'
+			,forceLogoutConfirm: /*[[#{admin.online.forceLogoutConfirm}]]*/ 'Bạn có chắc muốn buộc người dùng đã chọn đăng xuất?'
+			,saveSuccess: /*[[#{common.save}]]*/ 'Lưu thành công'
+			,updateSuccess: /*[[#{common.update}]]*/ 'Cập nhật thành công'
+			,deleteSuccess: /*[[#{common.delete}]]*/ 'Xóa thành công'
+			,systemContact: /*[[#{admin.system.contact}]]*/ 'Đã xảy ra lỗi hệ thống, vui lòng liên hệ quản trị viên'
+			,passwordMinlength5: /*[[#{admin.user.password.minlength5}]]*/ 'Mật khẩu phải có ít nhất 5 ký tự'
+			,backup: /*[[#{common.backup}]]*/ 'Dự phòng'
+			,dataPermName: /*[[#{admin.dataPerm.name}]]*/ 'Tên quyền dữ liệu'
+			,dataPermTable: /*[[#{admin.dataPerm.table}]]*/ 'Tên bảng dữ liệu'
+			,dataPermModule: /*[[#{admin.dataPerm.module}]]*/ 'Phân hệ'
+			,dataPermUserAttribute: /*[[#{admin.dataPerm.userAttribute}]]*/ 'Thuộc tính người dùng dùng để kiểm soát quyền'
+			,dataPermTableColumn: /*[[#{admin.dataPerm.tableColumn}]]*/ 'Cột dữ liệu dùng để kiểm soát quyền'
+			,dataPermCode: /*[[#{admin.dataPerm.code}]]*/ 'Mã quyền'
+			,dataPermSort: /*[[#{admin.dataPerm.sort}]]*/ 'Thứ tự'
+			,createdAt: /*[[#{admin.audit.createdAt}]]*/ 'Thời gian tạo'
+			,createdById: /*[[#{admin.audit.createdById}]]*/ 'ID người tạo'
+			,modifiedAt: /*[[#{admin.dataPerm.modifiedAt}]]*/ 'Thời gian sửa'
+			,dataPermNameRequired: /*[[#{admin.dataPerm.name.required}]]*/ 'Vui lòng nhập tên quyền dữ liệu'
+			,dataPermTableRequired: /*[[#{admin.dataPerm.table.required}]]*/ 'Vui lòng nhập tên bảng dữ liệu'
+			,dataPermModuleRequired: /*[[#{admin.dataPerm.module.required}]]*/ 'Vui lòng chọn phân hệ'
+			,dataPermUserAttributeRequired: /*[[#{admin.dataPerm.userAttribute.required}]]*/ 'Vui lòng nhập thuộc tính người dùng kiểm soát quyền'
+			,dataPermTableColumnRequired: /*[[#{admin.dataPerm.tableColumn.required}]]*/ 'Vui lòng nhập cột dữ liệu kiểm soát quyền'
+			,dataPermCodeRequired: /*[[#{admin.dataPerm.code.required}]]*/ 'Vui lòng nhập mã quyền'
+			,roleId: /*[[#{admin.roleDataPerm.roleId}]]*/ 'ID vai trò'
+			,permissionId: /*[[#{admin.roleDataPerm.permissionId}]]*/ 'ID quyền'
+			,bookId: /*[[#{admin.book.id}]]*/ 'ID truyện'
+			,bookDirection: /*[[#{admin.book.direction}]]*/ 'Kênh tác phẩm'
+			,bookDirectionMale: /*[[#{admin.book.direction.male}]]*/ 'Kênh nam'
+			,bookDirectionFemale: /*[[#{admin.book.direction.female}]]*/ 'Kênh nữ'
+			,bookCategoryName: /*[[#{admin.book.categoryName}]]*/ 'Tên danh mục'
+			,bookName: /*[[#{admin.book.name}]]*/ 'Tên truyện'
+			,bookAuthorName: /*[[#{admin.book.authorName}]]*/ 'Tên tác giả'
+			,bookStatus: /*[[#{admin.book.status}]]*/ 'Trạng thái truyện'
+			,bookSerializing: /*[[#{admin.book.status.serializing}]]*/ 'Đang ra'
+			,bookCompleted: /*[[#{admin.book.status.completed}]]*/ 'Đã hoàn thành'
+			,bookViews: /*[[#{admin.book.views}]]*/ 'Lượt xem'
+			,bookWordCount: /*[[#{admin.book.wordCount}]]*/ 'Tổng số chữ'
+			,bookCommentCount: /*[[#{admin.book.commentCount}]]*/ 'Số bình luận'
+			,bookYesterdaySubscriptions: /*[[#{admin.book.yesterdaySubscriptions}]]*/ 'Lượt mua chương hôm qua'
+			,bookLatestIndexName: /*[[#{admin.book.latestIndexName}]]*/ 'Tên chương mới nhất'
+			,bookLatestIndexUpdatedAt: /*[[#{admin.book.latestIndexUpdatedAt}]]*/ 'Thời gian cập nhật chương mới nhất'
+			,bookPaid: /*[[#{admin.book.paid}]]*/ 'Hình thức đọc'
+			,bookPaidYes: /*[[#{admin.book.paid.yes}]]*/ 'Thu phí'
+			,bookPaidNo: /*[[#{admin.book.paid.no}]]*/ 'Miễn phí'
+			,bookCreatedAt: /*[[#{admin.book.createdAt}]]*/ 'Thời gian tạo'
+			,bookDownloadTxt: /*[[#{admin.book.downloadTxt}]]*/ 'Tải TXT'
+			,bookIndexNumber: /*[[#{admin.bookIndex.number}]]*/ 'Số thứ tự chương'
+			,bookIndexName: /*[[#{admin.bookIndex.name}]]*/ 'Tên chương'
+			,bookIndexWordCount: /*[[#{admin.bookIndex.wordCount}]]*/ 'Số chữ'
+			,bookIndexPrice: /*[[#{admin.bookIndex.price}]]*/ 'Giá chương (Xu)'
+			,bookIndexStorage: /*[[#{admin.bookIndex.storage}]]*/ 'Phương thức lưu trữ'
+			,bookContentIndexId: /*[[#{admin.bookContent.indexId}]]*/ 'ID chương'
+			,bookContent: /*[[#{admin.bookContent.content}]]*/ 'Nội dung chương'
+			,bookSettingSort: /*[[#{admin.bookSetting.sort}]]*/ 'Thứ tự'
+			,bookSettingType: /*[[#{admin.bookSetting.type}]]*/ 'Loại đề xuất'
+			,bookSettingBookIdRequired: /*[[#{admin.bookSetting.bookId.required}]]*/ 'Vui lòng nhập ID truyện'
+			,bookSettingSortRequired: /*[[#{admin.bookSetting.sort.required}]]*/ 'Vui lòng nhập thứ tự'
+			,bookSettingTypeRequired: /*[[#{admin.bookSetting.type.required}]]*/ 'Vui lòng chọn loại đề xuất'
+			,bookCommentBook: /*[[#{admin.bookComment.book}]]*/ 'Truyện được bình luận'
+			,bookCommentContent: /*[[#{admin.bookComment.content}]]*/ 'Nội dung bình luận'
+			,bookCommentReplyCount: /*[[#{admin.bookComment.replyCount}]]*/ 'Số lượt trả lời'
+			,bookCommentTime: /*[[#{admin.bookComment.time}]]*/ 'Thời gian bình luận'
+			,bookCommentUser: /*[[#{admin.bookComment.user}]]*/ 'Người bình luận'
+			,primaryKey: /*[[#{common.primaryKey}]]*/ 'Khóa chính'
+			,authorInviteCode: /*[[#{admin.author.inviteCode}]]*/ 'Mã mời'
+			,authorPenName: /*[[#{admin.author.penName}]]*/ 'Bút danh'
+			,authorPhone: /*[[#{admin.author.phone}]]*/ 'Số điện thoại'
+			,authorSocial: /*[[#{admin.author.social}]]*/ 'Tài khoản QQ hoặc WeChat'
+			,authorEmail: /*[[#{admin.author.email}]]*/ 'Email'
+			,authorDirection: /*[[#{admin.author.direction}]]*/ 'Kênh sáng tác'
+			,authorJoinedAt: /*[[#{admin.author.joinedAt}]]*/ 'Thời gian tham gia'
+			,authorBlocked: /*[[#{admin.author.blocked}]]*/ 'Đã khóa'
+			,authorRestore: /*[[#{admin.author.restore}]]*/ 'Khôi phục hoạt động'
+			,authorCodeValidUntil: /*[[#{admin.authorCode.validUntil}]]*/ 'Thời hạn hiệu lực'
+			,authorCodeUsed: /*[[#{admin.authorCode.used}]]*/ 'Đã sử dụng'
+			,authorCodeUsedYes: /*[[#{admin.authorCode.used.yes}]]*/ 'Đã sử dụng'
+			,authorCodeUsedNo: /*[[#{admin.authorCode.used.no}]]*/ 'Chưa sử dụng'
+			,authorCodeInviteRequired: /*[[#{admin.authorCode.invite.required}]]*/ 'Vui lòng nhập mã mời'
+			,authorCodeValidUntilRequired: /*[[#{admin.authorCode.validUntil.required}]]*/ 'Vui lòng nhập thời hạn hiệu lực'
+			,novelUserPhone: /*[[#{admin.author.phone}]]*/ 'Số điện thoại'
+			,novelUserNickname: /*[[#{admin.novelUser.nickname}]]*/ 'Biệt danh'
+			,novelUserGender: /*[[#{admin.novelUser.gender}]]*/ 'Giới tính'
+			,genderMale: /*[[#{admin.novelUser.gender.male}]]*/ 'Nam'
+			,genderFemale: /*[[#{admin.novelUser.gender.female}]]*/ 'Nữ'
+			,genderUnknown: /*[[#{admin.novelUser.gender.unknown}]]*/ 'Không xác định'
+			,novelUserBalance: /*[[#{admin.novelUser.balance}]]*/ 'Số dư (Xu)'
+			,novelUserRegisteredAt: /*[[#{admin.novelUser.registeredAt}]]*/ 'Thời gian đăng ký'
+			,paymentTradeNo: /*[[#{admin.payment.tradeNo}]]*/ 'Mã đơn hàng'
+			,paymentRechargeAmount: /*[[#{admin.payment.rechargeAmount}]]*/ 'Số Xu nạp'
+			,paymentRechargeUser: /*[[#{admin.payment.rechargeUser}]]*/ 'Người nạp'
+			,paymentStatus: /*[[#{admin.payment.status}]]*/ 'Trạng thái thanh toán'
+			,paymentFailed: /*[[#{admin.payment.failed}]]*/ 'Nạp thất bại'
+			,paymentSuccess: /*[[#{admin.payment.success}]]*/ 'Nạp thành công'
+			,paymentPending: /*[[#{admin.payment.pending}]]*/ 'Chờ thanh toán'
+			,other: /*[[#{common.other}]]*/ 'Khác'
+			,friendLinkName: /*[[#{admin.friendLink.name}]]*/ 'Tên liên kết'
+			,friendLinkUrl: /*[[#{admin.friendLink.url}]]*/ 'URL liên kết'
+			,friendLinkSort: /*[[#{admin.friendLink.sort}]]*/ 'Thứ tự'
+			,friendLinkEnabled: /*[[#{admin.friendLink.enabled}]]*/ 'Đang bật'
+			,feedbackUser: /*[[#{admin.feedback.user}]]*/ 'Người gửi phản hồi'
+			,feedbackContent: /*[[#{admin.feedback.content}]]*/ 'Nội dung phản hồi'
+			,feedbackTime: /*[[#{admin.feedback.time}]]*/ 'Thời gian phản hồi'
+			,newsCategoryName: /*[[#{admin.news.categoryName}]]*/ 'Tên danh mục'
+			,newsSource: /*[[#{admin.news.source}]]*/ 'Nguồn'
+			,newsTitle: /*[[#{admin.news.title}]]*/ 'Tiêu đề'
+			,newsPublishedAt: /*[[#{admin.news.publishedAt}]]*/ 'Thời gian xuất bản'
+			,newsCategoryIdRequired: /*[[#{admin.news.categoryId.required}]]*/ 'Vui lòng chọn danh mục'
+			,newsCategoryNameRequired: /*[[#{admin.news.categoryName.required}]]*/ 'Vui lòng nhập tên danh mục'
+			,newsTitleRequired: /*[[#{admin.news.title.required}]]*/ 'Vui lòng nhập tiêu đề'
+			,newsContentRequired: /*[[#{admin.news.content.required}]]*/ 'Vui lòng nhập nội dung'
+			,websiteSavedRestart: /*[[#{admin.website.savedRestart}]]*/ 'Thao tác thành công; khởi động lại novel-front để áp dụng.'
+			,generatorTableName: /*[[#{admin.generator.tableName}]]*/ 'Tên bảng'
+			,generatorTableDescription: /*[[#{admin.generator.tableDescription}]]*/ 'Mô tả bảng'
+			,generatorConfig: /*[[#{admin.generator.config}]]*/ 'Cấu hình sinh mã'
+			,generatorColumnConfig: /*[[#{admin.generator.columnConfig}]]*/ 'Cấu hình cột'
+			,generatorDownloadOnline: /*[[#{admin.generator.downloadOnline}]]*/ 'Tải mã trực tuyến'
+			,generatorGenerateLocal: /*[[#{admin.generator.generateLocal}]]*/ 'Sinh mã cục bộ'
+			,generatorConfirmLocal: /*[[#{admin.generator.confirmLocal}]]*/ 'Bạn có chắc muốn sinh mã cho bản ghi đã chọn trong thư mục gốc dự án cục bộ?'
+			,generatorConfirmBatch: /*[[#{admin.generator.confirmBatch}]]*/ 'Bạn có chắc muốn sinh mã hàng loạt cho các bản ghi đã chọn trong thư mục gốc dự án cục bộ?'
+			,generatorSelectTable: /*[[#{admin.generator.selectTable}]]*/ 'Vui lòng chọn bảng cần sinh mã'
+			,generatorAuthorRequired: /*[[#{admin.generator.author.required}]]*/ 'Vui lòng nhập tên tác giả'
+			,generatorEmailRequired: /*[[#{admin.generator.email.required}]]*/ 'Vui lòng nhập email'
+			,generatorPackageRequired: /*[[#{admin.generator.package.required}]]*/ 'Vui lòng nhập tên package'
+			,columnName: /*[[#{admin.column.name}]]*/ 'Tên cột'
+			,columnType: /*[[#{admin.column.type}]]*/ 'Kiểu cột'
+			,columnJavaType: /*[[#{admin.column.javaType}]]*/ 'Kiểu Java ánh xạ'
+			,columnComment: /*[[#{admin.column.comment}]]*/ 'Chú thích cột'
+			,columnSort: /*[[#{admin.column.sort}]]*/ 'Thứ tự cột'
+			,columnLabel: /*[[#{admin.column.label}]]*/ 'Nhãn cột'
+			,columnDisplayType: /*[[#{admin.column.displayType}]]*/ 'Kiểu hiển thị trên trang'
+			,columnDictType: /*[[#{admin.column.dictType}]]*/ 'Loại từ điển'
+			,columnRequired: /*[[#{admin.column.required}]]*/ 'Bắt buộc'
+			,dictId: /*[[#{admin.dictionary.id}]]*/ 'Mã'
+			,dictLabel: /*[[#{admin.dictionary.label}]]*/ 'Nhãn'
+			,dictValue: /*[[#{admin.dictionary.value}]]*/ 'Giá trị dữ liệu'
+			,dictType: /*[[#{admin.dictionary.type}]]*/ 'Loại'
+			,dictDescription: /*[[#{admin.dictionary.description}]]*/ 'Mô tả'
+			,dictSort: /*[[#{admin.dictionary.sort}]]*/ 'Thứ tự'
+			,dictParentId: /*[[#{admin.dictionary.parentId}]]*/ 'Mã cấp trên'
+			,dictCreatedBy: /*[[#{admin.dictionary.createdBy}]]*/ 'Người tạo'
+			,dictUpdatedBy: /*[[#{admin.dictionary.updatedBy}]]*/ 'Người cập nhật'
+			,dictRemark: /*[[#{admin.dictionary.remark}]]*/ 'Ghi chú'
+			,dictDeleted: /*[[#{admin.dictionary.deleted}]]*/ 'Đánh dấu xóa'
+			,logUserId: /*[[#{admin.log.userId}]]*/ 'ID người dùng'
+			,logUsername: /*[[#{admin.user.username}]]*/ 'Tên đăng nhập'
+			,logElapsed: /*[[#{admin.log.elapsed}]]*/ 'Thời gian xử lý'
+			,logMethod: /*[[#{admin.log.method}]]*/ 'Phương thức'
+			,logParameters: /*[[#{admin.log.parameters}]]*/ 'Tham số'
+			,logIp: /*[[#{admin.log.ip}]]*/ 'Địa chỉ IP'
+			,imageMax2M: /*[[#{validation.imageMax2M}]]*/ 'Kích thước ảnh không được vượt quá 2 MB.'
+			,uploadFailed: /*[[#{validation.uploadFailed}]]*/ 'Tải lên thất bại'
+			,welcomeTitle: /*[[#{admin.welcome.title}]]*/ 'Chào mừng đến với Novel Plus'
+			,welcomeMessage: /*[[#{admin.welcome.message}]]*/ 'Cảm ơn bạn đã sử dụng Novel Plus.'
+			,test_order_id: /*[[#{test.order.id}]]*/ 'Khóa chính'
+			,test_order_merchantNo: /*[[#{test.order.merchantNo}]]*/ 'Mã thương nhân Fubei'
+			,test_order_externalOrderNo: /*[[#{test.order.externalOrderNo}]]*/ 'Mã đơn của thương nhân bên thứ ba'
+			,test_order_fubeiOrderNo: /*[[#{test.order.fubeiOrderNo}]]*/ 'Mã đơn Fubei'
+			,test_order_platformOrderNo: /*[[#{test.order.platformOrderNo}]]*/ 'Mã đơn nền tảng'
+			,test_order_merchantOrderNo: /*[[#{test.order.merchantOrderNo}]]*/ 'Mã đơn thương nhân'
+			,test_order_status: /*[[#{test.order.status}]]*/ 'Trạng thái đơn hàng'
+			,test_order_couponDiscount: /*[[#{test.order.couponDiscount}]]*/ 'Khấu trừ phiếu ưu đãi'
+			,test_order_redPacketDiscount: /*[[#{test.order.redPacketDiscount}]]*/ 'Khấu trừ bao lì xì'
+			,test_order_receivedAmount: /*[[#{test.order.receivedAmount}]]*/ 'Số tiền thực nhận (CNY)'
+			,test_order_amount: /*[[#{test.order.amount}]]*/ 'Giá trị đơn hàng'
+			,test_order_fee: /*[[#{test.order.fee}]]*/ 'Phí giao dịch (CNY)'
+			,test_order_description: /*[[#{test.order.description}]]*/ 'Mô tả hàng hóa hoặc giao dịch'
+			,test_order_extraData: /*[[#{test.order.extraData}]]*/ 'Dữ liệu bổ sung'
+			,test_order_storeId: /*[[#{test.order.storeId}]]*/ 'ID cửa hàng Fubei'
+			,test_order_cashierId: /*[[#{test.order.cashierId}]]*/ 'ID thu ngân Fubei'
+			,test_order_terminalNo: /*[[#{test.order.terminalNo}]]*/ 'Mã thiết bị đầu cuối'
+			,test_order_buyerId: /*[[#{test.order.buyerId}]]*/ 'Open ID WeChat hoặc buyer_user_id Alipay'
+			,test_order_buyerAccount: /*[[#{test.order.buyerAccount}]]*/ 'Tài khoản khách hàng Alipay'
+			,test_order_successTime: /*[[#{test.order.successTime}]]*/ 'Thời gian giao dịch thành công'
+			,test_order_channel: /*[[#{test.order.channel}]]*/ 'Kênh thanh toán'
+			,test_order_freeVoucher: /*[[#{test.order.freeVoucher}]]*/ 'Phiếu không cần nạp (CNY)'
+			,test_order_prepaidVoucher: /*[[#{test.order.prepaidVoucher}]]*/ 'Phiếu trả trước (CNY)'
+			,test_order_paidAmount: /*[[#{test.order.paidAmount}]]*/ 'Khách thực trả (CNY)'
+			,test_order_signature: /*[[#{test.order.signature}]]*/ 'Chữ ký'
+			,test_order_other: /*[[#{test.order.other}]]*/ 'Tùy chọn khác'
+			,test_order_pushTime: /*[[#{test.order.pushTime}]]*/ 'Thời gian đẩy'
+			,test_order_pushIp: /*[[#{test.order.pushIp}]]*/ 'IP đẩy dữ liệu'
+			,test_order_merchantId: /*[[#{test.order.merchantId}]]*/ 'ID thương nhân'
+			,test_order_qrNo: /*[[#{test.order.qrNo}]]*/ 'Mã QR'
+		});
+		window.adminMessage = function (key, fallback) {
+			return window.AdminI18n && window.AdminI18n[key] ? window.AdminI18n[key] : fallback;
+		};
+		window.adminFormat = function (key, fallback) {
+			var text = adminMessage(key, fallback);
+			for (var i = 2; i < arguments.length; i++) {
+				text = text.replace('{' + (i - 2) + '}', arguments[i]);
+			}
+			return text;
+		};
+	</script>
 	<script src="/js/bootstrap.min.js?v=3.3.6"></script>
 	<script src="/js/plugins/bootstrap-table/bootstrap-table.js"></script>
 	<script src="/js/plugins/bootstrap-table/bootstrap-table-mobile.min.js"></script>
-	<script
-			src="/js/plugins/bootstrap-table/locale/bootstrap-table-zh-CN.min.js"></script>
+	<script src="/js/plugins/bootstrap-table/locale/bootstrap-table-vi-VN.js"></script>
 	<script src="/js/plugins/validate/jquery.validate.min.js"></script>
-	<script src="/js/plugins/validate/messages_zh.min.js"></script>
+	<script src="/js/plugins/validate/messages_vi.js"></script>
 	<script src="/js/plugins/jsTree/jstree.min.js"></script>
 	<script src="/js/plugins/jqTreeGrid/jquery.treegrid.min.js"></script>
 	<script src="/js/plugins/jqTreeGrid/jquery.treegrid.extension.js"></script>
 	<script src="/js/plugins/jqTreeGrid/jquery.treegrid.bootstrap3.js"></script>
 	<script src="/js/plugins/chosen/chosen.jquery.js"></script>
 	<script src="/js/plugins/layer/layer.js"></script>
-	<script src="/js/common.js"/>
-	<!--summernote-->
+	<script src="/js/common.js"></script>
+	<!-- Trình soạn thảo Summernote. -->
 	<script src="/js/plugins/summernote/summernote.js"></script>
-	<!--<script src="/js/plugins/summernote/summernote-zh-CN.min.js"></script>-->
 	<script type="text/javascript" src="/js/plugins/layer/laydate/laydate.js" ></script>
 	<script src="/js/layui.js"></script>
 	<script type="text/javascript" src="/js/dict-util.js"></script>

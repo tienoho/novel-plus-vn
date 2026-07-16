@@ -12,16 +12,16 @@ function save() {
 		cache : true,
 		type : "POST",
 		url : "/system/sysDept/save",
-		data : $('#signupForm').serialize(),// 你的formid
+		data : $('#signupForm').serialize(),// ID biểu mẫu
 		async : false,
 		error : function(request) {
-			parent.layer.alert("Connection error");
+			parent.layer.alert(adminMessage('connectionError', 'Lỗi kết nối'));
 		},
 		success : function(data) {
 			if (data.code == 0) {
-				parent.layer.msg("操作成功");
+				parent.layer.msg(adminMessage('operationSuccess', 'Thao tác thành công'));
 				parent.reLoad();
-				var index = parent.layer.getFrameIndex(window.name); // 获取窗口索引
+				var index = parent.layer.getFrameIndex(window.name); // Lấy chỉ mục cửa sổ
 				parent.layer.close(index);
 
 			} else {
@@ -42,7 +42,7 @@ function validateRule() {
 		},
 		messages : {
 			name : {
-				required : icon + "请输入姓名"
+				required : icon + adminMessage('userNameRequired', 'Vui lòng nhập họ tên')
 			}
 		}
 	})

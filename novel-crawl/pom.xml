@@ -12,7 +12,7 @@
     <artifactId>novel-crawl</artifactId>
 
     <name>novel-crawl</name>
-    <description>小说精品屋 爬虫管理程序</description>
+    <description>Trình quản lý thu thập dữ liệu Novel Plus</description>
 
     <dependencies>
 
@@ -61,7 +61,7 @@
                         </goals>
                         <configuration>
                             <tasks>
-                                <!-- 文件夹 -->
+                                <!-- Thư mục. -->
                                 <copy todir="${project.build.directory}/build/config" overwrite="true">
                                     <fileset dir="${basedir}/src/main/build/config">
                                         <include name="*.*"/>
@@ -79,7 +79,8 @@
                                     </fileset>
                                 </copy>
                                 <zip destfile='${project.build.directory}/build/${project.artifactId}.zip'>
-                                    <zipfileset filemode="755" dir='${project.build.directory}/build/'/>
+                                    <zipfileset filemode="755" dir='${project.build.directory}/build/'
+                                                excludes="${project.artifactId}.zip"/>
                                 </zip>
 
                                 <copy file="${basedir}/src/main/build/docker/Dockerfile"

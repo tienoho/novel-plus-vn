@@ -23,7 +23,7 @@ import com.java2nb.common.utils.Query;
 import com.java2nb.common.utils.R;
 
 /**
- * 充值订单
+ * Đơn nạp tiền
  *
  * @author xiongxy
  * @email 1179705413@qq.com
@@ -42,12 +42,12 @@ public class PayController {
         return "novel/pay/pay";
     }
 
-    @ApiOperation(value = "获取充值订单列表", notes = "获取充值订单列表")
+    @ApiOperation(value = "Lấy danh sách đơn nạp tiền", notes = "Lấy danh sách đơn nạp tiền")
     @ResponseBody
     @GetMapping("/list")
     @RequiresPermissions("novel:pay:pay")
     public R list(@RequestParam Map<String, Object> params) {
-        //查询列表数据
+        // Truy vấn dữ liệu danh sách
         Query query = new Query(params);
         List<PayDO> payList = payService.list(query);
         int total = payService.count(query);
@@ -55,14 +55,14 @@ public class PayController {
         return R.ok().put("data", pageBean);
     }
 
-    @ApiOperation(value = "新增充值订单页面", notes = "新增充值订单页面")
+    @ApiOperation(value = "Trang thêm đơn nạp tiền", notes = "Trang thêm đơn nạp tiền")
     @GetMapping("/add")
     @RequiresPermissions("novel:pay:add")
     String add() {
         return "novel/pay/add";
     }
 
-    @ApiOperation(value = "修改充值订单页面", notes = "修改充值订单页面")
+    @ApiOperation(value = "Trang sửa đơn nạp tiền", notes = "Trang sửa đơn nạp tiền")
     @GetMapping("/edit/{id}")
     @RequiresPermissions("novel:pay:edit")
     String edit(@PathVariable("id") Long id, Model model) {
@@ -71,7 +71,7 @@ public class PayController {
         return "novel/pay/edit";
     }
 
-    @ApiOperation(value = "查看充值订单页面", notes = "查看充值订单页面")
+    @ApiOperation(value = "Trang chi tiết đơn nạp tiền", notes = "Trang chi tiết đơn nạp tiền")
     @GetMapping("/detail/{id}")
     @RequiresPermissions("novel:pay:detail")
     String detail(@PathVariable("id") Long id, Model model) {
@@ -81,9 +81,9 @@ public class PayController {
     }
 
     /**
-     * 保存
+     * Lưu
      */
-    @ApiOperation(value = "新增充值订单", notes = "新增充值订单")
+    @ApiOperation(value = "Thêm đơn nạp tiền", notes = "Thêm đơn nạp tiền")
     @ResponseBody
     @PostMapping("/save")
     @RequiresPermissions("novel:pay:add")
@@ -95,9 +95,9 @@ public class PayController {
     }
 
     /**
-     * 修改
+     * Sửa
      */
-    @ApiOperation(value = "修改充值订单", notes = "修改充值订单")
+    @ApiOperation(value = "Sửa đơn nạp tiền", notes = "Sửa đơn nạp tiền")
     @ResponseBody
     @RequestMapping("/update")
     @RequiresPermissions("novel:pay:edit")
@@ -107,9 +107,9 @@ public class PayController {
     }
 
     /**
-     * 删除
+     * Xóa
      */
-    @ApiOperation(value = "删除充值订单", notes = "删除充值订单")
+    @ApiOperation(value = "Xóa đơn nạp tiền", notes = "Xóa đơn nạp tiền")
     @PostMapping("/remove")
     @ResponseBody
     @RequiresPermissions("novel:pay:remove")
@@ -121,9 +121,9 @@ public class PayController {
     }
 
     /**
-     * 删除
+     * Xóa
      */
-    @ApiOperation(value = "批量删除充值订单", notes = "批量删除充值订单")
+    @ApiOperation(value = "Xóa hàng loạt đơn nạp tiền", notes = "Xóa hàng loạt đơn nạp tiền")
     @PostMapping("/batchRemove")
     @ResponseBody
     @RequiresPermissions("novel:pay:batchRemove")

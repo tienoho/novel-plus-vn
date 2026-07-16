@@ -7,7 +7,7 @@ import java.util.Objects;
 
 
 /**
- * 字典表
+ * Bảng từ điển
  *
  * @author xiongxy
  * @email 1179705413@qq.com
@@ -17,210 +17,210 @@ public class DictDO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    //编号
+    // Mã số
     private Long id;
-    //标签名
+    // Tên nhãn
     private String name;
-    //数据值
+    // Giá trị dữ liệu
     private String value;
-    //类型
+    // Loại
     private String type;
-    //描述
+    // Mô tả
     private String description;
-    //排序（升序）
+    // Sắp xếp tăng dần
     private BigDecimal sort;
-    //父级编号
+    // Mã cấp cha
     private Long parentId;
-    //创建者
+    //Người tạo
     private Integer createBy;
-    //创建时间
+    // Thời gian tạo
     private Date createDate;
-    //更新者
+    // Người cập nhật
     private Long updateBy;
-    //更新时间
+    // Thời gian cập nhật
     private Date updateDate;
-    //备注信息
+    // Ghi chú
     private String remarks;
-    //删除标记
+    //Cờ xóa
     private String delFlag;
 
     /**
-     * 设置：编号
+     * Đặt: mã số
      */
     public void setId(Long id) {
         this.id = id;
     }
 
     /**
-     * 获取：编号
+     * Lấy: mã số
      */
     public Long getId() {
         return id;
     }
 
     /**
-     * 设置：标签名
+     * Đặt: tên nhãn
      */
     public void setName(String name) {
         this.name = name;
     }
 
     /**
-     * 获取：标签名
+     * Lấy: tên nhãn
      */
     public String getName() {
         return name;
     }
 
     /**
-     * 设置：数据值
+     * Đặt: giá trị dữ liệu
      */
     public void setValue(String value) {
         this.value = value;
     }
 
     /**
-     * 获取：数据值
+     * Lấy: giá trị dữ liệu
      */
     public String getValue() {
         return value;
     }
 
     /**
-     * 设置：类型
+     * Đặt: loại
      */
     public void setType(String type) {
         this.type = type;
     }
 
     /**
-     * 获取：类型
+     * Lấy: loại
      */
     public String getType() {
         return type;
     }
 
     /**
-     * 设置：描述
+     * Đặt: mô tả
      */
     public void setDescription(String description) {
         this.description = description;
     }
 
     /**
-     * 获取：描述
+     * Lấy: mô tả
      */
     public String getDescription() {
         return description;
     }
 
     /**
-     * 设置：排序（升序）
+     * Đặt: thứ tự (tăng dần)
      */
     public void setSort(BigDecimal sort) {
         this.sort = sort;
     }
 
     /**
-     * 获取：排序（升序）
+     * Lấy: thứ tự (tăng dần)
      */
     public BigDecimal getSort() {
         return sort;
     }
 
     /**
-     * 设置：父级编号
+     * Đặt: mã cấp cha
      */
     public void setParentId(Long parentId) {
         this.parentId = parentId;
     }
 
     /**
-     * 获取：父级编号
+     * Lấy: mã cấp cha
      */
     public Long getParentId() {
         return parentId;
     }
 
     /**
-     * 设置：创建者
+     * Đặt: người tạo
      */
     public void setCreateBy(Integer createBy) {
         this.createBy = createBy;
     }
 
     /**
-     * 获取：创建者
+     * Lấy: người tạo
      */
     public Integer getCreateBy() {
         return createBy;
     }
 
     /**
-     * 设置：创建时间
+     * Đặt: thời gian tạo
      */
     public void setCreateDate(Date createDate) {
         this.createDate = createDate;
     }
 
     /**
-     * 获取：创建时间
+     * Lấy: thời gian tạo
      */
     public Date getCreateDate() {
         return createDate;
     }
 
     /**
-     * 设置：更新者
+     * Đặt: người cập nhật
      */
     public void setUpdateBy(Long updateBy) {
         this.updateBy = updateBy;
     }
 
     /**
-     * 获取：更新者
+     * Lấy: người cập nhật
      */
     public Long getUpdateBy() {
         return updateBy;
     }
 
     /**
-     * 设置：更新时间
+     * Đặt: thời gian cập nhật
      */
     public void setUpdateDate(Date updateDate) {
         this.updateDate = updateDate;
     }
 
     /**
-     * 获取：更新时间
+     * Lấy: thời gian cập nhật
      */
     public Date getUpdateDate() {
         return updateDate;
     }
 
     /**
-     * 设置：备注信息
+     * Đặt: ghi chú
      */
     public void setRemarks(String remarks) {
         this.remarks = remarks;
     }
 
     /**
-     * 获取：备注信息
+     * Lấy: ghi chú
      */
     public String getRemarks() {
         return remarks;
     }
 
     /**
-     * 设置：删除标记
+     * Đặt: cờ xóa
      */
     public void setDelFlag(String delFlag) {
         this.delFlag = delFlag;
     }
 
     /**
-     * 获取：删除标记
+     * Lấy: cờ xóa
      */
     public String getDelFlag() {
         return delFlag;

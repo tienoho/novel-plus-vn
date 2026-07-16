@@ -45,21 +45,21 @@
 .user_level9 { background: #ffa800 }
 .user_level10 { background: #ff6e26 }
 .user_level11 { background: #ff0000 }
-/*固定悬浮图层*/
+/* Lớp nổi cố định */
 .readPopup { border: 1px solid #D9D9D9; border-radius: 3px; background: #FFF; box-shadow: 0 1px 2px #999; overflow: hidden; padding-bottom: 20px; z-index: 9999; position: fixed; left: 50%; top: 50% }
 .icon_check { position: absolute; width: 29px; height: 25px; right: -1px; top: -1px; z-index: 2; background: url(../images/icon_readpage.png) no-repeat 0 -142px }
 .on .icon_check { display: block }
 .closePopup { position: absolute; top: 20px; right: 20px; width: 16px; height: 15px; background: url(../images/icon_readpage.png) no-repeat -43px -126px }
 .chapterBox { width: 600px; margin-left: -300px; margin-top: -260px }
 .chapterBox .scrollWrap { height: 540px }
-/*弹窗内容*/
+/* Nội dung hộp thoại */
 .popupTit h2 { text-align: center; letter-spacing: 15px; color: #333; font: 700 20px/30px "Microsoft Yahei"; margin: 30px 0 }
 .popupTit h3 { font-size: 16px; margin: 15px 20px }
 .scrollWrap { overflow-y: scroll; position: relative }
 .dirWrap { padding: 0 40px }
 .scrollWrap h3 { padding-left: 26px; font-size: 14px; background: #e6e6e6; height: 30px; line-height: 30px; font-weight: normal; position: relative; cursor: pointer; margin: 0 0 15px; border-radius: 3px }
 .readPopup .tc .btn_gray { margin-left: 30px }
-/*捧场、送鲜花*/
+/* Ủng hộ, tặng hoa */
 .pcBox, .flowerBox { width: 500px; margin-left: -251px; margin-top: -215px }
 .propsList { padding: 15px 0 10px 20px }
 .propsList li { float: left; cursor: pointer; margin: 0 8px 16px; text-align: center }
@@ -70,10 +70,10 @@
 .have_num { padding: 0 30px 10px; font-size: 14px; color: #999 }
 .have_num .red { margin: 0 4px }
 .popup_text { width: 418px; height: 62px; padding: 8px 10px; margin: 8px 30px 20px; color: #555; border: 1px solid #e6e6e6; }
-/*消息提示*/
+/* Thông báo */
 .newsTipBox { width: 400px; padding-bottom: 30px; margin-left: -200px; margin-top: -105px }
 .tipWrap { padding: 30px; font-size: 14px }
-/*遮罩层*/
+/* Lớp phủ */
 .maskBox { position: fixed; left: 0; top: 0; z-index: 995; width: 100%; height: 100%; background: black; filter: alpha(opacity=30); opacity: 0.3; animation: mask 2s ease-out 0s 1 normal }
 @keyframes mask { 0% {
 filter:alpha(opacity=0);
@@ -106,7 +106,7 @@ opacity:0.3
 .icon_hg { width: 30px; height: 30px; display: inline-block; background-position: -300px -320px; position: absolute; top: -13px; right: -13px }
 .fansCon .list2 { padding: 0 }
 .fansCon .list2 li { width: 250px; float: left; height: 59px; padding: 0 0 19px; display: inline }
-.fansCon .list2 .num { font: 16px/59px "microsoft yahei", Arial, "宋体"; width: 32px; color: #666; font-weight: bold }
+.fansCon .list2 .num { font: 16px/59px "Microsoft YaHei", Arial, SimSun; width: 32px; color: #666; font-weight: bold }
 .fansCon .list2 .img { width: 40px; height: 40px; margin-top: 10px; position: relative }
 .fansCon .list2 .img img { width: 100%; height: 100%; border-radius: 50% }
 .fansCon .list2 .img span { display: block; margin: 0; position: absolute; left: 5px; bottom: 0 }

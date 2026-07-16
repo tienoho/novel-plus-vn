@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 
 public class BrowserUtil {
 
-    // 浏览器类型
+    // Loại trình duyệt
     public static final String[] mobileAgents = { "iphone", "android", "phone", "mobile", "wap", "netfront", "java",
             "opera mobi", "opera mini", "ucweb", "windows ce", "symbian", "series", "webos", "sony", "blackberry",
             "dopod", "nokia", "samsung", "palmsource", "xda", "pieplus", "meizu", "midp", "cldc", "motorola", "foma",
@@ -24,7 +24,7 @@ public class BrowserUtil {
 
     /**
      *
-     * 判断是否是手机浏览器
+     * Kiểm tra có phải trình duyệt di động hay không
      */
     public static boolean isMobile(HttpServletRequest request) {
         boolean isMobile = false;

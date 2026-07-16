@@ -1,36 +1,36 @@
---菜单SQL
+--SQL menu
 INSERT
 INTO`sys_menu`(`parent_id`, `name`, `url`, `perms`, `type`, `icon`, `order_num`)
-VALUES('247', '网站信息表', 'novel/websiteInfo', 'novel:websiteInfo:websiteInfo', '1', 'fa', '6');
+VALUES('247', 'Bảng thông tin website', 'novel/websiteInfo', 'novel:websiteInfo:websiteInfo', '1', 'fa', '6');
 
---按钮父菜单ID
+--ID menu cha của nút
 set
 @parentId
 = @@identity;
 
---菜单对应按钮SQL
+--SQL nút thuộc menu
 INSERT
 INTO`sys_menu`(`parent_id`, `name`, `url`, `perms`, `type`, `icon`, `order_num`)
 SELECT
 @parentId,
-'查看', null, 'novel:websiteInfo:detail', '2', null, '6';
+'Xem', null, 'novel:websiteInfo:detail', '2', null, '6';
 INSERT
 INTO`sys_menu`(`parent_id`, `name`, `url`, `perms`, `type`, `icon`, `order_num`)
 SELECT
 @parentId,
-'新增', null, 'novel:websiteInfo:add', '2', null, '6';
+'Thêm', null, 'novel:websiteInfo:add', '2', null, '6';
 INSERT
 INTO`sys_menu`(`parent_id`, `name`, `url`, `perms`, `type`, `icon`, `order_num`)
 SELECT
 @parentId,
-'修改', null, 'novel:websiteInfo:edit', '2', null, '6';
+'Sửa', null, 'novel:websiteInfo:edit', '2', null, '6';
 INSERT
 INTO`sys_menu`(`parent_id`, `name`, `url`, `perms`, `type`, `icon`, `order_num`)
 SELECT
 @parentId,
-'删除', null, 'novel:websiteInfo:remove', '2', null, '6';
+'Xóa', null, 'novel:websiteInfo:remove', '2', null, '6';
 INSERT
 INTO`sys_menu`(`parent_id`, `name`, `url`, `perms`, `type`, `icon`, `order_num`)
 SELECT
 @parentId,
-'批量删除', null, 'novel:websiteInfo:batchRemove', '2', null, '6';
+'Xóa hàng loạt', null, 'novel:websiteInfo:batchRemove', '2', null, '6';

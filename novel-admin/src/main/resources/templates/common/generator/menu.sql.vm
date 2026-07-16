@@ -1,18 +1,18 @@
--- 菜单SQL
+-- SQL menu
 INSERT INTO `sys_menu` (`parent_id`, `name`, `url`, `perms`, `type`, `icon`, `order_num`)
     VALUES ('1', '${comments}', '${pathName}/${classname}', '${pathName}:${classname}:${classname}', '1', 'fa', '6');
 
--- 按钮父菜单ID
+-- ID menu cha của nút
 set @parentId = @@identity;
 
--- 菜单对应按钮SQL
+-- SQL nút thuộc menu
 INSERT INTO `sys_menu` (`parent_id`, `name`, `url`, `perms`, `type`, `icon`, `order_num`)
-    SELECT @parentId, '查看', null, '${pathName}:${classname}:detail', '2', null, '6';
+    SELECT @parentId, 'Xem', null, '${pathName}:${classname}:detail', '2', null, '6';
 INSERT INTO `sys_menu` (`parent_id`, `name`, `url`, `perms`, `type`, `icon`, `order_num`)
-    SELECT @parentId, '新增', null, '${pathName}:${classname}:add', '2', null, '6';
+    SELECT @parentId, 'Thêm', null, '${pathName}:${classname}:add', '2', null, '6';
 INSERT INTO `sys_menu` (`parent_id`, `name`, `url`, `perms`, `type`, `icon`, `order_num`)
-    SELECT @parentId, '修改', null, '${pathName}:${classname}:edit', '2', null, '6';
+    SELECT @parentId, 'Sửa', null, '${pathName}:${classname}:edit', '2', null, '6';
 INSERT INTO `sys_menu` (`parent_id`, `name`, `url`, `perms`, `type`, `icon`, `order_num`)
-    SELECT @parentId, '删除', null, '${pathName}:${classname}:remove', '2', null, '6';
+    SELECT @parentId, 'Xóa', null, '${pathName}:${classname}:remove', '2', null, '6';
 INSERT INTO `sys_menu` (`parent_id`, `name`, `url`, `perms`, `type`, `icon`, `order_num`)
-    SELECT @parentId, '批量删除', null, '${pathName}:${classname}:batchRemove', '2', null, '6';
+    SELECT @parentId, 'Xóa hàng loạt', null, '${pathName}:${classname}:batchRemove', '2', null, '6';

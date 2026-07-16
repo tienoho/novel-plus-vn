@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <meta charset="utf-8">
 <head th:include="include :: header"></head>
 <body class="gray-bg">
@@ -12,7 +12,7 @@
                 <input id="id" name="id" th:value="${author.id}"
                        type="hidden">
                                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">用户ID：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.author.userId}+'：'">ID người dùng:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${author.userId}">
@@ -22,7 +22,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">邀请码：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.author.inviteCode}+'：'">Mã mời:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${author.inviteCode}">
@@ -32,7 +32,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">笔名：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.author.penName}+'：'">Bút danh:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${author.penName}">
@@ -42,7 +42,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">手机号码：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.author.phone}+'：'">Số điện thoại:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${author.telPhone}">
@@ -52,7 +52,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">QQ或微信账号：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.author.social}+'：'">Tài khoản QQ hoặc WeChat:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${author.chatAccount}">
@@ -62,7 +62,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">电子邮箱：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.author.email}+'：'">Email:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${author.email}">
@@ -72,7 +72,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">作品方向，0：男频，1：女频：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.author.direction}+'：'">Kênh sáng tác (0: nam, 1: nữ):</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8 dict-type" dict-type="work_direction"
                                  th:attr="dict-value=${author.workDirection}">
@@ -82,7 +82,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">入驻时间：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.author.joinedAt}+'：'">Thời gian tham gia:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${author.createTime}==null?null:${#dates.format(author.createTime,'yyyy-MM-dd HH:mm:ss')}">
@@ -91,7 +91,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">0：正常，1：封禁：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.author.status}+'：'">Trạng thái (0: hoạt động, 1: khóa):</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${author.status}">

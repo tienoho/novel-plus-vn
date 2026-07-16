@@ -10,7 +10,7 @@ import java.util.Objects;
 
 
 /**
- * 数据权限管理
+ * Quản lý quyền dữ liệu
  *
  * @author xiongxy
  * @email 1179705413@qq.com
@@ -22,166 +22,166 @@ public class DataPermDO implements Serializable {
 
 
     //
-    //java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-    //所以通过序列化成字符串来解决
+    // Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+    // Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
     @JsonSerialize(using = LongToStringSerializer.class)
     private Long id;
-    //权限名称
+    // Tên quyền
     private String name;
-    //数据表名称
+    // Tên bảng dữ liệu
     private String tableName;
-    //所属模块
+    // Mô-đun sở hữu
     private String moduleName;
-    //用户权限控制属性名
+    // Tên thuộc tính kiểm soát quyền người dùng
     private String crlAttrName;
-    //数据表权限控制列名
+    // Tên cột kiểm soát quyền trong bảng dữ liệu
     private String crlColumnName;
-    //权限code，all_开头表示查看所有数据的权限，sup_开头表示查看下级数据的权限，own_开头表示查看本级数据的权限
+    // Mã quyền; tiền tố all_ xem mọi dữ liệu, sup_ xem dữ liệu cấp dưới, own_ xem dữ liệu cùng cấp
     private String permCode;
-    //排序
+    // Thứ tự
     private Integer orderNum;
-    //创建时间
+    // Thời gian tạo
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date gmtCreate;
-    //修改时间
+    // Thời gian sửa
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date gmtModified;
 
     /**
-     * 设置：
+     * Đặt:
      */
     public void setId(Long id) {
         this.id = id;
     }
 
     /**
-     * 获取：
+     * Lấy:
      */
     public Long getId() {
         return id;
     }
 
     /**
-     * 设置：权限名称
+     * Đặt: tên quyền
      */
     public void setName(String name) {
         this.name = name;
     }
 
     /**
-     * 获取：权限名称
+     * Lấy: tên quyền
      */
     public String getName() {
         return name;
     }
 
     /**
-     * 设置：数据表名称
+     * Đặt: tên bảng dữ liệu
      */
     public void setTableName(String tableName) {
         this.tableName = tableName;
     }
 
     /**
-     * 获取：数据表名称
+     * Lấy: tên bảng dữ liệu
      */
     public String getTableName() {
         return tableName;
     }
 
     /**
-     * 设置：所属模块
+     * Đặt: mô-đun sở hữu
      */
     public void setModuleName(String moduleName) {
         this.moduleName = moduleName;
     }
 
     /**
-     * 获取：所属模块
+     * Lấy: mô-đun sở hữu
      */
     public String getModuleName() {
         return moduleName;
     }
 
     /**
-     * 设置：用户权限控制属性名
+     * Đặt: tên thuộc tính kiểm soát quyền người dùng
      */
     public void setCrlAttrName(String crlAttrName) {
         this.crlAttrName = crlAttrName;
     }
 
     /**
-     * 获取：用户权限控制属性名
+     * Lấy: tên thuộc tính kiểm soát quyền người dùng
      */
     public String getCrlAttrName() {
         return crlAttrName;
     }
 
     /**
-     * 设置：数据表权限控制列名
+     * Đặt: tên cột kiểm soát quyền trong bảng dữ liệu
      */
     public void setCrlColumnName(String crlColumnName) {
         this.crlColumnName = crlColumnName;
     }
 
     /**
-     * 获取：数据表权限控制列名
+     * Lấy: tên cột kiểm soát quyền trong bảng dữ liệu
      */
     public String getCrlColumnName() {
         return crlColumnName;
     }
 
     /**
-     * 设置：权限code，all_开头表示查看所有数据的权限，sup_开头表示查看下级数据的权限，own_开头表示查看本级数据的权限
+     * Đặt: mã quyền; tiền tố all_ xem mọi dữ liệu, sup_ xem dữ liệu cấp dưới, own_ xem dữ liệu cùng cấp
      */
     public void setPermCode(String permCode) {
         this.permCode = permCode;
     }
 
     /**
-     * 获取：权限code，all_开头表示查看所有数据的权限，sup_开头表示查看下级数据的权限，own_开头表示查看本级数据的权限
+     * Lấy: mã quyền; tiền tố all_ xem mọi dữ liệu, sup_ xem dữ liệu cấp dưới, own_ xem dữ liệu cùng cấp
      */
     public String getPermCode() {
         return permCode;
     }
 
     /**
-     * 设置：排序
+     * Đặt: thứ tự
      */
     public void setOrderNum(Integer orderNum) {
         this.orderNum = orderNum;
     }
 
     /**
-     * 获取：排序
+     * Lấy: thứ tự
      */
     public Integer getOrderNum() {
         return orderNum;
     }
 
     /**
-     * 设置：创建时间
+     * Đặt: thời gian tạo
      */
     public void setGmtCreate(Date gmtCreate) {
         this.gmtCreate = gmtCreate;
     }
 
     /**
-     * 获取：创建时间
+     * Lấy: thời gian tạo
      */
     public Date getGmtCreate() {
         return gmtCreate;
     }
 
     /**
-     * 设置：修改时间
+     * Đặt: thời gian sửa
      */
     public void setGmtModified(Date gmtModified) {
         this.gmtModified = gmtModified;
     }
 
     /**
-     * 获取：修改时间
+     * Lấy: thời gian sửa
      */
     public Date getGmtModified() {
         return gmtModified;

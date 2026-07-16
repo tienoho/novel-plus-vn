@@ -30,7 +30,7 @@ var YT = {
         LoadShow: function () {
             if ($C("LayerShowPic") == null) {
                 var sp = document.createElement("div");
-                sp.innerHTML = "<div id=\"LayerShowPic\" style=\"position:absolute;width:180px;height:70px;z-index:100;background-color: #fdfce9;border: 1px solid #666666;font-size:12px;\"><div align=\"center\" style=\"z-index:91;\"><br><img src=\"" + YT.BaseData.WaitImg + "\" align=\"absmiddle\" /> 请稍后…</div></div><iframe id=\"LayerCover\" style=\"position:absolute;width:100%;height:100%;z-index:10;left: 0px;top: 0px;background-color:#eeeeee;FILTER: alpha(opacity=1);opacity: 0.3 !important; \"></iframe>";
+                sp.innerHTML = "<div id=\"LayerShowPic\" style=\"position:absolute;width:180px;height:70px;z-index:100;background-color: #fdfce9;border: 1px solid #666666;font-size:12px;\"><div align=\"center\" style=\"z-index:91;\"><br><img src=\"" + YT.BaseData.WaitImg + "\" align=\"absmiddle\" /> " + novelMessage('wait', 'Vui lòng chờ…') + "</div></div><iframe id=\"LayerCover\" style=\"position:absolute;width:100%;height:100%;z-index:10;left: 0px;top: 0px;background-color:#eeeeee;FILTER: alpha(opacity=1);opacity: 0.3 !important; \"></iframe>";
                 document.body.appendChild(sp);
             }
             $C("LayerShowPic").style.display = '';
@@ -143,7 +143,7 @@ var YT = {
             }
             else { $('#' + id).panel('close'); }
         },
-        /*格式化时间字符串*/
+        /* Định dạng chuỗi thời gian. */
         formatDate: function (now, types) {
             if (now != null && now != "") {
                 var dateN = new Date(+/\d+/.exec(now)[0]);
@@ -167,7 +167,7 @@ var YT = {
                 return "";
             }
         },
-        /** 获取当前时间月份*/
+        /** Lấy tháng của thời gian hiện tại. */
         formatMonth: function (now) {
             if (now != null && now != "") {
                 var dateN = new Date(+/\d+/.exec(now)[0]);
@@ -178,7 +178,7 @@ var YT = {
                 return "";
             }
         },
-        /** 获取当前时间具体的某一天*/
+        /** Lấy ngày cụ thể của thời gian hiện tại. */
         formatDay: function (now) {
             if (now != null && now != "") {
                 var dateN = new Date(+/\d+/.exec(now)[0]);
@@ -190,23 +190,23 @@ var YT = {
                 return "";
             }
         },
-        /** 获取所属时间的季度*/
+        /** Lấy quý của thời gian hiện tại. */
         formatSeasonal: function (now) {
             if (now != null && now != "") {
                 var dateN = new Date(+/\d+/.exec(now)[0]);
                 var year = dateN.getFullYear();
                 var month = dateN.getMonth() + 1;
                 if (month == 1) {
-                    return year + "年第1季度";
+                    return year + " - " + novelMessage('quarter1', 'Quý 1');
                 }
                 else if (month == 4) {
-                    return year + "年第2季度";
+                    return year + " - " + novelMessage('quarter2', 'Quý 2');
                 }
                 else if (month == 7) {
-                    return year + "年第三季度";
+                    return year + " - " + novelMessage('quarter3', 'Quý 3');
                 }
                 else {
-                    return year + "年第四季度";
+                    return year + " - " + novelMessage('quarter4', 'Quý 4');
                 }
             }
             else {
@@ -216,10 +216,10 @@ var YT = {
 
         formatStatus: function (id) {
             if (id == 0) {
-                return "无效";
+                return novelMessage('invalid', 'Không hợp lệ');
             }
             else {
-                return "有效";
+                return novelMessage('valid', 'Hợp lệ');
             }
         },
         ShowPanel: function (obj, divName, xlong, ylong) {
@@ -265,7 +265,7 @@ var YT = {
         }
     },
     Dirt: {
-        /*绑定到列表*/
+        /* Gắn dữ liệu vào danh sách. */
         BindList: function (listId, dirtName, needBlock) {
             var obj = $C(listId);
             if (obj != undefined) {
@@ -277,12 +277,12 @@ var YT = {
                     }
                 }
                 if (needBlock) {
-                    obj.options.add(new Option("请选择", "0"));
+                    obj.options.add(new Option(novelMessage('select', 'Vui lòng chọn'), "0"));
                     obj.value = "";
                 }
             }
         },
-        /*获取值表示的意义*/
+        /* Lấy nhãn tương ứng với giá trị. */
         GetName: function (dirtName, dValue) {
             var obj = eval("DirtInfo." + dirtName);
             if (obj != undefined && obj != null) {
@@ -334,9 +334,9 @@ var YT = {
     }
 }
 
-/*重新定义录入框校验规则*/
+/* Định nghĩa lại các rule kiểm tra ô nhập. */
 $.extend($.fn.validatebox.defaults.rules, {
-    chinaMobile: {/*手机号码*/
+    chinaMobile: {/* Số điện thoại. */
         validator: function (value, param) {
             var reg = /^(13|14|15|17|18)\d{9}$/;
             var reglt = /^(\d{3}|\d{4})-\d{8}$/;
@@ -347,26 +347,26 @@ $.extend($.fn.validatebox.defaults.rules, {
             else {
                 return reg.test(value);
             }
-        }, message: '手机号码有误'
+        }, message: novelMessage('phoneInvalid', 'Số điện thoại không hợp lệ.')
     },
-    chinaName: {/*中文名称*/
+    chinaName: {/* Tên theo quy tắc cũ. */
         validator: function (value, param) {
             //            var reg = /^[\u4e00-\u9fa5a-zA-Z0-9]{2,6}$/;
             var reg = /^[a-zA-Z\u4e00-\u9fa5][a-zA-Z0-9\u4e00-\u9fa5]{1,5}$/;
             //            var reg = /^[\u4e00-\u9fa5,a-zA-Z0-9]{2,5}$/;
             return reg.test(value);
-        }, message: '在笔名中数字不能开头,且昵称的长度应在2-6之间'
+        }, message: novelMessage('penNameInvalid', 'Bút danh không được bắt đầu bằng chữ số và phải dài từ 2 đến 6 ký tự.')
     },
-    realName: {/*真实姓名*/
+    realName: {/* Tên thật. */
         validator: function (value, param) {
             //            var reg = /^[a-zA-Z\u4e00-\u9fa5][a-zA-Z0-9\u4e00-\u9fa5]{1,5}$/;
             var reg = /^[\u4e00-\u9fa5,a-zA-Z0-9]{2,5}$/;
             return reg.test(value);
-        }, message: '真实姓名的长度为2-5位中文字符'
+        }, message: novelMessage('realNameInvalid', 'Tên thật phải dài từ 2 đến 5 ký tự.')
     },
     maxLength: {
         validator: function (value, param) {
-            $.fn.validatebox.defaults.rules.maxLength.message = '只能少于' + param + '字符串';
+            $.fn.validatebox.defaults.rules.maxLength.message = novelMessage('maxLength', 'Độ dài phải nhỏ hơn {0} ký tự.').replace('{0}', param);
             return value.length < param;
         }
     },
@@ -374,19 +374,19 @@ $.extend($.fn.validatebox.defaults.rules, {
         validator: function (value, param) {
             var reg = /^(-|[0-9])(|\d{1,9})$/;
             return reg.test(value);
-        }, message: '必须是数字'
+        }, message: novelMessage('numberRequired', 'Giá trị phải là số.')
     },
     isBankNumber: {
         validator: function (value, param) {
             var reg = /^([0-9]{16}|[0-9]{19})$/;
             return reg.test(value);
-        }, message: '银行卡号错误'
+        }, message: novelMessage('bankNumberInvalid', 'Số tài khoản ngân hàng không hợp lệ.')
     },
     isEmail: {
         validator: function (value, param) {
             var reg = /^([a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+((\.[a-zA-Z0-9_-]{2,3}){1,2})$/;
             return reg.test(value);
-        }, message: '邮箱格式错误'
+        }, message: novelMessage('emailInvalid', 'Định dạng email không hợp lệ.')
     },
 
     isPosInt: {
@@ -398,7 +398,7 @@ $.extend($.fn.validatebox.defaults.rules, {
             else {
                 return false;
             }
-        }, message: '必须是大于0的正整数'
+        }, message: novelMessage('positiveInteger', 'Giá trị phải là số nguyên dương lớn hơn 0.')
     },
     isPosIntTen: {
         validator: function (value, param) {
@@ -409,7 +409,7 @@ $.extend($.fn.validatebox.defaults.rules, {
             else {
                 return false;
             }
-        }, message: '必须是大于10的正整数'
+        }, message: novelMessage('integerAbove10', 'Giá trị phải là số nguyên dương lớn hơn 10.')
     },
     isDate: {
         validator: function (value, param) {
@@ -421,69 +421,69 @@ $.extend($.fn.validatebox.defaults.rules, {
         validator: function (value, param) {
             var reg = /^(^\d{15}$|^\d{18}$|^\d{17}(\d|X|x))$/;
             return isCardID(value);
-        }, message: '身份证号码错误'
+        }, message: novelMessage('idCardInvalid', 'Số giấy tờ tùy thân không hợp lệ.')
     },
     isFloat: {
         validator: function (value, param) {
             var reg = /^(^\+?[1-9][0-9]*$)$|^(\d{1,9}\.\d{1,9})$/;
             return reg.test(value);
-        }, message: '必须是大于零的数字'
+        }, message: novelMessage('positiveNumber', 'Giá trị phải là số lớn hơn 0.')
     },
     isFloatMin0:
         {
             validator: function (value, param) {
                 var reg = /^(^\d{1,9})$|^(\d{1,9}\.\d{1,9})$/;
                 return reg.test(value);
-            }, message: '必须是大于零的数字'
+            }, message: novelMessage('positiveNumber', 'Giá trị phải là số lớn hơn 0.')
         },
     isPassWord: {
         validator: function (value, param) {
             var reg = /^[a-zA-Z0-9_]{5,15}$/;
             return reg.test(value);
-        }, message: '密码格式错误'
+        }, message: novelMessage('passwordInvalid', 'Định dạng mật khẩu không hợp lệ.')
     },
     isConfirmPassword: {
         validator: function (value, param) {
             return $(param[0]).val() == value;
-        }, message: '两次录入的密码不同'
+        }, message: novelMessage('passwordMismatch', 'Hai mật khẩu đã nhập không khớp.')
     },
     phoneCheck: {
         validator: function (value, param) {
             var reg = /^(((\()?\d{2,4}(\))?[-(\s)*]){0,2})?(\d{8})$/;
             return reg.test(value);
-        }, message: '输入的电话不正确'
+        }, message: novelMessage('phoneInvalid', 'Số điện thoại không hợp lệ.')
     },
     isUserName: {
         validator: function (value, param) {
             var reg = /^[a-zA-Z0-9_]{3,15}$/;
             return reg.test(value);
-        }, message: '用户名格式错误'
+        }, message: novelMessage('usernameInvalid', 'Định dạng tên đăng nhập không hợp lệ.')
     },
     equalTo: {
         validator: function (value, param) {
             return $(param[0]).val() == value;
         },
-        message: '字段不匹配'
+        message: novelMessage('fieldMismatch', 'Giá trị không khớp.')
     }
 });
 
-/*空函数*/
+/* Hàm rỗng giữ tương thích API cũ. */
 function CreateGrid() { }
 function CreateGridReload() { }
 
-/*身份证校验正确性*/
-var NumbCardCity = { 11: "北京", 12: "天津", 13: "河北", 14: "山西", 15: "内蒙古", 21: "辽宁", 22: "吉林", 23: "黑龙江", 31: "上海", 32: "江苏", 33: "浙江", 34: "安徽", 35: "福建", 36: "江西", 37: "山东", 41: "河南", 42: "湖北", 43: "湖南", 44: "广东", 45: "广西", 46: "海南", 50: "重庆", 51: "四川", 52: "贵州", 53: "云南", 54: "西藏", 61: "陕西", 62: "甘肃", 63: "青海", 64: "宁夏", 65: "新疆", 71: "台湾", 81: "香港", 82: "澳门", 91: "国外" };
+/* Kiểm tra số giấy tờ theo quy tắc cũ. */
+var NumbCardCity = {11:true,12:true,13:true,14:true,15:true,21:true,22:true,23:true,31:true,32:true,33:true,34:true,35:true,36:true,37:true,41:true,42:true,43:true,44:true,45:true,46:true,50:true,51:true,52:true,53:true,54:true,61:true,62:true,63:true,64:true,65:true,71:true,81:true,82:true,91:true};
 function isCardID(sId) {
     var iSum = 0;
     var info = "";
-    if (!/^\d{17}(\d|x)$/i.test(sId)) return false; /* "你输入的身份证长度或格式错误";  */
+    if (!/^\d{17}(\d|x)$/i.test(sId)) return false; /* Độ dài hoặc định dạng giấy tờ không hợp lệ. */
     sId = sId.replace(/x$/i, "a");
-    if (NumbCardCity[parseInt(sId.substr(0, 2))] == null) return false; /*"你的身份证地区非法";*/
+    if (NumbCardCity[parseInt(sId.substr(0, 2))] == null) return false; /* Mã khu vực không hợp lệ. */
     sBirthday = sId.substr(6, 4) + "-" + Number(sId.substr(10, 2)) + "-" + Number(sId.substr(12, 2));
     var d = new Date(sBirthday.replace(/-/g, "/"));
-    if (sBirthday != (d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate())) return false; /* "身份证上的出生日期非法";*/
+    if (sBirthday != (d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate())) return false; /* Ngày sinh trên giấy tờ không hợp lệ. */
     for (var i = 17; i >= 0; i--) iSum += (Math.pow(2, i) % 11) * parseInt(sId.charAt(17 - i), 11);
-    if (iSum % 11 != 1) return false; /*"你输入的身份证号非法";*/
+    if (iSum % 11 != 1) return false; /* Số giấy tờ không hợp lệ. */
     return true;
 }
 
@@ -495,7 +495,7 @@ function getSex(val) {
 }
 function showBirthday(val) {
     var mm;
-    if (18 == val.length) {/*18位身份证号码*/
+    if (18 == val.length) {/* Số giấy tờ 18 chữ số. */
         mm = val.charAt(6) + val.charAt(7) + val.charAt(8) + val.charAt(9) + '-' + val.charAt(10) + val.charAt(11) + '-' + val.charAt(12) + val.charAt(13);
 
     }
@@ -504,29 +504,29 @@ function showBirthday(val) {
 
 
 var DirtInfo = {
-    TrueOrFalse: [[0, "否"], [1, "是"]],
-    EnumUserCommendStatus: [[0, "新"], [1, "已处理"], [2, "已查看"]],
-    AvailablesStatus: [[0, "禁用"], [1, "可用"]],
-    SettleClass: [[0, "现金"], [1, "预付扣款"]],
-    EnumSexClass: [[0, "不限"], [1, "男"], [2, "女"]],
-    EnumUserType: [[1, "手机端app"], [2, "手机wap端"]],
-    EnumPayClass: [[1, "支付宝"], [2, "微信"], [3, "微信扫码"], [100, "绑定手机奖励"]],
-    EnumPayStatus: [[0, "新申请"], [2, "充值失败"], [3, "成功"]],
-    EnumMoneyClass: [[0, "购买"], [1, "赠送"]],
-    EnumUserFrom: [[1, "其他"], [2, "微博"], [3, "qq"], [4, "微信"], [10, "app注册"], [11, "wap注册"], [12, "微博绑定"], [13, "qq绑定"], [14, "微信绑定"]],
-    EnumSignType: [[0, "未签约"], [1, "分成"], [2, "买断"], [3, "保底"], [4, "买断整本"], [9, "保底"], [15, "道具结算"], [30, "全勤奖励"]],
-    EnumLogType: [[0, "app登录"], [1, "wap登录"]],
-    EnumAuditStatus: [[-10, "下线"], [-1, "审核失败"], [0, "编辑中"], [1, "提交申请"], [2, "通过审核"], [3, "已发布"]],
-    EnumHandleStatus: [[-1, "处理失败"], [0, "新申请"], [1, "待处理"], [2, "处理成功"]],
-    EnumAuthorLevel: [[1, "一级"], [2, "二级"], [3, "三级"], [4, "四级"], [5, "五级"]],
-    EnumChannelClass: [[0, "特级"], [1, "一级"], [2, "二级"], [3, "三级"], [4, "四级"], [5, "五级"], [6, "六级"], [7, "七级"], [8, "八级"], [9, "九级"], [1100, "千级"]],
-    EnumVipChapter: [[0, "公众"], [1, "VIP"]],
-    EnumBookLeveType: [[1, "A级"], [2, "B级"], [3, "C级"], [4, "普通"], [5, "S级"]],
+    TrueOrFalse: [[0, novelMessage('legacyNo', 'Không')], [1, novelMessage('legacyYes', 'Có')]],
+    EnumUserCommendStatus: [[0, novelMessage('legacyNew', 'Mới')], [1, novelMessage('legacyProcessed', 'Đã xử lý')], [2, novelMessage('legacyViewed', 'Đã xem')]],
+    AvailablesStatus: [[0, novelMessage('legacyDisabled', 'Đã tắt')], [1, novelMessage('legacyAvailable', 'Khả dụng')]],
+    SettleClass: [[0, novelMessage('legacyCash', 'Tiền mặt')], [1, novelMessage('legacyPrepaid', 'Khấu trừ trả trước')]],
+    EnumSexClass: [[0, novelMessage('legacyUnlimited', 'Không giới hạn')], [1, novelMessage('legacyMale', 'Nam')], [2, novelMessage('legacyFemale', 'Nữ')]],
+    EnumUserType: [[1, novelMessage('legacyMobileApp', 'Ứng dụng di động')], [2, novelMessage('legacyMobileWeb', 'Web di động')]],
+    EnumPayClass: [[1, novelMessage('legacyAlipay', 'Alipay')], [2, novelMessage('legacyWechat', 'WeChat')], [3, novelMessage('legacyWechatQr', 'Mã QR WeChat')], [100, novelMessage('legacyPhoneReward', 'Thưởng liên kết số điện thoại')]],
+    EnumPayStatus: [[0, novelMessage('legacyNewRequest', 'Yêu cầu mới')], [2, novelMessage('legacyRechargeFailed', 'Nạp tiền thất bại')], [3, novelMessage('legacySuccess', 'Thành công')]],
+    EnumMoneyClass: [[0, novelMessage('legacyPurchase', 'Mua')], [1, novelMessage('legacyGift', 'Tặng')]],
+    EnumUserFrom: [[1, novelMessage('legacyOther', 'Khác')], [2, novelMessage('legacyWeibo', 'Weibo')], [3, novelMessage('legacyQq', 'QQ')], [4, novelMessage('legacyWechat', 'WeChat')], [10, novelMessage('legacyAppRegister', 'Đăng ký qua ứng dụng')], [11, novelMessage('legacyWapRegister', 'Đăng ký qua web di động')], [12, novelMessage('legacyWeiboBind', 'Liên kết Weibo')], [13, novelMessage('legacyQqBind', 'Liên kết QQ')], [14, novelMessage('legacyWechatBind', 'Liên kết WeChat')]],
+    EnumSignType: [[0, novelMessage('legacyUnsigned', 'Chưa ký hợp đồng')], [1, novelMessage('legacyRevenueShare', 'Chia sẻ doanh thu')], [2, novelMessage('legacyBuyout', 'Mua đứt')], [3, novelMessage('legacyGuarantee', 'Bảo đảm tối thiểu')], [4, novelMessage('legacyFullBuyout', 'Mua đứt toàn bộ')], [9, novelMessage('legacyGuarantee', 'Bảo đảm tối thiểu')], [15, novelMessage('legacyItemSettlement', 'Đối soát vật phẩm')], [30, novelMessage('legacyAttendanceBonus', 'Thưởng chuyên cần')]],
+    EnumLogType: [[0, novelMessage('legacyAppLogin', 'Đăng nhập ứng dụng')], [1, novelMessage('legacyWapLogin', 'Đăng nhập web di động')]],
+    EnumAuditStatus: [[-10, novelMessage('legacyOffline', 'Đã gỡ')], [-1, novelMessage('legacyAuditFailed', 'Duyệt thất bại')], [0, novelMessage('legacyEditing', 'Đang biên tập')], [1, novelMessage('legacySubmitted', 'Đã gửi duyệt')], [2, novelMessage('legacyApproved', 'Đã duyệt')], [3, novelMessage('legacyPublished', 'Đã xuất bản')]],
+    EnumHandleStatus: [[-1, novelMessage('legacyProcessingFailed', 'Xử lý thất bại')], [0, novelMessage('legacyNewRequest', 'Yêu cầu mới')], [1, novelMessage('legacyPending', 'Chờ xử lý')], [2, novelMessage('legacyProcessedSuccess', 'Xử lý thành công')]],
+    EnumAuthorLevel: [[1, novelMessage('legacyLevel', 'Cấp {0}').replace('{0}', 1)], [2, novelMessage('legacyLevel', 'Cấp {0}').replace('{0}', 2)], [3, novelMessage('legacyLevel', 'Cấp {0}').replace('{0}', 3)], [4, novelMessage('legacyLevel', 'Cấp {0}').replace('{0}', 4)], [5, novelMessage('legacyLevel', 'Cấp {0}').replace('{0}', 5)]],
+    EnumChannelClass: [[0, novelMessage('legacySpecial', 'Đặc biệt')], [1, novelMessage('legacyLevel', 'Cấp {0}').replace('{0}', 1)], [2, novelMessage('legacyLevel', 'Cấp {0}').replace('{0}', 2)], [3, novelMessage('legacyLevel', 'Cấp {0}').replace('{0}', 3)], [4, novelMessage('legacyLevel', 'Cấp {0}').replace('{0}', 4)], [5, novelMessage('legacyLevel', 'Cấp {0}').replace('{0}', 5)], [6, novelMessage('legacyLevel', 'Cấp {0}').replace('{0}', 6)], [7, novelMessage('legacyLevel', 'Cấp {0}').replace('{0}', 7)], [8, novelMessage('legacyLevel', 'Cấp {0}').replace('{0}', 8)], [9, novelMessage('legacyLevel', 'Cấp {0}').replace('{0}', 9)], [1100, novelMessage('legacyThousandLevel', 'Cấp nghìn')]],
+    EnumVipChapter: [[0, novelMessage('legacyPublic', 'Công khai')], [1, "VIP"]],
+    EnumBookLeveType: [[1, "A"], [2, "B"], [3, "C"], [4, novelMessage('legacyNormal', 'Thông thường')], [5, "S"]],
     EnumBookLeveTypeL: [[1, "A"], [2, "B"], [3, "C"]],
-    EnumAdmActClass: [[50, "签约等级修改"], [51, "封面修改"], [52, "渠道添加"], [53, "渠道修改"], [54, "渠道删除"], [55, "章节删除"]],
-    EnumSettlementType: [[0, "未结算"], [1, "已结算"], [2, "结算失败"]],
-    EnumBookProcess: [[0, "连载"], [1, "完结"]],
-    EnumAuthStatus: [[1 ,"独家"], [2, "非独家"]]
+    EnumAdmActClass: [[50, novelMessage('legacyContractLevelChange', 'Đổi cấp hợp đồng')], [51, novelMessage('legacyCoverChange', 'Đổi ảnh bìa')], [52, novelMessage('legacyChannelAdd', 'Thêm kênh')], [53, novelMessage('legacyChannelEdit', 'Sửa kênh')], [54, novelMessage('legacyChannelDelete', 'Xóa kênh')], [55, novelMessage('legacyChapterDelete', 'Xóa chương')]],
+    EnumSettlementType: [[0, novelMessage('legacyUnsettled', 'Chưa đối soát')], [1, novelMessage('legacySettled', 'Đã đối soát')], [2, novelMessage('legacySettlementFailed', 'Đối soát thất bại')]],
+    EnumBookProcess: [[0, novelMessage('legacySerializing', 'Đang ra')], [1, novelMessage('legacyCompleted', 'Đã hoàn thành')]],
+    EnumAuthStatus: [[1, novelMessage('legacyExclusive', 'Độc quyền')], [2, novelMessage('legacyNonExclusive', 'Không độc quyền')]]
 };
 
 function dateToDate(date) {
@@ -590,7 +590,7 @@ $(function () {
     initSubmitButton(3);
 });
 
-//停留时间
+// Khóa nút gửi trong thời gian chờ.
 function initSubmitButton(wait) {
     $("input[type='submit']").each(function () {
         $(this).click(function () {
@@ -598,7 +598,7 @@ function initSubmitButton(wait) {
                 return false;
             }
             var oldVal = $(this).val();
-            $(this).val("正在处理，请稍等(" + wait + ")");
+            $(this).val(novelMessage('processing', 'Đang xử lý, vui lòng chờ ({0})').replace('{0}', wait));
             $(this).attr("submited", "1");
             setTimeout('ButtonLimit("' + $(this).attr("id") + '",' + wait + ',"' + oldVal + '")', 1000);
         });
@@ -607,7 +607,7 @@ function initSubmitButton(wait) {
 function ButtonLimit(objId, wait, oldVal) {
     wait--;
     if (wait > 0) {
-        $("#" + objId).val("正在处理，请稍等(" + wait + ")");
+        $("#" + objId).val(novelMessage('processing', 'Đang xử lý, vui lòng chờ ({0})').replace('{0}', wait));
         setTimeout('ButtonLimit("' + objId + '",' + wait + ',"' + oldVal + '");', 1000);
     }
     else {

@@ -9,7 +9,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * 表单形式的全局时间类型转换器
+ * Bộ chuyển đổi kiểu thời gian toàn cục cho biểu mẫu
  * @author xiongxiaoyang
  */
 public class DateConverter implements Converter<String, Date> {
@@ -43,11 +43,11 @@ public class DateConverter implements Converter<String, Date> {
     }
 
     /**
-     * 格式化日期
+     * Định dạng ngày
      *
-     * @param dateStr String 字符型日期
-     * @param format  String 格式
-     * @return Date 日期
+     * @param dateStr ngày dạng chuỗi String
+     * @param format định dạng String
+     * @return đối tượng Date
      */
     private Date parseDate(String dateStr, String format) {
         Date date = null;

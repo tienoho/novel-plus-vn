@@ -39,12 +39,12 @@ public class FriendLinkController {
         return "novel/friendLink/friendLink";
     }
 
-    @ApiOperation(value = "获取列表", notes = "获取列表")
+    @ApiOperation(value = "Lấy danh sách", notes = "Lấy danh sách")
     @ResponseBody
     @GetMapping("/list")
     @RequiresPermissions("novel:friendLink:friendLink")
     public R list(@RequestParam Map<String, Object> params) {
-        //查询列表数据
+        // Truy vấn dữ liệu danh sách
         Query query = new Query(params);
         List<FriendLinkDO> friendLinkList = friendLinkService.list(query);
         int total = friendLinkService.count(query);
@@ -52,14 +52,14 @@ public class FriendLinkController {
         return R.ok().put("data", pageBean);
     }
 
-    @ApiOperation(value = "新增页面", notes = "新增页面")
+    @ApiOperation(value = "Trang thêm mới", notes = "Trang thêm mới")
     @GetMapping("/add")
     @RequiresPermissions("novel:friendLink:add")
     String add() {
         return "novel/friendLink/add";
     }
 
-    @ApiOperation(value = "修改页面", notes = "修改页面")
+    @ApiOperation(value = "Trang chỉnh sửa", notes = "Trang chỉnh sửa")
     @GetMapping("/edit/{id}")
     @RequiresPermissions("novel:friendLink:edit")
     String edit(@PathVariable("id") Integer id, Model model) {
@@ -68,7 +68,7 @@ public class FriendLinkController {
         return "novel/friendLink/edit";
     }
 
-    @ApiOperation(value = "查看页面", notes = "查看页面")
+    @ApiOperation(value = "Trang chi tiết", notes = "Trang chi tiết")
     @GetMapping("/detail/{id}")
     @RequiresPermissions("novel:friendLink:detail")
     String detail(@PathVariable("id") Integer id, Model model) {
@@ -78,9 +78,9 @@ public class FriendLinkController {
     }
 
     /**
-     * 保存
+     * Lưu
      */
-    @ApiOperation(value = "新增", notes = "新增")
+    @ApiOperation(value = "Thêm mới", notes = "Thêm mới")
     @ResponseBody
     @PostMapping("/save")
     @RequiresPermissions("novel:friendLink:add")
@@ -93,9 +93,9 @@ public class FriendLinkController {
     }
 
     /**
-     * 修改
+     * Sửa
      */
-    @ApiOperation(value = "修改", notes = "修改")
+    @ApiOperation(value = "Chỉnh sửa", notes = "Chỉnh sửa")
     @ResponseBody
     @RequestMapping("/update")
     @RequiresPermissions("novel:friendLink:edit")
@@ -106,9 +106,9 @@ public class FriendLinkController {
     }
 
     /**
-     * 删除
+     * Xóa
      */
-    @ApiOperation(value = "删除", notes = "删除")
+    @ApiOperation(value = "Xóa", notes = "Xóa")
     @PostMapping("/remove")
     @ResponseBody
     @RequiresPermissions("novel:friendLink:remove")
@@ -121,9 +121,9 @@ public class FriendLinkController {
     }
 
     /**
-     * 删除
+     * Xóa
      */
-    @ApiOperation(value = "批量删除", notes = "批量删除")
+    @ApiOperation(value = "Xóa hàng loạt", notes = "Xóa hàng loạt")
     @PostMapping("/batchRemove")
     @ResponseBody
     @RequiresPermissions("novel:friendLink:batchRemove")

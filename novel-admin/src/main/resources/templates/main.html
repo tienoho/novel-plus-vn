@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="utf-8">
-    <title>首页</title>
+    <title th:text="#{admin.dashboard}">Tổng quan</title>
     <meta name="renderer" content="webkit">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -156,7 +156,7 @@
                 <div class="layui-row layui-col-space15">
                     <div class="layui-col-md12">
                         <div class="layui-card">
-                            <div class="layui-card-header"><i class="fa fa-warning icon"></i>数据统计</div>
+                            <div class="layui-card-header"><i class="fa fa-warning icon"></i><span th:text="#{admin.dashboard.data}">Thống kê dữ liệu</span></div>
                             <div class="layui-card-body">
                                 <div class="welcome-module">
                                     <div class="layui-row layui-col-space10">
@@ -164,12 +164,12 @@
                                             <div class="panel layui-bg-number">
                                                 <div class="panel-body">
                                                     <div class="panel-title">
-                                                        <span class="label pull-right layui-bg-blue">实时</span>
-                                                        <h5>会员统计</h5>
+                                                        <span class="label pull-right layui-bg-blue" th:text="#{admin.dashboard.realtime}">Thời gian thực</span>
+                                                        <h5 th:text="#{admin.dashboard.members}">Thành viên</h5>
                                                     </div>
                                                     <div class="panel-content">
                                                         <h1 class="no-margins" id="userCount">1234</h1>
-                                                        <small>当前分类总记录数</small>
+                                                        <small th:text="#{admin.dashboard.total('')}">Tổng số bản ghi</small>
                                                     </div>
                                                 </div>
                                             </div>
@@ -178,12 +178,12 @@
                                             <div class="panel layui-bg-number">
                                                 <div class="panel-body">
                                                     <div class="panel-title">
-                                                        <span class="label pull-right layui-bg-cyan">实时</span>
-                                                        <h5>作家统计</h5>
+                                                        <span class="label pull-right layui-bg-cyan" th:text="#{admin.dashboard.realtime}">Thời gian thực</span>
+                                                        <h5 th:text="#{admin.dashboard.authors}">Tác giả</h5>
                                                     </div>
                                                     <div class="panel-content">
                                                         <h1 class="no-margins" id="authorCount">1234</h1>
-                                                        <small>当前分类总记录数</small>
+                                                        <small th:text="#{admin.dashboard.total('')}">Tổng số bản ghi</small>
                                                     </div>
                                                 </div>
                                             </div>
@@ -192,12 +192,12 @@
                                             <div class="panel layui-bg-number">
                                                 <div class="panel-body">
                                                     <div class="panel-title">
-                                                        <span class="label pull-right layui-bg-orange">实时</span>
-                                                        <h5>作品统计</h5>
+                                                        <span class="label pull-right layui-bg-orange" th:text="#{admin.dashboard.realtime}">Thời gian thực</span>
+                                                        <h5 th:text="#{admin.dashboard.books}">Tác phẩm</h5>
                                                     </div>
                                                     <div class="panel-content">
                                                         <h1 class="no-margins" id="bookCount">1234</h1>
-                                                        <small>当前分类总记录数</small>
+                                                        <small th:text="#{admin.dashboard.total('')}">Tổng số bản ghi</small>
                                                     </div>
                                                 </div>
                                             </div>
@@ -206,12 +206,12 @@
                                             <div class="panel layui-bg-number">
                                                 <div class="panel-body">
                                                     <div class="panel-title">
-                                                        <span class="label pull-right layui-bg-green">实时</span>
-                                                        <h5>交易统计</h5>
+                                                        <span class="label pull-right layui-bg-green" th:text="#{admin.dashboard.realtime}">Thời gian thực</span>
+                                                        <h5 th:text="#{admin.dashboard.transactions}">Giao dịch</h5>
                                                     </div>
                                                     <div class="panel-content">
                                                         <h1 class="no-margins" id="orderCount">1234</h1>
-                                                        <small>当前分类总记录数</small>
+                                                        <small th:text="#{admin.dashboard.total('')}">Tổng số bản ghi</small>
                                                     </div>
                                                 </div>
                                             </div>
@@ -223,7 +223,7 @@
                     </div>
                     <div class="layui-col-md12">
                         <div class="layui-card">
-                            <div class="layui-card-header"><i class="fa fa-line-chart icon"></i>报表统计</div>
+                            <div class="layui-card-header"><i class="fa fa-line-chart icon"></i><span th:text="#{admin.dashboard.reports}">Báo cáo thống kê</span></div>
                             <div class="layui-card-body">
                                 <div id="echarts-records" style="width: 100%;min-height:500px"></div>
                             </div>
@@ -236,7 +236,7 @@
 
 
                 <div class="layui-card">
-                    <div class="layui-card-header"><i class="fa fa-fire icon"></i>项目信息</div>
+                    <div class="layui-card-header"><i class="fa fa-fire icon"></i><span th:text="#{admin.project.info}">Thông tin dự án</span></div>
                     <div class="layui-card-body layui-text">
                         <table class="layui-table">
                             <colgroup>
@@ -245,21 +245,21 @@
                             </colgroup>
                             <tbody>
                             <tr>
-                                <td>项目名称</td>
+                                <td th:text="#{admin.project.name}">Tên dự án</td>
                                 <td>
                                     novel
                                 </td>
                             </tr>
                             <tr>
-                                <td>开发语言</td>
+                                <td th:text="#{admin.project.language}">Ngôn ngữ phát triển</td>
                                 <td>Java</td>
                             </tr>
                             <tr>
-                                <td>主要特色</td>
-                                <td>Spring Boot 3 / Vue 3 / 项目实战 / 保姆级教程</td>
+                                <td th:text="#{admin.project.features}">Tính năng chính</td>
+                                <td th:text="#{admin.project.feature.novel}">Spring Boot 3 / Vue 3 / dự án thực tế / hướng dẫn chi tiết</td>
                             </tr>
                             <tr>
-                                <td>下载地址</td>
+                                <td th:text="#{admin.project.download}">Địa chỉ tải xuống</td>
                                 <td>
                                     <a href="https://gitee.com/novel_dev_team/novel" target="_blank">Gitee</a> /
                                     <a href="https://github.com/201206030/novel" target="_blank">Github</a>
@@ -295,7 +295,7 @@
                 </div>
 
                 <div class="layui-card">
-                    <div class="layui-card-header"><i class="fa fa-fire icon"></i>项目信息</div>
+                    <div class="layui-card-header"><i class="fa fa-fire icon"></i><span th:text="#{admin.project.info}">Thông tin dự án</span></div>
                     <div class="layui-card-body layui-text">
                         <table class="layui-table">
                             <colgroup>
@@ -304,21 +304,21 @@
                             </colgroup>
                             <tbody>
                             <tr>
-                                <td>项目名称</td>
+                                <td th:text="#{admin.project.name}">Tên dự án</td>
                                 <td>
                                     novel-plus
                                 </td>
                             </tr>
                             <tr>
-                                <td>开发语言</td>
+                                <td th:text="#{admin.project.language}">Ngôn ngữ phát triển</td>
                                 <td>Java</td>
                             </tr>
                             <tr>
-                                <td>主要特色</td>
-                                <td>原创 / 多端 / 充值 / 订阅 / 采集</td>
+                                <td th:text="#{admin.project.features}">Tính năng chính</td>
+                                <td th:text="#{admin.project.feature.plus}">Sáng tác / đa nền tảng / nạp tiền / đăng ký đọc / thu thập dữ liệu</td>
                             </tr>
                             <tr>
-                                <td>下载地址</td>
+                                <td th:text="#{admin.project.download}">Địa chỉ tải xuống</td>
                                 <td>
                                     <a href="https://gitee.com/novel_dev_team/novel-plus" target="_blank">Gitee</a> /
                                     <a href="https://github.com/201206030/novel-plus" target="_blank">Github</a>
@@ -354,7 +354,7 @@
                 </div>
 
                 <div class="layui-card">
-                    <div class="layui-card-header"><i class="fa fa-fire icon"></i>项目信息</div>
+                    <div class="layui-card-header"><i class="fa fa-fire icon"></i><span th:text="#{admin.project.info}">Thông tin dự án</span></div>
                     <div class="layui-card-body layui-text">
                         <table class="layui-table">
                             <colgroup>
@@ -363,21 +363,21 @@
                             </colgroup>
                             <tbody>
                             <tr>
-                                <td>项目名称</td>
+                                <td th:text="#{admin.project.name}">Tên dự án</td>
                                 <td>
                                     novel-cloud
                                 </td>
                             </tr>
                             <tr>
-                                <td>开发语言</td>
+                                <td th:text="#{admin.project.language}">Ngôn ngữ phát triển</td>
                                 <td>Java</td>
                             </tr>
                             <tr>
-                                <td>主要特色</td>
-                                <td>微服务 / Spring Cloud 2022 / Spring Cloud Alibaba 2022</td>
+                                <td th:text="#{admin.project.features}">Tính năng chính</td>
+                                <td th:text="#{admin.project.feature.cloud}">Vi dịch vụ / Spring Cloud 2022 / Spring Cloud Alibaba 2022</td>
                             </tr>
                             <tr>
-                                <td>下载地址</td>
+                                <td th:text="#{admin.project.download}">Địa chỉ tải xuống</td>
                                 <td>
                                     <a href="https://gitee.com/novel_dev_team/novel-cloud" target="_blank">Gitee</a> /
                                     <a href="https://github.com/201206030/novel-cloud" target="_blank">Github</a>
@@ -418,7 +418,7 @@
 <script src="/layuimini/lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
 <script src="/layuimini/lib/layui-v2.5.4/layui.js" charset="utf-8"></script>
 <script src="/layuimini/js/lay-config.js?v=1.0.4" charset="utf-8"></script>
-<script>
+<script th:inline="javascript">
     $.ajax({
         type: "GET",
         url: "/novel/stat/countSta",
@@ -442,7 +442,7 @@
             echarts = layui.echarts;
 
         /**
-         * 查看公告信息
+         * Xem nội dung thông báo.
          **/
         $('body').on('click', '.layuimini-notice', function () {
             var title = $(this).children('.layuimini-notice-title').text(),
@@ -454,11 +454,11 @@
                 '</div>\n';
             parent.layer.open({
                 type: 1,
-                title: '系统公告' + '<span style="float: right;right: 1px;font-size: 12px;color: #b1b3b9;margin-top: 1px">' + noticeTime + '</span>',
+                title: /*[[#{admin.notice.system}]]*/ 'Thông báo hệ thống' + '<span style="float: right;right: 1px;font-size: 12px;color: #b1b3b9;margin-top: 1px">' + noticeTime + '</span>',
                 area: '300px;',
                 shade: 0.8,
                 id: 'layuimini-notice',
-                btn: ['查看', '取消'],
+                btn: [/*[[#{admin.notice.view}]]*/ 'Xem', /*[[#{common.cancel}]]*/ 'Hủy'],
                 btnAlign: 'c',
                 moveType: 1,
                 content: html,
@@ -473,7 +473,7 @@
         });
 
         /**
-         * 报表功能
+         * Biểu đồ thống kê.
          */
         $.ajax({
             type: "GET",
@@ -481,22 +481,22 @@
             data: {},
             success: function (r) {
                 if (r.code == 0) {
-                    var legendData = ['会员新增', '作家新增', '作品新增', '交易新增'];
+                    var legendData = [/*[[#{admin.chart.memberNew}]]*/ 'Thành viên mới', /*[[#{admin.chart.authorNew}]]*/ 'Tác giả mới', /*[[#{admin.chart.bookNew}]]*/ 'Tác phẩm mới', /*[[#{admin.chart.transactionNew}]]*/ 'Giao dịch mới'];
                     var userSeries = [
                         {
-                            name: '会员新增',
+                            name: /*[[#{admin.chart.memberNew}]]*/ 'Thành viên mới',
                             type: 'line',
                             data: []
                         }, {
-                            name: '作家新增',
+                            name: /*[[#{admin.chart.authorNew}]]*/ 'Tác giả mới',
                             type: 'line',
                             data: []
                         }, {
-                            name: '作品新增',
+                            name: /*[[#{admin.chart.bookNew}]]*/ 'Tác phẩm mới',
                             type: 'line',
                             data: []
                         }, {
-                            name: '交易新增',
+                            name: /*[[#{admin.chart.transactionNew}]]*/ 'Giao dịch mới',
                             type: 'line',
                             data: []
                         }];
@@ -550,7 +550,7 @@
                     };
                     echartsRecords.setOption(optionRecords);
 
-                    // echarts 窗口缩放自适应
+                    // Tự điều chỉnh biểu đồ theo kích thước cửa sổ.
                     window.onresize = function () {
                         echartsRecords.resize();
                     }

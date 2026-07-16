@@ -10,12 +10,12 @@ $('.tooltip-demo').tooltip({
     container: "body"
 });
 
-// 使用animation.css修改Bootstrap Modal
+// Dùng animation.css cho Bootstrap Modal
 $('.modal').appendTo("body");
 
 $("[data-toggle=popover]").popover();
 
-//折叠ibox
+//Thu gọn ibox
 $('.collapse-link').click(function () {
     var ibox = $(this).closest('div.ibox');
     var button = $(this).find('i');
@@ -29,15 +29,15 @@ $('.collapse-link').click(function () {
     }, 50);
 });
 
-//关闭ibox
+//Đóng ibox
 $('.close-link').click(function () {
     var content = $(this).closest('div.ibox');
     content.remove();
 });
 
-//判断当前页面是否在iframe中
+//Kiểm tra trang hiện tại có nằm trong iframe hay không
 //if (top == this) {
-//    var gohome = '<div class="gohome"><a class="animated bounceInUp" href="index.html?v=4.0" title="返回首页"><i class="fa fa-home"></i></a></div>';
+//    var gohome = '<div class="gohome"><a class="animated bounceInUp" href="index.html?v=4.0" title="Về trang chủ"><i class="fa fa-home"></i></a></div>';
 //    $('body').append(gohome);
 //}
 
@@ -49,14 +49,14 @@ function animationHover(element, animation) {
             element.addClass('animated ' + animation);
         },
         function () {
-            //动画完成之前移除class
+            //Xóa class trước khi hoạt ảnh hoàn tất
             window.setTimeout(function () {
                 element.removeClass('animated ' + animation);
             }, 2000);
         });
 }
 
-//拖动面板
+//Kéo bảng điều khiển
 function WinMove() {
     var element = "[class*=col]";
     var handle = ".ibox-title";
@@ -72,11 +72,13 @@ function WinMove() {
 };
 
 
-//编辑器新增的ajax上传图片函数
+//Hàm AJAX tải ảnh của trình soạn thảo
 function sendFile(files, editor, $editable) {
     var size = files[0].size;
     if((size / 1024 / 1024) > 2) {
-        alert("图片大小不能超过2M...");
+        alert(typeof adminMessage === 'function'
+            ? adminMessage('imageMax2M', 'Kích thước ảnh không được vượt quá 2 MB.')
+            : 'Kích thước ảnh không được vượt quá 2 MB.');
         return false;
     }
     console.log("size="+size);
@@ -85,16 +87,18 @@ function sendFile(files, editor, $editable) {
     $.ajax({
         data : formData,
         type : "POST",
-        url : "/common/sysFile/upload",    // 图片上传出来的url，返回的是图片上传后的路径，http格式
+        url : "/common/sysFile/upload",    // API tải ảnh trả về đường dẫn ảnh dạng HTTP
         cache : false,
         contentType : false,
         processData : false,
         dataType : "json",
-        success: function(data) {//data是返回的hash,key之类的值，key是定义的文件名
+        success: function(data) {//data là dữ liệu trả về; key là tên tệp đã định nghĩa
             $('.summernote').summernote('insertImage',data.fileName);
         },
         error:function(){
-            alert("上传失败");
+            alert(typeof adminMessage === 'function'
+                ? adminMessage('uploadFailed', 'Tải lên thất bại')
+                : 'Tải lên thất bại');
         }
     });
 }

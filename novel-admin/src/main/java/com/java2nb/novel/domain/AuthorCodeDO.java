@@ -15,7 +15,7 @@ import java.util.Date;
 
 
 /**
- * 作家邀请码表
+ * Bảng mã mời tác giả
  * 
  * @author xiongxy
  * @email 1179705413@qq.com
@@ -25,95 +25,95 @@ public class AuthorCodeDO implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	
-	//主键
-		//java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-	//所以通过序列化成字符串来解决
+	// Khóa chính
+		// Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+	// Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
 	@JsonSerialize(using = LongToStringSerializer.class)
 			private Long id;
-	//邀请码
+	// Mã mời
 			private String inviteCode;
-	//有效时间
+	// Thời hạn hiệu lực
 			@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 		private Date validityTime;
-	//是否使用过，0：未使用，1:使用过
+	// Đã sử dụng: 0 chưa, 1 rồi
 			private Integer isUse;
-	//创建时间
+	// Thời gian tạo
 			@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 		private Date createTime;
-	//创建人ID
-		//java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-	//所以通过序列化成字符串来解决
+	// ID người tạo
+		// Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+	// Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
 	@JsonSerialize(using = LongToStringSerializer.class)
 			private Long createUserId;
 
 	/**
-	 * 设置：主键
+	 * Đặt: khóa chính
 	 */
 	public void setId(Long id) {
 		this.id = id;
 	}
 	/**
-	 * 获取：主键
+	 * Lấy: khóa chính
 	 */
 	public Long getId() {
 		return id;
 	}
 	/**
-	 * 设置：邀请码
+	 * Đặt: mã mời
 	 */
 	public void setInviteCode(String inviteCode) {
 		this.inviteCode = inviteCode;
 	}
 	/**
-	 * 获取：邀请码
+	 * Lấy: mã mời
 	 */
 	public String getInviteCode() {
 		return inviteCode;
 	}
 	/**
-	 * 设置：有效时间
+	 * Đặt: thời hạn hiệu lực
 	 */
 	public void setValidityTime(Date validityTime) {
 		this.validityTime = validityTime;
 	}
 	/**
-	 * 获取：有效时间
+	 * Lấy: thời hạn hiệu lực
 	 */
 	public Date getValidityTime() {
 		return validityTime;
 	}
 	/**
-	 * 设置：是否使用过，0：未使用，1:使用过
+	 * Đặt: đã sử dụng: 0 chưa, 1 rồi
 	 */
 	public void setIsUse(Integer isUse) {
 		this.isUse = isUse;
 	}
 	/**
-	 * 获取：是否使用过，0：未使用，1:使用过
+	 * Lấy: đã sử dụng: 0 chưa, 1 rồi
 	 */
 	public Integer getIsUse() {
 		return isUse;
 	}
 	/**
-	 * 设置：创建时间
+	 * Đặt: thời gian tạo
 	 */
 	public void setCreateTime(Date createTime) {
 		this.createTime = createTime;
 	}
 	/**
-	 * 获取：创建时间
+	 * Lấy: thời gian tạo
 	 */
 	public Date getCreateTime() {
 		return createTime;
 	}
 	/**
-	 * 设置：创建人ID
+	 * Đặt: ID người tạo
 	 */
 	public void setCreateUserId(Long createUserId) {
 		this.createUserId = createUserId;
 	}
 	/**
-	 * 获取：创建人ID
+	 * Lấy: ID người tạo
 	 */
 	public Long getCreateUserId() {
 		return createUserId;

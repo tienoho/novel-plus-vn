@@ -35,14 +35,14 @@ public class RoleController extends BaseController {
 		return roles;
 	}
 
-	@Log("添加角色")
+	@Log("Thêm vai trò")
 	@RequiresPermissions("sys:role:add")
 	@GetMapping("/add")
 	String add() {
 		return prefix + "/add";
 	}
 
-	@Log("编辑角色")
+	@Log("Sửa vai trò")
 	@RequiresPermissions("sys:role:edit")
 	@GetMapping("/edit/{id}")
 	String edit(@PathVariable("id") Long id, Model model) {
@@ -51,58 +51,58 @@ public class RoleController extends BaseController {
 		return prefix + "/edit";
 	}
 
-	@Log("保存角色")
+	@Log("Lưu vai trò")
 	@RequiresPermissions("sys:role:add")
 	@PostMapping("/save")
 	@ResponseBody()
 	R save(RoleDO role) {
 		if (Constant.DEMO_ACCOUNT.equals(getUsername())) {
-			return R.error(1, "演示系统不允许修改,完整体验请部署程序");
+			return R.error(1, messages.get("error.demoReadOnly"));
 		}
 		if (roleService.save(role) > 0) {
 			return R.ok();
 		} else {
-			return R.error(1, "保存失败");
+			return R.error(1, messages.get("error.saveFailed"));
 		}
 	}
 
-	@Log("更新角色")
+	@Log("Cập nhật vai trò")
 	@RequiresPermissions("sys:role:edit")
 	@PostMapping("/update")
 	@ResponseBody()
 	R update(RoleDO role) {
 		if (Constant.DEMO_ACCOUNT.equals(getUsername())) {
-			return R.error(1, "演示系统不允许修改,完整体验请部署程序");
+			return R.error(1, messages.get("error.demoReadOnly"));
 		}
 		if (roleService.update(role) > 0) {
 			return R.ok();
 		} else {
-			return R.error(1, "保存失败");
+			return R.error(1, messages.get("error.saveFailed"));
 		}
 	}
 
-	@Log("删除角色")
+	@Log("Xóa vai trò")
 	@RequiresPermissions("sys:role:remove")
 	@PostMapping("/remove")
 	@ResponseBody()
 	R save(Long id) {
 		if (Constant.DEMO_ACCOUNT.equals(getUsername())) {
-			return R.error(1, "演示系统不允许修改,完整体验请部署程序");
+			return R.error(1, messages.get("error.demoReadOnly"));
 		}
 		if (roleService.remove(id) > 0) {
 			return R.ok();
 		} else {
-			return R.error(1, "删除失败");
+			return R.error(1, messages.get("error.deleteFailed"));
 		}
 	}
 	
 	@RequiresPermissions("sys:role:batchRemove")
-	@Log("批量删除角色")
+	@Log("Xóa nhiều vai trò")
 	@PostMapping("/batchRemove")
 	@ResponseBody
 	R batchRemove(@RequestParam("ids[]") Long[] ids) {
 		if (Constant.DEMO_ACCOUNT.equals(getUsername())) {
-			return R.error(1, "演示系统不允许修改,完整体验请部署程序");
+			return R.error(1, messages.get("error.demoReadOnly"));
 		}
 		int r = roleService.batchremove(ids);
 		if (r > 0) {

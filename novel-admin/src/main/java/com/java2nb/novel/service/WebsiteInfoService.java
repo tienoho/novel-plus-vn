@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 网站信息表
+ * Bảng thông tin website
  * 
  * @author xiongxy
  * @email 1179705413@qq.com

@@ -1,14 +1,111 @@
 
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head id="Head1"><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>
-    申请作者
-</title><link rel="stylesheet" type="text/css" href="/css/easyui.css" />
+<html xmlns="http://www.w3.org/1999/xhtml" lang="vi">
+<head id="Head1"><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title th:text="#{author.apply}">Đăng ký tác giả</title><link rel="stylesheet" type="text/css" href="/css/easyui.css" />
     <link href="/css/public.css" rel="stylesheet" type="text/css" />
     <script type="text/javascript" src="/javascript/jquery-1.8.0.min.js"></script>
     <script type="text/javascript" src="/javascript/jquery.easyui.min.js"></script>
-    <script type="text/javascript" src="/javascript/easyui-lang-zh_CN.js"></script>
+    <script type="text/javascript" src="/javascript/easyui-lang-vi_VN.js"></script>
+    <script th:inline="javascript">
+        window.NovelI18n = Object.assign(window.NovelI18n || {}, {
+            wait: /*[[#{common.wait}]]*/ 'Vui lòng chờ…',
+            select: /*[[#{common.select}]]*/ 'Vui lòng chọn',
+            valid: /*[[#{common.valid}]]*/ 'Hợp lệ',
+            invalid: /*[[#{common.invalid}]]*/ 'Không hợp lệ',
+            processing: /*[[#{common.processing('{0}')}]]*/ 'Đang xử lý, vui lòng chờ ({0})',
+            quarter1: /*[[#{time.quarter1}]]*/ 'Quý 1',
+            quarter2: /*[[#{time.quarter2}]]*/ 'Quý 2',
+            quarter3: /*[[#{time.quarter3}]]*/ 'Quý 3',
+            quarter4: /*[[#{time.quarter4}]]*/ 'Quý 4',
+            phoneInvalid: /*[[#{validation.phone.invalid}]]*/ 'Số điện thoại không hợp lệ.',
+            penNameInvalid: /*[[#{validation.penName.invalid}]]*/ 'Bút danh không được bắt đầu bằng chữ số và phải dài từ 2 đến 6 ký tự.',
+            realNameInvalid: /*[[#{validation.realName.invalid}]]*/ 'Tên thật phải dài từ 2 đến 5 ký tự.',
+            maxLength: /*[[#{validation.maxLength('{0}')}]]*/ 'Độ dài phải nhỏ hơn {0} ký tự.',
+            numberRequired: /*[[#{validation.number}]]*/ 'Giá trị phải là số.',
+            bankNumberInvalid: /*[[#{validation.bankNumber}]]*/ 'Số tài khoản ngân hàng không hợp lệ.',
+            emailInvalid: /*[[#{validation.email.invalid}]]*/ 'Định dạng email không hợp lệ.',
+            positiveInteger: /*[[#{validation.positiveInteger}]]*/ 'Giá trị phải là số nguyên dương lớn hơn 0.',
+            integerAbove10: /*[[#{validation.integerAbove10}]]*/ 'Giá trị phải là số nguyên dương lớn hơn 10.',
+            idCardInvalid: /*[[#{validation.idCard}]]*/ 'Số giấy tờ tùy thân không hợp lệ.',
+            positiveNumber: /*[[#{validation.positiveNumber}]]*/ 'Giá trị phải là số lớn hơn 0.',
+            passwordInvalid: /*[[#{validation.password.invalid}]]*/ 'Định dạng mật khẩu không hợp lệ.',
+            passwordMismatch: /*[[#{validation.password.mismatch}]]*/ 'Hai mật khẩu đã nhập không khớp.',
+            usernameInvalid: /*[[#{validation.username.invalid}]]*/ 'Định dạng tên đăng nhập không hợp lệ.',
+            fieldMismatch: /*[[#{validation.fieldMismatch}]]*/ 'Giá trị không khớp.',
+            penNameExists: /*[[#{author.penName.exists}]]*/ 'Bút danh đã tồn tại, vui lòng chọn tên khác.',
+            legacyNo: /*[[#{legacy.no}]]*/ 'Không',
+            legacyYes: /*[[#{legacy.yes}]]*/ 'Có',
+            legacyNew: /*[[#{legacy.new}]]*/ 'Mới',
+            legacyProcessed: /*[[#{legacy.processed}]]*/ 'Đã xử lý',
+            legacyViewed: /*[[#{legacy.viewed}]]*/ 'Đã xem',
+            legacyDisabled: /*[[#{legacy.disabled}]]*/ 'Đã tắt',
+            legacyAvailable: /*[[#{legacy.available}]]*/ 'Khả dụng',
+            legacyCash: /*[[#{legacy.cash}]]*/ 'Tiền mặt',
+            legacyPrepaid: /*[[#{legacy.prepaid}]]*/ 'Khấu trừ trả trước',
+            legacyMobileApp: /*[[#{legacy.mobileApp}]]*/ 'Ứng dụng di động',
+            legacyMobileWeb: /*[[#{legacy.mobileWeb}]]*/ 'Web di động',
+            legacyAlipay: /*[[#{legacy.alipay}]]*/ 'Alipay',
+            legacyWechat: /*[[#{legacy.wechat}]]*/ 'WeChat',
+            legacyWechatQr: /*[[#{legacy.wechatQr}]]*/ 'Mã QR WeChat',
+            legacyPhoneReward: /*[[#{legacy.phoneReward}]]*/ 'Thưởng liên kết số điện thoại',
+            legacyNewRequest: /*[[#{legacy.newRequest}]]*/ 'Yêu cầu mới',
+            legacyRechargeFailed: /*[[#{legacy.rechargeFailed}]]*/ 'Nạp tiền thất bại',
+            legacySuccess: /*[[#{legacy.success}]]*/ 'Thành công',
+            legacyPurchase: /*[[#{legacy.purchase}]]*/ 'Mua',
+            legacyGift: /*[[#{legacy.gift}]]*/ 'Tặng',
+            legacyOther: /*[[#{legacy.other}]]*/ 'Khác',
+            legacyWeibo: /*[[#{legacy.weibo}]]*/ 'Weibo',
+            legacyQq: /*[[#{legacy.qq}]]*/ 'QQ',
+            legacyAppRegister: /*[[#{legacy.appRegister}]]*/ 'Đăng ký qua ứng dụng',
+            legacyWapRegister: /*[[#{legacy.wapRegister}]]*/ 'Đăng ký qua web di động',
+            legacyWeiboBind: /*[[#{legacy.weiboBind}]]*/ 'Liên kết Weibo',
+            legacyQqBind: /*[[#{legacy.qqBind}]]*/ 'Liên kết QQ',
+            legacyWechatBind: /*[[#{legacy.wechatBind}]]*/ 'Liên kết WeChat',
+            legacyUnsigned: /*[[#{legacy.unsigned}]]*/ 'Chưa ký hợp đồng',
+            legacyRevenueShare: /*[[#{legacy.revenueShare}]]*/ 'Chia sẻ doanh thu',
+            legacyBuyout: /*[[#{legacy.buyout}]]*/ 'Mua đứt',
+            legacyGuarantee: /*[[#{legacy.guarantee}]]*/ 'Bảo đảm tối thiểu',
+            legacyFullBuyout: /*[[#{legacy.fullBuyout}]]*/ 'Mua đứt toàn bộ',
+            legacyItemSettlement: /*[[#{legacy.itemSettlement}]]*/ 'Đối soát vật phẩm',
+            legacyAttendanceBonus: /*[[#{legacy.attendanceBonus}]]*/ 'Thưởng chuyên cần',
+            legacyAppLogin: /*[[#{legacy.appLogin}]]*/ 'Đăng nhập ứng dụng',
+            legacyWapLogin: /*[[#{legacy.wapLogin}]]*/ 'Đăng nhập web di động',
+            legacyOffline: /*[[#{legacy.offline}]]*/ 'Đã gỡ',
+            legacyAuditFailed: /*[[#{legacy.auditFailed}]]*/ 'Duyệt thất bại',
+            legacyEditing: /*[[#{legacy.editing}]]*/ 'Đang biên tập',
+            legacySubmitted: /*[[#{legacy.submitted}]]*/ 'Đã gửi duyệt',
+            legacyApproved: /*[[#{legacy.approved}]]*/ 'Đã duyệt',
+            legacyPublished: /*[[#{legacy.published}]]*/ 'Đã xuất bản',
+            legacyProcessingFailed: /*[[#{legacy.processingFailed}]]*/ 'Xử lý thất bại',
+            legacyPending: /*[[#{legacy.pending}]]*/ 'Chờ xử lý',
+            legacyProcessedSuccess: /*[[#{legacy.processedSuccess}]]*/ 'Xử lý thành công',
+            legacySpecial: /*[[#{legacy.special}]]*/ 'Đặc biệt',
+            legacyLevel: /*[[#{legacy.level('{0}')}]]*/ 'Cấp {0}',
+            legacyThousandLevel: /*[[#{legacy.thousandLevel}]]*/ 'Cấp nghìn',
+            legacyPublic: /*[[#{legacy.public}]]*/ 'Công khai',
+            legacyNormal: /*[[#{legacy.normal}]]*/ 'Thông thường',
+            legacyContractLevelChange: /*[[#{legacy.contractLevelChange}]]*/ 'Đổi cấp hợp đồng',
+            legacyCoverChange: /*[[#{legacy.coverChange}]]*/ 'Đổi ảnh bìa',
+            legacyChannelAdd: /*[[#{legacy.channelAdd}]]*/ 'Thêm kênh',
+            legacyChannelEdit: /*[[#{legacy.channelEdit}]]*/ 'Sửa kênh',
+            legacyChannelDelete: /*[[#{legacy.channelDelete}]]*/ 'Xóa kênh',
+            legacyChapterDelete: /*[[#{legacy.chapterDelete}]]*/ 'Xóa chương',
+            legacyUnsettled: /*[[#{legacy.unsettled}]]*/ 'Chưa đối soát',
+            legacySettled: /*[[#{legacy.settled}]]*/ 'Đã đối soát',
+            legacySettlementFailed: /*[[#{legacy.settlementFailed}]]*/ 'Đối soát thất bại',
+            legacyExclusive: /*[[#{legacy.exclusive}]]*/ 'Độc quyền',
+            legacyNonExclusive: /*[[#{legacy.nonExclusive}]]*/ 'Không độc quyền',
+            legacyUnlimited: /*[[#{common.unlimited}]]*/ 'Không giới hạn',
+            legacyMale: /*[[#{user.gender.male}]]*/ 'Nam',
+            legacyFemale: /*[[#{user.gender.female}]]*/ 'Nữ',
+            legacySerializing: /*[[#{book.status.serializing}]]*/ 'Đang ra',
+            legacyCompleted: /*[[#{book.status.completed}]]*/ 'Đã hoàn thành'
+        });
+        function novelMessage(key, fallback) {
+            return window.NovelI18n && window.NovelI18n[key] ? window.NovelI18n[key] : fallback;
+        }
+    </script>
     <script src="/javascript/YT.js" type="text/javascript"></script>
     <style type="text/css">
         .ipage a
@@ -38,77 +135,77 @@
                 <tr>
                     <td colspan="3" style="text-align: left;">
                         <div style="padding-left: 15px; height: 40px; line-height: 40px;">
-                            我是网络小说写手，我要注册为小说精品屋签约作者：</div>
+                            <span th:text="#{author.apply.intro}">Tôi là người viết truyện trực tuyến và muốn đăng ký trở thành tác giả ký hợp đồng.</span></div>
                     </td>
                 </tr>
-                <tr><td align="right">邀请码：</td><td><input name="inviteCode" th:value="${author.inviteCode}" type="text" maxlength="12" id="TxtGetCode" class="easyui-validatebox inpMain" data-options="required:true" /></td>
+                <tr><td align="right" th:text="#{author.inviteCode}+': '">Mã mời:</td><td><input name="inviteCode" th:value="${author.inviteCode}" type="text" maxlength="12" id="TxtGetCode" class="easyui-validatebox inpMain" data-options="required:true" /></td>
                     <td>
-                        <span class="notes"> *</span> 小说精品屋分配给作者的邀请码
+                        <span class="notes"> *</span> <span th:text="#{author.inviteCode.note}">Mã mời do ban biên tập cấp cho tác giả.</span>
                     </td>
                 </tr>
                 <tr>
                     <td align="right">
-                        作者笔名：
+                        <span th:text="#{author.penName}+': '">Bút danh:</span>
                     </td>
                     <td>
                         <input name="penName" th:value="${author.penName}" type="text" maxlength="8" id="TxtNiceName" class="easyui-validatebox inpMain" data-options="required:true" validType="checkPenName" />
 
                     </td>
                     <td>
-                        <span class="notes"> *</span> 长度为2到8位的中英文
+                        <span class="notes"> *</span> <span th:text="#{author.penName.note}">Dài từ 2 đến 8 ký tự.</span>
                     </td>
                 </tr>
                 <tr>
                     <td align="right">
-                        手机号码：
+                        <span th:text="#{author.phone}+': '">Số điện thoại:</span>
                     </td>
                     <td>
                         <input name="telPhone" th:value="${author.telPhone}" type="text" id="TxtMobile" class="easyui-validatebox inpMain" data-options="required:true" validType="chinaMobile" />
                     </td>
                     <td>
-                        <span class="notes"> *</span> 小说精品屋的编辑会通过这个号码与您联系
+                        <span class="notes"> *</span> <span th:text="#{author.contactNote}">Ban biên tập sẽ liên hệ qua thông tin này.</span>
                     </td>
                 </tr>
                 <tr>
                     <td align="right">
-                        QQ或微信：
+                        <span th:text="#{author.chatAccount}+': '">QQ hoặc WeChat:</span>
                     </td>
                     <td>
                         <input name="chatAccount" th:value="${author.chatAccount}" type="text" id="TxtQQ" class="easyui-validatebox inpMain" data-options="required:true" />
                     </td>
                     <td>
-                        <span class="notes"> *</span> 小说精品屋的编辑会通过这个号码与您联系
+                        <span class="notes"> *</span> <span th:text="#{author.contactNote}">Ban biên tập sẽ liên hệ qua thông tin này.</span>
                     </td>
                 </tr>
                 <tr>
                     <td align="right">
-                        电子邮箱：
+                        <span th:text="#{author.email}+': '">Email:</span>
                     </td>
                     <td>
                         <input name="email" th:value="${author.email}" type="text" id="TxtEmail" class="easyui-validatebox inpMain w300" data-options="required:true" validType="email" />
                     </td>
                     <td>
-                        <span class="notes"> *</span> 长度为2到15位的中英文，数字
+                        <span class="notes"> *</span> <span th:text="#{author.email.note}">Dài từ 2 đến 15 chữ cái hoặc chữ số.</span>
                     </td>
                 </tr>
                 <tr>
                     <td align="right">
-                        男女主角：
+                        <span th:text="#{author.protagonist}+': '">Nhân vật chính:</span>
                     </td>
                     <td>
                         <div>
                             <ul class="ipage">
                                 <input type="hidden" name="workDirection" id="HidSexclass" /><!-- th:attr="class=${author.workDirection} == '0'? 'ahover':''"-->
-                                <a href="javascript:void(0);" val="0">男性主角选男频</a>
+                                <a href="javascript:void(0);" val="0" th:text="#{author.direction.male}">Nhân vật nam, chọn kênh truyện nam</a>
                                 <a href="javascript:void(0);" val="1">
-                                女性主角选女频</a>
+                                <span th:text="#{author.direction.female}">Nhân vật nữ, chọn kênh truyện nữ</span></a>
                                 <div class="clear">
                                 </div>
                             </ul>
                         </div>
                     </td>
                     <td>
-                        <span class="notes"> *</span> 请选择作品方向
+                        <span class="notes"> *</span> <span th:text="#{author.direction.note}">Vui lòng chọn hướng tác phẩm.</span>
                     </td>
                 </tr>
             </table>
@@ -118,7 +215,7 @@
                 <td>
                     <div style="padding-left: 110px; margin-top: 10px; margin-bottom: 5px;">
 
-                        <input type="submit" name="btnSubmit" value="立即开始您的作者生涯" id="btnSubmit" class="btnGray" />
+                        <input type="submit" name="btnSubmit" th:value="#{author.start}" id="btnSubmit" class="btnGray" />
                     </div>
                 </td>
             </tr>
@@ -166,4 +263,3 @@
 </script>
 </body>
 </html>
-

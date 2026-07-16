@@ -783,7 +783,7 @@
     display: inline-block
 }
 
-/*目录页*/
+/* Trang mục lục */
 .book_info1 {
     text-align: center;
     padding: 10px 0 15px
@@ -987,7 +987,7 @@
 }
 
 .comment_list .li_0 {
-    font-family: "宋体"
+    font-family: SimSun
 }
 
 .comment_list .li_0 strong {

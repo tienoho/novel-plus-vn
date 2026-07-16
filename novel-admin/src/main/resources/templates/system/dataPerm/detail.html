@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <meta charset="utf-8">
 <head th:include="include :: header"></head>
 <body class="gray-bg">
@@ -12,7 +12,7 @@
                 <input id="id" name="id" th:value="${dataPerm.id}"
                        type="hidden">
                                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">权限名称：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.dataPerm.name}+'：'">Tên quyền dữ liệu:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${dataPerm.name}">
@@ -22,7 +22,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">数据表名称：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.dataPerm.table}+'：'">Tên bảng dữ liệu:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${dataPerm.tableName}">
@@ -32,7 +32,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">所属模块：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.dataPerm.module}+'：'">Phân hệ:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${dataPerm.moduleName}">
@@ -42,7 +42,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">用户权限控制属性名：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.dataPerm.userAttribute}+'：'">Thuộc tính người dùng dùng để kiểm soát quyền:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${dataPerm.crlAttrName}">
@@ -52,7 +52,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">数据表权限控制列名：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.dataPerm.tableColumn}+'：'">Cột dữ liệu dùng để kiểm soát quyền:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${dataPerm.crlColumnName}">
@@ -62,7 +62,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">权限code：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.dataPerm.code}+'：'">Mã quyền:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${dataPerm.permCode}">
@@ -72,7 +72,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">排序：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.dataPerm.sort}+'：'">Thứ tự:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${dataPerm.orderNum}">
@@ -82,7 +82,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">创建时间：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.audit.createdAt}+'：'">Thời gian tạo:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${dataPerm.gmtCreate}">
@@ -92,7 +92,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">修改时间：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.dataPerm.modifiedAt}+'：'">Thời gian sửa:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${dataPerm.gmtModified}">

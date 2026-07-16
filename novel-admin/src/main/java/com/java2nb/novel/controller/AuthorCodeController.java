@@ -23,7 +23,7 @@ import com.java2nb.common.utils.Query;
 import com.java2nb.common.utils.R;
 
 /**
- * 作家邀请码表
+ * Bảng mã mời tác giả
  *
  * @author xiongxy
  * @email 1179705413@qq.com
@@ -42,12 +42,12 @@ public class AuthorCodeController {
         return "novel/authorCode/authorCode";
     }
 
-    @ApiOperation(value = "获取作家邀请码表列表", notes = "获取作家邀请码表列表")
+    @ApiOperation(value = "Lấy danh sách bảng mã mời tác giả", notes = "Lấy danh sách bảng mã mời tác giả")
     @ResponseBody
     @GetMapping("/list")
     @RequiresPermissions("novel:authorCode:authorCode")
     public R list(@RequestParam Map<String, Object> params) {
-        //查询列表数据
+        // Truy vấn dữ liệu danh sách
         Query query = new Query(params);
         List<AuthorCodeDO> authorCodeList = authorCodeService.list(query);
         int total = authorCodeService.count(query);
@@ -55,14 +55,14 @@ public class AuthorCodeController {
         return R.ok().put("data", pageBean);
     }
 
-    @ApiOperation(value = "新增作家邀请码表页面", notes = "新增作家邀请码表页面")
+    @ApiOperation(value = "Trang thêm bảng mã mời tác giả", notes = "Trang thêm bảng mã mời tác giả")
     @GetMapping("/add")
     @RequiresPermissions("novel:authorCode:add")
     String add() {
         return "novel/authorCode/add";
     }
 
-    @ApiOperation(value = "修改作家邀请码表页面", notes = "修改作家邀请码表页面")
+    @ApiOperation(value = "Trang sửa bảng mã mời tác giả", notes = "Trang sửa bảng mã mời tác giả")
     @GetMapping("/edit/{id}")
     @RequiresPermissions("novel:authorCode:edit")
     String edit(@PathVariable("id") Long id, Model model) {
@@ -71,7 +71,7 @@ public class AuthorCodeController {
         return "novel/authorCode/edit";
     }
 
-    @ApiOperation(value = "查看作家邀请码表页面", notes = "查看作家邀请码表页面")
+    @ApiOperation(value = "Trang chi tiết bảng mã mời tác giả", notes = "Trang chi tiết bảng mã mời tác giả")
     @GetMapping("/detail/{id}")
     @RequiresPermissions("novel:authorCode:detail")
     String detail(@PathVariable("id") Long id, Model model) {
@@ -81,9 +81,9 @@ public class AuthorCodeController {
     }
 
     /**
-     * 保存
+     * Lưu
      */
-    @ApiOperation(value = "新增作家邀请码表", notes = "新增作家邀请码表")
+    @ApiOperation(value = "Thêm bảng mã mời tác giả", notes = "Thêm bảng mã mời tác giả")
     @ResponseBody
     @PostMapping("/save")
     @RequiresPermissions("novel:authorCode:add")
@@ -95,9 +95,9 @@ public class AuthorCodeController {
     }
 
     /**
-     * 修改
+     * Sửa
      */
-    @ApiOperation(value = "修改作家邀请码表", notes = "修改作家邀请码表")
+    @ApiOperation(value = "Sửa bảng mã mời tác giả", notes = "Sửa bảng mã mời tác giả")
     @ResponseBody
     @RequestMapping("/update")
     @RequiresPermissions("novel:authorCode:edit")
@@ -107,9 +107,9 @@ public class AuthorCodeController {
     }
 
     /**
-     * 删除
+     * Xóa
      */
-    @ApiOperation(value = "删除作家邀请码表", notes = "删除作家邀请码表")
+    @ApiOperation(value = "Xóa bảng mã mời tác giả", notes = "Xóa bảng mã mời tác giả")
     @PostMapping("/remove")
     @ResponseBody
     @RequiresPermissions("novel:authorCode:remove")
@@ -121,9 +121,9 @@ public class AuthorCodeController {
     }
 
     /**
-     * 删除
+     * Xóa
      */
-    @ApiOperation(value = "批量删除作家邀请码表", notes = "批量删除作家邀请码表")
+    @ApiOperation(value = "Xóa hàng loạt bảng mã mời tác giả", notes = "Xóa hàng loạt bảng mã mời tác giả")
     @PostMapping("/batchRemove")
     @ResponseBody
     @RequiresPermissions("novel:authorCode:batchRemove")

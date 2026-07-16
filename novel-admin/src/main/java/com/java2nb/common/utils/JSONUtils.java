@@ -9,7 +9,7 @@ import java.util.Map;
 public class JSONUtils {
 
     /**
-     * Bean对象转JSON
+     * Chuyển đối tượng Bean thành JSON
      *
      * @param object
      * @param dataFormatString
@@ -27,7 +27,7 @@ public class JSONUtils {
     }
 
     /**
-     * Bean对象转JSON
+     * Chuyển đối tượng Bean thành JSON
      *
      * @param object
      * @return
@@ -41,7 +41,7 @@ public class JSONUtils {
     }
 
     /**
-     * String转JSON字符串
+     * Chuyển String thành chuỗi JSON
      *
      * @param key
      * @param value
@@ -57,7 +57,7 @@ public class JSONUtils {
     }
 
     /**
-     * 将json字符串转换成对象
+     * Chuyển chuỗi JSON thành đối tượng
      *
      * @param json
      * @param clazz
@@ -71,7 +71,7 @@ public class JSONUtils {
     }
 
     /**
-     * json字符串转map
+     * Chuyển chuỗi JSON thành Map
      *
      * @param json
      * @return

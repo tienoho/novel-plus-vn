@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 首页小说设置表
+ * Bảng cấu hình tác phẩm trang chủ
  * 
  * @author xiongxy
  * @email 1179705413@qq.com

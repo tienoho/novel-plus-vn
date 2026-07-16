@@ -2,6 +2,7 @@ package com.java2nb.novel.core.crawl;
 
 import com.java2nb.novel.core.utils.RandomBookInfoUtil;
 import com.java2nb.novel.core.utils.StringUtil;
+import com.java2nb.novel.core.i18n.Messages;
 import com.java2nb.novel.entity.Book;
 import com.java2nb.novel.entity.BookContent;
 import com.java2nb.novel.entity.BookIndex;
@@ -22,7 +23,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * 爬虫解析器
+ * Bộ phân tích dữ liệu thu thập
  *
  * @author Administrator
  */
@@ -37,32 +38,34 @@ public class CrawlParser {
 
     private final StringRedisTemplate stringRedisTemplate;
 
+    private final Messages messages;
+
     /**
-     * 爬虫源采集章节数量缓存key
+     * Khóa bộ nhớ đệm số chương đã thu thập theo nguồn
      */
     private static final String CRAWL_SOURCE_CHAPTER_COUNT_CACHE_KEY = "crawlSource:chapterCount:";
 
     /**
-     * 爬虫任务进度
+     * Tiến độ tác vụ thu thập
      */
     private final Map<Long, Integer> crawlTaskProgress = new HashMap<>();
 
     /**
-     * 获取爬虫任务进度
+     * Lấy tiến độ tác vụ thu thập
      */
     public Integer getCrawlTaskProgress(Long taskId) {
         return crawlTaskProgress.get(taskId);
     }
 
     /**
-     * 移除爬虫任务进度
+     * Xóa tiến độ tác vụ thu thập
      */
     public void removeCrawlTaskProgress(Long taskId) {
         crawlTaskProgress.remove(taskId);
     }
 
     /**
-     * 获取爬虫源采集的章节数量
+     * Lấy số chương đã thu thập theo nguồn
      */
     public Long getCrawlSourceChapterCount(Integer sourceId) {
         return Optional.ofNullable(
@@ -86,14 +89,14 @@ public class CrawlParser {
             boolean isFindBookName = bookNameMatch.find();
             if (isFindBookName) {
                 String bookName = bookNameMatch.group(1);
-                //设置小说名
+                //Gán tên truyện
                 book.setBookName(bookName);
                 Pattern authorNamePatten = PatternFactory.getPattern(ruleBean.getAuthorNamePatten());
                 Matcher authorNameMatch = authorNamePatten.matcher(bookDetailHtml);
                 boolean isFindAuthorName = authorNameMatch.find();
                 if (isFindAuthorName) {
                     String authorName = authorNameMatch.group(1);
-                    //设置作者名
+                    //Gán tên tác giả
                     book.setAuthorName(authorName);
                     if (StringUtils.isNotBlank(ruleBean.getPicUrlPatten())) {
                         Pattern picUrlPatten = PatternFactory.getPattern(ruleBean.getPicUrlPatten());
@@ -104,7 +107,7 @@ public class CrawlParser {
                             if (StringUtils.isNotBlank(picUrl) && StringUtils.isNotBlank(ruleBean.getPicUrlPrefix())) {
                                 picUrl = ruleBean.getPicUrlPrefix() + picUrl;
                             }
-                            //设置封面图片路径
+                            //Gán đường dẫn ảnh bìa
                             book.setPicUrl(picUrl);
                         }
                     }
@@ -114,7 +117,7 @@ public class CrawlParser {
                         boolean isFindScore = scoreMatch.find();
                         if (isFindScore) {
                             String score = scoreMatch.group(1);
-                            //设置评分
+                            //Gán điểm số
                             book.setScore(Float.parseFloat(score));
                         }
                     }
@@ -124,7 +127,7 @@ public class CrawlParser {
                         boolean isFindVisitCount = visitCountMatch.find();
                         if (isFindVisitCount) {
                             String visitCount = visitCountMatch.group(1);
-                            //设置访问次数
+                            //Gán lượt xem
                             book.setVisitCount(Long.parseLong(visitCount));
                         }
                     }
@@ -132,13 +135,13 @@ public class CrawlParser {
                     String desc = bookDetailHtml.substring(
                         bookDetailHtml.indexOf(ruleBean.getDescStart()) + ruleBean.getDescStart().length());
                     desc = desc.substring(0, desc.indexOf(ruleBean.getDescEnd()));
-                    //过滤掉简介中的特殊标签
+                    //Loại bỏ thẻ đặc biệt khỏi phần giới thiệu
                     desc = desc.replaceAll("<a[^<]+</a>", "")
                         .replaceAll("<font[^<]+</font>", "")
                         .replaceAll("<p>\\s*</p>", "")
                         .replaceAll("<p>", "")
                         .replaceAll("</p>", "<br/>");
-                    // 小说简介过滤
+                    // Lọc phần giới thiệu truyện
                     String filterDesc = ruleBean.getFilterDesc();
                     if (StringUtils.isNotBlank(filterDesc)) {
                         String[] filterRules = filterDesc.replace("\r\n", "\n").split("\n");
@@ -148,13 +151,13 @@ public class CrawlParser {
                             }
                         }
                     }
-                    // 去除小说简介前后空格
+                    // Xóa khoảng trắng đầu và cuối phần giới thiệu
                     desc = desc.trim();
-                    // 去除小说简介末尾冗余的小说名
+                    // Xóa tên truyện dư thừa ở cuối phần giới thiệu
                     if (desc.endsWith(bookName)) {
                         desc = desc.substring(0, desc.length() - bookName.length());
                     }
-                    //设置书籍简介
+                    //Gán phần giới thiệu truyện
                     book.setBookDesc(desc);
                     if (StringUtils.isNotBlank(ruleBean.getStatusPatten())) {
                         Pattern bookStatusPatten = PatternFactory.getPattern(ruleBean.getStatusPatten());
@@ -163,7 +166,7 @@ public class CrawlParser {
                         if (isFindBookStatus) {
                             String bookStatus = bookStatusMatch.group(1);
                             if (ruleBean.getBookStatusRule().get(bookStatus) != null) {
-                                //设置更新状态
+                                //Gán trạng thái cập nhật
                                 book.setBookStatus(ruleBean.getBookStatusRule().get(bookStatus));
                             }
                         }
@@ -176,12 +179,12 @@ public class CrawlParser {
                         boolean isFindUpdateTime = updateTimeMatch.find();
                         if (isFindUpdateTime) {
                             String updateTime = updateTimeMatch.group(1);
-                            //设置更新时间
+                            //Gán thời gian cập nhật
                             try {
                                 book.setLastIndexUpdateTime(
                                     new SimpleDateFormat(ruleBean.getUpadateTimeFormatPatten()).parse(updateTime));
                             } catch (ParseException e) {
-                                log.error("解析最新章节更新时间出错", e);
+                                log.error(messages.get("crawl.log.updateTimeParseFailed"), e);
                             }
 
                         }
@@ -189,13 +192,13 @@ public class CrawlParser {
 
                 }
                 if (book.getVisitCount() == null && book.getScore() != null) {
-                    //随机根据评分生成访问次数
+                    //Tạo ngẫu nhiên lượt xem dựa trên điểm số
                     book.setVisitCount(RandomBookInfoUtil.getVisitCountByScore(book.getScore()));
                 } else if (book.getVisitCount() != null && book.getScore() == null) {
-                    //随机根据访问次数生成评分
+                    //Tạo ngẫu nhiên điểm số dựa trên lượt xem
                     book.setScore(RandomBookInfoUtil.getScoreByVisitCount(book.getVisitCount()));
                 } else if (book.getVisitCount() == null) {
-                    //都没有，设置成固定值
+                    //Nếu cả hai đều thiếu, dùng giá trị cố định
                     book.setVisitCount(Constants.VISIT_COUNT_DEFAULT);
                     book.setScore(6.5f);
                 }
@@ -209,7 +212,7 @@ public class CrawlParser {
         throws InterruptedException {
 
         if (task != null) {
-            // 开始采集
+            // Bắt đầu thu thập
             crawlTaskProgress.put(task.getId(), 0);
         }
 
@@ -217,7 +220,7 @@ public class CrawlParser {
 
         List<BookIndex> indexList = new ArrayList<>();
         List<BookContent> contentList = new ArrayList<>();
-        //读取目录
+        //Đọc mục lục
         String indexListUrl = ruleBean.getBookIndexUrl().replace("{bookId}", sourceBookId);
         String indexListHtml = crawlHttpClient.get(indexListUrl, ruleBean.getCharset());
 
@@ -237,7 +240,7 @@ public class CrawlParser {
 
             int indexNum = 0;
 
-            //总字数
+            //Tổng số chữ
             int totalWordCount = book.getWordCount() == null ? 0 : book.getWordCount();
 
             while (isFindIndex) {
@@ -252,14 +255,14 @@ public class CrawlParser {
                     String bookContentUrl = ruleBean.getBookContentUrl();
                     int calStart = bookContentUrl.indexOf("{cal_");
                     if (calStart != -1) {
-                        //内容页URL需要进行计算才能得到
+                        //URL trang nội dung cần được tính toán
                         String calStr = bookContentUrl.substring(calStart,
                             calStart + bookContentUrl.substring(calStart).indexOf("}"));
                         String[] calArr = calStr.split("_");
                         int calType = Integer.parseInt(calArr[1]);
                         if (calType == 1) {
                             ///{cal_1_1_3}_{bookId}/{indexId}.html
-                            //第一种计算规则，去除第x个参数的最后y个字母
+                            //Quy tắc tính thứ nhất: bỏ y ký tự cuối của tham số thứ x
                             int x = Integer.parseInt(calArr[2]);
                             int y = Integer.parseInt(calArr[3]);
                             String calResult;
@@ -282,13 +285,13 @@ public class CrawlParser {
                     String contentUrl = bookContentUrl.replace("{bookId}", sourceBookId)
                         .replace("{indexId}", sourceIndexId);
 
-                    //查询章节内容
+                    //Truy vấn nội dung chương
                     String contentHtml = crawlHttpClient.get(contentUrl, ruleBean.getCharset());
                     if (contentHtml != null && !contentHtml.contains("正在手打中")) {
                         String content = contentHtml.substring(
                             contentHtml.indexOf(ruleBean.getContentStart()) + ruleBean.getContentStart().length());
                         content = content.substring(0, content.indexOf(ruleBean.getContentEnd()));
-                        // 小说内容过滤
+                        // Lọc nội dung truyện
                         String filterContent = ruleBean.getFilterContent();
                         if (StringUtils.isNotBlank(filterContent)) {
                             String[] filterRules = filterContent.replace("\r\n", "\n").split("\n");
@@ -298,9 +301,9 @@ public class CrawlParser {
                                 }
                             }
                         }
-                        // 去除小说内容末尾的所有换行
+                        // Xóa mọi ký tự xuống dòng ở cuối nội dung
                         content = removeTrailingBrTags(content);
-                        //插入章节目录和章节内容
+                        //Thêm mục lục và nội dung chương
                         BookIndex bookIndex = new BookIndex();
                         bookIndex.setIndexName(indexName);
                         bookIndex.setIndexNum(indexNum);
@@ -313,15 +316,15 @@ public class CrawlParser {
                         contentList.add(bookContent);
 
                         if (hasIndex != null) {
-                            //章节更新
+                            //Cập nhật chương
                             bookIndex.setId(hasIndex.getId());
                             bookContent.setIndexId(hasIndex.getId());
 
-                            //计算总字数
+                            // Tính tổng số chữ.
                             totalWordCount = (totalWordCount + wordCount - hasIndex.getWordCount());
                         } else {
-                            //章节插入
-                            //设置目录和章节内容
+                            //Thêm chương
+                            //Gán mục lục và nội dung chương
                             Long indexId = ID_WORKER.nextId();
                             bookIndex.setId(indexId);
                             bookIndex.setBookId(book.getId());
@@ -330,17 +333,17 @@ public class CrawlParser {
 
                             bookContent.setIndexId(indexId);
 
-                            //计算总字数
+                            // Tính tổng số chữ.
                             totalWordCount += wordCount;
                         }
                         bookIndex.setUpdateTime(currentDate);
 
                         if (task != null) {
-                            // 更新单本任务采集进度
+                            // Cập nhật tiến độ tác vụ thu thập từng truyện
                             crawlTaskProgress.put(task.getId(), indexList.size());
                         }
 
-                        // 更新爬虫源采集章节数量
+                        // Cập nhật số chương đã thu thập theo nguồn
                         stringRedisTemplate.opsForValue().increment(CRAWL_SOURCE_CHAPTER_COUNT_CACHE_KEY + sourceId);
 
                     }
@@ -352,8 +355,8 @@ public class CrawlParser {
             }
 
             if (!indexList.isEmpty()) {
-                //如果有爬到最新章节，则设置小说主表的最新章节信息
-                //获取爬取到的最新章节
+                //Nếu thu thập được chương mới nhất, cập nhật thông tin chương mới nhất của truyện
+                //Lấy chương mới nhất vừa thu thập
                 BookIndex lastIndex = indexList.getLast();
                 book.setLastIndexId(lastIndex.getId());
                 book.setLastIndexName(lastIndex.getIndexName());
@@ -385,7 +388,7 @@ public class CrawlParser {
     }
 
     /**
-     * 删除字符串末尾的所有 <br> 类似标签（允许各种空格）
+     * Xóa mọi thẻ dạng <br> ở cuối chuỗi, cho phép nhiều kiểu khoảng trắng
      */
     public static String removeTrailingBrTags(String str) {
         return str.replaceAll("(?i)(?:\\s*<\\s*br\\s*/?\\s*>)++(?:\\s|\\u3000)*$", "");

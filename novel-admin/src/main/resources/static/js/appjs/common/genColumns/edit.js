@@ -1,7 +1,7 @@
 var columnData = JSON.parse($("#genColumns").val());
 var columnJsData = [[]];
 var row_template = ['text','text','text','text','text','text','text','text','text'];
-var headerCols = ['列名', '列类型', '映射java类型', '列注释', '列标签名', '页面显示类型', '字典类型', '是否必填', '列排序（升序）'];
+var headerCols = [adminMessage('columnName', 'Tên cột'), adminMessage('columnType', 'Kiểu cột'), adminMessage('columnJavaType', 'Kiểu Java ánh xạ'), adminMessage('columnComment', 'Chú thích cột'), adminMessage('columnLabel', 'Nhãn cột'), adminMessage('columnDisplayType', 'Kiểu hiển thị'), adminMessage('columnDictType', 'Loại từ điển'), adminMessage('columnRequired', 'Bắt buộc'), adminMessage('columnSort', 'Thứ tự cột')];
 for (var i = 0; i < columnData.length; i++) {
     columnJsData[i] = [columnData[i].columnName, columnData[i].columnType, columnData[i].javaType, columnData[i].columnComment,
         columnData[i].columnLabel, columnData[i].pageType, columnData[i].dictType, columnData[i].isRequired, columnData[i].columnSort];

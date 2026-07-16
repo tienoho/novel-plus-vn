@@ -10,7 +10,7 @@ import java.util.Map;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * 菜单管理
+ * Quản lý menu
  * @author xiongxy
  * @email 1179705413@qq.com
  * @date 2019-10-03 09:45:09

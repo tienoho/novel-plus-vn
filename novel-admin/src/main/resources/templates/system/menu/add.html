@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <meta charset="utf-8">
 <head th:include="include :: header"></head>
 <body class="gray-bg">
@@ -12,62 +12,62 @@
 							<input id="parentId" name="parentId" type="hidden"
 								th:value="${pId}">
 							<div class="form-group">
-								<label class="col-sm-3 control-label">上级菜单：</label>
+								<label class="col-sm-3 control-label" th:text="#{admin.menu.parent}+'：'">Menu cấp trên:</label>
 								<div class="col-sm-8">
 									<input id="" name="" class="form-control" type="text"
 										th:value="${pName}" readonly>
 								</div>
 							</div>
 							<div class="form-group">
-								<label class="col-sm-3 control-label">菜单类型：</label>
+								<label class="col-sm-3 control-label" th:text="#{admin.menu.type}+'：'">Loại menu:</label>
 								<div class="col-sm-8">
 									<label class="radio-inline"> <input type="radio"
-										name="type" value="0" /> 目录
+										name="type" value="0" /> <span th:text="#{admin.menu.directory}">Thư mục</span>
 									</label> <label class="radio-inline"> <input type="radio"
-										name="type" value="1" /> 菜单
+										name="type" value="1" /> <span th:text="#{admin.menu.item}">Menu</span>
 									</label> <label class="radio-inline"> <input type="radio"
-										name="type" value="2" /> 按钮
+										name="type" value="2" /> <span th:text="#{admin.menu.button}">Nút</span>
 									</label>
 								</div>
 							</div>
 							<div class="form-group">
-								<label class="col-sm-3 control-label">菜单名称：</label>
+								<label class="col-sm-3 control-label" th:text="#{admin.menu.name}+'：'">Tên menu:</label>
 								<div class="col-sm-8">
 									<input id="name" name="name" class="form-control" type="text">
 								</div>
 							</div>
 							<div class="form-group">
-								<label class="col-sm-3 control-label">链接地址：</label>
+								<label class="col-sm-3 control-label" th:text="#{admin.menu.url}+'：'">Địa chỉ:</label>
 								<div class="col-sm-8">
 									<input id="url" name="url" class="form-control" type="text">
 								</div>
 							</div>
 							<div class="form-group">
-								<label class="col-sm-3 control-label">权限标识：</label>
+								<label class="col-sm-3 control-label" th:text="#{admin.menu.permission}+'：'">Mã quyền:</label>
 								<div class="col-sm-8">
 									<input id="perms" name="perms" class="form-control" type="text">
 								</div>
 							</div>
 							<div class="form-group">
-								<label class="col-sm-3 control-label">排序号：</label>
+								<label class="col-sm-3 control-label" th:text="#{admin.menu.sort}+'：'">Thứ tự:</label>
 								<div class="col-sm-8">
 									<input id="orderNum" name="orderNum" class="form-control"
 										type="text">
 								</div>
 							</div>
 							<div class="form-group">
-								<label class="col-sm-3 control-label">图标：</label>
+								<label class="col-sm-3 control-label" th:text="#{admin.menu.icon}+'：'">Biểu tượng:</label>
 								<div class="col-sm-6">
 									<input id="icon" name="icon" class="form-control" type="text"
-										placeholder="例如：fa fa-circle-o">
+										th:placeholder="#{admin.menu.icon.placeholder}" placeholder="Ví dụ: fa fa-circle-o">
 								</div>
-								<input id="ico-btn" class="btn btn-warning" type="button" value="选择图标">
+								<input id="ico-btn" class="btn btn-warning" type="button" th:value="#{admin.menu.icon.select}" value="Chọn biểu tượng">
 							</div>
 
 
 							<div class="form-group">
 								<div class="col-sm-8 col-sm-offset-3">
-									<button type="submit" class="btn btn-primary">提交</button>
+									<button type="submit" class="btn btn-primary" th:text="#{common.submit}">Gửi</button>
 								</div>
 							</div>
 						</form>

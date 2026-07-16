@@ -35,12 +35,13 @@ import com.java2nb.novel.service.BookService;
 import com.java2nb.common.utils.PageBean;
 import com.java2nb.common.utils.Query;
 import com.java2nb.common.utils.R;
+import com.java2nb.common.utils.Messages;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 /**
- * 小说表
+ * Bảng tác phẩm
  *
  * @author xiongxy
  * @email 1179705413@qq.com
@@ -51,6 +52,8 @@ import javax.servlet.http.HttpSession;
 @Controller
 @RequestMapping("/novel/book")
 public class BookController {
+    @Autowired
+    Messages messages;
 
     @Autowired
     private BookService bookService;
@@ -81,12 +84,12 @@ public class BookController {
         return "novel/book/book";
     }
 
-    @ApiOperation(value = "获取小说表列表", notes = "获取小说表列表")
+    @ApiOperation(value = "Lấy danh sách bảng tác phẩm", notes = "Lấy danh sách bảng tác phẩm")
     @ResponseBody
     @GetMapping("/list")
     @RequiresPermissions("novel:book:book")
     public R list(@RequestParam Map<String, Object> params) {
-        //查询列表数据
+        // Truy vấn dữ liệu danh sách
         Query query = new Query(params);
         List<BookDO> bookList = bookService.list(query);
         int total = bookService.count(query);
@@ -94,14 +97,14 @@ public class BookController {
         return R.ok().put("data", pageBean);
     }
 
-    @ApiOperation(value = "新增小说表页面", notes = "新增小说表页面")
+    @ApiOperation(value = "Trang thêm bảng tác phẩm", notes = "Trang thêm bảng tác phẩm")
     @GetMapping("/add")
     @RequiresPermissions("novel:book:add")
     String add() {
         return "novel/book/add";
     }
 
-    @ApiOperation(value = "修改小说表页面", notes = "修改小说表页面")
+    @ApiOperation(value = "Trang sửa bảng tác phẩm", notes = "Trang sửa bảng tác phẩm")
     @GetMapping("/edit/{id}")
     @RequiresPermissions("novel:book:edit")
     String edit(@PathVariable("id") Long id, Model model) {
@@ -110,7 +113,7 @@ public class BookController {
         return "novel/book/edit";
     }
 
-    @ApiOperation(value = "查看小说表页面", notes = "查看小说表页面")
+    @ApiOperation(value = "Trang chi tiết bảng tác phẩm", notes = "Trang chi tiết bảng tác phẩm")
     @GetMapping("/detail/{id}")
     @RequiresPermissions("novel:book:detail")
     String detail(@PathVariable("id") Long id, Model model) {
@@ -120,9 +123,9 @@ public class BookController {
     }
 
     /**
-     * 保存
+     * Lưu
      */
-    @ApiOperation(value = "新增小说表", notes = "新增小说表")
+    @ApiOperation(value = "Thêm bảng tác phẩm", notes = "Thêm bảng tác phẩm")
     @ResponseBody
     @PostMapping("/save")
     @RequiresPermissions("novel:book:add")
@@ -134,9 +137,9 @@ public class BookController {
     }
 
     /**
-     * 修改
+     * Sửa
      */
-    @ApiOperation(value = "修改小说表", notes = "修改小说表")
+    @ApiOperation(value = "Sửa bảng tác phẩm", notes = "Sửa bảng tác phẩm")
     @ResponseBody
     @RequestMapping("/update")
     @RequiresPermissions("novel:book:edit")
@@ -146,9 +149,9 @@ public class BookController {
     }
 
     /**
-     * 删除
+     * Xóa
      */
-    @ApiOperation(value = "删除小说表", notes = "删除小说表")
+    @ApiOperation(value = "Xóa bảng tác phẩm", notes = "Xóa bảng tác phẩm")
     @PostMapping("/remove")
     @ResponseBody
     @RequiresPermissions("novel:book:remove")
@@ -160,9 +163,9 @@ public class BookController {
     }
 
     /**
-     * 删除
+     * Xóa
      */
-    @ApiOperation(value = "批量删除小说表", notes = "批量删除小说表")
+    @ApiOperation(value = "Xóa hàng loạt bảng tác phẩm", notes = "Xóa hàng loạt bảng tác phẩm")
     @PostMapping("/batchRemove")
     @ResponseBody
     @RequiresPermissions("novel:book:batchRemove")
@@ -172,7 +175,7 @@ public class BookController {
     }
 
     /**
-     * 小说下载
+     * Tải tác phẩm
      */
     @RequestMapping(value = "/download")
     public void download(@RequestParam("bookId") Long bookId, @RequestParam("bookName") String bookName,
@@ -184,13 +187,13 @@ public class BookController {
                 .setIfAbsent(Constant.BOOK_IS_DOWNLOADING_KEY + bookId, "1", 10, TimeUnit.MINUTES);
             if (Boolean.FALSE.equals(success)) {
                 resp.setContentType("text/html;charset=UTF-8");
-                out.write("该小说正在下载中，请稍后重试！".getBytes(StandardCharsets.UTF_8));
+                out.write(messages.get("book.download.inProgress").getBytes(StandardCharsets.UTF_8));
                 out.close();
                 return;
             }
-            //设置响应头，对文件进行url编码
+            // Đặt header phản hồi và mã hóa URL cho tệp
             bookName = URLEncoder.encode(bookName, StandardCharsets.UTF_8);
-            //解决手机端不能下载附件的问题
+            // Khắc phục việc thiết bị di động không tải được tệp đính kèm
             resp.setContentType("application/octet-stream");
             resp.setHeader("Content-Disposition", "attachment;filename=" + bookName + ".txt");
 
@@ -205,7 +208,7 @@ public class BookController {
                 List<List<BookIndexDO>> bookIndexSmallList = bookIndexBigList.stream().collect(
                     Collectors.groupingBy(item -> bookIndexBigList.indexOf(item) / 100)).values().stream().toList();
                 for (List<BookIndexDO> bookIndexList : bookIndexSmallList) {
-                    // 获取集合中所有的ID
+                    // Lấy toàn bộ ID trong tập hợp
                     List<Long> bookIndexIds = bookIndexList.stream().map(BookIndexDO::getId).toList();
                     List<BookContentDO> bookContentList = bookContentService.listByIndexIds(bookIndexIds);
                     Map<Long, String> bookContentMap = bookContentList.stream()

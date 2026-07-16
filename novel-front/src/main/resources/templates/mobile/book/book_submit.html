@@ -1,11 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
-<!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>小说提交</title>
+    <title th:text="#{book.submit}">Gửi truyện</title>
 
     <div th:include="common/css :: css"></div>
 
@@ -22,7 +20,7 @@
         <a href="javascript:history.go(-1)">
             <i style="font-size: 20px;color: #92B8B1;" class="layui-icon">&#xe65c;</i></a>
     </div>
-    <b class="layui-icon">单本小说提交</b>
+    <b class="layui-icon" th:text="#{book.submit.single}">Gửi một truyện</b>
     <div style="float: right;margin-right: 10px"><a href="/">
         <i style="font-size: 20px;color: #92B8B1;" class="layui-icon">&#xe68e;</i>
     </a>
@@ -31,27 +29,27 @@
 <div style="height: 800px;padding: 20px;border: 1px solid #eee;">
 <form  class="layui-form" action="">
     <div class="layui-form-item">
-        <label class="layui-form-label">详情页Url:</label>
+        <label class="layui-form-label" th:text="#{book.sourceUrl}+': '">URL trang chi tiết nguồn:</label>
         <div class="layui-col-xs7 layui-col-sm6 layui-col-md3 layui-col-lg1" >
-            <input type="text" id="bookUrl" name="bookUrl" required  lay-verify="required" placeholder="请输入源站小说详情页Url" autocomplete="off" class="layui-input">
+            <input type="text" id="bookUrl" name="bookUrl" required lay-verify="required" th:placeholder="#{book.sourceUrl.placeholder}" autocomplete="off" class="layui-input">
         </div>
     </div>
     <div class="layui-form-item">
-        <label class="layui-form-label">小说名:</label>
+        <label class="layui-form-label" th:text="#{book.name}+': '">Tên truyện:</label>
         <div class="layui-col-xs7 layui-col-sm6 layui-col-md3 layui-col-lg1" >
-            <input type="text" id="bookName" name="bookName" required  lay-verify="required" placeholder="请输入小说名" autocomplete="off" class="layui-input">
+            <input type="text" id="bookName" name="bookName" required lay-verify="required" th:placeholder="#{book.name.placeholder}" autocomplete="off" class="layui-input">
         </div>
     </div>
     <div class="layui-form-item">
-        <label class="layui-form-label">小说评分:</label>
+        <label class="layui-form-label" th:text="#{book.score}+': '">Điểm truyện:</label>
         <div class="layui-col-xs7 layui-col-sm6 layui-col-md3 layui-col-lg1">
-            <input type="number" id="score" name="score" required  lay-verify="required" placeholder="请输入小说评分" autocomplete="off" class="layui-input">
+            <input type="number" id="score" name="score" required lay-verify="required" th:placeholder="#{book.score.placeholder}" autocomplete="off" class="layui-input">
         </div>
     </div>
     <div class="layui-form-item">
         <div class="layui-input-block">
-            <button class="layui-btn" lay-submit lay-filter="formDemo">提交</button>
-            <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+            <button class="layui-btn" lay-submit lay-filter="formDemo" th:text="#{common.submit}">Gửi</button>
+            <button type="reset" class="layui-btn layui-btn-primary" th:text="#{common.reset}">Đặt lại</button>
         </div>
     </div>
 </form>
@@ -65,18 +63,18 @@
 <div th:replace="common/js :: js"></div>
 
 
-<script>
-    //Demo
+<script th:inline="javascript">
+    // Xử lý form gửi truyện.
     layui.use('form', function(){
         var form = layui.form;
 
-        //监听提交
+        // Gửi dữ liệu mà không thay đổi tên field API.
         form.on('submit(formDemo)', function(){
             $.post("/book/submit",{"bookUrl":$("#bookUrl").val(),"bookName":$("#bookName").val(),"score":$("#score").val()},function (data) {
                 if(data.code == 1 ){
-                    layer.alert("提交成功，任务排队中，请过一段时间后再搜索查看");
+                    layer.alert(/*[[#{book.submit.success}]]*/ 'Gửi thành công. Tác vụ đang chờ xử lý; vui lòng tìm lại sau.');
                 }else{
-                    layer.alert("提交失败");
+                    layer.alert(/*[[#{book.submit.failed}]]*/ 'Không thể gửi truyện.');
                 }
             });
             return false;

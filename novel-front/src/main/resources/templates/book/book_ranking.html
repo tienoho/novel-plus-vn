@@ -1,11 +1,11 @@
 
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="vi">
 <head th:replace="common/header :: common_head(~{::title},~{::meta},~{::link},~{})">
-    <title th:text="'小说排行榜_'+${application.website.name}"></title>
-    <meta name="keywords" content="小说排行榜,热门小说榜,小说排行榜完结版,完结小说排行榜,完本小说排行榜,最新小说排行榜,网络小说排行榜,排行榜,点击榜,新书榜,推荐榜" />
-    <meta name="description" th:content="'最新热门网络小说排行榜,包含各类热门小说榜,小说排行榜上都是受用户喜爱的小说作品,精彩尽在'+${application.website.name}+'。'" />
+    <title th:text="#{book.ranking}+'_'+${application.website.name}"></title>
+    <meta name="keywords" th:content="#{book.ranking}+','+#{book.ranking.views}+','+#{book.ranking.new}+','+#{book.ranking.updates}" />
+    <meta name="description" th:content="#{book.seo.list.description(${application.website.name})}" />
     <link rel="stylesheet" href="/css/main.css" />
     <link rel="stylesheet" href="/css/book.css" />
 </head>
@@ -17,12 +17,12 @@
     <div class="channelRankingContent cf">
         <div class="wrap_left fl">
             <div class="wrap_bg">
-                <!--榜单详情 start-->
+                <!-- Bắt đầu chi tiết bảng xếp hạng. -->
                 <div class="pad20">
 
                     <div class="book_tit">
                         <div class="fl">
-                            <h3 class="font26 mt5 mb5" id="rankName">点击榜</h3>
+                            <h3 class="font26 mt5 mb5" id="rankName" th:text="#{book.ranking.views}">Xếp hạng lượt xem</h3>
                         </div>
                         <a class="fr"></a>
                     </div>
@@ -30,12 +30,12 @@
                         <table cellpadding="0" cellspacing="0">
                             <thead>
                             <tr>
-                                <th class="rank">排名</th>
-                                <th class="style">类别</th>
-                                <th class="name">书名</th>
-                                <th class="chapter">最新章节</th>
-                                <th class="author">作者</th>
-                                <th class="word">字数</th>
+                                <th class="rank" th:text="#{book.rank}">Hạng</th>
+                                <th class="style" th:text="#{book.category}">Danh mục truyện</th>
+                                <th class="name" th:text="#{book.name}">Tên truyện</th>
+                                <th class="chapter" th:text="#{book.latest}">Chương mới nhất</th>
+                                <th class="author" th:text="#{book.author}">Tác giả</th>
+                                <th class="word" th:text="#{book.wordCount}">Số chữ</th>
                             </tr>
                             </thead>
                             <tbody id="bookRankList">
@@ -45,7 +45,7 @@
                         </table>
                     </div>
                 </div>
-                <!--榜单详情 end-->
+                <!-- Kết thúc chi tiết bảng xếp hạng. -->
 
             </div>
         </div>
@@ -53,14 +53,14 @@
         <div class="wrap_right fr">
             <div class="wrap_inner wrap_right_cont mb20">
                 <div class="title cf noborder">
-                    <h3 class="on">排行榜</h3>
+                    <h3 class="on" th:text="#{book.ranking}">Bảng xếp hạng truyện</h3>
                 </div>
                 <div class="rightList2">
                     <ul id="rankType">
-                        <li><a class="on" href="javascript:listRank(0)">点击榜</a></li>
-                        <li><a href="javascript:listRank(1)">新书榜</a></li>
-                        <li><a href="javascript:listRank(2)">更新榜</a></li>
-                        <li><a href="javascript:listRank(3)">评论榜</a></li>
+                        <li><a class="on" href="javascript:listRank(0)" th:text="#{book.ranking.views}">Xếp hạng lượt xem</a></li>
+                        <li><a href="javascript:listRank(1)" th:text="#{book.ranking.new}">Xếp hạng truyện mới</a></li>
+                        <li><a href="javascript:listRank(2)" th:text="#{book.ranking.updates}">Xếp hạng cập nhật</a></li>
+                        <li><a href="javascript:listRank(3)" th:text="#{book.ranking.comments}">Xếp hạng bình luận</a></li>
                     </ul>
                 </div>
             </div>
@@ -72,7 +72,13 @@
 </div>
 <div th:replace="common/js :: js"></div>
 
-<script type="text/javascript">
+<script type="text/javascript" th:inline="javascript">
+    const tenThousandUnitText = /*[[#{book.tenThousandUnit}]]*/ 'vạn';
+    const viewsRankText = /*[[#{book.ranking.views}]]*/ 'Xếp hạng lượt xem';
+    const newRankText = /*[[#{book.ranking.new}]]*/ 'Xếp hạng truyện mới';
+    const updatesRankText = /*[[#{book.ranking.updates}]]*/ 'Xếp hạng cập nhật';
+    const commentsRankText = /*[[#{book.ranking.comments}]]*/ 'Xếp hạng bình luận';
+    const networkErrorText = /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng';
     $("#rankType a").click(function () {
         $("#rankType .on").removeClass("on");
         $(this).addClass("on");
@@ -109,7 +115,7 @@
                             "                                <td class=\"chapter\"><a href=\"/book/"+book.id+".html\" >"+book.lastIndexName+"</a>\n" +
                             "                                </td>\n" +
                             "                                <td class=\"author\"><a href=\"javascript:void(0)\">"+book.authorName+"</a></td>\n" +
-                            "                                <td class=\"word\">"+(book.wordCount / 10000).toFixed(2)+"万</td>\n" +
+                            "                                <td class=\"word\">"+(book.wordCount / 10000).toFixed(2)+" " + tenThousandUnitText + "</td>\n" +
                             "                            </tr>");
                     }
                     $("#bookRankList").html(bookRankListHtml);
@@ -120,24 +126,24 @@
 
             },
             error: function () {
-                layer.alert('网络异常');
+                layer.alert(networkErrorText);
             }
         })
         switch (rankType) {
             case 0 : {
-                $("#rankName").html("点击榜");
+                $("#rankName").html(viewsRankText);
                 break;
             }
             case 1 : {
-                $("#rankName").html("新书榜");
+                $("#rankName").html(newRankText);
                 break;
             }
             case 2 : {
-                $("#rankName").html("更新榜");
+                $("#rankName").html(updatesRankText);
                 break;
             }
             case 3 : {
-                $("#rankName").html("评论榜");
+                $("#rankName").html(commentsRankText);
                 break;
             }
 

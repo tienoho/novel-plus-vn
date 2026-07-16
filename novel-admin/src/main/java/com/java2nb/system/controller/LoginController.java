@@ -36,9 +36,11 @@ public class LoginController extends BaseController {
     FileService fileService;
     @Autowired
     JnConfig jnConfig;
+    @Autowired
+    Messages messages;
 
 
-    @Log("请求访问主页")
+    @Log("Truy cập trang chủ")
     @GetMapping({"","/","/index"})
     String index(Model model) {
         List<Tree<MenuDO>> menus = menuService.listMenuTree(getUserId());
@@ -65,24 +67,24 @@ public class LoginController extends BaseController {
         return "login";
     }
 
-    @Log("登录")
+    @Log("Đăng nhập")
     @PostMapping("/login")
     @ResponseBody
     R ajaxLogin(String username, String password,String verify,HttpServletRequest request) {
 
         try {
-            //从session中获取随机数
+            // Lấy mã xác minh đã lưu trong phiên.
             String random = (String) request.getSession().getAttribute(RandomValidateCodeUtil.RANDOMCODEKEY);
             if (StringUtils.isBlank(verify)) {
-                return R.error("请输入验证码");
+                return R.error(messages.get("auth.captcha.required"));
             }
             if (random.equals(verify)) {
             } else {
-                return R.error("请输入正确的验证码");
+                return R.error(messages.get("auth.captcha.invalid"));
             }
         } catch (Exception e) {
-            logger.error("验证码校验失败", e);
-            return R.error("验证码校验失败");
+            logger.error("Không thể kiểm tra mã xác minh", e);
+            return R.error(messages.get("auth.captcha.failed"));
         }
         password = MD5Utils.encrypt(username, password);
         UsernamePasswordToken token = new UsernamePasswordToken(username, password);
@@ -91,7 +93,7 @@ public class LoginController extends BaseController {
             subject.login(token);
             return R.ok();
         } catch (AuthenticationException e) {
-            return R.error("用户或密码错误");
+            return R.error(messages.get("auth.login.failed"));
         }
     }
 
@@ -106,20 +108,18 @@ public class LoginController extends BaseController {
         return "main";
     }
 
-    /**
-     * 生成验证码
-     */
+    /** Tạo ảnh mã xác minh. */
     @GetMapping(value = "/getVerify")
     public void getVerify(HttpServletRequest request, HttpServletResponse response) {
         try {
-            response.setContentType("image/jpeg");//设置相应类型,告诉浏览器输出的内容为图片
-            response.setHeader("Pragma", "No-cache");//设置响应头信息，告诉浏览器不要缓存此内容
+            response.setContentType("image/jpeg"); // Trả về ảnh JPEG.
+            response.setHeader("Pragma", "No-cache"); // Không lưu ảnh mã xác minh vào bộ nhớ đệm.
             response.setHeader("Cache-Control", "no-cache");
             response.setDateHeader("Expire", 0);
             RandomValidateCodeUtil randomValidateCode = new RandomValidateCodeUtil();
-            randomValidateCode.getRandcode(request, response);//输出验证码图片方法
+            randomValidateCode.getRandcode(request, response);
         } catch (Exception e) {
-            logger.error("获取验证码失败>>>> ", e);
+            logger.error("Không thể tạo mã xác minh", e);
         }
     }
 

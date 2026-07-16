@@ -33,7 +33,7 @@ public class CrawlHttpClient {
         if (Objects.isNull(body) || body.length() < Constants.INVALID_HTML_LENGTH) {
             return processErrorHttpResult(url, charset);
         }
-        //成功获得html内容
+        //Đã lấy nội dung HTML thành công
         return body;
     }
 

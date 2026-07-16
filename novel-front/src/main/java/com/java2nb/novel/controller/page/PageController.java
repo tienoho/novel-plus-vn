@@ -53,10 +53,10 @@ public class PageController extends BaseController {
         HttpServletRequest request) {
 
         if (request.getRequestURI().startsWith("/author")) {
-            //访问作者专区
+            //Truy cập khu vực tác giả
             UserDetails user = getUserDetails(request);
             if (user == null) {
-                //未登录
+                //Chưa đăng nhập
                 return "redirect:/user/login.html?originUrl=" + request.getRequestURI();
             }
 
@@ -76,15 +76,15 @@ public class PageController extends BaseController {
     }
 
     /**
-     * 首页
+     * Trang chủ
      */
     @SneakyThrows
     @RequestMapping(path = {"/", "/index", "/index.html"})
     public String index(Model model) {
-        //加载小说首页小说基本信息线程
+        //Luồng tải thông tin cơ bản tác phẩm trên trang chủ
         CompletableFuture<Map<String, List<BookSettingVO>>> bookCompletableFuture = CompletableFuture.supplyAsync(
             bookService::listBookSettingVO, threadPoolExecutor);
-        //加载首页新闻线程
+        //Luồng tải tin tức trang chủ
         CompletableFuture<List<News>> newsCompletableFuture = CompletableFuture.supplyAsync(newsService::listIndexNews,
             threadPoolExecutor);
         model.addAttribute("bookMap", bookCompletableFuture.get());
@@ -93,7 +93,7 @@ public class PageController extends BaseController {
     }
 
     /**
-     * 登录页
+     * Trang đăng nhập
      */
     @RequestMapping("user/login.html")
     public String login() {
@@ -101,7 +101,7 @@ public class PageController extends BaseController {
     }
 
     /**
-     * 注册页
+     * Trang đăng ký
      */
     @RequestMapping("user/register.html")
     public String register() {
@@ -109,7 +109,7 @@ public class PageController extends BaseController {
     }
 
     /**
-     * 用户中心页
+     * Trang trung tâm người dùng
      */
     @RequestMapping("user/userinfo.html")
     public String userinfo() {
@@ -117,7 +117,7 @@ public class PageController extends BaseController {
     }
 
     /**
-     * 我的书架页
+     * Trang tủ sách của tôi
      */
     @RequestMapping("user/favorites.html")
     public String favorites() {
@@ -125,7 +125,7 @@ public class PageController extends BaseController {
     }
 
     /**
-     * 阅读历史页
+     * Trang lịch sử đọc
      */
     @RequestMapping("user/read_history.html")
     public String readHistory() {
@@ -133,7 +133,7 @@ public class PageController extends BaseController {
     }
 
     /**
-     * 充值页
+     * Trang nạp Xu
      */
     @RequestMapping("pay/index.html")
     public String pay() {
@@ -142,7 +142,7 @@ public class PageController extends BaseController {
 
 
     /**
-     * 作品页
+     * Trang tác phẩm
      */
     @RequestMapping("book/bookclass.html")
     public String bookClass() {
@@ -150,7 +150,7 @@ public class PageController extends BaseController {
     }
 
     /**
-     * 排行页
+     * Trang xếp hạng
      */
     @RequestMapping("book/book_ranking.html")
     public String bookRank() {
@@ -160,39 +160,39 @@ public class PageController extends BaseController {
 
 
     /**
-     * 详情页
+     * Trang chi tiết
      */
     @SneakyThrows
     @RequestMapping("/book/{bookId}.html")
     public String bookDetail(@PathVariable("bookId") Long bookId, Model model) {
-        //加载小说基本信息线程
+        //Luồng tải thông tin cơ bản tác phẩm
         CompletableFuture<Book> bookCompletableFuture = CompletableFuture.supplyAsync(() -> {
-            //查询书籍
+            //Truy vấn tác phẩm
             Book book = bookService.queryBookDetail(bookId);
-            log.debug("加载小说基本信息线程结束");
+            log.debug("Đã tải xong thông tin cơ bản của tác phẩm");
             return book;
         }, threadPoolExecutor);
-        //加载小说评论列表线程
+        //Luồng tải danh sách bình luận
         CompletableFuture<PageBean<BookCommentVO>> bookCommentPageBeanCompletableFuture = CompletableFuture.supplyAsync(
             () -> {
                 PageBean<BookCommentVO> bookCommentVOPageBean = bookService.listCommentByPage(null, bookId, 1, 5);
-                log.debug("加载小说评论列表线程结束");
+                log.debug("Đã tải xong danh sách bình luận tác phẩm");
                 return bookCommentVOPageBean;
             }, threadPoolExecutor);
-        //加载小说首章信息线程，该线程在加载小说基本信息线程执行完毕后才执行
+        //Luồng tải chương đầu chạy sau khi tải xong thông tin tác phẩm
         CompletableFuture<Long> firstBookIndexIdCompletableFuture = bookCompletableFuture.thenApplyAsync((book) -> {
             if (book.getLastIndexId() != null) {
-                //查询首章目录ID
+                //Truy vấn ID mục lục chương đầu
                 Long firstBookIndexId = bookService.queryFirstBookIndexId(bookId);
-                log.debug("加载小说基本信息线程结束");
+                log.debug("Đã tải xong thông tin cơ bản của tác phẩm");
                 return firstBookIndexId;
             }
             return null;
         }, threadPoolExecutor);
-        //加载随机推荐小说线程，该线程在加载小说基本信息线程执行完毕后才执行
+        //Luồng tải đề xuất ngẫu nhiên chạy sau khi tải xong thông tin tác phẩm
         CompletableFuture<List<Book>> recBookCompletableFuture = bookCompletableFuture.thenApplyAsync((book) -> {
             List<Book> books = bookService.listRecBookByCatId(book.getCatId());
-            log.debug("加载随机推荐小说线程结束");
+            log.debug("Đã tải xong danh sách tác phẩm đề xuất ngẫu nhiên");
             return books;
         }, threadPoolExecutor);
 
@@ -205,7 +205,7 @@ public class PageController extends BaseController {
     }
 
     /**
-     * 目录页
+     * Trang mục lục
      */
     @SneakyThrows
     @RequestMapping("/book/indexList-{bookId}.html")
@@ -219,75 +219,75 @@ public class PageController extends BaseController {
     }
 
     /**
-     * 内容页
+     * Trang nội dung
      */
     @SneakyThrows
     @RequestMapping("/book/{bookId}/{bookIndexId}.html")
     public String bookContent(@PathVariable("bookId") Long bookId, @PathVariable("bookIndexId") Long bookIndexId,
         HttpServletRequest request, Model model) {
-        //加载小说基本信息线程
+        //Luồng tải thông tin cơ bản tác phẩm
         CompletableFuture<Book> bookCompletableFuture = CompletableFuture.supplyAsync(() -> {
-            //查询书籍
+            //Truy vấn tác phẩm
             Book book = bookService.queryBookDetail(bookId);
-            log.debug("加载小说基本信息线程结束");
+            log.debug("Đã tải xong thông tin cơ bản của tác phẩm");
             return book;
         }, threadPoolExecutor);
 
-        //加载小说章节信息线程
+        //Luồng tải thông tin chương
         CompletableFuture<BookIndex> bookIndexCompletableFuture = CompletableFuture.supplyAsync(() -> {
-            //查询目录
+            //Truy vấn mục lục
             BookIndex bookIndex = bookService.queryBookIndex(bookIndexId);
-            log.debug("加载小说章节信息线程结束");
+            log.debug("Đã tải xong thông tin chương");
             return bookIndex;
         }, threadPoolExecutor);
 
-        //加载小说上一章节信息线程，该线程在加载小说章节信息线程执行完毕后才执行
+        //Luồng tải chương trước chạy sau khi tải xong thông tin chương
         CompletableFuture<Long> preBookIndexIdCompletableFuture = bookIndexCompletableFuture.thenApplyAsync(
             (bookIndex) -> {
-                //查询上一章节目录ID
+                //Truy vấn ID mục lục chương trước
                 Long preBookIndexId = bookService.queryPreBookIndexId(bookId, bookIndex.getIndexNum());
-                log.debug("加载小说上一章节信息线程结束");
+                log.debug("Đã tải xong thông tin chương trước");
                 return preBookIndexId;
             }, threadPoolExecutor);
 
-        //加载小说下一章节信息线程，该线程在加载小说章节信息线程执行完毕后才执行
+        //Luồng tải chương tiếp theo chạy sau khi tải xong thông tin chương
         CompletableFuture<Long> nextBookIndexIdCompletableFuture = bookIndexCompletableFuture.thenApplyAsync(
             (bookIndex) -> {
-                //查询下一章目录ID
+                //Truy vấn ID mục lục chương tiếp theo
                 Long nextBookIndexId = bookService.queryNextBookIndexId(bookId, bookIndex.getIndexNum());
-                log.debug("加载小说下一章节信息线程结束");
+                log.debug("Đã tải xong thông tin chương tiếp theo");
                 return nextBookIndexId;
             }, threadPoolExecutor);
 
-        //加载小说内容信息线程，该线程在加载小说章节信息线程执行完毕后才执行
+        //Luồng tải nội dung chạy sau khi tải xong thông tin chương
         CompletableFuture<BookContent> bookContentCompletableFuture = bookIndexCompletableFuture.thenApplyAsync(
             (bookIndex) -> {
-                //查询内容
+                //Truy vấn nội dung
                 BookContent bookContent = bookContentServiceMap.get(bookIndex.getStorageType())
                     .queryBookContent(bookId, bookIndexId);
-                log.debug("加载小说内容信息线程结束");
+                log.debug("Đã tải xong nội dung tác phẩm");
                 return bookContent;
             }, threadPoolExecutor);
 
-        //判断用户是否需要购买线程，该线程在加载小说章节信息线程执行完毕后才执行
+        //Luồng kiểm tra yêu cầu mua chương chạy sau khi tải xong thông tin chương
         CompletableFuture<Boolean> needBuyCompletableFuture = bookIndexCompletableFuture.thenApplyAsync((bookIndex) -> {
-            //判断该目录是否收费
+            //Kiểm tra mục lục có thu phí hay không
             if (bookIndex.getIsVip() != null && bookIndex.getIsVip() == 1) {
-                //收费
+                //Có thu phí
                 UserDetails user = getUserDetails(request);
                 if (user == null) {
-                    //未登录，需要购买
+                    //Chưa đăng nhập và cần mua chương
                     return true;
                 }
-                //判断用户是否购买过该目录
+                //Kiểm tra người dùng đã mua mục lục hay chưa
                 boolean isBuy = userService.queryIsBuyBookIndex(user.getId(), bookIndexId);
                 if (!isBuy) {
-                    //没有购买过，需要购买
+                    //Chưa mua nên cần thanh toán
                     return true;
                 }
             }
 
-            log.debug("判断用户是否需要购买线程结束");
+            log.debug("Đã kiểm tra xong yêu cầu mua chương của người dùng");
             return false;
 
         }, threadPoolExecutor);
@@ -303,18 +303,18 @@ public class PageController extends BaseController {
     }
 
     /**
-     * 评论页面
+     * Trang bình luận
      */
     @RequestMapping("/book/comment-{bookId}.html")
     public String commentList(@PathVariable("bookId") Long bookId, Model model) {
-        //查询书籍
+        //Truy vấn tác phẩm
         Book book = bookService.queryBookDetail(bookId);
         model.addAttribute("book", book);
         return "book/book_comment";
     }
 
     /**
-     * 评论回复页面
+     * Trang phản hồi bình luận
      */
     @RequestMapping("/book/reply-{commentId}.html")
     public String commentReplyList(@PathVariable("commentId") Long commentId, Model model) {
@@ -324,11 +324,11 @@ public class PageController extends BaseController {
     }
 
     /**
-     * 新闻内容页面
+     * Trang nội dung tin tức
      */
     @RequestMapping("/about/newsInfo-{newsId}.html")
     public String newsInfo(@PathVariable("newsId") Long newsId, Model model) {
-        //查询新闻
+        //Truy vấn tin tức
         News news = newsService.queryNewsInfo(newsId);
         model.addAttribute("news", news);
         return "about/news_info";
@@ -336,21 +336,21 @@ public class PageController extends BaseController {
 
 
     /**
-     * 作者注册页面
+     * Trang đăng ký tác giả
      */
     @RequestMapping("author/register.html")
     public String authorRegister(Author author, HttpServletRequest request, Model model) {
         UserDetails user = getUserDetails(request);
         if (user == null) {
-            //未登录
+            //Chưa đăng nhập
             return "redirect:/user/login.html?originUrl=/author/register.html";
         }
 
         if (StringUtils.isNotBlank(author.getInviteCode())) {
-            //提交作者注册信息
+            //Gửi thông tin đăng ký tác giả
             String errorInfo = authorService.register(user.getId(), author);
             if (StringUtils.isBlank(errorInfo)) {
-                //注册成功
+                //Đăng ký thành công
                 return "redirect:/author/index.html";
             }
             model.addAttribute("LabErr", errorInfo);

@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.ModelAndView;
 
 /**
- * 统一异常处理器
+ * Bộ xử lý ngoại lệ thống nhất
  *
  * @author xiongxiaoyang
  */
@@ -39,10 +39,10 @@ public class CommonExceptionHandler {
     public Object handleException(HttpServletRequest request, Exception e) {
         log.error(e.getMessage(), e);
         if (isJsonRequest(request)) {
-            // 如果是REST请求，返回JSON格式的错误响应
+            // Nếu là yêu cầu REST, trả phản hồi lỗi JSON
             return RestResult.error();
         } else {
-            //跳转页面过程中出现异常时统一跳转到404页面
+            //Khi chuyển trang gặp lỗi, chuyển thống nhất tới trang 404
             return new ModelAndView("404");
         }
     }

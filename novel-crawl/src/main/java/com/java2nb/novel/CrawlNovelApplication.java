@@ -1,5 +1,6 @@
 package com.java2nb.novel;
 
+import com.java2nb.novel.core.i18n.Messages;
 import lombok.extern.slf4j.Slf4j;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.CommandLineRunner;
@@ -29,9 +30,11 @@ public class CrawlNovelApplication {
     }
 
     @Bean
-    public CommandLineRunner commandLineRunner(ApplicationContext ctx) {
+    public CommandLineRunner commandLineRunner(ApplicationContext ctx, Messages messages) {
         return args -> {
-            log.info("项目启动啦，访问路径：{}", "http://" + InetAddress.getLocalHost().getHostAddress() + ":" + ctx.getEnvironment().getProperty("server.port"));
+            String address = "http://" + InetAddress.getLocalHost().getHostAddress() + ":"
+                + ctx.getEnvironment().getProperty("server.port");
+            log.info(messages.get("crawl.log.applicationStarted", address));
         };
     }
 

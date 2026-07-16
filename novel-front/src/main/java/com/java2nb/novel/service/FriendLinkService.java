@@ -11,8 +11,8 @@ import java.util.List;
 public interface FriendLinkService {
 
     /**
-     * 查询首页友情链接
-     * @return 集合
+     * Truy vấn liên kết bạn bè trang chủ
+     * @return tập dữ liệu
      * */
     List<FriendLink> listIndexLink();
 }

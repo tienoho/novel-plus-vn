@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <meta charset="utf-8">
 <head th:include="include :: header"></head>
 <body class="gray-bg">
@@ -10,7 +10,7 @@
                 <div class="ibox-content">
                     <form class="form-horizontal m-t" id="signupForm">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">链接名：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.friendLink.name}+'：'">Tên liên kết:</label>
                             <div class="col-sm-8">
                                 <input id="linkName" name="linkName"
                                        class="form-control"
@@ -19,7 +19,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">链接url：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.friendLink.url}+'：'">URL liên kết:</label>
                             <div class="col-sm-8">
                                 <input id="linkUrl" name="linkUrl"
                                        class="form-control"
@@ -28,7 +28,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">排序号：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.friendLink.sort}+'：'">Thứ tự:</label>
                             <div class="col-sm-8">
                                 <input id="sort" name="sort"
                                        class="form-control"
@@ -37,10 +37,10 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">是否开启：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.friendLink.enabled}+'：'">Đang bật:</label>
                             <div class="col-sm-8">
 
-                                <select data-placeholder="--选择--" id="isOpen"
+                                <select th:data-placeholder="#{common.select}" data-placeholder="Vui lòng chọn" id="isOpen"
                                         name="isOpen"
                                         class="form-control chosen-select" tabindex="2"
                                         dict-type="yes_no" required>
@@ -50,7 +50,7 @@
                         </div>
                         <div class="form-group">
                             <div class="col-sm-8 col-sm-offset-3">
-                                <button type="submit" class="btn btn-primary">提交</button>
+                                <button type="submit" class="btn btn-primary" th:text="#{common.submit}">Gửi</button>
                             </div>
                         </div>
                     </form>

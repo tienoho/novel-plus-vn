@@ -1,8 +1,8 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="vi">
 <head th:replace="common/header :: common_head(~{::title},~{},~{::link},~{})">
-    <title th:text="'修改昵称_'+${application.website.name}"></title>
+    <title th:text="#{user.nickname.change}+'_'+${application.website.name}"></title>
     <link rel="stylesheet" href="/css/user.css"/>
 </head>
 <body class="">
@@ -14,11 +14,11 @@
         <div class="my_l">
 
             <ul class="log_list">
-                <li><a class="link_1 " href="/user/userinfo.html">个人中心</a></li>
-                <li><a class="link_4" href="/user/favorites.html">我的书架</a></li>
-                <li><a class="link_6" href="/user/comment.html">我的书评</a></li>
-                <li><a class="link_7 " href="/user/feedback_list.html">我的反馈</a></li>
-                <li><a class="link_8 on" href="/user/setup.html">账号设置</a></li>
+                <li><a class="link_1" href="/user/userinfo.html" th:text="#{user.center}">Tài khoản của tôi</a></li>
+                <li><a class="link_4" href="/user/favorites.html" th:text="#{user.bookshelf}">Tủ sách</a></li>
+                <li><a class="link_6" href="/user/comment.html" th:text="#{user.comments}">Bình luận của tôi</a></li>
+                <li><a class="link_7" href="/user/feedback_list.html" th:text="#{user.feedback}">Phản hồi của tôi</a></li>
+                <li><a class="link_8 on" href="/user/setup.html" th:text="#{user.settings}">Cài đặt tài khoản</a></li>
             </ul>
 
         </div>
@@ -26,11 +26,11 @@
             <div class="my_info cf">
                 <div class="my_info_txt">
                     <ul class="mytab_list">
-                        <li><i class="tit">我的昵称</i><input name="txtNiceName" type="text" value="15171695474"
-                                                          maxlength="20" id="txtNiceName" class="s_input"
+                        <li><i class="tit" th:text="#{user.nickname}">Biệt danh</i><input name="txtNiceName" type="text" value=""
+                                                          maxlength="11" id="txtNiceName" class="s_input"
                                                           placeholder=""/></li>
-                        <li><i class="tit">&nbsp;</i>用户名只能包括汉字、英文字母、数字和下划线</li>
-                        <li><i class="tit">&nbsp;</i><input type="button" onclick="updateName()" name="btn" value="修改"
+                        <li><i class="tit">&nbsp;</i><span th:text="#{user.nickname.rule}">Biệt danh chỉ được gồm chữ cái tiếng Anh, chữ số và dấu gạch dưới.</span></li>
+                        <li><i class="tit">&nbsp;</i><input type="button" onclick="updateName()" name="btn" th:value="#{common.change}"
                                                             id="btn" class="s_btn btn_red"/></li>
                         <li><i class="tit">&nbsp;</i><span id="LabErr"></span></li>
                     </ul>
@@ -43,8 +43,11 @@
 <div th:replace="common/footer :: footer">
 </div>
 <div th:replace="common/js :: js"></div>
-<script type="text/javascript">
-    //查询用户信息
+<script type="text/javascript" th:inline="javascript">
+    const nicknameRequiredText = /*[[#{user.nickname.required}]]*/ 'Biệt danh không được để trống.';
+    const nicknameInvalidText = /*[[#{user.nickname.invalid}]]*/ 'Biệt danh không đúng định dạng.';
+    const networkErrorText = /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng';
+    // Tải thông tin người dùng.
     $.ajax({
         type: "get",
         url: "/user/userInfo",
@@ -60,7 +63,7 @@
 
 
             } else if (data.code == 1001) {
-                //未登录
+                // Phiên đăng nhập đã hết hạn.
                 location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
 
             } else {
@@ -69,18 +72,18 @@
 
         },
         error: function () {
-            layer.alert('网络异常');
+            layer.alert(networkErrorText);
         }
     })
 
     function updateName() {
         var nickname = $("#txtNiceName").val();
         if (nickname.isBlank()) {
-            $("#LabErr").html("昵称不能为空！");
+            $("#LabErr").html(nicknameRequiredText);
             return;
         }
         if (!nickname.isNickName()) {
-            $("#LabErr").html("昵称格式不正确！");
+            $("#LabErr").html(nicknameInvalidText);
             return;
         }
         $.ajax({
@@ -95,7 +98,7 @@
                     window.location.href = '/user/setup.html';
 
                 } else if (data.code == 1001) {
-                    //未登录
+                    // Phiên đăng nhập đã hết hạn.
                     location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
 
                 } else {
@@ -104,7 +107,7 @@
 
             },
             error: function () {
-                layer.alert('网络异常');
+                layer.alert(networkErrorText);
             }
         })
     }

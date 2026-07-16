@@ -1,4 +1,4 @@
-// 以下为官方示例
+// Ví dụ từ tài liệu chính thức
 $().ready(function() {
 	validateRule();
 	// $("#signupForm").validate();
@@ -15,16 +15,16 @@ function update() {
 		cache : true,
 		type : "POST",
 		url : "/sys/user/update",
-		data : $('#signupForm').serialize(),// 你的formid
+		data : $('#signupForm').serialize(),// ID biểu mẫu
 		async : false,
 		error : function(request) {
-			alert("Connection error");
+			alert(adminMessage('connectionError', 'Lỗi kết nối'));
 		},
 		success : function(data) {
 			if (data.code == 0) {
 				parent.layer.msg(data.msg);
 				parent.reLoad();
-				var index = parent.layer.getFrameIndex(window.name); // 获取窗口索引
+				var index = parent.layer.getFrameIndex(window.name); // Lấy chỉ mục cửa sổ
 				parent.layer.close(index);
 
 			} else {
@@ -92,29 +92,29 @@ function validateRule() {
 		messages : {
 
 			name : {
-				required : icon + "请输入姓名"
+				required : icon + adminMessage('userNameRequired', 'Vui lòng nhập họ tên')
 			},
 			username : {
-				required : icon + "请输入您的用户名",
-				minlength : icon + "用户名必须两个字符以上"
+				required : icon + adminMessage('usernameRequired', 'Vui lòng nhập tên đăng nhập'),
+				minlength : icon + adminMessage('usernameMinlength', 'Tên đăng nhập phải có ít nhất 2 ký tự')
 			},
 			password : {
-				required : icon + "请输入您的密码",
-				minlength : icon + "密码必须6个字符以上"
+				required : icon + adminMessage('passwordRequired', 'Vui lòng nhập mật khẩu'),
+				minlength : icon + adminMessage('passwordMinlength', 'Mật khẩu phải có ít nhất 6 ký tự')
 			},
 			confirm_password : {
-				required : icon + "请再次输入密码",
-				minlength : icon + "密码必须6个字符以上",
-				equalTo : icon + "两次输入的密码不一致"
+				required : icon + adminMessage('passwordConfirmRequired', 'Vui lòng nhập lại mật khẩu'),
+				minlength : icon + adminMessage('passwordMinlength', 'Mật khẩu phải có ít nhất 6 ký tự'),
+				equalTo : icon + adminMessage('passwordMismatch', 'Mật khẩu nhập lại không khớp')
 			},
-			email : icon + "请输入您的E-mail",
+			email : icon + adminMessage('emailRequired', 'Vui lòng nhập email'),
 		}
 	})
 }
 var openDept = function(){
 	layer.open({
 		type:2,
-		title:"选择部门",
+		title: adminMessage('departmentName', 'Phòng ban'),
 		area : [ '300px', '450px' ],
 		content:"/system/sysDept/treeView"
 	})

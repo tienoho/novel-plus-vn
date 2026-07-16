@@ -1,4 +1,4 @@
-//把对象调整到中心位置
+// Căn đối tượng vào giữa.
 ;(function($){
     $.fn.setmiddle = function() {
         var dl = $(document).scrollLeft(),
@@ -14,7 +14,7 @@
     }
 })(jQuery);
 
-//提示信息
+// Hiển thị thông báo.
 ;(function($){
     $.tips = function(options) {
         var settings = {
@@ -47,14 +47,14 @@
     }
 })(jQuery);
 
-//设置cookie
+// Ghi cookie.
 var setCookie = function(cname, cvalue, exdays) {
     var day = new Date();
     day.setTime(day.getTime() + (exdays*24*60*60*1000));
     document.cookie = cname + "=" + encodeURI(cvalue) + "; " + "expires=" + day.toUTCString() +"; path=/";
 };
 
-//获取cookie
+// Đọc cookie.
 var getCookie = function(cname) {
     var name = cname + "=";
     var obj = document.cookie.split(';');
@@ -66,12 +66,12 @@ var getCookie = function(cname) {
     return "";
 };
 
-//清除cookie 
+// Xóa cookie.
 var clearCookie = function(cname) { 
     setCookie(cname, "", -1); 
 };
 
-//检查cookie 
+// Kiểm tra cookie.
 var checkCookie = function(cname) {
     var value = getCookie(cname);
     if (value != "") {
@@ -243,7 +243,7 @@ var chapterInit = function(){
 
 $(function(){
 
-    //首页切换
+    // Chuyển nội dung trang chủ.
     $(".new-book ol li").click(function() {
         var index = $(this).index();
         var _cid = $(this).data('cid');
@@ -264,7 +264,7 @@ $(function(){
     });
 
 
-	//小说页
+	// Trang chi tiết truyện.
 	$(".book-info .intro .more").click(function() {
 		$(this).toggleClass("show");
     	$(".book-info .intro").toggleClass("show");
@@ -276,12 +276,12 @@ $(function(){
         return false;
     });
 	$(".j-textarea").live("focus", function() {
-		if ($(this).val() == "说点什么吧，您的评论是对本书最大的支持！") {
+		if ($(this).val() == novelMessage('commentPlaceholder', 'Viết bình luận...')) {
 			$(this).val("")
 		}
 	}).live("blur", function() {
 		if ($.trim($(this).val()) == "") {
-			$(this).val("说点什么吧，您的评论是对本书最大的支持！")
+			$(this).val(novelMessage('commentPlaceholder', 'Viết bình luận...'))
 		}
 	}).live("keydown", function(){  
         var len = $(".j-textarea").val().length;
@@ -297,12 +297,12 @@ $(function(){
     $(".j-send").click(function() {
     	var txt = $(".j-textarea").val();
     	var len = $(".j-textarea").val().length;
-    	if (txt == "说点什么吧，您的评论是对本书最大的支持！" || len == 0) {
-    		$(".form-msg").text("评论内容不能为空");
+	if (txt == novelMessage('commentPlaceholder', 'Viết bình luận...') || len == 0) {
+		$(".form-msg").text(novelMessage('commentRequired', 'Nội dung bình luận không được để trống.'));
     		return false;
     	}
     	else {
-    		alert("您的评论已提交，审核过后您的评论会出现在这里！");
+		alert(novelMessage('commentSuccess', 'Đăng bình luận thành công.'));
     	}
     });
     var $review = $(".review-list ul");
@@ -318,12 +318,12 @@ $(function(){
         $(this).addClass("on").siblings("li").removeClass("on");
         $(".guess ul").eq(index).show().siblings("ul").hide();
     });
-    //搜索输入字符串合法性验证
+    // Kiểm tra nội dung tìm kiếm.
     $("#search-btn").click(function(){
         var str = $("#q").val();
         var ret = /[^\w\u4e00-\u9fa5]/;
         if(ret.test(str)){
-           alert("搜索内容不合法");
+           alert(novelMessage('searchInvalid', 'Nội dung tìm kiếm không hợp lệ.'));
            return false;
         }else{
            return ture;

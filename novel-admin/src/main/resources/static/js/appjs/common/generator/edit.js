@@ -1,11 +1,11 @@
-// 以下为官方示例
+// Ví dụ từ tài liệu chính thức
 $().ready(function() {
 	validateRule();
 });
 
 $.validator.setDefaults({
 	submitHandler : function() {
-		console.log('提交修改');
+		console.log('Gửi thay đổi');
 		update();
 	}
 });
@@ -14,10 +14,10 @@ function update() {
 		cache : true,
 		type : "POST",
 		url : "/common/generator/update",
-		data : $('#signupForm').serialize(),// 你的formid
+		data : $('#signupForm').serialize(),// ID biểu mẫu
 		async : false,
 		error : function(request) {
-			parent.layer.alert("网络连接超时");
+			parent.layer.alert(adminMessage('connectionError', 'Lỗi kết nối'));
 		},
 		success : function(data) {
 			if (data.code == 0) {
@@ -49,13 +49,13 @@ function validateRule() {
 		messages : {
 
 			author : {
-				required : icon + "请输入作者"
+				required : icon + adminMessage('generatorAuthorRequired', 'Vui lòng nhập tên tác giả')
 			},
 			email : {
-				required : icon + "请输入email",
+				required : icon + adminMessage('generatorEmailRequired', 'Vui lòng nhập email'),
 			},
 			package : {
-				required : icon + "请输入包名",
+				required : icon + adminMessage('generatorPackageRequired', 'Vui lòng nhập tên package'),
 			},
 		}
 	})

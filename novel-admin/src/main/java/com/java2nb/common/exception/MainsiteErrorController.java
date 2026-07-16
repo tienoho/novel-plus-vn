@@ -2,6 +2,7 @@ package com.java2nb.common.exception;
 
 
 import com.java2nb.common.utils.R;
+import com.java2nb.common.utils.Messages;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.boot.web.servlet.error.ErrorController;
@@ -19,6 +20,8 @@ public class MainsiteErrorController implements ErrorController {
 
     @Autowired
     ErrorAttributes errorAttributes;
+    @Autowired
+    Messages messages;
 
     @RequestMapping(
         value = {ERROR_PATH},
@@ -43,13 +46,13 @@ public class MainsiteErrorController implements ErrorController {
         response.setStatus(200);
         int code = response.getStatus();
         if (404 == code) {
-            return R.error(404, "未找到资源");
+            return R.error(404, messages.get("error.notFound"));
         } else if (403 == code) {
-            return R.error(403, "没有访问权限");
+            return R.error(403, messages.get("error.accessDenied"));
         } else if (401 == code) {
-            return R.error(403, "登录过期");
+            return R.error(403, messages.get("error.loginExpired"));
         } else {
-            return R.error(500, "服务器错误");
+            return R.error(500, messages.get("error.internal"));
         }
     }
 

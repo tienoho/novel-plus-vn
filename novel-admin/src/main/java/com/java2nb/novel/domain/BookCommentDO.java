@@ -9,7 +9,7 @@ import java.util.Date;
 
 
 /**
- * 小说评论表
+ * Bảng bình luận tác phẩm
  *
  * @author xiongxy
  * @email 1179705413@qq.com
@@ -20,28 +20,28 @@ public class BookCommentDO implements Serializable {
     private static final long serialVersionUID = 1L;
 
 
-    //主键
-    //java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-    //所以通过序列化成字符串来解决
+    // Khóa chính
+    // Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+    // Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
     @JsonSerialize(using = LongToStringSerializer.class)
     private Long id;
-    //小说ID
-    //java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-    //所以通过序列化成字符串来解决
+    // ID tác phẩm
+    // Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+    // Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
     @JsonSerialize(using = LongToStringSerializer.class)
     private Long bookId;
-    //评价内容
+    // Nội dung đánh giá
     private String commentContent;
-    //回复数量
+    // Số phản hồi
     private Integer replyCount;
-    //审核状态，0：待审核，1：审核通过，2：审核不通过
+    // Trạng thái duyệt: 0 chờ duyệt, 1 đã duyệt, 2 từ chối
     private Integer auditStatus;
-    //评价时间
+    // Thời gian đánh giá
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
-    //评价人
-    //java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-    //所以通过序列化成字符串来解决
+    // Người đánh giá
+    // Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+    // Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
     @JsonSerialize(using = LongToStringSerializer.class)
     private Long createUserId;
 
@@ -66,98 +66,98 @@ public class BookCommentDO implements Serializable {
     }
 
     /**
-     * 设置：主键
+     * Đặt: khóa chính
      */
     public void setId(Long id) {
         this.id = id;
     }
 
     /**
-     * 获取：主键
+     * Lấy: khóa chính
      */
     public Long getId() {
         return id;
     }
 
     /**
-     * 设置：小说ID
+     * Đặt: ID tác phẩm
      */
     public void setBookId(Long bookId) {
         this.bookId = bookId;
     }
 
     /**
-     * 获取：小说ID
+     * Lấy: ID tác phẩm
      */
     public Long getBookId() {
         return bookId;
     }
 
     /**
-     * 设置：评价内容
+     * Đặt: nội dung đánh giá
      */
     public void setCommentContent(String commentContent) {
         this.commentContent = commentContent;
     }
 
     /**
-     * 获取：评价内容
+     * Lấy: nội dung đánh giá
      */
     public String getCommentContent() {
         return commentContent;
     }
 
     /**
-     * 设置：回复数量
+     * Đặt: số phản hồi
      */
     public void setReplyCount(Integer replyCount) {
         this.replyCount = replyCount;
     }
 
     /**
-     * 获取：回复数量
+     * Lấy: số phản hồi
      */
     public Integer getReplyCount() {
         return replyCount;
     }
 
     /**
-     * 设置：审核状态，0：待审核，1：审核通过，2：审核不通过
+     * Đặt: trạng thái duyệt: 0 chờ duyệt, 1 đã duyệt, 2 từ chối
      */
     public void setAuditStatus(Integer auditStatus) {
         this.auditStatus = auditStatus;
     }
 
     /**
-     * 获取：审核状态，0：待审核，1：审核通过，2：审核不通过
+     * Lấy: trạng thái duyệt: 0 chờ duyệt, 1 đã duyệt, 2 từ chối
      */
     public Integer getAuditStatus() {
         return auditStatus;
     }
 
     /**
-     * 设置：评价时间
+     * Đặt: thời gian đánh giá
      */
     public void setCreateTime(Date createTime) {
         this.createTime = createTime;
     }
 
     /**
-     * 获取：评价时间
+     * Lấy: thời gian đánh giá
      */
     public Date getCreateTime() {
         return createTime;
     }
 
     /**
-     * 设置：评价人
+     * Đặt: người đánh giá
      */
     public void setCreateUserId(Long createUserId) {
         this.createUserId = createUserId;
     }
 
     /**
-     * 获取：评价人
+     * Lấy: người đánh giá
      */
     public Long getCreateUserId() {
         return createUserId;

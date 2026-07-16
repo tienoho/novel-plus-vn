@@ -18,19 +18,19 @@ public class UserFeedbackDO implements Serializable {
     private static final long serialVersionUID = 1L;
 
 
-    //主键id
-    //java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-    //所以通过序列化成字符串来解决
+    //ID khóa chính
+    // Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+    // Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
     @JsonSerialize(using = LongToStringSerializer.class)
     private Long id;
-    //用户id
-    //java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-    //所以通过序列化成字符串来解决
+    // ID người dùng
+    // Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+    // Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
     @JsonSerialize(using = LongToStringSerializer.class)
     private Long userId;
-    //反馈内容
+    // Nội dung phản hồi
     private String content;
-    //反馈时间
+    // Thời gian phản hồi
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
 
@@ -46,56 +46,56 @@ public class UserFeedbackDO implements Serializable {
     }
 
     /**
-     * 设置：主键id
+     * Đặt: ID khóa chính
      */
     public void setId(Long id) {
         this.id = id;
     }
 
     /**
-     * 获取：主键id
+     * Lấy: ID khóa chính
      */
     public Long getId() {
         return id;
     }
 
     /**
-     * 设置：用户id
+     * Đặt: ID người dùng
      */
     public void setUserId(Long userId) {
         this.userId = userId;
     }
 
     /**
-     * 获取：用户id
+     * Lấy: ID người dùng
      */
     public Long getUserId() {
         return userId;
     }
 
     /**
-     * 设置：反馈内容
+     * Đặt: nội dung phản hồi
      */
     public void setContent(String content) {
         this.content = content;
     }
 
     /**
-     * 获取：反馈内容
+     * Lấy: nội dung phản hồi
      */
     public String getContent() {
         return content;
     }
 
     /**
-     * 设置：反馈时间
+     * Đặt: thời gian phản hồi
      */
     public void setCreateTime(Date createTime) {
         this.createTime = createTime;
     }
 
     /**
-     * 获取：反馈时间
+     * Lấy: thời gian phản hồi
      */
     public Date getCreateTime() {
         return createTime;

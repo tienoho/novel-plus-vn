@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 数据权限管理
+ * Quản lý quyền dữ liệu
  * 
  * @author xiongxy
  * @email 1179705413@qq.com

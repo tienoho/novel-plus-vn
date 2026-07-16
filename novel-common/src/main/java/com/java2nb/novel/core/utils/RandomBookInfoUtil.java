@@ -1,15 +1,17 @@
 package com.java2nb.novel.core.utils;
 
+import com.java2nb.novel.core.i18n.Messages;
+
 import java.util.Random;
 
 /**
- * 随机生成小说信息工具类
+ * Tiện ích tạo ngẫu nhiên thông tin tác phẩm
  * @author Administrator
  */
 public class RandomBookInfoUtil {
 
     /**
-     * 根据评分获取访问人数
+     * Lấy số lượt truy cập theo điểm đánh giá
      * */
     public static Long getVisitCountByScore(Float score){
         Long visitCount ;
@@ -32,7 +34,7 @@ public class RandomBookInfoUtil {
     }
 
     /**
-     * 根据访问人数获取评分
+     * Lấy điểm đánh giá theo số lượt truy cập
      * */
     public static Float getScoreByVisitCount(Long visitCount){
         Float score;
@@ -50,46 +52,46 @@ public class RandomBookInfoUtil {
         return score;
     }
     /**
-     * 获取分类名
+     * Lấy tên danh mục
      * */
     public static String getCatNameById(Integer catId) {
-        String catName = "其他";
+        String catName = Messages.getDefault("book.category.other");
 
         switch (catId) {
             case 1: {
-                catName = "玄幻奇幻";
+                catName = Messages.getDefault("book.category.fantasy");
                 break;
             }
             case 2: {
-                catName = "武侠仙侠";
+                catName = Messages.getDefault("book.category.wuxia");
                 break;
             }
             case 3: {
-                catName = "都市言情";
+                catName = Messages.getDefault("book.category.urbanRomance");
                 break;
             }
             case 4: {
-                catName = "历史军事";
+                catName = Messages.getDefault("book.category.historyMilitary");
                 break;
             }
             case 5: {
-                catName = "科幻灵异";
+                catName = Messages.getDefault("book.category.scifiSupernatural");
                 break;
             }
             case 6: {
-                catName = "网游竞技";
+                catName = Messages.getDefault("book.category.gameSports");
                 break;
             }
             case 7: {
-                catName = "女生频道";
+                catName = Messages.getDefault("book.category.women");
                 break;
             }
             case 8: {
-                catName = "轻小说";
+                catName = Messages.getDefault("book.category.lightNovel");
                 break;
             }
             case 9: {
-                catName = "漫画";
+                catName = Messages.getDefault("book.category.comic");
                 break;
             }
             default: {

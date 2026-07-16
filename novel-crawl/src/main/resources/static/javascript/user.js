@@ -40,7 +40,7 @@ var UserUtil = {
         }
         else {
             layer.open({
-                content: '手机号码和验证码必须填写',
+                content: (window.crawlCommonMessages || {}).phoneCaptchaRequired,
                 style: UserUtil.msgStyle,
                 time: 2
             });
@@ -55,7 +55,7 @@ var UserUtil = {
         }
         else {
             layer.open({
-                content: '手机号码和验证码必须填写',
+                content: (window.crawlCommonMessages || {}).phoneCaptchaRequired,
                 style: UserUtil.msgStyle,
                 time: 2
             });
@@ -63,13 +63,13 @@ var UserUtil = {
     },
     RegSmsWait: function () {
         if (secondStep > 0) {
-            $("#btnSendSms").val("重新发送(" + secondStep + ")");
+            $("#btnSendSms").val(((window.crawlCommonMessages || {}).smsResend || '').replace('{0}', secondStep));
             secondStep--;
             setTimeout("UserUtil.RegSmsWait()", 1000);
         }
         else {
             secondStep = 180;
-            $("#btnSendSms").val("重新获取验证码");
+            $("#btnSendSms").val((window.crawlCommonMessages || {}).smsGetAgain);
             $("#btnSendSms").removeAttr("disabled");
             $("#txtUName").removeAttr("readonly");
         }

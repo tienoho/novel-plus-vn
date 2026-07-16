@@ -5,7 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 /**
- * 线程池配置属性
+ * Thuộc tính cấu hình thread pool
  * @author xiongxiaoyang
  */
 @Data

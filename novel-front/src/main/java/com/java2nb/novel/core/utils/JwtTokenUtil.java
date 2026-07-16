@@ -29,7 +29,7 @@ public class JwtTokenUtil {
     private Long expiration;
 
     /**
-     * 根据负责生成JWT的token
+     * Tạo token JWT bằng khóa chịu trách nhiệm ký
      */
     private String generateToken(Map<String, Object> claims) {
         return Jwts.builder()
@@ -40,7 +40,7 @@ public class JwtTokenUtil {
     }
 
     /**
-     * 从token中获取JWT中的负载
+     * Lấy payload JWT từ token
      */
     private Claims getClaimsFromToken(String token) {
         Claims claims = null;
@@ -50,20 +50,20 @@ public class JwtTokenUtil {
                     .parseClaimsJws(token)
                     .getBody();
         } catch (Exception e) {
-            log.info("JWT格式验证失败:{}",token);
+            log.info("Xác thực định dạng JWT thất bại: {}", token);
         }
         return claims;
     }
 
     /**
-     * 生成token的过期时间
+     * Thời hạn token
      */
     private Date generateExpirationDate() {
         return new Date(System.currentTimeMillis() + expiration * 1000);
     }
 
     /**
-     * 从token中获取用户信息
+     * Lấy thông tin người dùng từ token
      */
     public UserDetails getUserDetailsFromToken(String token) {
         if(isTokenExpired(token)){
@@ -82,7 +82,7 @@ public class JwtTokenUtil {
 
 
     /**
-     * 判断token是否已经失效
+     * Kiểm tra token đã hết hiệu lực hay chưa
      */
     private boolean isTokenExpired(String token) {
         Date expiredDate = getExpiredDateFromToken(token);
@@ -94,7 +94,7 @@ public class JwtTokenUtil {
     }
 
     /**
-     * 从token中获取过期时间
+     * Lấy thời gian hết hạn từ token
      */
     private Date getExpiredDateFromToken(String token) {
         Claims claims = getClaimsFromToken(token);
@@ -102,7 +102,7 @@ public class JwtTokenUtil {
     }
 
     /**
-     * 根据用户信息生成token
+     * Tạo token theo thông tin người dùng
      */
     @SneakyThrows
     public String generateToken(UserDetails userDetails) {
@@ -113,14 +113,14 @@ public class JwtTokenUtil {
     }
 
     /**
-     * 判断token是否可以被刷新
+     * Kiểm tra token có thể làm mới hay không
      */
     public boolean canRefresh(String token) {
         return !isTokenExpired(token);
     }
 
     /**
-     * 刷新token
+     *Làm mới tokenn
      */
     public String refreshToken(String token) {
         Claims claims = getClaimsFromToken(token);

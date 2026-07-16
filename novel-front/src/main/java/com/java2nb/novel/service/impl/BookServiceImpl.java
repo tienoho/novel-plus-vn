@@ -5,6 +5,7 @@ import com.java2nb.novel.core.cache.CacheKey;
 import com.java2nb.novel.core.cache.CacheService;
 import com.java2nb.novel.core.config.BookPriceProperties;
 import com.java2nb.novel.core.enums.ResponseStatus;
+import com.java2nb.novel.core.i18n.Messages;
 import com.java2nb.novel.core.utils.Constants;
 import com.java2nb.novel.core.utils.FileUtil;
 import com.java2nb.novel.core.utils.StringUtil;
@@ -63,9 +64,10 @@ import static org.mybatis.dynamic.sql.select.SelectDSL.select;
 @RequiredArgsConstructor
 @Slf4j
 public class BookServiceImpl implements BookService {
+    private final Messages messages;
 
     /**
-     * 本地图片保存路径
+     * Đường dẫn lưu ảnh cục bộ
      */
     @Value("${pic.save.path}")
     private String picSavePath;
@@ -110,7 +112,7 @@ public class BookServiceImpl implements BookService {
         if (list == null || list.isEmpty()) {
             list = bookSettingMapper.listVO();
             if (list.isEmpty()) {
-                //如果首页小说没有被设置，则初始化首页小说设置
+                //Khởi tạo cấu hình tác phẩm trang chủ nếu chưa có
                 list = initIndexBookSetting();
             }
             cacheService.setObject(CacheKey.INDEX_BOOK_SETTINGS_KEY, list, 3600 * 24);
@@ -122,7 +124,7 @@ public class BookServiceImpl implements BookService {
 
 
     /**
-     * 初始化首页小说设置
+     * Khởi tạo cấu hình tác phẩm trang chủ
      */
     private List<BookSettingVO> initIndexBookSetting() {
         Date currentDate = new Date();
@@ -323,17 +325,17 @@ public class BookServiceImpl implements BookService {
         SortSpecification sortSpecification = visitCount.descending();
         switch (type) {
             case 1: {
-                //最新入库排序
+                //Sắp xếp theo thời gian nhập kho mới nhất
                 sortSpecification = createTime.descending();
                 break;
             }
             case 2: {
-                //最新更新时间排序
+                //Sắp xếp theo thời gian cập nhật mới nhất
                 sortSpecification = lastIndexUpdateTime.descending();
                 break;
             }
             case 3: {
-                //评论数量排序
+                //Sắp xếp theo số bình luận
                 sortSpecification = commentCount.descending();
                 break;
             }
@@ -400,7 +402,7 @@ public class BookServiceImpl implements BookService {
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void addBookComment(Long userId, BookComment comment) {
-        //判断该用户是否已评论过该书籍
+        //Kiểm tra người dùng đã bình luận tác phẩm hay chưa
         SelectStatementProvider selectStatement = select(count(BookCommentDynamicSqlSupport.id))
             .from(bookComment)
             .where(BookCommentDynamicSqlSupport.createUserId, isEqualTo(userId))
@@ -410,11 +412,11 @@ public class BookServiceImpl implements BookService {
         if (bookCommentMapper.count(selectStatement) > 0) {
             throw new BusinessException(ResponseStatus.HAS_COMMENTS);
         }
-        //增加评论
+        //Tăng bình luận
         comment.setCreateUserId(userId);
         comment.setCreateTime(new Date());
         bookCommentMapper.insertSelective(comment);
-        //增加书籍评论数
+        //Tăng số bình luận của tác phẩm
         bookMapper.addCommentCount(comment.getBookId());
 
     }
@@ -429,10 +431,10 @@ public class BookServiceImpl implements BookService {
             .render(RenderingStrategies.MYBATIS3);
         List<BookAuthor> bookAuthors = bookAuthorMapper.selectMany(selectStatement);
         if (bookAuthors.size() > 0) {
-            //作者存在
+            //Tác giả đã tồn tại
             authorId = bookAuthors.get(0).getId();
         } else {
-            //作者不存在，先创建作者
+            //Tác giả chưa tồn tại, tạo tác giả trước
             Date currentDate = new Date();
             authorId = idWorker.nextId();
             BookAuthor bookAuthor = new BookAuthor();
@@ -453,7 +455,7 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public Long queryIdByNameAndAuthor(String bookName, String author) {
-        //查询小说ID
+        //Truy vấn ID tác phẩm
         SelectStatementProvider selectStatement = select(id)
             .from(book)
             .where(BookDynamicSqlSupport.bookName, isEqualTo(bookName))
@@ -520,9 +522,9 @@ public class BookServiceImpl implements BookService {
     @Override
     public void addBook(Book book, Long authorId, String penName) {
         book.setId(IdWorker.INSTANCE.nextId());
-        //判断小说名是否存在
+        //Kiểm tra tên tác phẩm có tồn tại hay không
         if (queryIdByNameAndAuthor(book.getBookName(), penName) != null) {
-            //该作者发布过此书名的小说
+            //Tác giả đã xuất bản tác phẩm trùng tên
             throw new BusinessException(ResponseStatus.BOOKNAME_EXISTS);
         }
         book.setAuthorName(penName);
@@ -535,10 +537,9 @@ public class BookServiceImpl implements BookService {
         book.setUpdateTime(book.getCreateTime());
         bookMapper.insertSelective(book);
         if (Objects.isNull(book.getPicUrl()) || !book.getPicUrl().startsWith(Constants.LOCAL_PIC_PREFIX)) {
-            // 用户没有上传封面图片，AI自动生成封面图片
+            // Người dùng chưa tải bìa; AI tự động tạo ảnh bìa
             threadPoolExecutor.execute(() -> {
-                String prompt = String.format("生成一本小说的封面图片，图片中间显示书名《%s》，书名下方显示作者“%s 著”。",
-                    book.getBookName(), book.getAuthorName());
+                String prompt = messages.get("ai.cover.prompt", book.getBookName(), book.getAuthorName());
                 log.debug("prompt:{}", prompt);
                 ImageResponse response = openAiImageModel.call(
                     new ImagePrompt(prompt,
@@ -584,14 +585,14 @@ public class BookServiceImpl implements BookService {
 
         Book book = queryBookDetail(bookId);
         if (!authorId.equals(book.getAuthorId())) {
-            //并不是更新自己的小说
+            //Không được cập nhật tác phẩm của người khác
             return;
         }
         Long lastIndexId = idWorker.nextId();
         Date currentDate = new Date();
         int wordCount = StringUtil.getStrValidWordCount(content);
 
-        //更新小说主表信息
+        //Cập nhật thông tin bảng chính tác phẩm
         bookMapper.update(update(BookDynamicSqlSupport.book)
             .set(BookDynamicSqlSupport.lastIndexId)
             .equalTo(lastIndexId)
@@ -606,11 +607,11 @@ public class BookServiceImpl implements BookService {
             .build()
             .render(RenderingStrategies.MYBATIS3));
 
-        //计算价格
+        //Tính giá
         int bookPrice = new BigDecimal(wordCount).multiply(bookPriceConfig.getValue())
             .divide(bookPriceConfig.getWordCount(), 0, RoundingMode.DOWN).intValue();
 
-        //更新小说目录表
+        //Cập nhật bảng mục lục tác phẩm
         int indexNum = 0;
         if (book.getLastIndexId() != null) {
             indexNum = queryBookIndex(book.getLastIndexId()).getIndexNum() + 1;
@@ -627,7 +628,7 @@ public class BookServiceImpl implements BookService {
         lastBookIndex.setUpdateTime(currentDate);
         bookIndexMapper.insertSelective(lastBookIndex);
 
-        //更新小说内容表
+        //Cập nhật bảng nội dung tác phẩm
         BookContent bookContent = new BookContent();
         bookContent.setIndexId(lastIndexId);
         bookContent.setContent(content);
@@ -663,16 +664,16 @@ public class BookServiceImpl implements BookService {
     @Override
     public void deleteIndex(Long indexId, Long authorId) {
 
-        //查询小说章节表信息
+        //Truy vấn thông tin bảng chương
         List<BookIndex> bookIndices = bookIndexMapper.selectMany(
             select(BookIndexDynamicSqlSupport.bookId, BookIndexDynamicSqlSupport.wordCount)
                 .from(bookIndex)
                 .where(BookIndexDynamicSqlSupport.id, isEqualTo(indexId)).build().render(RenderingStrategies.MYBATIS3));
         if (bookIndices.size() > 0) {
             BookIndex bookIndex = bookIndices.get(0);
-            //获取小说ID
+            //Lấy ID tác phẩm
             Long bookId = bookIndex.getBookId();
-            //查询小说表信息
+            //Truy vấn thông tin bảng tác phẩm
             List<Book> books = bookMapper.selectMany(
                 select(wordCount, BookDynamicSqlSupport.authorId)
                     .from(book)
@@ -682,16 +683,16 @@ public class BookServiceImpl implements BookService {
             if (books.size() > 0) {
                 Book book = books.get(0);
                 int wordCount = book.getWordCount();
-                //作者ID相同，表明该小说是登录用户发布，可以删除
+                //ID tác giả trùng người đăng nhập nên có thể xóa tác phẩm
                 if (book.getAuthorId().equals(authorId)) {
-                    //删除目录表和内容表记录
+                    //Xóa bản ghi mục lục và nội dung
                     bookIndexMapper.deleteByPrimaryKey(indexId);
                     bookContentMapper.delete(
                         deleteFrom(bookContent).where(BookContentDynamicSqlSupport.indexId, isEqualTo(indexId)).build()
                             .render(RenderingStrategies.MYBATIS3));
-                    //更新总字数
+                    //Cập nhật tổng số chữ
                     wordCount = wordCount - bookIndex.getWordCount();
-                    //更新最新章节
+                    //Cập nhật chương mới nhất
                     Long lastIndexId = null;
                     String lastIndexName = null;
                     Date lastIndexUpdateTime = null;
@@ -711,7 +712,7 @@ public class BookServiceImpl implements BookService {
                         lastIndexUpdateTime = lastBookIndex.getCreateTime();
 
                     }
-                    //更新小说主表信息
+                    //Cập nhật thông tin bảng chính tác phẩm
                     bookMapper.update(update(BookDynamicSqlSupport.book)
                         .set(BookDynamicSqlSupport.wordCount)
                         .equalTo(wordCount)
@@ -739,16 +740,16 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public void updateIndexName(Long indexId, String indexName, Long authorId) {
-        //查询小说章节表信息
+        //Truy vấn thông tin bảng chương
         List<BookIndex> bookIndices = bookIndexMapper.selectMany(
             select(BookIndexDynamicSqlSupport.bookId, BookIndexDynamicSqlSupport.wordCount)
                 .from(bookIndex)
                 .where(BookIndexDynamicSqlSupport.id, isEqualTo(indexId)).build().render(RenderingStrategies.MYBATIS3));
         if (bookIndices.size() > 0) {
             BookIndex bookIndex = bookIndices.get(0);
-            //获取小说ID
+            //Lấy ID tác phẩm
             Long bookId = bookIndex.getBookId();
-            //查询小说表信息
+            //Truy vấn thông tin bảng tác phẩm
             List<Book> books = bookMapper.selectMany(
                 select(wordCount, BookDynamicSqlSupport.authorId)
                     .from(book)
@@ -757,7 +758,7 @@ public class BookServiceImpl implements BookService {
                     .render(RenderingStrategies.MYBATIS3));
             if (books.size() > 0) {
                 Book book = books.get(0);
-                //作者ID相同，表明该小说是登录用户发布，可以修改
+                //ID tác giả trùng với người đăng nhập, vì vậy có thể sửa tác phẩm
                 if (book.getAuthorId().equals(authorId)) {
 
                     bookIndexMapper.update(
@@ -780,16 +781,16 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public String queryIndexContent(Long indexId, Long authorId) {
-        //查询小说章节表信息
+        //Truy vấn thông tin bảng chương
         List<BookIndex> bookIndices = bookIndexMapper.selectMany(
             select(BookIndexDynamicSqlSupport.bookId, BookIndexDynamicSqlSupport.wordCount)
                 .from(bookIndex)
                 .where(BookIndexDynamicSqlSupport.id, isEqualTo(indexId)).build().render(RenderingStrategies.MYBATIS3));
         if (bookIndices.size() > 0) {
             BookIndex bookIndex = bookIndices.get(0);
-            //获取小说ID
+            //Lấy ID tác phẩm
             Long bookId = bookIndex.getBookId();
-            //查询小说表信息
+            //Truy vấn thông tin bảng tác phẩm
             List<Book> books = bookMapper.selectMany(
                 select(wordCount, BookDynamicSqlSupport.authorId)
                     .from(book)
@@ -798,7 +799,7 @@ public class BookServiceImpl implements BookService {
                     .render(RenderingStrategies.MYBATIS3));
             if (books.size() > 0) {
                 Book book = books.get(0);
-                //作者ID相同，表明该小说是登录用户发布
+                //ID tác giả trùng người đăng nhập, tác phẩm do người dùng này xuất bản
                 if (book.getAuthorId().equals(authorId)) {
                     return bookContentMapper.selectMany(
                             select(content)
@@ -818,16 +819,16 @@ public class BookServiceImpl implements BookService {
     @Override
     public void updateBookContent(Long indexId, String indexName, String content, Long authorId) {
 
-        //查询小说章节表信息
+        //Truy vấn thông tin bảng chương
         List<BookIndex> bookIndices = bookIndexMapper.selectMany(
             select(BookIndexDynamicSqlSupport.bookId, BookIndexDynamicSqlSupport.wordCount)
                 .from(bookIndex)
                 .where(BookIndexDynamicSqlSupport.id, isEqualTo(indexId)).build().render(RenderingStrategies.MYBATIS3));
         if (bookIndices.size() > 0) {
             BookIndex bookIndex = bookIndices.get(0);
-            //获取小说ID
+            //Lấy ID tác phẩm
             Long bookId = bookIndex.getBookId();
-            //查询小说表信息
+            //Truy vấn thông tin bảng tác phẩm
             List<Book> books = bookMapper.selectMany(
                 select(wordCount, BookDynamicSqlSupport.authorId)
                     .from(book)
@@ -836,16 +837,16 @@ public class BookServiceImpl implements BookService {
                     .render(RenderingStrategies.MYBATIS3));
             if (books.size() > 0) {
                 Book book = books.get(0);
-                //作者ID相同，表明该小说是登录用户发布，可以修改
+                //ID tác giả trùng với người đăng nhập, vì vậy có thể sửa tác phẩm
                 if (book.getAuthorId().equals(authorId)) {
                     Date currentDate = new Date();
                     int wordCount = StringUtil.getStrValidWordCount(content);
 
-                    //计算价格
+                    //Tính giá
                     int bookPrice = new BigDecimal(wordCount).multiply(bookPriceConfig.getValue())
                         .divide(bookPriceConfig.getWordCount(), 0, RoundingMode.DOWN).intValue();
 
-                    //更新小说目录表
+                    //Cập nhật bảng mục lục tác phẩm
                     bookIndexMapper.update(
                         update(BookIndexDynamicSqlSupport.bookIndex)
                             .set(BookIndexDynamicSqlSupport.indexName)
@@ -859,7 +860,7 @@ public class BookServiceImpl implements BookService {
                             .where(BookIndexDynamicSqlSupport.id, isEqualTo(indexId))
                             .build().render(RenderingStrategies.MYBATIS3));
 
-                    //更新小说内容表
+                    //Cập nhật bảng nội dung tác phẩm
                     bookContentMapper.update(
                         update(BookContentDynamicSqlSupport.bookContent)
                             .set(BookContentDynamicSqlSupport.content)
@@ -894,11 +895,11 @@ public class BookServiceImpl implements BookService {
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void addBookCommentReply(Long userId, BookCommentReply commentReply) {
-        //增加回复
+        //Tăng phản hồi
         commentReply.setCreateUserId(userId);
         commentReply.setCreateTime(new Date());
         bookCommentReplyMapper.insertSelective(commentReply);
-        //增加评论回复数
+        //Tăng số phản hồi bình luận
         bookCommentMapper.addReplyCount(commentReply.getCommentId());
     }
 

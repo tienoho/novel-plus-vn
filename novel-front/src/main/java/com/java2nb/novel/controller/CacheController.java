@@ -37,8 +37,8 @@ public class CacheController {
     private final FriendLinkService friendLinkService;
 
     /**
-     * 刷新缓存
-     * @param type 缓存类型，1：首页书籍推荐，2：首页新闻，3：首页友情链接
+     * Làm mới bộ nhớ đệm
+     * @param type loại bộ nhớ đệm: 1 đề xuất tác phẩm, 2 tin tức, 3 liên kết bạn bè trang chủ
      * */
     @GetMapping("refresh/{pass}/{type}")
     public RestResult<Void> refreshCache(@PathVariable("type") Byte type, @PathVariable("pass") String pass){
@@ -47,19 +47,19 @@ public class CacheController {
         }
         switch (type){
             case 1:{
-                //刷新首页推荐书籍缓存
+                //Làm mới bộ nhớ đệm đề xuất tác phẩm trang chủ
                 cacheService.del(CacheKey.INDEX_BOOK_SETTINGS_KEY);
                 bookService.listBookSettingVO();
                 break;
             }
             case 2:{
-                //刷新首页新闻缓存
+                //Làm mới bộ nhớ đệm tin tức trang chủ
                 cacheService.del(CacheKey.INDEX_NEWS_KEY);
                 newsService.listIndexNews();
                 break;
             }
             case 3:{
-                //刷新首页友情链接
+                //Làm mới liên kết bạn bè trang chủ
                 cacheService.del(CacheKey.INDEX_LINK_KEY);
                 friendLinkService.listIndexLink();
                 break;

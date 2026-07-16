@@ -114,7 +114,7 @@
 .comment_list .user_head { width: 50px; height: 50px; border-radius: 50%; background: #f6f6f6 }
 .comment_list .user_heads span { display: block; margin: 0; position: absolute; left: 12px; bottom: 0 }
 .comment_list ul { /*width: 640px;*/ width: 660px; }
-.comment_list .li_0 { font-family: "宋体" }
+.comment_list .li_0 { font-family: SimSun }
 .comment_list .li_0 strong { font-size: 14px; color: #f00 }
 .comment_list .li_1 { overflow: hidden }
 .comment_list .user_name { color: #ed4259 }

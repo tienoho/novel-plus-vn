@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 过滤器配置类
+ * Lớp cấu hình bộ lọc
  * @author Administrator
  */
 @Configuration
@@ -46,7 +46,7 @@ public class FilterConfig{
         FilterRegistrationBean<XssFilter> registration = new FilterRegistrationBean<>();
         //
         registration.setDispatcherTypes(DispatcherType.REQUEST);
-        //过滤器类（继承Filter）
+        //Lớp bộ lọc (kế thừa Filter)
         registration.setFilter(new XssFilter());
         //
         registration.addUrlPatterns(StringUtils.split(urlPatterns, ","));
@@ -57,7 +57,7 @@ public class FilterConfig{
         Map<String, String> initParameters = new HashMap<>(2);
         initParameters.put("excludes", excludes);
         initParameters.put("enabled", enabled);
-        //Filter 初始化参数
+        //Tham số khởi tạo Filter
         registration.setInitParameters(initParameters);
         return registration;
     }

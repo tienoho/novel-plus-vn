@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 部门管理
+ * Quản lý phòng ban
  * 
  * @author xiongxy
  * @email 1179705413@qq.com

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="#{crawl.error.title}">Không thể mở trang</title>
+    <style>
+        body {
+            align-items: center;
+            background: #f5f7f9;
+            color: #334155;
+            display: flex;
+            font-family: Arial, sans-serif;
+            justify-content: center;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        main {
+            max-width: 560px;
+            padding: 32px;
+            text-align: center;
+        }
+
+        strong {
+            color: #16a085;
+            display: block;
+            font-size: 72px;
+            line-height: 1;
+        }
+
+        a {
+            background: #16a085;
+            border-radius: 4px;
+            color: #fff;
+            display: inline-block;
+            margin-top: 12px;
+            padding: 10px 18px;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+<main>
+    <strong>404</strong>
+    <h1 th:text="#{crawl.error.title}">Không thể mở trang</h1>
+    <p th:text="#{crawl.error.message}">Trang bạn yêu cầu không tồn tại hoặc đã xảy ra lỗi.</p>
+    <a href="/" th:text="#{crawl.error.backHome}">Về trang quản lý</a>
+</main>
+</body>
+</html>

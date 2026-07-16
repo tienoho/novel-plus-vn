@@ -11,7 +11,7 @@ spring:
     host: 127.0.0.1
     port: 6379
     password: test123456
-    # 连接超时时间（毫秒）
+    # Thời gian chờ kết nối (mili giây)
     timeout: 10000
 
 

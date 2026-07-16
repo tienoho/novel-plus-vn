@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <meta charset="utf-8">
 <head th:include="include :: header"></head>
 <body class="gray-bg">
@@ -10,7 +10,7 @@
                 <div class="ibox-content">
                     <form class="form-horizontal m-t" id="signupForm">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">作品方向，0：男频，1：女频：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.book.direction}+'：'">Kênh tác phẩm (0: nam, 1: nữ):</label>
                             <div class="col-sm-8">
                                 <input id="workDirection" name="workDirection"
                                        class="form-control"
@@ -19,7 +19,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">分类ID：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.book.categoryId}+'：'">ID danh mục:</label>
                             <div class="col-sm-8">
                                 <input id="catId" name="catId"
                                        class="form-control"
@@ -28,7 +28,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">分类名：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.book.categoryName}+'：'">Tên danh mục:</label>
                             <div class="col-sm-8">
                                 <input id="catName" name="catName"
                                        class="form-control"
@@ -37,7 +37,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">子分类ID：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.book.subcategoryId}+'：'">ID danh mục con:</label>
                             <div class="col-sm-8">
                                 <input id="catChildId" name="catChildId"
                                        class="form-control"
@@ -46,7 +46,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">子分类名：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.book.subcategoryName}+'：'">Tên danh mục con:</label>
                             <div class="col-sm-8">
                                 <input id="catChildName" name="catChildName"
                                        class="form-control"
@@ -55,7 +55,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">小说封面：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.book.cover}+'：'">Ảnh bìa:</label>
                             <div class="col-sm-8">
                                 <input id="picUrl" name="picUrl"
                                        class="form-control"
@@ -64,7 +64,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">小说名：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.book.name}+'：'">Tên truyện:</label>
                             <div class="col-sm-8">
                                 <input id="bookName" name="bookName"
                                        class="form-control"
@@ -73,7 +73,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">男主角姓名：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.book.maleLead}+'：'">Tên nhân vật nam chính:</label>
                             <div class="col-sm-8">
                                 <input id="heroName" name="heroName"
                                        class="form-control"
@@ -82,7 +82,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">女主角姓名：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.book.femaleLead}+'：'">Tên nhân vật nữ chính:</label>
                             <div class="col-sm-8">
                                 <input id="ladyName" name="ladyName"
                                        class="form-control"
@@ -91,7 +91,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">作品风格，0：甜宠，1：虐恋，2：其他：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.book.style}+'：'">Phong cách (0: ngọt ngào, 1: ngược tâm, 2: khác):</label>
                             <div class="col-sm-8">
                                 <input id="bookStyle" name="bookStyle"
                                        class="form-control"
@@ -100,7 +100,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">作品标签：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.book.tags}+'：'">Nhãn tác phẩm:</label>
                             <div class="col-sm-8">
                                 <input id="bookLabel" name="bookLabel"
                                        class="form-control"
@@ -109,7 +109,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">作者id：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.book.authorId}+'：'">ID tác giả:</label>
                             <div class="col-sm-8">
                                 <input id="authorId" name="authorId"
                                        class="form-control"
@@ -118,7 +118,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">作者名：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.book.authorName}+'：'">Tên tác giả:</label>
                             <div class="col-sm-8">
                                 <input id="authorName" name="authorName"
                                        class="form-control"
@@ -127,7 +127,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">书籍描述：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.book.description}+'：'">Giới thiệu truyện:</label>
                             <div class="col-sm-8">
                                 <input id="bookDesc" name="bookDesc"
                                        class="form-control"
@@ -136,7 +136,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">评分，预留字段：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.book.score}+'：'">Điểm số:</label>
                             <div class="col-sm-8">
                                 <input id="score" name="score"
                                        class="form-control"
@@ -145,7 +145,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">书籍状态，0：连载中，1：已完结：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.book.status}+'：'">Trạng thái truyện (0: đang ra, 1: hoàn thành):</label>
                             <div class="col-sm-8">
                                 <input id="bookStatus" name="bookStatus"
                                        class="form-control"
@@ -154,7 +154,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">点击量：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.book.views}+'：'">Lượt xem:</label>
                             <div class="col-sm-8">
                                 <input id="visitCount" name="visitCount"
                                        class="form-control"
@@ -163,7 +163,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">总字数：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.book.wordCount}+'：'">Tổng số chữ:</label>
                             <div class="col-sm-8">
                                 <input id="wordCount" name="wordCount"
                                        class="form-control"
@@ -172,7 +172,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">评论数：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.book.commentCount}+'：'">Số bình luận:</label>
                             <div class="col-sm-8">
                                 <input id="commentCount" name="commentCount"
                                        class="form-control"
@@ -181,7 +181,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">昨日订阅数：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.book.yesterdaySubscriptions}+'：'">Lượt mua chương hôm qua:</label>
                             <div class="col-sm-8">
                                 <input id="yesterdayBuy" name="yesterdayBuy"
                                        class="form-control"
@@ -190,7 +190,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">最新目录ID：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.book.latestIndexId}+'：'">ID chương mới nhất:</label>
                             <div class="col-sm-8">
                                 <input id="lastIndexId" name="lastIndexId"
                                        class="form-control"
@@ -199,7 +199,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">最新目录名：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.book.latestIndexName}+'：'">Tên chương mới nhất:</label>
                             <div class="col-sm-8">
                                 <input id="lastIndexName" name="lastIndexName"
                                        class="form-control"
@@ -208,7 +208,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">最新目录更新时间：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.book.latestIndexUpdatedAt}+'：'">Thời gian cập nhật chương mới nhất:</label>
                             <div class="col-sm-8">
                                 <input type="text" class="laydate-icon layer-date form-control"
                                        id="lastIndexUpdateTime"
@@ -219,7 +219,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">是否收费，1：收费，0：免费：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.book.paid}+'：'">Thu phí (1: thu phí, 0: miễn phí):</label>
                             <div class="col-sm-8">
                                 <input id="isVip" name="isVip"
                                        class="form-control"
@@ -228,7 +228,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">状态，0：入库，1：上架：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.book.shelfStatus}+'：'">Trạng thái (0: đã nhập, 1: đã xuất bản):</label>
                             <div class="col-sm-8">
                                 <input id="status" name="status"
                                        class="form-control"
@@ -237,7 +237,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">更新时间：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.book.updatedAt}+'：'">Thời gian cập nhật:</label>
                             <div class="col-sm-8">
                                 <input type="text" class="laydate-icon layer-date form-control"
                                        id="updateTime"
@@ -248,7 +248,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">创建时间：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.book.createdAt}+'：'">Thời gian tạo:</label>
                             <div class="col-sm-8">
                                 <input type="text" class="laydate-icon layer-date form-control"
                                        id="createTime"
@@ -259,7 +259,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">爬虫源站ID：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.book.crawlSourceId}+'：'">ID nguồn thu thập:</label>
                             <div class="col-sm-8">
                                 <input id="crawlSourceId" name="crawlSourceId"
                                        class="form-control"
@@ -268,7 +268,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">抓取的源站小说ID：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.book.crawlBookId}+'：'">ID truyện trên website nguồn:</label>
                             <div class="col-sm-8">
                                 <input id="crawlBookId" name="crawlBookId"
                                        class="form-control"
@@ -277,7 +277,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">最后一次的抓取时间：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.book.lastCrawlAt}+'：'">Thời gian thu thập gần nhất:</label>
                             <div class="col-sm-8">
                                 <input type="text" class="laydate-icon layer-date form-control"
                                        id="crawlLastTime"
@@ -288,7 +288,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">是否已停止更新，0：未停止，1：已停止：</label>
+                            <label class="col-sm-3 control-label" th:text="#{admin.book.stopUpdate}+'：'">Đã dừng cập nhật (0: chưa dừng, 1: đã dừng):</label>
                             <div class="col-sm-8">
                                 <input id="crawlIsStop" name="crawlIsStop"
                                        class="form-control"
@@ -298,7 +298,7 @@
                         </div>
                         <div class="form-group">
                             <div class="col-sm-8 col-sm-offset-3">
-                                <button type="submit" class="btn btn-primary">提交</button>
+                                <button type="submit" class="btn btn-primary" th:text="#{common.submit}">Gửi</button>
                             </div>
                         </div>
                     </form>

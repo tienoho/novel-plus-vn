@@ -35,14 +35,14 @@ public class FrontNovelApplication {
     @Bean
     public CommandLineRunner commandLineRunner(ApplicationContext ctx) {
         return args -> {
-            log.info("项目启动啦，访问路径：{}",
+            log.info("Ứng dụng đã khởi động, địa chỉ truy cập: {}",
                 "http://" + InetAddress.getLocalHost().getHostAddress() + ":" + ctx.getEnvironment()
                     .getProperty("server.port"));
         };
     }
 
     /**
-     * 解决同一时间只能一个定时任务执行的问题
+     * Bảo đảm tại một thời điểm chỉ một tác vụ theo lịch được thực thi
      */
     @Bean
     public TaskScheduler taskScheduler() {

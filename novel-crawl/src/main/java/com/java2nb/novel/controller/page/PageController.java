@@ -32,7 +32,7 @@ public class PageController {
     }
 
     /**
-     * 首页
+     * Trang chủ
      */
     @RequestMapping(path = {"/", "/index", "/index.html"})
     public String index() {

@@ -23,7 +23,7 @@ import com.java2nb.common.utils.Query;
 import com.java2nb.common.utils.R;
 
 /**
- * 角色与数据权限对应关系
+ * Quan hệ giữa vai trò và quyền dữ liệu
  *
  * @author xiongxy
  * @email 1179705413@qq.com
@@ -42,12 +42,12 @@ public class RoleDataPermController {
         return "system/roleDataPerm/roleDataPerm";
     }
 
-    @ApiOperation(value = "获取角色与数据权限对应关系列表", notes = "获取角色与数据权限对应关系列表")
+    @ApiOperation(value = "Lấy danh sách quan hệ giữa vai trò và quyền dữ liệu", notes = "Lấy danh sách quan hệ giữa vai trò và quyền dữ liệu")
     @ResponseBody
     @GetMapping("/list")
     @RequiresPermissions("system:roleDataPerm:roleDataPerm")
     public R list(@RequestParam Map<String, Object> params) {
-        //查询列表数据
+        // Truy vấn dữ liệu danh sách
         Query query = new Query(params);
         List<RoleDataPermDO> roleDataPermList = roleDataPermService.list(query);
         int total = roleDataPermService.count(query);
@@ -55,14 +55,14 @@ public class RoleDataPermController {
         return R.ok().put("data", pageBean);
     }
 
-    @ApiOperation(value = "新增角色与数据权限对应关系页面", notes = "新增角色与数据权限对应关系页面")
+    @ApiOperation(value = "Trang thêm quan hệ giữa vai trò và quyền dữ liệu", notes = "Trang thêm quan hệ giữa vai trò và quyền dữ liệu")
     @GetMapping("/add")
     @RequiresPermissions("system:roleDataPerm:add")
     String add() {
         return "system/roleDataPerm/add";
     }
 
-    @ApiOperation(value = "修改角色与数据权限对应关系页面", notes = "修改角色与数据权限对应关系页面")
+    @ApiOperation(value = "Trang sửa quan hệ giữa vai trò và quyền dữ liệu", notes = "Trang sửa quan hệ giữa vai trò và quyền dữ liệu")
     @GetMapping("/edit/{id}")
     @RequiresPermissions("system:roleDataPerm:edit")
     String edit(@PathVariable("id") Long id, Model model) {
@@ -71,7 +71,7 @@ public class RoleDataPermController {
         return "system/roleDataPerm/edit";
     }
 
-    @ApiOperation(value = "查看角色与数据权限对应关系页面", notes = "查看角色与数据权限对应关系页面")
+    @ApiOperation(value = "Trang chi tiết quan hệ giữa vai trò và quyền dữ liệu", notes = "Trang chi tiết quan hệ giữa vai trò và quyền dữ liệu")
     @GetMapping("/detail/{id}")
     @RequiresPermissions("system:roleDataPerm:detail")
     String detail(@PathVariable("id") Long id, Model model) {
@@ -81,9 +81,9 @@ public class RoleDataPermController {
     }
 
     /**
-     * 保存
+     * Lưu
      */
-    @ApiOperation(value = "新增角色与数据权限对应关系", notes = "新增角色与数据权限对应关系")
+    @ApiOperation(value = "Thêm quan hệ giữa vai trò và quyền dữ liệu", notes = "Thêm quan hệ giữa vai trò và quyền dữ liệu")
     @ResponseBody
     @PostMapping("/save")
     @RequiresPermissions("system:roleDataPerm:add")
@@ -95,9 +95,9 @@ public class RoleDataPermController {
     }
 
     /**
-     * 修改
+     * Sửa
      */
-    @ApiOperation(value = "修改角色与数据权限对应关系", notes = "修改角色与数据权限对应关系")
+    @ApiOperation(value = "Sửa quan hệ giữa vai trò và quyền dữ liệu", notes = "Sửa quan hệ giữa vai trò và quyền dữ liệu")
     @ResponseBody
     @RequestMapping("/update")
     @RequiresPermissions("system:roleDataPerm:edit")
@@ -107,9 +107,9 @@ public class RoleDataPermController {
     }
 
     /**
-     * 删除
+     * Xóa
      */
-    @ApiOperation(value = "删除角色与数据权限对应关系", notes = "删除角色与数据权限对应关系")
+    @ApiOperation(value = "Xóa quan hệ giữa vai trò và quyền dữ liệu", notes = "Xóa quan hệ giữa vai trò và quyền dữ liệu")
     @PostMapping("/remove")
     @ResponseBody
     @RequiresPermissions("system:roleDataPerm:remove")
@@ -121,9 +121,9 @@ public class RoleDataPermController {
     }
 
     /**
-     * 删除
+     * Xóa
      */
-    @ApiOperation(value = "批量删除角色与数据权限对应关系", notes = "批量删除角色与数据权限对应关系")
+    @ApiOperation(value = "Xóa hàng loạt quan hệ giữa vai trò và quyền dữ liệu", notes = "Xóa hàng loạt quan hệ giữa vai trò và quyền dữ liệu")
     @PostMapping("/batchRemove")
     @ResponseBody
     @RequiresPermissions("system:roleDataPerm:batchRemove")

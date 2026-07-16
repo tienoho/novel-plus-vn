@@ -18,7 +18,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * 作家日收入统计任务
+ * Tác vụ thống kê thu nhập hằng ngày của tác giả
  *
  * @author cd
  */
@@ -34,30 +34,30 @@ public class MonthIncomeStaSchedule {
     private final AuthorIncomeProperties authorIncomeConfig;
 
     /**
-     * 每个月1号凌晨2点统计上个月数据
+     * Thống kê dữ liệu tháng trước lúc 2 giờ ngày đầu tháng
      */
     @Scheduled(cron = "0 0 2 1 * ?")
     public void statistics() {
 
-        //获取上个月的开始时间和结束时间
+        //Lấy thời điểm bắt đầu và kết thúc tháng trước
         Date startTime = DateUtil.getLastMonthStartTime();
         Date endTime = DateUtil.getLastMonthEndTime();
 
-        //每次查询的作家数量
+        //Số tác giả mỗi lần truy vấn
         int needAuthorNumber = 10;
-        //查询出来的真实作家数量
+        //Số tác giả thực tế truy vấn được
         int realAuthorNumber;
-        //每次查询最大申请时间
+        //Khoảng thời gian yêu cầu tối đa mỗi lần truy vấn
         Date maxAuthorCreateTime = new Date();
         do {
-            //1.查询作家列表
+            //1. Truy vấn danh sách tác giả
             List<Author> authors = authorService.queryAuthorList(needAuthorNumber, maxAuthorCreateTime);
             realAuthorNumber = authors.size();
             for (Author author : authors) {
                 maxAuthorCreateTime = author.getCreateTime();
                 Long authorId = author.getId();
                 Long userId = author.getUserId();
-                //2.查询作家作品
+                //2. Truy vấn tác phẩm của tác giả
                 List<Book> books = bookService.queryBookList(authorId);
 
                 long totalPreTaxIncome = 0L;
@@ -66,7 +66,7 @@ public class MonthIncomeStaSchedule {
 
                     Long bookId = book.getId();
 
-                    //3.月收入数据未统计入库,分作品统计数据入库
+                    //3. Nếu chưa lưu thống kê thu nhập tháng, lưu theo từng tác phẩm
                     Long monthIncome = authorService.queryTotalAccount(userId, bookId, startTime, endTime);
 
                     BigDecimal monthIncomeShare = new BigDecimal(monthIncome)
@@ -86,7 +86,7 @@ public class MonthIncomeStaSchedule {
 
                     totalAfterTaxIncome += afterTaxIncome;
 
-                    //4.查询月收入统计是否入库
+                    //4. Kiểm tra thống kê thu nhập tháng đã được lưu hay chưa
                     if (monthIncome > 0 && !authorService.queryIsStatisticsMonth(bookId, endTime)) {
                         AuthorIncome authorIncome = new AuthorIncome();
                         authorIncome.setAuthorId(authorId);

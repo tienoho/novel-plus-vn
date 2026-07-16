@@ -19,39 +19,39 @@ public class WebLogAspect {
 
     private static final Logger logger = LoggerFactory.getLogger(WebLogAspect.class);
 
-    @Pointcut("execution( * com.java2nb..controller.*.*(..))")//两个..代表所有子目录，最后括号里的两个..代表所有参数
+    @Pointcut("execution( * com.java2nb..controller.*.*(..))")//Hai dấu chấm đại diện mọi thư mục con; hai dấu chấm trong ngoặc cuối đại diện mọi tham số
     public void logPointCut() {
     }
 
 
     @Before("logPointCut()")
     public void doBefore(JoinPoint joinPoint) throws Throwable {
-        // 接收到请求，记录请求内容
+        // Nhận yêu cầu và ghi lại nội dung
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         HttpServletRequest request = attributes.getRequest();
 
-        // 记录下请求内容
-        logger.info("请求地址 : " + request.getRequestURL().toString());
+        // Ghi lại nội dung yêu cầu
+        logger.info("Địa chỉ yêu cầu: " + request.getRequestURL().toString());
         logger.info("HTTP METHOD : " + request.getMethod());
-        // 获取真实的ip地址
+        // Lấy địa chỉ IP thực
         logger.info("IP : " + IPUtils.getIpAddr(request));
         logger.info("CLASS_METHOD : " + joinPoint.getSignature().getDeclaringTypeName() + "."
             + joinPoint.getSignature().getName());
-        logger.info("参数 : " + Arrays.toString(joinPoint.getArgs()));
+        logger.info("Tham số: " + Arrays.toString(joinPoint.getArgs()));
 
     }
 
-    @AfterReturning(returning = "ret", pointcut = "logPointCut()")// returning的值和doAfterReturning的参数名一致
+    @AfterReturning(returning = "ret", pointcut = "logPointCut()")// Giá trị returning trùng tên tham số của doAfterReturning
     public void doAfterReturning(Object ret) throws Throwable {
-        // 处理完请求，返回内容(返回值太复杂时，打印的是物理存储空间的地址)
-        logger.debug("返回值 : " + ret);
+        // Sau khi xử lý yêu cầu, trả nội dung; nếu giá trị quá phức tạp, log có thể hiển thị địa chỉ bộ nhớ
+        logger.debug("Giá trị trả về: " + ret);
     }
 
     @Around("logPointCut()")
     public Object doAround(ProceedingJoinPoint pjp) throws Throwable {
         long startTime = System.currentTimeMillis();
-        Object ob = pjp.proceed();// ob 为方法的返回值
-        logger.info("耗时 : " + (System.currentTimeMillis() - startTime));
+        Object ob = pjp.proceed();// ob là giá trị trả về của phương thức
+        logger.info("Thời gian xử lý: " + (System.currentTimeMillis() - startTime));
         return ob;
     }
 }

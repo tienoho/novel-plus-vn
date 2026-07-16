@@ -30,7 +30,7 @@ function AddToFavorites(isTip)
             window.external.AddFavorite(url, title);
         else {
             if(isTip){
-                alert("该浏览器不支持自动收藏，请点击Ctrl+D手动收藏！");
+                alert(novelMessage('favoriteUnsupported', 'Trình duyệt này không hỗ trợ lưu tự động. Hãy nhấn Ctrl+D để lưu trang.'));
             }
         }
     }

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh_CN" xmlns:th="http://www.thymeleaf.org"
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
 	xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
 <meta charset="utf-8">
 <head th:include="include :: header"></head>
@@ -10,12 +10,12 @@
 				<div class="ibox-body">
 					<div id="exampleToolbar" role="group" class="t-bar">
 						<button shiro:hasPermission="sys:menu:add" type="button"
-							class="btn btn-primary" title="在根节点下添加菜单" onclick="add('0')">
-							<i class="fa fa-plus" aria-hidden="true"></i>添加
+							class="btn btn-primary" th:title="#{admin.menu.add}" title="Thêm menu ở cấp gốc" onclick="add('0')">
+							<i class="fa fa-plus" aria-hidden="true"></i><span th:text="#{common.add}">Thêm</span>
 						</button>
 						<button shiro:hasPermission="sys:menu:batchRemove" type="button"
 							class="btn btn-danger" onclick="batchRemove()">
-							<i class="fa fa-trash" aria-hidden="true"></i>删除
+							<i class="fa fa-trash" aria-hidden="true"></i><span th:text="#{common.deleteAction}">Xóa</span>
 						</button>
 					</div>
 					<table id="exampleTable" data-mobile-responsive="true">
@@ -23,7 +23,7 @@
 				</div>
 			</div>
 		</div>
-		<!--shiro控制bootstraptable行内按钮看见性 -->
+		<!-- Shiro kiểm soát khả năng hiển thị nút thao tác trong Bootstrap Table. -->
 		<div>
 			<script type="text/javascript">
 				var s_add_h = 'hidden';

@@ -25,151 +25,151 @@ public class UserDO implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	
-	//主键
-		//java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-	//所以通过序列化成字符串来解决
+	// Khóa chính
+		// Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+	// Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
 	@JsonSerialize(using = LongToStringSerializer.class)
 			private Long id;
-	//登录名
+	// Tên đăng nhập
 			private String username;
-	//登录密码
+	// Mật khẩu đăng nhập
 			private String password;
-	//昵称
+	// Biệt danh
 			private String nickName;
-	//用户头像
+	// Ảnh đại diện người dùng
 			private String userPhoto;
-	//用户性别，0：男，1：女
+	// Giới tính người dùng: 0 nam, 1 nữ
 			private Integer userSex;
-	//账户余额
-		//java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-	//所以通过序列化成字符串来解决
+	// Số dư tài khoản
+		// Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+	// Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
 	@JsonSerialize(using = LongToStringSerializer.class)
 			private Long accountBalance;
-	//用户状态，0：正常
+	// Trạng thái người dùng: 0 bình thường
 			private Integer status;
-	//创建时间
+	// Thời gian tạo
 			@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 		private Date createTime;
-	//更新时间
+	// Thời gian cập nhật
 			@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 		private Date updateTime;
 
 	/**
-	 * 设置：主键
+	 * Đặt: khóa chính
 	 */
 	public void setId(Long id) {
 		this.id = id;
 	}
 	/**
-	 * 获取：主键
+	 * Lấy: khóa chính
 	 */
 	public Long getId() {
 		return id;
 	}
 	/**
-	 * 设置：登录名
+	 * Đặt: tên đăng nhập
 	 */
 	public void setUsername(String username) {
 		this.username = username;
 	}
 	/**
-	 * 获取：登录名
+	 * Lấy: tên đăng nhập
 	 */
 	public String getUsername() {
 		return username;
 	}
 	/**
-	 * 设置：登录密码
+	 * Đặt: mật khẩu đăng nhập
 	 */
 	public void setPassword(String password) {
 		this.password = password;
 	}
 	/**
-	 * 获取：登录密码
+	 * Lấy: mật khẩu đăng nhập
 	 */
 	public String getPassword() {
 		return password;
 	}
 	/**
-	 * 设置：昵称
+	 * Đặt: biệt danh
 	 */
 	public void setNickName(String nickName) {
 		this.nickName = nickName;
 	}
 	/**
-	 * 获取：昵称
+	 * Lấy: biệt danh
 	 */
 	public String getNickName() {
 		return nickName;
 	}
 	/**
-	 * 设置：用户头像
+	 * Đặt: ảnh đại diện người dùng
 	 */
 	public void setUserPhoto(String userPhoto) {
 		this.userPhoto = userPhoto;
 	}
 	/**
-	 * 获取：用户头像
+	 * Lấy: ảnh đại diện người dùng
 	 */
 	public String getUserPhoto() {
 		return userPhoto;
 	}
 	/**
-	 * 设置：用户性别，0：男，1：女
+	 * Đặt: giới tính: 0 nam, 1 nữ
 	 */
 	public void setUserSex(Integer userSex) {
 		this.userSex = userSex;
 	}
 	/**
-	 * 获取：用户性别，0：男，1：女
+	 * Lấy: giới tính: 0 nam, 1 nữ
 	 */
 	public Integer getUserSex() {
 		return userSex;
 	}
 	/**
-	 * 设置：账户余额
+	 * Đặt: số dư tài khoản
 	 */
 	public void setAccountBalance(Long accountBalance) {
 		this.accountBalance = accountBalance;
 	}
 	/**
-	 * 获取：账户余额
+	 * Lấy: số dư tài khoản
 	 */
 	public Long getAccountBalance() {
 		return accountBalance;
 	}
 	/**
-	 * 设置：用户状态，0：正常
+	 * Đặt: trạng thái người dùng: 0 bình thường
 	 */
 	public void setStatus(Integer status) {
 		this.status = status;
 	}
 	/**
-	 * 获取：用户状态，0：正常
+	 * Lấy: trạng thái người dùng: 0 bình thường
 	 */
 	public Integer getStatus() {
 		return status;
 	}
 	/**
-	 * 设置：创建时间
+	 * Đặt: thời gian tạo
 	 */
 	public void setCreateTime(Date createTime) {
 		this.createTime = createTime;
 	}
 	/**
-	 * 获取：创建时间
+	 * Lấy: thời gian tạo
 	 */
 	public Date getCreateTime() {
 		return createTime;
 	}
 	/**
-	 * 设置：更新时间
+	 * Đặt: thời gian cập nhật
 	 */
 	public void setUpdateTime(Date updateTime) {
 		this.updateTime = updateTime;
 	}
 	/**
-	 * 获取：更新时间
+	 * Lấy: thời gian cập nhật
 	 */
 	public Date getUpdateTime() {
 		return updateTime;

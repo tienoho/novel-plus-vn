@@ -1,11 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
-<!DOCTYPE html>
-<html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>登录</title>
+    <title th:text="#{site.login}">Đăng nhập</title>
 
     <div th:include="mobile/common/css :: css"></div>
 
@@ -19,7 +17,7 @@
         <a href="javascript:history.go(-1)">
             <i style="font-size: 20px;color: #fff;" class="layui-icon">&#xe65c;</i></a>
     </div>
-    <b class="layui-icon">登录</b>
+    <b class="layui-icon" th:text="#{site.login}">Đăng nhập</b>
     <div style="width:10%;float: right;margin-right: 10px"><a href="/">
         <i style="font-size: 20px;color: #fff;" class="layui-icon">&#xe68e;</i>
     </a>
@@ -29,29 +27,29 @@
       action="">
     <input type="hidden" id="bookIdHidden" name="bookId" th:value="${bookId}"/>
     <div class="layui-form-item">
-        <label class="layui-form-label">手机号码</label>
+        <label class="layui-form-label" th:text="#{auth.phone}">Số điện thoại</label>
         <div class="layui-input-inline">
-            <input name="txtUName" type="text" id="txtUName" placeholder="请输入手机号"
+            <input name="txtUName" type="text" id="txtUName" th:placeholder="#{auth.phone}"
                    autocomplete="off" class="layui-input">
         </div>
     </div>
     <div class="layui-form-item">
-        <label class="layui-form-label">密码</label>
+        <label class="layui-form-label" th:text="#{auth.password}">Mật khẩu</label>
         <div class="layui-input-inline">
-            <input name="txtPassword" type="password" id="txtPassword" placeholder="请输入密码"
+            <input name="txtPassword" type="password" id="txtPassword" th:placeholder="#{auth.password}"
                    autocomplete="off" class="layui-input">
         </div>
 
     </div>
     <div class="layui-form-item">
         <div class="layui-input-block">
-            <input id="autoLogin" type="checkbox" lay-skin="primary" title="下次自动登录">
+            <input id="autoLogin" type="checkbox" lay-skin="primary" th:title="#{auth.autoLogin}">
         </div>
     </div>
     <div class="layui-form-item">
         <div class="layui-input-block">
-            <input type="button" value="登录" id="btnLogin" class="layui-btn"/>
-            <a class="layui-btn layui-btn-primary" href="/user/register.html">注册</a>
+            <input type="button" th:value="#{site.login}" id="btnLogin" class="layui-btn"/>
+            <a class="layui-btn layui-btn-primary" href="/user/register.html" th:text="#{site.register}">Đăng ký</a>
         </div>
     </div>
 </form>
@@ -62,7 +60,13 @@
 </body>
 <div th:replace="mobile/common/js :: js">
 </div>
-<script type="text/javascript">
+<script type="text/javascript" th:inline="javascript">
+    const loginMessages = {
+        phoneRequired: /*[[#{auth.phone.required}]]*/ 'Vui lòng nhập số điện thoại!',
+        phoneInvalid: /*[[#{auth.phone.invalid}]]*/ 'Số điện thoại không đúng định dạng!',
+        passwordRequired: /*[[#{auth.password.required}]]*/ 'Vui lòng nhập mật khẩu!',
+        networkError: /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng'
+    };
     if (localStorage.getItem("autoLogin") == 1) {
         $("#autoLogin").prop("checked", 'true');
         layui.form.render('checkbox', 'loginForm');
@@ -72,16 +76,16 @@
     $("#btnLogin").click(function () {
         var username = $("#txtUName").val();
         if (username.isBlank()) {
-            layer.alert("手机号不能为空！");
+            layer.alert(loginMessages.phoneRequired);
             return;
         }
         if (!username.isPhone()) {
-            layer.alert("手机号格式不正确！");
+            layer.alert(loginMessages.phoneInvalid);
             return;
         }
         var password = $("#txtPassword").val();
         if (password.isBlank()) {
-            layer.alert("密码不能为空！");
+            layer.alert(loginMessages.passwordRequired);
             return;
         }
         $.ajax({
@@ -106,7 +110,7 @@
 
             },
             error: function () {
-                layer.alert('网络异常');
+                layer.alert(loginMessages.networkError);
             }
         })
 

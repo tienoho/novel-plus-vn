@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 
 /**
- * 作家收入配置属性
+ * Thuộc tính cấu hình thu nhập tác giả
  * @author cd
  */
 @Component

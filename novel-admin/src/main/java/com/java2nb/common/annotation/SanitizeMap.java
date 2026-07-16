@@ -3,9 +3,9 @@ package com.java2nb.common.annotation;
 import java.lang.annotation.*;
 
 /**
- * 标记某个方法参数需要进行 Map 字段的清理和标准化处理。
+ * Đánh dấu tham số phương thức cần làm sạch và chuẩn hóa các trường Map.
  *
- * <p>通常用于 DAO 接口中 list 方法的 Map 参数，用于防止非法排序字段或排序顺序。</p>
+ * <p>Thường dùng cho tham số Map của phương thức list trong DAO để ngăn trường hoặc thứ tự sắp xếp không hợp lệ.</p>
  */
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)

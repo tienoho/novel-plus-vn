@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
     <meta charset="utf-8">
     <meta th:if="${catId == 9}" name="viewport" content="width=device-width, initial-scale=0.5, maximum-scale=1">
@@ -9,7 +9,7 @@
     <meta name="keywords" th:content="${book.bookName}+','+${bookIndex.indexName}">
 
     <meta name="description"
-          th:content="${book.bookName}+'最新更新章节免费在线阅读TXT下载'">
+          th:content="#{reader.seo.chapter.description(${book.bookName})}">
 
 
 
@@ -196,32 +196,32 @@
 
 
 <p class="Readpage" style="background:#FFFFFF;padding:2px;">
-    <a id="lightdiv" class="button lighton" onclick="nr_setbg('light')">开灯</a>
-    <a id="huyandiv" class="button huyanon" onclick="nr_setbg('huyan')">护眼</a>&nbsp;&nbsp;&nbsp;&nbsp;
-    字体：<a id="fontbig" class="sizebg" onclick="nr_setbg('big')">大</a> <a id="fontmiddle" class="button sizebgon"
-                                                                         onclick="nr_setbg('middle')">中</a> <a
-        id="fontsmall" class="sizebg" onclick="nr_setbg('small')">小</a>
+    <a id="lightdiv" class="button lighton" onclick="nr_setbg('light')" th:text="#{reader.lightOn}">Bật đèn</a>
+    <a id="huyandiv" class="button huyanon" onclick="nr_setbg('huyan')" th:text="#{reader.eyeCare}">Bảo vệ mắt</a>&nbsp;&nbsp;&nbsp;&nbsp;
+    <span th:text="#{reader.fontSize}+'：'">Cỡ chữ:</span><a id="fontbig" class="sizebg" onclick="nr_setbg('big')" th:text="#{reader.font.large}">Lớn</a> <a id="fontmiddle" class="button sizebgon"
+                                                                         onclick="nr_setbg('middle')" th:text="#{reader.font.medium}">Vừa</a> <a
+        id="fontsmall" class="sizebg" onclick="nr_setbg('small')" th:text="#{reader.font.small}">Nhỏ</a>
 </p>
 <div class="indexDiv" style="height: 42px;line-height: 42px;text-align:center;background: #f2f2f2">
 
-    <a th:href="${preBookIndexId!=0?'/book/'+book.id+'/'+preBookIndexId+'.html':'#'}">上一章</a>
-    <a th:href="'/book/indexList-'+${book.id}+'.html'">目录</a>
-    <a th:href="${nextBookIndexId!=0?'/book/'+book.id+'/'+nextBookIndexId+'.html':'#'}">下一章</a>
+    <a th:href="${preBookIndexId!=0?'/book/'+book.id+'/'+preBookIndexId+'.html':'#'}" th:text="#{reader.previous}">Chương trước</a>
+    <a th:href="'/book/indexList-'+${book.id}+'.html'" th:text="#{book.catalog}">Mục lục</a>
+    <a th:href="${nextBookIndexId!=0?'/book/'+book.id+'/'+nextBookIndexId+'.html':'#'}" th:text="#{reader.next}">Chương sau</a>
 </div>
 <!--<div id="screenInput" class="screen_toolbar" style="display: none">
     <div style="height: 5px" class="layui-col-xs2 layui-col-sm3 layui-col-md3 layui-col-lg3"></div>
     <div class="layui-col-xs6 layui-col-sm4 layui-col-md4 layui-col-lg4">
-        <input type="text" id="screenBulletText" required lay-verify="required" placeholder="请输入弹幕内容,右下角开关可控制弹幕是否开启" autocomplete="off"
+        <input type="text" id="screenBulletText" required lay-verify="required" placeholder="Nhập nội dung bình luận chạy; công tắc góc dưới bên phải dùng để bật hoặc tắt" autocomplete="off"
                class="layui-input">
 
     </div>
     <div class="layui-col-xs2 layui-col-sm1 layui-col-md1 layui-col-lg1">
-        <button class="layui-btn send">发送</button>
+        <button class="layui-btn send">Gửi</button>
     </div>
 </div>
 <form id="screenSwitch" class="layui-form">
-    <div class="layui-form-item" style="position: fixed;right: 0px;bottom: 100px" title="弹幕开关">
-        &lt;!&ndash; <label  class="layui-form-label" style="opacity:0.5;font-weight: bold;color: red;">弹幕</label>&ndash;&gt;
+    <div class="layui-form-item" style="position: fixed;right: 0px;bottom: 100px" title="Bật hoặc tắt bình luận chạy">
+        &lt;!&ndash; <label  class="layui-form-label" style="opacity:0.5;font-weight: bold;color: red;">Bình luận chạy</label>&ndash;&gt;
         <div class="layui-input-block">
             <input class="clear" type="checkbox" name="switch" lay-skin="switch">
         </div>
@@ -237,16 +237,16 @@
 </div>
 <div  class="Readarea ReadAjax_content screen_container"
      style="color: rgb(0, 0, 0); font-size: 10px;background-color: #fff" th:if="${needBuy}">
-    <h5>此章为VIP章节，需要订阅后才能继续阅读</h5>
-    价格：<span style="color: red" th:text="${bookIndex.bookPrice}+'屋币(1元=100屋币)'"></span><br/>
-    <a href="javascript:buyBookIndex()"  type="button" class="layui-btn layui-btn-sm layui-btn-radius">购买</a>
+    <h5 th:text="#{reader.vip.required}">Đây là chương VIP. Bạn cần mua chương để tiếp tục đọc.</h5>
+    <span th:text="#{book.price}+'：'">Giá:</span><span style="color: red" th:text="${bookIndex.bookPrice}+' '+#{payment.currency}+' ('+#{reader.vip.rate}+')'"></span><br/>
+    <a href="javascript:buyBookIndex()" type="button" class="layui-btn layui-btn-sm layui-btn-radius" th:text="#{book.buy}">Mua chương</a>
 
 </div>
 <div class="indexDiv" style="height: 42px;line-height: 42px;text-align:center;background: #f2f2f2">
 
-    <a th:href="${preBookIndexId!=0?'/book/'+book.id+'/'+preBookIndexId+'.html':'#'}">上一章</a>
-    <a th:href="'/book/indexList-'+${book.id}+'.html'">目录</a>
-    <a th:href="${nextBookIndexId!=0?'/book/'+book.id+'/'+nextBookIndexId+'.html':'#'}">下一章</a>
+    <a th:href="${preBookIndexId!=0?'/book/'+book.id+'/'+preBookIndexId+'.html':'#'}" th:text="#{reader.previous}">Chương trước</a>
+    <a th:href="'/book/indexList-'+${book.id}+'.html'" th:text="#{book.catalog}">Mục lục</a>
+    <a th:href="${nextBookIndexId!=0?'/book/'+book.id+'/'+nextBookIndexId+'.html':'#'}" th:text="#{reader.next}">Chương sau</a>
 
 </div>
 
@@ -278,7 +278,7 @@
 <script>
     (function () {
 
-        //添加阅读记录
+        // Lưu lịch sử đọc
         $.ajax({
             type: "POST",
             url: "/user/addReadHistory",
@@ -340,7 +340,7 @@
 
 
                 } else if(data.code == 1001){
-                    //未登录
+                    // Chưa đăng nhập
 
                 }else {
                     layer.alert(data.msg);
@@ -348,7 +348,7 @@
 
             },
             error: function () {
-                layer.alert('网络异常');
+                layer.alert(novelMessage('auth.networkError', 'Không thể kết nối mạng'));
             }
         })
 

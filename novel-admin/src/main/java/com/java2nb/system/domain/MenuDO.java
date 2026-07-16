@@ -7,160 +7,160 @@ public class MenuDO implements Serializable {
 	private static final long serialVersionUID = 1L;
 	//
 	private Long menuId;
-	// 父菜单ID，一级菜单为0
+	// ID menu cha; menu cấp một là 0
 	private Long parentId;
-	// 菜单名称
+	// Tên menu
 	private String name;
-	// 菜单URL
+	// URL menu
 	private String url;
-	// 授权(多个用逗号分隔，如：user:list,user:create)
+	// Quyền hạn (nhiều giá trị cách nhau bằng dấu phẩy, ví dụ: user:list,user:create)
 	private String perms;
-	// 类型 0：目录 1：菜单 2：按钮
+	// Loại: 0 thư mục, 1 menu, 2 nút
 	private Integer type;
-	// 菜单图标
+	// Biểu tượng menu
 	private String icon;
-	// 排序
+	// Thứ tự
 	private Integer orderNum;
-	// 创建时间
+	// Thời gian tạo
 	private Date gmtCreate;
-	// 修改时间
+	// Thời gian sửa
 	private Date gmtModified;
 
 	/**
-	 * 设置：
+	 * Đặt:
 	 */
 	public void setMenuId(Long menuId) {
 		this.menuId = menuId;
 	}
 
 	/**
-	 * 获取：
+	 * Lấy:
 	 */
 	public Long getMenuId() {
 		return menuId;
 	}
 
 	/**
-	 * 设置：父菜单ID，一级菜单为0
+	 * Đặt: ID menu cha; menu cấp một là 0
 	 */
 	public void setParentId(Long parentId) {
 		this.parentId = parentId;
 	}
 
 	/**
-	 * 获取：父菜单ID，一级菜单为0
+	 * Lấy: ID menu cha; menu cấp một là 0
 	 */
 	public Long getParentId() {
 		return parentId;
 	}
 
 	/**
-	 * 设置：菜单名称
+	 * Đặt: tên menu
 	 */
 	public void setName(String name) {
 		this.name = name;
 	}
 
 	/**
-	 * 获取：菜单名称
+	 * Lấy: tên menu
 	 */
 	public String getName() {
 		return name;
 	}
 
 	/**
-	 * 设置：菜单URL
+	 * Đặt: URL menu
 	 */
 	public void setUrl(String url) {
 		this.url = url;
 	}
 
 	/**
-	 * 获取：菜单URL
+	 * Lấy: URL menu
 	 */
 	public String getUrl() {
 		return url;
 	}
 
 	/**
-	 * 设置：授权(多个用逗号分隔，如：user:list,user:create)
+	 * Đặt: quyền hạn (nhiều giá trị cách nhau bằng dấu phẩy, ví dụ: user:list,user:create)
 	 */
 	public void setPerms(String perms) {
 		this.perms = perms;
 	}
 
 	/**
-	 * 获取：授权(多个用逗号分隔，如：user:list,user:create)
+	 * Lấy: quyền hạn (nhiều giá trị cách nhau bằng dấu phẩy, ví dụ: user:list,user:create)
 	 */
 	public String getPerms() {
 		return perms;
 	}
 
 	/**
-	 * 设置：类型 0：目录 1：菜单 2：按钮
+	 * Đặt: loại: 0 thư mục, 1 menu, 2 nút
 	 */
 	public void setType(Integer type) {
 		this.type = type;
 	}
 
 	/**
-	 * 获取：类型 0：目录 1：菜单 2：按钮
+	 * Lấy: loại: 0 thư mục, 1 menu, 2 nút
 	 */
 	public Integer getType() {
 		return type;
 	}
 
 	/**
-	 * 设置：菜单图标
+	 * Đặt: biểu tượng menu
 	 */
 	public void setIcon(String icon) {
 		this.icon = icon;
 	}
 
 	/**
-	 * 获取：菜单图标
+	 * Lấy: biểu tượng menu
 	 */
 	public String getIcon() {
 		return icon;
 	}
 
 	/**
-	 * 设置：排序
+	 * Đặt: thứ tự
 	 */
 	public void setOrderNum(Integer orderNum) {
 		this.orderNum = orderNum;
 	}
 
 	/**
-	 * 获取：排序
+	 * Lấy: thứ tự
 	 */
 	public Integer getOrderNum() {
 		return orderNum;
 	}
 
 	/**
-	 * 设置：创建时间
+	 * Đặt: thời gian tạo
 	 */
 	public void setGmtCreate(Date gmtCreate) {
 		this.gmtCreate = gmtCreate;
 	}
 
 	/**
-	 * 获取：创建时间
+	 * Lấy: thời gian tạo
 	 */
 	public Date getGmtCreate() {
 		return gmtCreate;
 	}
 
 	/**
-	 * 设置：修改时间
+	 * Đặt: thời gian sửa
 	 */
 	public void setGmtModified(Date gmtModified) {
 		this.gmtModified = gmtModified;
 	}
 
 	/**
-	 * 获取：修改时间
+	 * Lấy: thời gian sửa
 	 */
 	public Date getGmtModified() {
 		return gmtModified;

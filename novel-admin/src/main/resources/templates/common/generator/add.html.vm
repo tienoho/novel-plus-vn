@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <meta charset="utf-8">
 <head th:include="include :: header"></head>
 <body class="gray-bg">
@@ -28,7 +28,7 @@
                                                    type="text">
                                         #elseif($column.pageType == 2)
 
-                                            <select data-placeholder="--选择--" id="${column.attrname}"
+                                            <select data-placeholder="--Chọn--" th:attr="data-placeholder=#{common.select}" id="${column.attrname}"
                                                     name="${column.attrname}"
                                                     class="form-control chosen-select" tabindex="2"
                                                     dict-type="${column.dictType}">
@@ -46,7 +46,7 @@
 
                                             </div>
                                         #elseif($column.pageType == 7)
-                                            <img title="点击选择图片" id="picImage${column.attrname}"
+                                            <img title="Nhấn để chọn ảnh" th:title="#{admin.file.selectImage}" id="picImage${column.attrname}"
                                                  style="cursor:pointer;width: 100px;height: 100px"
                                                  src="/img/webuploader.png"/>
                                             <input id="${column.attrname}" name="${column.attrname}"
@@ -66,7 +66,7 @@
                         #end
                         <div class="form-group">
                             <div class="col-sm-8 col-sm-offset-3">
-                                <button type="submit" class="btn btn-primary">提交</button>
+                                <button type="submit" class="btn btn-primary" th:text="#{common.submit}">Gửi</button>
                             </div>
                         </div>
                     </form>

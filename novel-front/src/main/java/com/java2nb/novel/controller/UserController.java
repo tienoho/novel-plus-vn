@@ -40,12 +40,12 @@ public class UserController extends BaseController {
     private final BookService bookService;
 
     /**
-     * 登录
+     * Đăng nhập
      */
     @PostMapping("login")
     public RestResult<Map<String, Object>> login(User user) {
 
-        //登录
+        //Đăng nhập
         UserDetails userDetails = userService.login(user);
 
         Map<String, Object> data = new HashMap<>(1);
@@ -57,19 +57,19 @@ public class UserController extends BaseController {
     }
 
     /**
-     * 注册
+     * Đăng ký
      */
     @PostMapping("register")
     public RestResult<?> register(@Validated({AddGroup.class}) User user,
         @RequestParam(value = "velCode", defaultValue = "") String velCode, HttpServletRequest request) {
 
-        //判断验证码是否正确
+        //Kiểm tra mã xác minh có đúng hay không
         if (!velCode.equals(
             cacheService.get(RandomValidateCodeUtil.RANDOM_CODE_KEY + ":" + IpUtil.getRealIp(request)))) {
             return RestResult.fail(ResponseStatus.VEL_CODE_ERROR);
         }
 
-        //注册
+        //Đăng ký
         UserDetails userDetails = userService.register(user);
         Map<String, Object> data = new HashMap<>(1);
         data.put("token", jwtTokenUtil.generateToken(userDetails));
@@ -81,7 +81,7 @@ public class UserController extends BaseController {
 
 
     /**
-     * 刷新token
+     *Làm mới tokenn
      */
     @PostMapping("refreshToken")
     public RestResult<?> refreshToken(HttpServletRequest request) {
@@ -102,7 +102,7 @@ public class UserController extends BaseController {
     }
 
     /**
-     * 查询小说是否已加入书架
+     * Truy vấn trạng thái tác phẩm trong tủ sách
      */
     @GetMapping("queryIsInShelf")
     public RestResult<?> queryIsInShelf(Long bookId, HttpServletRequest request) {
@@ -114,7 +114,7 @@ public class UserController extends BaseController {
     }
 
     /**
-     * 加入书架
+     * Thêm vào tủ sách
      */
     @PostMapping("addToBookShelf")
     public RestResult<Void> addToBookShelf(Long bookId, Long preContentId, HttpServletRequest request) {
@@ -127,7 +127,7 @@ public class UserController extends BaseController {
     }
 
     /**
-     * 移出书架
+     * Xóa khỏi tủ sách
      */
     @DeleteMapping("removeFromBookShelf/{bookId}")
     public RestResult<?> removeFromBookShelf(@PathVariable("bookId") Long bookId, HttpServletRequest request) {
@@ -140,7 +140,7 @@ public class UserController extends BaseController {
     }
 
     /**
-     * 分页查询书架
+     * Truy vấn phân trang tủ sách
      */
     @GetMapping("listBookShelfByPage")
     public RestResult<?> listBookShelfByPage(@RequestParam(value = "curr", defaultValue = "1") int page,
@@ -153,7 +153,7 @@ public class UserController extends BaseController {
     }
 
     /**
-     * 分页查询阅读记录
+     * Truy vấn phân trang lịch sử đọc
      */
     @GetMapping("listReadHistoryByPage")
     public RestResult<?> listReadHistoryByPage(@RequestParam(value = "curr", defaultValue = "1") int page,
@@ -166,7 +166,7 @@ public class UserController extends BaseController {
     }
 
     /**
-     * 添加阅读记录
+     * Thêm lịch sử đọc
      */
     @PostMapping("addReadHistory")
     public RestResult<?> addReadHistory(Long bookId, Long preContentId, HttpServletRequest request) {
@@ -179,7 +179,7 @@ public class UserController extends BaseController {
     }
 
     /**
-     * 添加反馈
+     * Thêm phản hồi
      */
     @PostMapping("addFeedBack")
     public RestResult<?> addFeedBack(String content, HttpServletRequest request) {
@@ -192,7 +192,7 @@ public class UserController extends BaseController {
     }
 
     /**
-     * 分页查询我的反馈列表
+     * Truy vấn phân trang danh sách phản hồi của tôi
      */
     @GetMapping("listUserFeedBackByPage")
     public RestResult<?> listUserFeedBackByPage(@RequestParam(value = "curr", defaultValue = "1") int page,
@@ -205,7 +205,7 @@ public class UserController extends BaseController {
     }
 
     /**
-     * 查询个人信息
+     * Truy vấn thông tin cá nhân
      */
     @GetMapping("userInfo")
     public RestResult<?> userInfo(HttpServletRequest request) {
@@ -217,7 +217,7 @@ public class UserController extends BaseController {
     }
 
     /**
-     * 更新个人信息
+     * Cập nhật thông tin cá nhân
      */
     @PostMapping("updateUserInfo")
     public RestResult<?> updateUserInfo(@Validated({UpdateGroup.class}) User user, HttpServletRequest request) {
@@ -237,7 +237,7 @@ public class UserController extends BaseController {
 
 
     /**
-     * 更新密码
+     * Cập nhật mật khẩu
      */
     @PostMapping("updatePassword")
     public RestResult<?> updatePassword(String oldPassword, String newPassword1, String newPassword2,
@@ -254,7 +254,7 @@ public class UserController extends BaseController {
     }
 
     /**
-     * 分页查询用户书评
+     * Truy vấn phân trang đánh giá tác phẩm của người dùng
      */
     @GetMapping("listCommentByPage")
     public RestResult<?> listCommentByPage(@RequestParam(value = "curr", defaultValue = "1") int page,
@@ -268,7 +268,7 @@ public class UserController extends BaseController {
 
 
     /**
-     * 购买小说章节
+     * Mua chương tác phẩm
      */
     @PostMapping("buyBookIndex")
     public RestResult<?> buyBookIndex(UserBuyRecord buyRecord, HttpServletRequest request) {

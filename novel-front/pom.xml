@@ -12,7 +12,12 @@
     <artifactId>novel-front</artifactId>
 
     <name>novel-front</name>
-    <description>小说精品屋 前台</description>
+    <description>Cổng đọc và khu vực tác giả Novel Plus</description>
+
+    <properties>
+        <!-- Theme nguồn được đóng gói; có thể đổi bằng -Dtheme.name=orange|blue|green|dark. -->
+        <theme.name>green</theme.name>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -26,7 +31,7 @@
             <version>2.2</version>
         </dependency>
 
-        <!--JWT(Json Web Token)登录支持-->
+        <!-- Hỗ trợ đăng nhập bằng JWT (JSON Web Token). -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt</artifactId>
@@ -70,7 +75,31 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+            </resource>
+            <resource>
+                <directory>../templates/${theme.name}/html</directory>
+                <targetPath>templates</targetPath>
+                <filtering>false</filtering>
+            </resource>
+            <resource>
+                <directory>../templates/${theme.name}/static</directory>
+                <targetPath>static</targetPath>
+                <filtering>false</filtering>
+            </resource>
+        </resources>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <configuration>
+                    <!-- Resource theme được khai báo sau runtime và phải luôn ghi đè file cùng đường dẫn. -->
+                    <overwrite>true</overwrite>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -86,7 +115,7 @@
                         </goals>
                         <configuration>
                             <tasks>
-                                <!-- 文件夹 -->
+                                <!-- Thư mục. -->
                                 <copy todir="${project.build.directory}/build/config" overwrite="true">
                                     <fileset dir="${basedir}/src/main/build/config">
                                         <include name="*.*"/>
@@ -94,16 +123,6 @@
                                     <fileset dir="${basedir}/src/main/resources">
                                         <include name="application-alipay.yml"/>
                                         <include name="application-website.yml"/>
-                                    </fileset>
-                                </copy>
-                                <copy todir="${basedir}/../templates/green/html" overwrite="true">
-                                    <fileset dir="${basedir}/src/main/resources/templates">
-                                        <include name="**/*.*"/>
-                                    </fileset>
-                                </copy>
-                                <copy todir="${basedir}/../templates/green/static" overwrite="true">
-                                    <fileset dir="${basedir}/src/main/resources/static">
-                                        <include name="**/*.*"/>
                                     </fileset>
                                 </copy>
                                 <copy todir="${project.build.directory}/build/templates" overwrite="true">
@@ -123,7 +142,8 @@
                                     </fileset>
                                 </copy>
                                 <zip destfile='${project.build.directory}/build/${project.artifactId}.zip'>
-                                    <zipfileset filemode="755" dir='${project.build.directory}/build/'/>
+                                    <zipfileset filemode="755" dir='${project.build.directory}/build/'
+                                                excludes="${project.artifactId}.zip"/>
                                 </zip>
 
                                 <copy file="${basedir}/src/main/build/docker/Dockerfile"
@@ -137,7 +157,7 @@
     </build>
     <!--    <build>-->
     <!--        <plugins>-->
-    <!--            &lt;!&ndash; 将相同groupId的依赖模块打包进来 &ndash;&gt;-->
+    <!--            &lt;!&ndash; Đóng gói các mô-đun dependency cùng groupId. &ndash;&gt;-->
     <!--            <plugin>-->
     <!--                <groupId>org.apache.maven.plugins</groupId>-->
     <!--                <artifactId>maven-shade-plugin</artifactId>-->
@@ -161,7 +181,7 @@
     <!--                </executions>-->
     <!--            </plugin>-->
     <!--            <plugin>-->
-    <!--                &lt;!&ndash;打包时去除第三方依赖&ndash;&gt;-->
+    <!--                &lt;!&ndash; Loại dependency bên thứ ba khi đóng gói. &ndash;&gt;-->
     <!--                <groupId>org.springframework.boot</groupId>-->
     <!--                <artifactId>spring-boot-maven-plugin</artifactId>-->
     <!--                <configuration>-->
@@ -174,7 +194,7 @@
     <!--                    </includes>-->
     <!--                </configuration>-->
     <!--            </plugin>-->
-    <!--            &lt;!&ndash;拷贝第三方依赖文件到指定目录&ndash;&gt;-->
+    <!--            &lt;!&ndash; Sao chép dependency bên thứ ba tới thư mục chỉ định. &ndash;&gt;-->
     <!--            <plugin>-->
     <!--                <groupId>org.apache.maven.plugins</groupId>-->
     <!--                <artifactId>maven-dependency-plugin</artifactId>-->
@@ -186,7 +206,7 @@
     <!--                            <goal>copy-dependencies</goal>-->
     <!--                        </goals>-->
     <!--                        <configuration>-->
-    <!--                            &lt;!&ndash;target/lib是依赖jar包的输出目录，根据自己喜好配置&ndash;&gt;-->
+    <!--                            &lt;!&ndash; target/lib là thư mục xuất JAR dependency và có thể thay đổi. &ndash;&gt;-->
     <!--                            <outputDirectory>target/lib</outputDirectory>-->
     <!--                            <excludeTransitive>false</excludeTransitive>-->
     <!--                            <stripVersion>false</stripVersion>-->
@@ -207,7 +227,7 @@
     <!--                        </goals>-->
     <!--                        <configuration>-->
     <!--                            <tasks>-->
-    <!--                                &lt;!&ndash; 文件夹 &ndash;&gt;-->
+    <!--                                &lt;!&ndash; Thư mục. &ndash;&gt;-->
     <!--                                <copy todir="${project.build.directory}/build/conf" overwrite="true">-->
     <!--                                    <fileset dir="${basedir}/src/main/resources">-->
     <!--                                        <include name="**/*.*"/>-->

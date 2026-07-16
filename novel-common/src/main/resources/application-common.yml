@@ -3,10 +3,10 @@ spring:
     url: jdbc:shardingsphere:absolutepath:${user.dir}/config/shardingsphere-jdbc.yml
     driver-class-name: org.apache.shardingsphere.driver.ShardingSphereDriver
   thymeleaf:
-    mode: LEGACYHTML5 #去除thymeleaf的html严格校验thymeleaf.mode=LEGACYHTML5
-    cache: false # 是否开启模板缓存，默认true,建议在开发时关闭缓存,不然没法看到实时
+    mode: LEGACYHTML5 #Tắt kiểm tra HTML nghiêm ngặt của Thymeleaf bằng LEGACYHTML5
+    cache: false # Bật bộ nhớ đệm template; nên tắt khi phát triển để thấy thay đổi ngay
 
-  #上传文件的最大值（100M）
+  #Kích thước tệp tải lên tối đa (100 MB)
   servlet:
     multipart:
       max-file-size: 100MB
@@ -14,7 +14,7 @@ spring:
 
 mybatis:
   configuration:
-    #自动将数据库带下划线的表字段值映射到Java类的驼峰字段上
+    #Tự ánh xạ cột có dấu gạch dưới sang thuộc tính camelCase của Java
     map-underscore-to-camel-case: true
   mapper-locations: classpath*:mybatis/mapping/*.xml
   type-aliases-package: com.java2nb.novel.entity

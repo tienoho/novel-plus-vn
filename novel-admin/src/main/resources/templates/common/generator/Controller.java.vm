@@ -42,12 +42,12 @@ public class ${className}Controller {
         return "${pathName}/${classname}/${classname}";
     }
 
-    @ApiOperation(value = "获取${comments}列表", notes = "获取${comments}列表")
+    @ApiOperation(value = "Lấy danh sách ${comments}", notes = "Lấy danh sách ${comments}")
     @ResponseBody
     @GetMapping("/list")
     @RequiresPermissions("${pathName}:${classname}:${classname}")
     public R list(@RequestParam Map<String, Object> params) {
-        //查询列表数据
+        // Truy vấn dữ liệu danh sách
         Query query = new Query(params);
         List<${className}DO> ${classname}List = ${classname}Service.list(query);
         int total = ${classname}Service.count(query);
@@ -55,14 +55,14 @@ public class ${className}Controller {
         return R.ok().put("data", pageBean);
     }
 
-    @ApiOperation(value = "新增${comments}页面", notes = "新增${comments}页面")
+    @ApiOperation(value = "Trang thêm ${comments}", notes = "Trang thêm ${comments}")
     @GetMapping("/add")
     @RequiresPermissions("${pathName}:${classname}:add")
     String add() {
         return "${pathName}/${classname}/add";
     }
 
-    @ApiOperation(value = "修改${comments}页面", notes = "修改${comments}页面")
+    @ApiOperation(value = "Trang sửa ${comments}", notes = "Trang sửa ${comments}")
     @GetMapping("/edit/{${pk.attrname}}")
     @RequiresPermissions("${pathName}:${classname}:edit")
     String edit(@PathVariable("${pk.attrname}") ${pk.javaType} ${pk.attrname}, Model model) {
@@ -71,7 +71,7 @@ public class ${className}Controller {
         return "${pathName}/${classname}/edit";
     }
 
-    @ApiOperation(value = "查看${comments}页面", notes = "查看${comments}页面")
+    @ApiOperation(value = "Trang chi tiết ${comments}", notes = "Trang chi tiết ${comments}")
     @GetMapping("/detail/{${pk.attrname}}")
     @RequiresPermissions("${pathName}:${classname}:detail")
     String detail(@PathVariable("${pk.attrname}") ${pk.javaType} ${pk.attrname}, Model model) {
@@ -81,9 +81,9 @@ public class ${className}Controller {
     }
 
     /**
-     * 保存
+     * Lưu
      */
-    @ApiOperation(value = "新增${comments}", notes = "新增${comments}")
+    @ApiOperation(value = "Thêm${comments}", notes = "Thêm${comments}")
     @ResponseBody
     @PostMapping("/save")
     @RequiresPermissions("${pathName}:${classname}:add")
@@ -95,9 +95,9 @@ public class ${className}Controller {
     }
 
     /**
-     * 修改
+     * Sửa
      */
-    @ApiOperation(value = "修改${comments}", notes = "修改${comments}")
+    @ApiOperation(value = "Sửa${comments}", notes = "Sửa${comments}")
     @ResponseBody
     @RequestMapping("/update")
     @RequiresPermissions("${pathName}:${classname}:edit")
@@ -107,9 +107,9 @@ public class ${className}Controller {
     }
 
     /**
-     * 删除
+     * Xóa
      */
-    @ApiOperation(value = "删除${comments}", notes = "删除${comments}")
+    @ApiOperation(value = "Xóa${comments}", notes = "Xóa${comments}")
     @PostMapping("/remove")
     @ResponseBody
     @RequiresPermissions("${pathName}:${classname}:remove")
@@ -121,9 +121,9 @@ public class ${className}Controller {
     }
 
     /**
-     * 删除
+     * Xóa
      */
-    @ApiOperation(value = "批量删除${comments}", notes = "批量删除${comments}")
+    @ApiOperation(value = "Xóa hàng loạt${comments}", notes = "Xóa hàng loạt${comments}")
     @PostMapping("/batchRemove")
     @ResponseBody
     @RequiresPermissions("${pathName}:${classname}:batchRemove")

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <meta charset="utf-8">
 <head th:include="include :: header"></head>
 <body class="gray-bg">
@@ -12,7 +12,7 @@
                 <input id="id" name="id" th:value="${bookSetting.id}"
                        type="hidden">
                                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">小说ID：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.book.id}+'：'">ID truyện:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${bookSetting.bookId}">
@@ -22,7 +22,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">排序号：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.bookSetting.sort}+'：'">Thứ tự:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${bookSetting.sort}">
@@ -32,7 +32,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">推荐类型：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.bookSetting.type}+'：'">Loại đề xuất:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8 dict-type" dict-type="book_rec_type"
                                  th:attr="dict-value=${bookSetting.type}">
@@ -42,7 +42,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">创建时间：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.book.createdAt}+'：'">Thời gian tạo:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${bookSetting.createTime}==null?null:${#dates.format(bookSetting.createTime,'yyyy-MM-dd HH:mm:ss')}">
@@ -51,7 +51,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">创建人ID：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.audit.createdById}+'：'">ID người tạo:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${bookSetting.createUserId}">
@@ -61,7 +61,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">更新时间：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.book.updatedAt}+'：'">Thời gian cập nhật:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${bookSetting.updateTime}==null?null:${#dates.format(bookSetting.updateTime,'yyyy-MM-dd HH:mm:ss')}">
@@ -70,7 +70,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">更新人ID：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.audit.updatedById}+'：'">ID người cập nhật:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${bookSetting.updateUserId}">

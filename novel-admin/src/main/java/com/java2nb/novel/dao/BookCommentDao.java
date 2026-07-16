@@ -10,7 +10,7 @@ import java.util.Map;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * 小说评论表
+ * Bảng bình luận tác phẩm
  * @author xiongxy
  * @email 1179705413@qq.com
  * @date 2023-04-14 21:59:28

@@ -1,6 +1,6 @@
 /*(C) 2012-2013 Douco Inc.*/
 
-/* 全局通用
+/* Dùng chung toàn cục
 ----------------------------------------------- */
 body {
     font-family: Microsoft Yahei, \5FAE\8F6F\96C5\9ED1, \5B8B\4F53, Arial, Verdana, sans-serif;
@@ -161,7 +161,7 @@ p.cue {
     cursor: pointer;
 }
 
-/* 主体框架
+/* Khung nội dung chính
 ----------------------------------------------- */
 #dcWrap {
     width: 100%;
@@ -398,7 +398,7 @@ select {
     padding: 0 6px;
 }
 
-/* 公共顶部
+/* Phần đầu dùng chung
 ----------------------------------------------- */
 #head .logo {
     border-right: 1px solid #515151;
@@ -460,7 +460,7 @@ select {
     border-right: 0;
 }
 
-/*- 下拉菜单 -*/
+/*- Trình đơn thả xuống -*/
 #head .nav .M {
     position: relative;
 }
@@ -532,7 +532,7 @@ select {
     color: #0072C6;
 }
 
-/* 公共管理菜单
+/* Trình đơn quản lý dùng chung
 ----------------------------------------------- */
 #menu {
     margin-right: -1px;
@@ -716,7 +716,7 @@ select {
     background-position: 13px -959px;
 }
 
-/* 当前位置
+/* Vị trí hiện tại
 ----------------------------------------------- */
 #urHere {
     background-color: #F5F5F5;
@@ -740,7 +740,7 @@ select {
     margin: 0 10px;
 }
 
-/* 公共主区域
+/* Khu vực nội dung chính dùng chung
 ----------------------------------------------- */
 .mainBox {
     border-left: 1px solid #FFF;
@@ -796,7 +796,7 @@ select {
     margin-bottom: 20px;
 }
 
-/* 公共样式
+/* Kiểu dùng chung
 ----------------------------------------------- */
 #maskBox {
     position: relative;
@@ -857,7 +857,7 @@ select {
     font-weight: bold;
 }
 
-/* 首页
+/* Trang chủ
 ----------------------------------------------- */
 #index .indexBox {
     margin-bottom: 20px;
@@ -928,7 +928,7 @@ select {
     line-height: 200%;
 }
 
-/* 单页面
+/* Trang đơn
 ----------------------------------------------- */
 .page dl {
     border: 1px dotted #CCC;
@@ -973,7 +973,7 @@ select {
     color: #999;
 }
 
-/* 首页商品筛选
+/* Bộ lọc sản phẩm trang chủ
 ----------------------------------------------- */
 .homeSortLeft {
     margin-right: 70px;
@@ -1025,7 +1025,7 @@ select {
     color: #666;
 }
 
-/* 图片模块管理
+/* Quản lý mô-đun hình ảnh
 ----------------------------------------------- */
 .imgModule form {
     padding: 0 7px;
@@ -1049,7 +1049,7 @@ select {
     float: right;
 }
 
-/* 订单中心
+/* Trung tâm đơn hàng
 ----------------------------------------------- */
 #order .tracking .trackingNo {
     float: left;
@@ -1090,7 +1090,7 @@ select {
     display: none;
 }
 
-/* 网站管理员
+/* Quản trị viên trang web
 ----------------------------------------------- */
 #manager .cloudAccount {
     background: url(../images/icon_cloud_account.png) no-repeat center top;
@@ -1118,7 +1118,7 @@ select {
     color: #60BBFF;
 }
 
-/* 留言板
+/* Bảng tin
 ----------------------------------------------- */
 #guestBook .book {
     border: 1px dotted #CCCCCC;
@@ -1155,7 +1155,7 @@ select {
     margin-top: 30px;
 }
 
-/* 云中心
+/* Trung tâm đám mây
 ----------------------------------------------- */
 #cloud .filter a {
     margin-right: 20px;
@@ -1288,7 +1288,7 @@ select {
     margin: 0 25px;
 }
 
-/* 模块扩展
+/* Mở rộng mô-đun
 ----------------------------------------------- */
 #module .install {
     margin-top: 150px;
@@ -1346,7 +1346,7 @@ select {
 #module .uninstall .list ul li a {
 }
 
-/* 模板扩展
+/* Mở rộng mẫu
 ----------------------------------------------- */
 #theme .enable {
     border-bottom: 1px solid #DDD;
@@ -1451,7 +1451,7 @@ select {
     color: #999;
 }
 
-/* 手机版
+/* Bản di động
 ----------------------------------------------- */
 #mobileBox {
     background-color: #F5F5F5;
@@ -1493,7 +1493,7 @@ select {
     margin-right: -1px;
 }
 
-/* 用户登录
+/* Đăng nhập người dùng
 ----------------------------------------------- */
 #login {
     margin: 0px auto;
@@ -1582,7 +1582,7 @@ select {
     width: 250px;
 }
 
-/* 分页
+/* Phân trang
 ----------------------------------------------- */
 .pager {
     text-align: right;
@@ -1595,7 +1595,7 @@ select {
     text-decoration: underline;
 }
 
-/* 信息提示
+/* Thông báo
 ----------------------------------------------- */
 /*- douMsg -*/
 #douMsg {
@@ -1657,7 +1657,7 @@ select {
     font-size: 14px;
 }
 
-/* 公共底部
+/* Chân trang dùng chung
 ----------------------------------------------- */
 #footer {
     margin-top: -1px;

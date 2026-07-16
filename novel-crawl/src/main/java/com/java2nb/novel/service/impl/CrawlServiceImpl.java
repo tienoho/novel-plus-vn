@@ -83,7 +83,7 @@ public class CrawlServiceImpl implements CrawlService {
             if (opt.isPresent()) {
                 CrawlSource crawlSource = opt.get();
                 if (crawlSource.getSourceStatus() == (byte) 1) {
-                    //关闭
+                    //Tắt
                     openOrCloseCrawl(crawlSource.getId(), (byte) 0);
                 }
                 Date currentDate = new Date();
@@ -120,12 +120,12 @@ public class CrawlServiceImpl implements CrawlService {
     @Override
     public void openOrCloseCrawl(Integer sourceId, Byte sourceStatus) {
 
-        // 判断是开启还是关闭，如果是关闭，则获取该爬虫源正在运行的线程集合并全部中断
-        // 如果是开启，先判断该爬虫源是否还在运行，如果在运行，则忽略，如果没有运行则启动线程爬取小说数据并加入到runningCrawlThread中
-        // 最后，保存爬虫源状态
+        // Xác định thao tác bật hoặc tắt; khi tắt, dừng toàn bộ luồng đang chạy của nguồn.
+        // Khi bật, bỏ qua nếu nguồn vẫn chạy; nếu chưa chạy, tạo luồng thu thập và thêm vào runningCrawlThread
+        // Cuối cùng lưu trạng thái nguồn thu thập
         if (sourceStatus == (byte) 0) {
-            // 关闭
-            // 将该爬虫源正在运行的线程集合全部停止
+            // Tắt
+            // Dừng toàn bộ luồng đang chạy của nguồn
             Set<Long> runningCrawlThreadId = runningCrawlThread.get(sourceId);
             if (runningCrawlThreadId != null) {
                 for (Long ThreadId : runningCrawlThreadId) {
@@ -138,20 +138,20 @@ public class CrawlServiceImpl implements CrawlService {
 
 
         } else {
-            // 开启
+            // Bật
             Byte realSourceStatus = Optional.ofNullable(crawlSourceStatusMap.get(sourceId)).orElse((byte) 0);
             if (realSourceStatus == (byte) 0) {
-                // 查询爬虫源规则
+                // Truy vấn quy tắc nguồn thu thập
                 CrawlSource source = queryCrawlSource(sourceId);
-                //该爬虫源已经停止运行了,启动线程爬取小说数据并将线程加入到runningCrawlThread中
+                //Nguồn đã dừng; tạo luồng thu thập dữ liệu và thêm vào runningCrawlThread
                 RuleBean ruleBean = new ObjectMapper().readValue(source.getCrawlRule(), RuleBean.class);
                 Set<Long> threadIds = new HashSet<>();
-                //按分类开始爬虫解析任务
+                //Bắt đầu tác vụ phân tích theo danh mục
                 for (int i = 1; i < 8; i++) {
                     final int catId = i;
                     Thread thread = new Thread(() -> CrawlServiceImpl.this.parseBookList(catId, ruleBean, sourceId));
                     thread.start();
-                    //thread加入到监控缓存中
+                    //Thêm luồng vào bộ nhớ đệm giám sát
                     threadIds.add(thread.getId());
                 }
                 runningCrawlThread.put(sourceId, threadIds);
@@ -159,7 +159,7 @@ public class CrawlServiceImpl implements CrawlService {
 
         }
 
-        // 保存爬虫源状态
+        // Lưu trạng thái nguồn thu thập
         crawlSourceStatusMap.put(sourceId, sourceStatus);
 
     }
@@ -202,10 +202,10 @@ public class CrawlServiceImpl implements CrawlService {
         for (CrawlSingleTask crawlSingleTask : pageBean.getList()) {
             if (crawlSingleTask.getTaskStatus() == 2
                 && crawlParser.getCrawlTaskProgress(crawlSingleTask.getId()) != null) {
-                // 如果排队中的任务有任务进度，将排队中的任务状态修改成采集中并设置任务进度
+                // Nếu tác vụ đang chờ đã có tiến độ, chuyển sang trạng thái đang thu thập và gán tiến độ
                 crawlSingleTask.setTaskStatus((byte) 3);
                 crawlSingleTask.setCrawlChapters(crawlParser.getCrawlTaskProgress(crawlSingleTask.getId()));
-                // 只会有一个任务在采集中
+                // Chỉ có một tác vụ được thu thập tại một thời điểm
                 break;
             }
         }
@@ -238,15 +238,15 @@ public class CrawlServiceImpl implements CrawlService {
         excCount += 1;
         task.setExcCount(excCount);
         if (status == 1 || excCount == 5) {
-            // 当采集成功或者采集次数等于5，则更新采集最终状态，并停止采集
+            // Khi thành công hoặc đã thử 5 lần, cập nhật trạng thái cuối và dừng thu thập.
             task.setTaskStatus(status);
         }
         if (status == 1) {
-            // 当采集成功，保存采集的章节数量
+            // Khi thành công, lưu số chương đã thu thập.
             task.setCrawlChapters(crawlParser.getCrawlTaskProgress(task.getId()));
         }
         crawlSingleTaskMapper.updateByPrimaryKeySelective(task);
-        // 删除任务进度
+        // Xóa tiến độ tác vụ
         crawlParser.removeCrawlTaskProgress(task.getId());
 
     }
@@ -262,7 +262,7 @@ public class CrawlServiceImpl implements CrawlService {
     }
 
     /**
-     * 解析分类列表
+     * Phân tích danh sách danh mục
      */
     @Override
     public void parseBookList(int catId, RuleBean ruleBean, Integer sourceId) {
@@ -272,7 +272,7 @@ public class CrawlServiceImpl implements CrawlService {
             return;
         }
 
-        //当前页码1
+        //Số trang hiện tại1
         int page = 1;
         int totalPage = page;
 
@@ -281,14 +281,14 @@ public class CrawlServiceImpl implements CrawlService {
             try {
                 String catBookListUrl;
                 if (StringUtils.isNotBlank(ruleBean.getBookListUrl())) {
-                    // 兼容老规则
-                    // 拼接分类URL
+                    // Tương thích quy tắc cũ
+                    // Tạo URL danh mục
                     catBookListUrl = ruleBean.getBookListUrl()
                         .replace("{catId}", catIdRule)
                         .replace("{page}", page + "");
                 } else {
-                    // 新规则
-                    // 拼接分类URL
+                    // Quy tắc mới
+                    // Tạo URL danh mục
                     catBookListUrl = catIdRule.replace("{page}", page + "");
                 }
                 log.info("catBookListUrl：{}", catBookListUrl);
@@ -300,9 +300,9 @@ public class CrawlServiceImpl implements CrawlService {
                     boolean isFindBookId = bookIdMatcher.find();
                     while (isFindBookId) {
                         try {
-                            //1.阻塞过程（使用了 sleep,同步锁的 wait,socket 中的 receiver,accept 等方法时）
-                            //捕获中断异常InterruptedException来退出线程。
-                            //2.非阻塞过程中通过判断中断标志来退出线程。
+                            //1. Với thao tác chặn như sleep, wait, receiver hoặc accept
+                            //Bắt InterruptedException để kết thúc luồng.
+                            //2. Với thao tác không chặn, kiểm tra cờ ngắt để kết thúc luồng.
                             if (Thread.currentThread().isInterrupted()) {
                                 return;
                             }
@@ -311,9 +311,9 @@ public class CrawlServiceImpl implements CrawlService {
                             parseBookAndSave(catId, ruleBean, sourceId, bookId, null);
                         } catch (InterruptedException e) {
                             log.error(e.getMessage(), e);
-                            //1.阻塞过程（使用了 sleep,同步锁的 wait,socket 中的 receiver,accept 等方法时）
-                            //捕获中断异常InterruptedException来退出线程。
-                            //2.非阻塞过程中通过判断中断标志来退出线程。
+                            //1. Với thao tác chặn như sleep, wait, receiver hoặc accept
+                            //Bắt InterruptedException để kết thúc luồng.
+                            //2. Với thao tác không chặn, kiểm tra cờ ngắt để kết thúc luồng.
                             return;
                         } catch (Exception e) {
                             log.error(e.getMessage(), e);
@@ -333,24 +333,24 @@ public class CrawlServiceImpl implements CrawlService {
                 }
             } catch (InterruptedException e) {
                 log.error(e.getMessage(), e);
-                //1.阻塞过程（使用了 sleep,同步锁的 wait,socket 中的 receiver,accept 等方法时）
-                //捕获中断异常InterruptedException来退出线程。
-                //2.非阻塞过程中通过判断中断标志来退出线程。
+                //1. Với thao tác chặn như sleep, wait, receiver hoặc accept
+                //Bắt InterruptedException để kết thúc luồng.
+                //2. Với thao tác không chặn, kiểm tra cờ ngắt để kết thúc luồng.
                 return;
             } catch (Exception e) {
                 log.error(e.getMessage(), e);
             }
             if (page >= totalPage) {
-                // 第一遍采集完成，翻到第一页，继续第二次采集，适用于分页数比较少的最近更新列表
+                // Sau lượt đầu, quay về trang một và chạy lượt hai; phù hợp danh sách cập nhật có ít trang.
                 page = 1;
                 try {
-                    // 第一遍采集完成，休眠1分钟
+                    // Sau lượt đầu, tạm dừng một phút.
                     Thread.sleep(Duration.ofMinutes(1));
                 } catch (InterruptedException e) {
                     log.error(e.getMessage(), e);
-                    //1.阻塞过程（使用了 sleep,同步锁的 wait,socket 中的 receiver,accept 等方法时）
-                    //捕获中断异常InterruptedException来退出线程。
-                    //2.非阻塞过程中通过判断中断标志来退出线程。
+                    //1. Với thao tác chặn như sleep, wait, receiver hoặc accept
+                    //Bắt InterruptedException để kết thúc luồng.
+                    //2. Với thao tác không chặn, kiểm tra cờ ngắt để kết thúc luồng.
                     return;
                 }
             } else {
@@ -371,26 +371,26 @@ public class CrawlServiceImpl implements CrawlService {
             if (book.getBookName() == null || book.getAuthorName() == null) {
                 return;
             }
-            //这里只做新书入库，查询是否存在这本书
+            //Chỉ nhập truyện mới; trước hết kiểm tra truyện đã tồn tại
             Book existBook = bookService.queryBookByBookNameAndAuthorName(book.getBookName(), book.getAuthorName());
-            //如果该小说不存在，则可以解析入库，但是标记该小说正在入库，30分钟之后才允许再次入库
+            //Nếu chưa tồn tại, đánh dấu đang nhập và chỉ cho phép nhập lại sau 30 phút
             if (existBook == null) {
-                //没有该书，可以入库
+                //Truyện chưa tồn tại và có thể được nhập
                 book.setCatId(catId);
-                //根据分类ID查询分类
+                //Truy vấn danh mục theo ID
                 book.setCatName(bookService.queryCatNameByCatId(catId));
                 if (catId == 7) {
-                    //女频
+                    //Kênh nữ
                     book.setWorkDirection((byte) 1);
                 } else {
-                    //男频
+                    //Kênh nam
                     book.setWorkDirection((byte) 0);
                 }
                 book.setCrawlBookId(bookId);
                 book.setCrawlSourceId(sourceId);
                 book.setCrawlLastTime(new Date());
                 book.setId(idWorker.nextId());
-                //解析章节目录
+                //Phân tích mục lục chương
                 boolean parseIndexContentResult = crawlParser.parseBookIndexAndContent(bookId, book, ruleBean, sourceId,
                     new HashMap<>(0), chapter -> {
                         bookService.saveBookAndIndexAndContent(book, chapter.getBookIndexList(),
@@ -399,7 +399,7 @@ public class CrawlServiceImpl implements CrawlService {
                 parseResult.set(parseIndexContentResult);
 
             } else {
-                //只更新书籍的爬虫相关字段
+                // Chỉ cập nhật các trường liên quan đến thu thập.
                 bookService.updateCrawlProperties(existBook.getId(), sourceId, bookId);
                 parseResult.set(true);
             }

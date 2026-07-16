@@ -1,5 +1,7 @@
 package com.java2nb.novel.core.utils;
 
+import com.java2nb.novel.core.i18n.Messages;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -7,7 +9,7 @@ import java.util.GregorianCalendar;
 import java.util.TimeZone;
 
 /**
- * 日期工具
+ * Tiện ích ngày tháng
  * @author cd
  */
 public class DateUtil {
@@ -17,7 +19,7 @@ public class DateUtil {
     public static final String TIME_PATTERN = "HH:mm:ss";
 
     /**
-     * 获取昨天的日期时间
+     * Lấy ngày giờ hôm qua
      * */
     public static Date getYesterday(){
         Calendar calendar = Calendar.getInstance();
@@ -26,15 +28,15 @@ public class DateUtil {
     }
 
     /**
-     * 根据日期，获取当天开始时间
+     * Lấy thời điểm bắt đầu ngày theo ngày chỉ định
      * */
     public static Date getDateStartTime(Date date){
         Calendar calendar = new GregorianCalendar();
         calendar.setTime(date);
         /*
-        * Calendar.HOUR_OF_DAY:是指获取24小时制的小时,取值范围:0-23;
-        * Calendar.HOUR:是指获取12小时制的小时,取值范围:0-12,凌晨和中午都是0,不是12;
-        * 需要配合Calendar.AM_PM使用;
+        * Calendar.HOUR_OF_DAY biểu thị giờ theo hệ 24 giờ, phạm vi 0-23;
+        * Calendar.HOUR biểu thị giờ theo hệ 12 giờ, phạm vi 0-12; nửa đêm và trưa là 0;
+        * Cần dùng cùng Calendar.AM_PM;
         * */
         calendar.set(Calendar.HOUR_OF_DAY,0);
         calendar.set(Calendar.MINUTE,0);
@@ -44,7 +46,7 @@ public class DateUtil {
     }
 
     /**
-     * 根据日期，获取当天结束时间
+     * Lấy thời điểm cuối ngày theo ngày chỉ định
      * */
     public static Date getDateEndTime(Date date){
         Calendar calendar = new GregorianCalendar();
@@ -57,16 +59,16 @@ public class DateUtil {
     }
 
     /**
-     * 获取上个月开始时间
+     * Lấy thời điểm bắt đầu tháng trước
      *
      * @return
      */
     public static Date getLastMonthStartTime(){
-        // 获取当前日期
+        // Lấy ngày hiện tại
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.YEAR, 0);
         calendar.add(Calendar.MONTH, -1);
-        // 设置为1号,当前日期既为本月第一天
+        // Đặt ngày thành 1 để lấy ngày đầu tháng hiện tại
         calendar.set(Calendar.DAY_OF_MONTH, 1);
         calendar.set(Calendar.HOUR_OF_DAY, 0);
         calendar.set(Calendar.MINUTE, 0);
@@ -77,16 +79,16 @@ public class DateUtil {
     }
 
     /**
-     * 获取上个月结束时间
+     * Lấy thời điểm kết thúc tháng trước
      *
      * @return
      */
     public static Date getLastMonthEndTime(){
-        // 获取当前日期
+        // Lấy ngày hiện tại
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.YEAR, 0);
         calendar.add(Calendar.MONTH, -1);
-        // 获取当前月最后一天
+        // Lấy ngày cuối tháng hiện tại
         calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
         calendar.set(Calendar.HOUR_OF_DAY, 23);
         calendar.set(Calendar.MINUTE, 59);
@@ -98,7 +100,7 @@ public class DateUtil {
 
 
     /**
-     * 格式化日期
+     * Định dạng ngày
      * */
     public static String formatDate(Date date,String patten){
 
@@ -107,7 +109,7 @@ public class DateUtil {
 
 
     /**
-     * 将日期格式化成"多久之前"的格式
+     * Định dạng ngày theo kiểu thời gian đã trôi qua
      * */
     public static String formatTimeAgo(Date date){
         if (date == null) {
@@ -120,7 +122,7 @@ public class DateUtil {
         long diff = now - then;
 
         if (diff < 0) {
-            // 未来时间
+            // Thời gian trong tương lai
             DateUtil.formatDate(date, DateUtil.DATE_TIME_PATTERN);
         }
 
@@ -132,17 +134,17 @@ public class DateUtil {
         long years = months / 12;
 
         if (seconds < 60) {
-            return "刚刚";
+            return Messages.getDefault("time.justNow");
         } else if (minutes < 60) {
-            return minutes + "分钟前";
+            return Messages.getDefault("time.minutesAgo", minutes);
         } else if (hours < 24) {
-            return hours + "小时前";
+            return Messages.getDefault("time.hoursAgo", hours);
         } else if (days < 30) {
-            return days + "天前";
+            return Messages.getDefault("time.daysAgo", days);
         } else if (months < 12) {
-            return months + "个月前";
+            return Messages.getDefault("time.monthsAgo", months);
         } else {
-            return years + "年前";
+            return Messages.getDefault("time.yearsAgo", years);
         }
     }
 

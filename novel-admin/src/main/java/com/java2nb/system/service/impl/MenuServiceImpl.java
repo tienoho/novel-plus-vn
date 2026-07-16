@@ -24,7 +24,7 @@ public class MenuServiceImpl implements MenuService {
 
 	/**
 	 * @param
-	 * @return 树形菜单
+	 * @return menu dạng cây
 	 */
 	@Cacheable
 	@Override
@@ -42,7 +42,7 @@ public class MenuServiceImpl implements MenuService {
 			tree.setAttributes(attributes);
 			trees.add(tree);
 		}
-		// 默认顶级菜单为０，根据数据库实际情况调整
+		// Menu cấp cao nhất mặc định là 0; điều chỉnh theo dữ liệu thực tế
 		Tree<MenuDO> t = BuildTree.build(trees);
 		return t;
 	}
@@ -90,14 +90,14 @@ public class MenuServiceImpl implements MenuService {
 			tree.setText(sysMenuDO.getName());
 			trees.add(tree);
 		}
-		// 默认顶级菜单为０，根据数据库实际情况调整
+		// Menu cấp cao nhất mặc định là 0; điều chỉnh theo dữ liệu thực tế
 		Tree<MenuDO> t = BuildTree.build(trees);
 		return t;
 	}
 
 	@Override
 	public Tree<MenuDO> getTree(Long id) {
-		// 根据roleId查询权限
+		// Truy vấn quyền theo roleId
 		List<MenuDO> menus = menuMapper.list(new HashMap<String, Object>(16));
 		List<Long> menuIds = roleMenuMapper.listMenuIdByRoleId(id);
 		List<Long> temp = menuIds;
@@ -123,7 +123,7 @@ public class MenuServiceImpl implements MenuService {
 			tree.setState(state);
 			trees.add(tree);
 		}
-		// 默认顶级菜单为０，根据数据库实际情况调整
+		// Menu cấp cao nhất mặc định là 0; điều chỉnh theo dữ liệu thực tế
 		Tree<MenuDO> t = BuildTree.build(trees);
 		return t;
 	}
@@ -155,7 +155,7 @@ public class MenuServiceImpl implements MenuService {
 			tree.setAttributes(attributes);
 			trees.add(tree);
 		}
-		// 默认顶级菜单为０，根据数据库实际情况调整
+		// Menu cấp cao nhất mặc định là 0; điều chỉnh theo dữ liệu thực tế
 		List<Tree<MenuDO>> list = BuildTree.buildList(trees, "0");
 		return list;
 	}

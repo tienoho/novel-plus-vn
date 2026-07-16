@@ -15,7 +15,7 @@ import java.util.Date;
 
 
 /**
- * 作者表
+ * Bảng tác giả
  * 
  * @author xiongxy
  * @email 1179705413@qq.com
@@ -25,150 +25,150 @@ public class AuthorDO implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	
-	//主键
-		//java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-	//所以通过序列化成字符串来解决
+	// Khóa chính
+		// Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+	// Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
 	@JsonSerialize(using = LongToStringSerializer.class)
 			private Long id;
-	//用户ID
-		//java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-	//所以通过序列化成字符串来解决
+	// ID người dùng
+		// Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+	// Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
 	@JsonSerialize(using = LongToStringSerializer.class)
 			private Long userId;
-	//邀请码
+	// Mã mời
 			private String inviteCode;
-	//笔名
+	// Bút danh
 			private String penName;
-	//手机号码
+	// Số điện thoại
 			private String telPhone;
-	//QQ或微信账号
+	// Tài khoản QQ hoặc WeChat
 			private String chatAccount;
-	//电子邮箱
+	// Email
 			private String email;
-	//作品方向，0：男频，1：女频
+	//Định hướng tác phẩm: 0 nam, 1 nữ
 			private Integer workDirection;
-	//创建时间
+	// Thời gian tạo
 			@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 		private Date createTime;
-	//0：正常，1：封禁
+	// 0 bình thường, 1 bị khóa
 			private Integer status;
 
 	/**
-	 * 设置：主键
+	 * Đặt: khóa chính
 	 */
 	public void setId(Long id) {
 		this.id = id;
 	}
 	/**
-	 * 获取：主键
+	 * Lấy: khóa chính
 	 */
 	public Long getId() {
 		return id;
 	}
 	/**
-	 * 设置：用户ID
+	 * Đặt: ID người dùng
 	 */
 	public void setUserId(Long userId) {
 		this.userId = userId;
 	}
 	/**
-	 * 获取：用户ID
+	 * Lấy: ID người dùng
 	 */
 	public Long getUserId() {
 		return userId;
 	}
 	/**
-	 * 设置：邀请码
+	 * Đặt: mã mời
 	 */
 	public void setInviteCode(String inviteCode) {
 		this.inviteCode = inviteCode;
 	}
 	/**
-	 * 获取：邀请码
+	 * Lấy: mã mời
 	 */
 	public String getInviteCode() {
 		return inviteCode;
 	}
 	/**
-	 * 设置：笔名
+	 * Đặt: bút danh
 	 */
 	public void setPenName(String penName) {
 		this.penName = penName;
 	}
 	/**
-	 * 获取：笔名
+	 * Lấy: bút danh
 	 */
 	public String getPenName() {
 		return penName;
 	}
 	/**
-	 * 设置：手机号码
+	 * Đặt: số điện thoại
 	 */
 	public void setTelPhone(String telPhone) {
 		this.telPhone = telPhone;
 	}
 	/**
-	 * 获取：手机号码
+	 * Lấy: số điện thoại
 	 */
 	public String getTelPhone() {
 		return telPhone;
 	}
 	/**
-	 * 设置：QQ或微信账号
+	 * Đặt: tài khoản QQ hoặc WeChat
 	 */
 	public void setChatAccount(String chatAccount) {
 		this.chatAccount = chatAccount;
 	}
 	/**
-	 * 获取：QQ或微信账号
+	 * Lấy: tài khoản QQ hoặc WeChat
 	 */
 	public String getChatAccount() {
 		return chatAccount;
 	}
 	/**
-	 * 设置：电子邮箱
+	 * Đặt: email
 	 */
 	public void setEmail(String email) {
 		this.email = email;
 	}
 	/**
-	 * 获取：电子邮箱
+	 * Lấy: email
 	 */
 	public String getEmail() {
 		return email;
 	}
 	/**
-	 * 设置：作品方向，0：男频，1：女频
+	 * Đặt: định hướng tác phẩm: 0 nam, 1 nữ
 	 */
 	public void setWorkDirection(Integer workDirection) {
 		this.workDirection = workDirection;
 	}
 	/**
-	 * 获取：作品方向，0：男频，1：女频
+	 * Lấy: định hướng tác phẩm: 0 nam, 1 nữ
 	 */
 	public Integer getWorkDirection() {
 		return workDirection;
 	}
 	/**
-	 * 设置：创建时间
+	 * Đặt: thời gian tạo
 	 */
 	public void setCreateTime(Date createTime) {
 		this.createTime = createTime;
 	}
 	/**
-	 * 获取：创建时间
+	 * Lấy: thời gian tạo
 	 */
 	public Date getCreateTime() {
 		return createTime;
 	}
 	/**
-	 * 设置：0：正常，1：封禁
+	 * Đặt: 0 bình thường, 1 bị khóa
 	 */
 	public void setStatus(Integer status) {
 		this.status = status;
 	}
 	/**
-	 * 获取：0：正常，1：封禁
+	 * Lấy: 0 bình thường, 1 bị khóa
 	 */
 	public Integer getStatus() {
 		return status;

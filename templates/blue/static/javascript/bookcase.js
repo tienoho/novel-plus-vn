@@ -22,7 +22,7 @@ layui.use(['layer', 'jquery'], function () {
             this.removeItem(k);
             this.removeBook(k)
         },
-        setBook: function (v) { //保存书籍
+        setBook: function (v) { // Lưu truyện
             var reg = new RegExp("(^|#)" + v);
             var books = this.getItem(this.bookList);
             if (books == "") {
@@ -62,7 +62,7 @@ layui.use(['layer', 'jquery'], function () {
             }
             this.setItem(this.bookList, books)
         },
-        setItem: function (k, v) { //保存章节
+        setItem: function (k, v) { // Lưu chương
             if (!!window.localStorage) {
                 localStorage.setItem(k, v);
             } else {
@@ -123,36 +123,6 @@ layui.use(['layer', 'jquery'], function () {
         }
     }
 
-    //载入历史记录
-    // function loadbooker() {
-    //     var bookhtml = '';
-    //     var books = lastread.getBook();
-    //     var books = books.reverse();
-    //     if (books.length) {
-    //         for (var i = 0; i < books.length; i++) {
-    //             if (i <= 100) {
-    //
-    //                 var title = books[i][0];
-    //                 var article_id = books[i][1];
-    //                 var chapter_title = books[i][2];
-    //                 var chapter_id = books[i][3];
-    //                 var author = books[i][4];
-    //                 var category = books[i][5];
-    //
-    //                 var article_url = article_rule.replace('{article_id}', article_id);
-    //                 var chapter_url = chapter_rule.replace('{article_id}', article_id);
-    //                 chapter_url = chapter_url.replace('{chapter_id}', chapter_id);
-    //
-    //                 bookhtml += '<li><span class="s1">' + category + '</span><span class="s2"><a href="' + article_url + '" target="_blank">' + title + '</a></span><span class="s3"><a href="' + chapter_url + '" target="_blank">' + chapter_title + '</a></span><span class="s4">' + author + '</span><span class="s5"><a href="javascript:void(0)" class="remove-book" data-id="' + article_id + '" title="删除“' + title + '”?">删除</a></span><span class="s6">&nbsp;</span><span class="s7">&nbsp;</span></li>';
-    //             }
-    //         }
-    //     } else {
-    //         bookhtml += '<div style="height:100px;line-height:100px; text-align:center">还木有任何书籍( ˙﹏˙ )</div>';
-    //     }
-    //
-    //     // $(".read_book").html(bookhtml);
-    // }
-
     window.lastread = new LastRead();
 
     $(function () {
@@ -170,14 +140,14 @@ layui.use(['layer', 'jquery'], function () {
 
                 html += "<div class=\"bookshelf-mask\"></div>";
                 html += "<div class=\"bookshelf-panel\">";
-                html += "<div class=\"bookshelf-head\"><h4>我的书架(" + books.length +"本) </h4><a class=\"close\" target=\"_self\">关闭</a></div>";
+                html += "<div class=\"bookshelf-head\"><h4>" + novelMessage('blueShelfTitle', 'Tủ sách của tôi ({0} truyện)').replace('{0}', books.length) + "</h4><a class=\"close\" target=\"_self\">" + novelMessage('close', 'Đóng') + "</a></div>";
                 html += "<div class=\"bookshelf-list\">";
-                html += "<div class=\"clearfix title\"><span class=\"label\"></span><em>用户浏览过的小说会自动保存到书架中（只限同一电脑）</em></div>";
+                html += "<div class=\"clearfix title\"><span class=\"label\"></span><em>" + novelMessage('blueShelfNote', 'Truyện đã đọc được tự động lưu trên thiết bị này.') + "</em></div>";
                 html += "</div>";
                 html += "</div>";
                 $("body").append(html);
 
-                var book_html = '<li><span class="s1"><b>作品分类</b></span><span class="s2"><b>作品名称</b></span><span class="s3"><b>上次阅读章节</b></span><span class="s4"><b>作者</b></span><span class="s5"><b>操作</b></span><span class="s6"><b>&nbsp;</b></span><span class="s7"><b>&nbsp;</b></span></li>';
+                var book_html = '<li><span class="s1"><b>' + novelMessage('bookCategory', 'Danh mục truyện') + '</b></span><span class="s2"><b>' + novelMessage('bookName', 'Tên truyện') + '</b></span><span class="s3"><b>' + novelMessage('blueLastChapter', 'Chương đọc gần nhất') + '</b></span><span class="s4"><b>' + novelMessage('author', 'Tác giả') + '</b></span><span class="s5"><b>' + novelMessage('actions', 'Thao tác') + '</b></span><span class="s6"><b>&nbsp;</b></span><span class="s7"><b>&nbsp;</b></span></li>';
 
                 if (books.length) {
                     for (var i = 0; i < books.length; i++) {
@@ -194,12 +164,12 @@ layui.use(['layer', 'jquery'], function () {
                             var chapter_url = chapter_rule.replace('{article_id}', sourceid);
                             chapter_url = chapter_url.replace('{chapter_id}', chapter_id);
 
-                            book_html += '<li><span class="s1">' + category + '</span><span class="s2"><a href="' + article_url + '" target="_blank">' + title + '</a></span><span class="s3"><a href="' + chapter_url + '" target="_blank">' + chapter_title + '</a></span><span class="s4">' + author + '</span><span class="s5"><a href="javascript:void(0)" class="remove-book" data-id="' + article_id + '" title="删除“' + title + '”?">删除</a></span><span class="s6">&nbsp;</span><span class="s7">&nbsp;</span></li>';
+                            book_html += '<li><span class="s1">' + category + '</span><span class="s2"><a href="' + article_url + '" target="_blank">' + title + '</a></span><span class="s3"><a href="' + chapter_url + '" target="_blank">' + chapter_title + '</a></span><span class="s4">' + author + '</span><span class="s5"><a href="javascript:void(0)" class="remove-book" data-id="' + article_id + '" title="' + novelMessage('blueRemoveTitle', 'Xóa “{0}”?').replace('{0}', title) + '">' + novelMessage('blueRemove', 'Xóa') + '</a></span><span class="s6">&nbsp;</span><span class="s7">&nbsp;</span></li>';
 
                         }
                     }
                 } else {
-                    book_html += '<div style="height:100px;line-height:100px; text-align:center">还木有任何书籍( ˙﹏˙ )</div>';
+                    book_html += '<div style="height:100px;line-height:100px; text-align:center">' + novelMessage('blueShelfEmpty', 'Chưa có truyện nào trong tủ sách.') + '</div>';
                 }
                 $(".bookshelf-list").append(book_html);
 
@@ -212,13 +182,13 @@ layui.use(['layer', 'jquery'], function () {
 
         $(".bookshelf-list li a.remove-book").live("click", function() {
             var _this =  $(this);
-            layer.confirm('确定从书架中移除？', {title:'提示'}, function(index){
+            layer.confirm(novelMessage('blueRemoveConfirm', 'Bạn có chắc muốn xóa truyện khỏi tủ sách?'), {title: novelMessage('notice', 'Thông báo')}, function(index){
 
                 lastread.remove(_this.data('id'));
                 _this.parent().parent().slideUp(300, function(){
                     $(this).remove();
                     var books = lastread.getBook().reverse();
-                    $(".bookshelf-head h4").html("我的书架("+books.length+"本)");
+                    $(".bookshelf-head h4").html(novelMessage('blueShelfTitle', 'Tủ sách của tôi ({0} truyện)').replace('{0}', books.length));
                 });
 
                 layer.close(index);

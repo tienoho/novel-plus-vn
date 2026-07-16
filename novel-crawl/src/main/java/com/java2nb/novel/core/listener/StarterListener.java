@@ -3,6 +3,7 @@ package com.java2nb.novel.core.listener;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.java2nb.novel.core.crawl.CrawlParser;
 import com.java2nb.novel.core.crawl.RuleBean;
+import com.java2nb.novel.core.i18n.Messages;
 import com.java2nb.novel.entity.Book;
 import com.java2nb.novel.entity.BookIndex;
 import com.java2nb.novel.entity.CrawlSingleTask;
@@ -37,6 +38,8 @@ public class StarterListener implements ServletContextInitializer {
 
     private final CrawlParser crawlParser;
 
+    private final Messages messages;
+
     @Value("${crawl.update.thread}")
     private int updateThreadCount;
 
@@ -44,10 +47,10 @@ public class StarterListener implements ServletContextInitializer {
     public void onStartup(ServletContext servletContext) {
         for (int i = 0; i < updateThreadCount; i++) {
             new Thread(() -> {
-                log.info("程序启动,开始执行自动更新线程。。。");
+                log.info(messages.get("crawl.log.autoUpdateStarted"));
                 while (true) {
                     try {
-                        //1.查询最新目录更新时间在一个月之内的前100条需要更新的数据
+                        //1. Truy vấn 100 truyện đầu tiên cần cập nhật, có thời gian cập nhật chương mới nhất trong vòng một tháng
                         Date currentDate = new Date();
                         Date startDate = DateUtils.addDays(currentDate, -30);
                         List<Book> bookList;
@@ -56,23 +59,23 @@ public class StarterListener implements ServletContextInitializer {
                         }
                         for (Book needUpdateBook : bookList) {
                             try {
-                                //查询爬虫源规则
+                                //Truy vấn quy tắc nguồn thu thập
                                 CrawlSource source = crawlService.queryCrawlSource(needUpdateBook.getCrawlSourceId());
                                 RuleBean ruleBean = new ObjectMapper().readValue(source.getCrawlRule(), RuleBean.class);
-                                //解析小说基本信息
+                                //Phân tích thông tin cơ bản của truyện
                                 crawlParser.parseBook(ruleBean, needUpdateBook.getCrawlBookId(), book -> {
-                                    //这里只做老书更新
+                                    //Chỉ cập nhật truyện đã tồn tại
                                     book.setId(needUpdateBook.getId());
                                     book.setWordCount(needUpdateBook.getWordCount());
                                     if (needUpdateBook.getPicUrl() != null && needUpdateBook.getPicUrl()
                                         .contains(Constants.LOCAL_PIC_PREFIX)) {
-                                        //本地图片则不更新
+                                        //Không cập nhật ảnh được lưu cục bộ
                                         book.setPicUrl(null);
                                     }
-                                    //查询已存在的章节
+                                    //Truy vấn các chương đã tồn tại
                                     Map<Integer, BookIndex> existBookIndexMap = bookService.queryExistBookIndexMap(
                                         needUpdateBook.getId());
-                                    //解析章节目录
+                                    //Phân tích mục lục chương
                                     crawlParser.parseBookIndexAndContent(needUpdateBook.getCrawlBookId(), book,
                                         ruleBean, needUpdateBook.getCrawlSourceId(), existBookIndexMap,
                                         chapter -> bookService.updateBookAndIndexAndContent(book,
@@ -84,7 +87,7 @@ public class StarterListener implements ServletContextInitializer {
                             }
 
                         }
-                        //  休眠10分钟
+                        //  Tạm dừng 10 phút
                         TimeUnit.MINUTES.sleep(10);
                     } catch (Exception e) {
                         log.error(e.getMessage(), e);
@@ -97,27 +100,27 @@ public class StarterListener implements ServletContextInitializer {
         }
 
         new Thread(() -> {
-            log.info("程序启动,开始执行单本采集任务线程。。。");
+            log.info(messages.get("crawl.log.singleTaskStarted"));
             while (true) {
                 CrawlSingleTask task = null;
                 byte crawlStatus = 0;
                 try {
-                    //获取采集任务
+                    //Lấy tác vụ thu thập
                     task = crawlService.getCrawlSingleTask();
 
                     if (task != null) {
-                        //查询爬虫规则
+                        //Truy vấn quy tắc thu thập
                         CrawlSource source = crawlService.queryCrawlSource(task.getSourceId());
                         RuleBean ruleBean = new ObjectMapper().readValue(source.getCrawlRule(), RuleBean.class);
                         if (crawlService.parseBookAndSave(task.getCatId(), ruleBean, task.getSourceId(),
                             task.getSourceBookId(), task)) {
-                            //采集成功
+                            //Thu thập thành công
                             crawlStatus = 1;
                         }
 
                     }
 
-                    //休眠1分钟
+                    //Tạm dừng 1 phút
                     TimeUnit.MINUTES.sleep(1);
 
                 } catch (Exception e) {

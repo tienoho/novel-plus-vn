@@ -23,7 +23,7 @@ public class NewsController {
     private final NewsService newsService;
 
     /**
-     * 查询首页新闻
+     * Truy vấn tin tức trang chủ
      * */
     @GetMapping("listIndexNews")
     public RestResult<List<News>> listIndexNews(){
@@ -31,7 +31,7 @@ public class NewsController {
     }
 
     /**
-     * 分页查询新闻列表
+     * Truy vấn phân trang danh sách tin tức
      * */
     @GetMapping("listByPage")
     public RestResult<PageBean<News>> listByPage(@RequestParam(value = "curr", defaultValue = "1") int page, @RequestParam(value = "limit", defaultValue = "5") int pageSize){
@@ -39,7 +39,7 @@ public class NewsController {
     }
 
     /**
-     * 增加新闻阅读量
+     * Tăng lượt đọc tin tức
      * */
     @PostMapping("addReadCount")
     public RestResult<Void> addReadCount(@RequestParam(value = "newsId") Integer newsId){

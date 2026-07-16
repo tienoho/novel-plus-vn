@@ -7,6 +7,7 @@ import com.java2nb.common.service.GeneratorService;
 import com.java2nb.common.utils.GenUtils;
 import com.java2nb.common.utils.PageBean;
 import com.java2nb.common.utils.R;
+import com.java2nb.common.utils.Messages;
 import io.swagger.annotations.ApiOperation;
 import lombok.SneakyThrows;
 import org.apache.commons.configuration.Configuration;
@@ -31,6 +32,8 @@ public class GeneratorController {
     String prefix = "common/generator";
     @Autowired
     GeneratorService generatorService;
+    @Autowired
+    Messages messages;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -67,7 +70,7 @@ public class GeneratorController {
     public R genCode(String tableName) {
         String[] tableNames = new String[]{tableName};
         generatorService.generatorCode(tableNames);
-        return R.ok("代码生成成功，请到本地项目中查看！");
+        return R.ok(messages.get("generator.success"));
     }
 
     @RequestMapping("/batchDownload")
@@ -89,7 +92,7 @@ public class GeneratorController {
         String[] tableNames = new String[]{};
         tableNames = JSON.parseArray(tables).toArray(tableNames);
         generatorService.generatorCode(tableNames);
-        return R.ok("代码批量生成成功，请到本地项目中查看！");
+        return R.ok(messages.get("generator.batchSuccess"));
     }
 
     @GetMapping("/edit")
@@ -119,7 +122,7 @@ public class GeneratorController {
             conf.setProperty("srcPath", map.get("srcPath"));
             conf.save();
         } catch (ConfigurationException e) {
-            return R.error("保存配置文件出错");
+            return R.error(messages.get("error.configSave"));
         }
         return R.ok();
     }
@@ -143,9 +146,9 @@ public class GeneratorController {
 
 
     /**
-     * 保存
+     * Lưu
      */
-    @ApiOperation(value = "新增", notes = "新增")
+    @ApiOperation(value = "Thêm mới", notes = "Thêm mới")
     @ResponseBody
     @PostMapping("/genColumns/save")
     public R save(@RequestBody List<GenColumnsDO> list) {

@@ -1,9 +1,9 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="vi">
 <head th:replace="common/header :: common_head(~{::title},~{::meta},~{::link},~{})">
-    <title th:text="'新闻公告_'+${application.website.name}"></title>
-    <meta name="keywords" content="新闻公告,小说,小说网,言情小说,都市小说,玄幻小说,穿越小说,青春小说,总裁豪门小说,网络小说,免费小说,全本小说,原创网络文学"/>
-    <meta name="description" th:content="${application.website.name}+'小说每日更新小说连载,小说排行榜,提供言情小说,都市小说,玄幻小说,穿越小说,青春小说,总裁豪门小说,网络小说,免费小说,全本小说,首发小说,最新章节免费小说阅读,精彩尽在'+${application.website.name}+'小说！'" />
+    <title th:text="#{news.title}+'_'+${application.website.name}"></title>
+    <meta name="keywords" th:content="#{news.title}+','+#{book.seo.list.keywords}"/>
+    <meta name="description" th:content="#{book.seo.list.description(${application.website.name})}" />
     <link rel="stylesheet" href="/css/about.css" />
 </head>
 <body class="body">
@@ -14,13 +14,13 @@
 <div class="main box_center cf">
     <div class="newsMain cf">
         <div class="nav_sub">
-            当前位置：<a href="/" > 首页 </a> &gt; <a href="/about/news.html" > 新闻公告 </a> &gt; <span th:utext="${news.title}">  </span>
+            <span th:text="#{news.currentLocation}+': '">Vị trí hiện tại: </span><a href="/" th:text="#{site.home}">Trang chủ</a> &gt; <a href="/about/news.html" th:text="#{news.title}">Tin tức và thông báo</a> &gt; <span th:utext="${news.title}"></span>
         </div>
         <div class="channelWrap channelNews cf">
             <div class="news_title">
                 <h2 th:utext="${news.title}"></h2>
                 <!--while [[...]] corresponds to th:text (i.e. result will be HTML-escaped), [(...)] corresponds to th:utext-->
-                <p class="from">来源：[[${news.sourceName}]] <span class="time" th:text="'时间：'+${#dates.format(news.createTime, 'yy-MM-dd')}"></span> <span class="time" th:text="'阅读量：'+${news.readCount}"></span></p>
+                <p class="from"><span th:text="#{news.source}+': '">Nguồn: </span>[[${news.sourceName}]] <span class="time" th:text="#{news.time}+': '+${#dates.format(news.createTime, 'dd/MM/yy')}"></span> <span class="time" th:text="#{news.views}+': '+${news.readCount}"></span></p>
             </div>
             <div class="news_info" th:utext="${news.content}">
             </div>

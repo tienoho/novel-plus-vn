@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
 
     <meta charset="utf-8">
@@ -55,9 +55,9 @@
 
         .container {
             display: flex;
-            overflow-x: auto; /* 允许内容水平滚动 */
-            white-space: nowrap; /* 禁止换行 */
-            scroll-snap-type: x mandatory; /* 在滚动时强制对齐 snap-points */
+            overflow-x: auto; /* Cho phép cuộn ngang. */
+            white-space: nowrap; /* Không xuống dòng. */
+            scroll-snap-type: x mandatory; /* Căn phần tử theo điểm snap khi cuộn. */
             -ms-overflow-style: none; /* Internet Explorer 10+ */
             scrollbar-width: none; /* Firefox */
         }
@@ -74,7 +74,7 @@
 
 
         .item {
-            flex: 0 0 calc(100% / 10); /* 每个元素宽度为容器的十分之一 */
+            flex: 0 0 calc(100% / 10); /* Mỗi phần tử chiếm một phần mười chiều rộng. */
             scroll-snap-align: start;
             box-sizing: border-box;
             text-align: center;
@@ -98,7 +98,7 @@
 <body>
 
 
-<!-- 你的HTML代码 -->
+<!-- Nội dung trang chủ mobile. -->
 <a name="top"></a>
 <div style="height: 40px;">
     <div style="line-height: 50px;width: 120px;float:left;padding-left: 10px"><img style="width: 150px;"
@@ -128,12 +128,12 @@
     <div class="layui-row">
 
         <div class="layui-col-xs10 layui-col-sm10 layui-col-md11 layui-col-lg11">
-            <input id="title" type="text" name="title" required lay-verify="required" placeholder="请输入书名·作者"
+            <input id="title" type="text" name="title" required lay-verify="required" th:placeholder="#{book.search.placeholder}"
                    autocomplete="off"
                    class="layui-input">
         </div>
         <div class="layui-col-xs1" style="padding: 0 1% 1%">
-            <button onclick="searchBooks()" class="layui-btn" lay-submit lay-filter="formDemo">搜索</button>
+            <button onclick="searchBooks()" class="layui-btn" lay-submit lay-filter="formDemo" th:text="#{common.search}">Tìm kiếm</button>
         </div>
     </div>
 
@@ -142,7 +142,7 @@
 <div class="layui-collapse layui-col-lg10">
     <div class="layui-colla-item">
         <blockquote class="layui-elem-quote" style="text-align: left;font-size: 16px">
-            精品推荐
+            <span th:text="#{home.featured}">Đề xuất nổi bật</span>
         </blockquote>
 
         <div class="container" style="padding-bottom: 10px">
@@ -166,7 +166,7 @@
 <div style="clear: both"></div>
 <div class="layui-colla-item">
     <blockquote class="layui-elem-quote" style="text-align: left;font-size: 16px">
-        热门推荐
+        <span th:text="#{home.popular}">Đề xuất phổ biến</span>
     </blockquote>
 
     <div class="layui-container">
@@ -182,7 +182,7 @@
                         <ul>
                             <li style="padding-bottom: 5px" class="line-limit-length"
                                 th:text="${book.bookName}"></li>
-                            <li style="padding-bottom: 5px;color: #a6a6a6" th:text="'作者：'+${book.authorName}"></li>
+                            <li style="padding-bottom: 5px;color: #a6a6a6" th:text="#{book.authorBy(${book.authorName})}"></li>
                             <li class='book_desc' style="color: #a6a6a6;padding-right:10px;"
                                 th:utext="${book.bookDesc}"></li>
                         </ul>
@@ -203,9 +203,9 @@
 <div class="layui-colla-item layui-col-lg10"
      style="border-width: 1px;border-style: solid;border-radius: 2px;border-top-width: 0px"><a
         href="javascript:moreNewBooks()">
-    <blockquote class="layui-elem-quote" style="text-align: left;color: #000;font-size: 16px">最新更新
+    <blockquote class="layui-elem-quote" style="text-align: left;color: #000;font-size: 16px"><span th:text="#{home.latest}">Mới cập nhật</span>
         <div style="float: right; margin-right: 20px"><i style="font-size: 14px;color:#666"
-                                                         class="layui-icon">更多&#xe65b;</i>
+                                                         class="layui-icon"><span th:text="#{common.more}">Xem thêm</span>&#xe65b;</i>
         </div>
     </blockquote>
 </a>
@@ -230,10 +230,13 @@
 <script src="/mobile/js/wap_collect.js"></script>
 
 
-<script>
+<script th:inline="javascript">
+
+    const descriptionLabel = /*[[#{book.description}]]*/ 'Giới thiệu';
+    const networkErrorText = /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng';
 
 
-    //更新榜单查询
+    // Tải danh sách truyện mới cập nhật.
     $.ajax({
         type: "get",
         url: "/book/listUpdateRank",
@@ -261,7 +264,7 @@
                         "\n" +
                         "                        <div style=\"clear: both\"></div>\n" +
                         "                        <div style=\"color: #a6a6a6;padding-left: 5px;padding-top: 5px\"\n" +
-                        "                             class=\"layui-elip layui-col-md11 layui-col-sm11 layui-col-lg11\">简介：" + updateRankBook.bookDesc + "" +
+                        "                             class=\"layui-elip layui-col-md11 layui-col-sm11 layui-col-lg11\">" + descriptionLabel + ": " + (updateRankBook.bookDesc || '') + "" +
                         "                    </div></a>\n" +
                         "                </div>");
 
@@ -275,7 +278,7 @@
         }
         ,
         error: function () {
-            layer.alert('网络异常');
+            layer.alert(networkErrorText);
         }
     })
 

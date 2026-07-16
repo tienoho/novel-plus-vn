@@ -11,7 +11,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 /**
- * 数据权限管理
+ * Quản lý quyền dữ liệu
  * @author xiongxy
  * @email 1179705413@qq.com
  * @date 2019-11-25 11:40:03

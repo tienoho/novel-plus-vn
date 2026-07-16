@@ -1,11 +1,11 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+    <html xmlns="http://www.w3.org/1999/xhtml" lang="vi">
 <head>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
-        <title>作家管理系统-小说精品屋</title>
+        <title th:text="#{author.system}">Hệ thống quản lý tác giả</title>
         <link rel="stylesheet" href="/css/base.css?v=1"/>
         <link rel="stylesheet" href="/css/user.css"/>
     </head>
@@ -17,7 +17,7 @@
         <div class="box_center cf"
              style="text-align: center;height: 44px;line-height: 48px;color: #fff;font-size: 16px;">
 
-            小说精品屋作家管理
+            <span th:text="#{author.system}">Hệ thống quản lý tác giả</span>
 
         </div>
     </div>
@@ -28,8 +28,8 @@
         <div class="my_l">
 
             <ul class="log_list">
-                <li><a class="link_4 on" href="/author/index.html">作品管理</a></li>
-                <li><a class="link_2 " href="/author/author_income_detail.html">稿费收入</a></li>
+                <li><a class="link_4 on" href="/author/index.html" th:text="#{author.management}">Quản lý truyện</a></li>
+                <li><a class="link_2" href="/author/author_income_detail.html" th:text="#{author.income}">Thu nhập nhuận bút</a></li>
             </ul>
 
         </div>
@@ -40,17 +40,17 @@
                     <form method="post" action="./register.html" id="form2">
                         <div class="user_l">
                             <div></div>
-                            <h3>小说章节内容填写</h3>
+                            <h3 th:text="#{author.chapter.form}">Nội dung chương</h3>
                             <ul class="log_list">
                                 <li><span id="LabErr"></span></li>
-                                <b>章节名：</b>
+                                <b th:text="#{author.chapter.name}+': '">Tên chương:</b>
                                 <li><input type="text" id="bookIndex" name="bookIndex" class="s_input" ></li>
-                                <b>章节内容：</b>
+                                <b th:text="#{author.chapter.content}+': '">Nội dung:</b>
                                 <li id="contentLi">
                                 <textarea  name="bookContent" rows="30" cols="80" id="bookContent"
                                           class="textarea"></textarea>
                                 </li>
-                                <li style="margin-top: 10px"><input type="button" onclick="addBookContent()" name="btnRegister" value="提交"
+                                <li style="margin-top: 10px"><input type="button" onclick="addBookContent()" name="btnRegister" th:value="#{common.submit}"
                                            id="btnRegister" class="btn_red">
 
 
@@ -65,19 +65,19 @@
                         <tr>
 
                             <th class="name">
-                                爬虫源（已开启的爬虫源）
+                                Nguồn crawler đang bật
                             </th>
                             <th class="chapter">
-                                成功爬取数量（websocket实现）
+                                Số lượng thu thập thành công qua WebSocket
                             </th>
                             <th class="time">
-                            目标爬取数量
+                            Số lượng mục tiêu
                             </th>
                             <th class="goread">
-                                状态（正在运行，已停止）（一次只能运行一个爬虫源）
+                                Trạng thái (mỗi lần chỉ chạy một nguồn crawler)
                             </th>
                             <th class="goread">
-                                操作（启动，停止）
+                                Thao tác bắt đầu/dừng
                             </th>
                         </tr>
                         </thead>
@@ -103,7 +103,13 @@
 <script src="/javascript/user.js" type="text/javascript"></script>
 <script src="/javascript/common.js" type="text/javascript"></script>
 
-<script language="javascript" type="text/javascript">
+<script language="javascript" type="text/javascript" th:inline="javascript">
+    const paidLabelText = /*[[#{author.chapter.paid}]]*/ 'Có thu phí';
+    const freeText = /*[[#{author.chapter.free}]]*/ 'Miễn phí';
+    const chargeText = /*[[#{author.chapter.charge}]]*/ 'Thu phí';
+    const chapterNameRequiredText = /*[[#{author.chapter.name.required}]]*/ 'Tên chương không được để trống.';
+    const chapterContentRequiredText = /*[[#{author.chapter.content.required}]]*/ 'Nội dung chương không được để trống.';
+    const networkErrorText = /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng';
 
     var bookId = getSearchString("bookId");
     var indexId = getSearchString("indexId");
@@ -112,13 +118,13 @@
 
     $("#bookIndex").val(indexName);
     if(isVip == 1){
-        $("#contentLi").after("<b>是否收费：</b>\n" +
-            "                                <li><input type=\"radio\" disabled name=\"isVip\" value=\"0\"   >免费\n" +
-            "                                    <input type=\"radio\" disabled name=\"isVip\" value=\"1\"  checked >收费</li><br/>");
+        $("#contentLi").after("<b>" + paidLabelText + ":</b>\n" +
+            "                                <li><input type=\"radio\" disabled name=\"isVip\" value=\"0\">" + freeText + "\n" +
+            "                                    <input type=\"radio\" disabled name=\"isVip\" value=\"1\" checked>" + chargeText + "</li><br/>");
     }else{
-        $("#contentLi").after("<b>是否收费：</b>\n" +
-            "                                <li><input type=\"radio\" disabled name=\"isVip\" value=\"0\"  checked >免费\n" +
-            "                                    <input type=\"radio\" disabled name=\"isVip\" value=\"1\"   >收费</li><br/>");
+        $("#contentLi").after("<b>" + paidLabelText + ":</b>\n" +
+            "                                <li><input type=\"radio\" disabled name=\"isVip\" value=\"0\" checked>" + freeText + "\n" +
+            "                                    <input type=\"radio\" disabled name=\"isVip\" value=\"1\">" + chargeText + "</li><br/>");
 
     }
 
@@ -141,7 +147,7 @@
         },
         error: function () {
             lock = false;
-            layer.alert('网络异常');
+            layer.alert(networkErrorText);
         }
     })
 
@@ -164,14 +170,14 @@
 
         var indexName = $("#bookIndex").val();
         if(!indexName){
-            $("#LabErr").html("章节名不能为空！");
+            $("#LabErr").html(chapterNameRequiredText);
             lock = false;
             return;
         }
 
         var content = $("#bookContent").val();
         if(!content){
-            $("#LabErr").html("章节内容不能为空！");
+            $("#LabErr").html(chapterContentRequiredText);
             lock = false;
             return;
         }
@@ -199,7 +205,7 @@
             },
             error: function () {
                 lock = false;
-                layer.alert('网络异常');
+                layer.alert(networkErrorText);
             }
         })
 

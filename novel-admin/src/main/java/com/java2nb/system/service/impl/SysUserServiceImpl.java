@@ -44,6 +44,8 @@ public class SysUserServiceImpl implements SysUserService {
     private JnConfig jnConfig;
     @Autowired
     DeptService deptService;
+    @Autowired
+    Messages messages;
     private static final Logger logger = LoggerFactory.getLogger(SysUserService.class);
 
     @Override
@@ -139,10 +141,10 @@ public class SysUserServiceImpl implements SysUserService {
                 userDO.setPassword(MD5Utils.encrypt(userDO.getUsername(), userVO.getPwdNew()));
                 return userMapper.update(userDO);
             } else {
-                throw new Exception("输入的旧密码有误！");
+                throw new Exception(messages.get("error.oldPasswordInvalid"));
             }
         } else {
-            throw new Exception("你修改的不是你登录的账号！");
+            throw new Exception(messages.get("error.accountMismatch"));
         }
     }
 
@@ -150,7 +152,7 @@ public class SysUserServiceImpl implements SysUserService {
     public int adminResetPwd(UserVO userVO) throws Exception {
         UserDO userDO = get(userVO.getUserDO().getUserId());
         if ("admin".equals(userDO.getUsername())) {
-            throw new Exception("超级管理员的账号不允许直接重置！");
+            throw new Exception(messages.get("error.superAdminReset"));
         }
         userDO.setPassword(MD5Utils.encrypt(userDO.getUsername(), userVO.getPwdNew()));
         return userMapper.update(userDO);
@@ -199,7 +201,7 @@ public class SysUserServiceImpl implements SysUserService {
             tree.setState(state);
             trees.add(tree);
         }
-        // 默认顶级菜单为０，根据数据库实际情况调整
+        // Menu cấp cao nhất mặc định là 0; điều chỉnh theo dữ liệu thực tế
         Tree<DeptDO> t = BuildTree.build(trees);
         return t;
     }
@@ -214,29 +216,29 @@ public class SysUserServiceImpl implements SysUserService {
         String fileName = file.getOriginalFilename();
         fileName = FileUtil.renameToUUID(fileName);
         FileDO sysFile = new FileDO(FileType.fileType(fileName), Constant.UPLOAD_FILES_PREFIX + fileName, new Date());
-        //获取图片后缀
+        // Lấy phần mở rộng ảnh
         String prefix = fileName.substring((fileName.lastIndexOf(".") + 1));
         String[] str = avatar_data.split(",");
-        //获取截取的x坐标
+        // Lấy tọa độ x vùng cắt
         int x = (int) Math.floor(Double.parseDouble(str[0].split(":")[1]));
-        //获取截取的y坐标
+        // Lấy tọa độ y vùng cắt
         int y = (int) Math.floor(Double.parseDouble(str[1].split(":")[1]));
-        //获取截取的高度
+        // Lấy chiều cao vùng cắt
         int h = (int) Math.floor(Double.parseDouble(str[2].split(":")[1]));
-        //获取截取的宽度
+        // Lấy chiều rộng vùng cắt
         int w = (int) Math.floor(Double.parseDouble(str[3].split(":")[1]));
-        //获取旋转的角度
+        // Lấy góc xoay
         int r = Integer.parseInt(str[4].split(":")[1].replaceAll("}", ""));
         try {
             BufferedImage cutImage = ImageUtils.cutImage(file, x, y, w, h, prefix);
             BufferedImage rotateImage = ImageUtils.rotateImage(cutImage, r);
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             boolean flag = ImageIO.write(rotateImage, prefix, out);
-            //转换后存入数据库
+            // Chuyển đổi rồi lưu vào cơ sở dữ liệu
             byte[] b = out.toByteArray();
             FileUtil.uploadFile(b, jnConfig.getUploadPath(), fileName);
         } catch (Exception e) {
-            throw new Exception("图片裁剪错误！！");
+            throw new Exception(messages.get("error.imageCrop"));
         }
         Map<String, Object> result = new HashMap<>();
         if (sysFileService.save(sysFile) > 0) {

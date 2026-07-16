@@ -12,14 +12,14 @@ function save() {
 		cache : true,
 		type : "POST",
 		url : "/common/dict/save",
-		data : $('#signupForm').serialize(), // 你的formid
+		data : $('#signupForm').serialize(), // ID biểu mẫu
 		async : false,
 		error : function(request) {
-			parent.layer.alert("网络超时");
+			parent.layer.alert(adminMessage('connectionError', 'Lỗi kết nối'));
 		},
 		success : function(data) {
 			if (data.code == 0) {
-				parent.layer.msg("操作成功");
+				parent.layer.msg(adminMessage('operationSuccess', 'Thao tác thành công'));
 				parent.reLoad();
 				var index = parent.layer.getFrameIndex(window.name);
 				parent.layer.close(index);
@@ -42,7 +42,7 @@ function validateRule() {
 		},
 		messages : {
 			name : {
-				required : icon + "请输入名字"
+				required : icon + adminMessage('validationRequired', 'Trường này là bắt buộc.')
 			}
 		}
 	})

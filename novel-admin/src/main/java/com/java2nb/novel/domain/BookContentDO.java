@@ -15,7 +15,7 @@ import java.util.Date;
 
 
 /**
- * 小说内容表
+ * Bảng nội dung tác phẩm
  * 
  * @author xiongxy
  * @email 1179705413@qq.com
@@ -25,51 +25,51 @@ public class BookContentDO implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	
-	//主键
-		//java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-	//所以通过序列化成字符串来解决
+	// Khóa chính
+		// Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+	// Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
 	@JsonSerialize(using = LongToStringSerializer.class)
 			private Long id;
-	//目录ID
-		//java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-	//所以通过序列化成字符串来解决
+	// ID mục lục
+		// Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+	// Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
 	@JsonSerialize(using = LongToStringSerializer.class)
 			private Long indexId;
-	//小说章节内容
+	// Nội dung chương
 			private String content;
 
 	/**
-	 * 设置：主键
+	 * Đặt: khóa chính
 	 */
 	public void setId(Long id) {
 		this.id = id;
 	}
 	/**
-	 * 获取：主键
+	 * Lấy: khóa chính
 	 */
 	public Long getId() {
 		return id;
 	}
 	/**
-	 * 设置：目录ID
+	 * Đặt: ID mục lục
 	 */
 	public void setIndexId(Long indexId) {
 		this.indexId = indexId;
 	}
 	/**
-	 * 获取：目录ID
+	 * Lấy: ID mục lục
 	 */
 	public Long getIndexId() {
 		return indexId;
 	}
 	/**
-	 * 设置：小说章节内容
+	 * Đặt: nội dung chương
 	 */
 	public void setContent(String content) {
 		this.content = content;
 	}
 	/**
-	 * 获取：小说章节内容
+	 * Lấy: nội dung chương
 	 */
 	public String getContent() {
 		return content;

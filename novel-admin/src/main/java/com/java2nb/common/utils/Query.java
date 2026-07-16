@@ -4,18 +4,18 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * 查询参数
+ * Tham số truy vấn
  */
 public class Query extends LinkedHashMap<String, Object> {
 	private static final long serialVersionUID = 1L;
 	// 
 	private int offset;
-	// 每页条数
+	// Số bản ghi mỗi trang
 	private int limit;
 
 	public Query(Map<String, Object> params) {
 		this.putAll(params);
-		// 分页参数
+		// Tham số phân trang
 		this.offset = Integer.parseInt(params.get("offset").toString());
 		this.limit = Integer.parseInt(params.get("limit").toString());
 		this.put("offset", offset);

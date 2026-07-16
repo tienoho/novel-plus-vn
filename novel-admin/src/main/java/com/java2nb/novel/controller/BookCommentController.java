@@ -23,7 +23,7 @@ import com.java2nb.common.utils.Query;
 import com.java2nb.common.utils.R;
 
 /**
- * 小说评论表
+ * Bảng bình luận tác phẩm
  *
  * @author xiongxy
  * @email 1179705413@qq.com
@@ -42,12 +42,12 @@ public class BookCommentController {
         return "novel/bookComment/bookComment";
     }
 
-    @ApiOperation(value = "获取小说评论表列表", notes = "获取小说评论表列表")
+    @ApiOperation(value = "Lấy danh sách bảng bình luận tác phẩm", notes = "Lấy danh sách bảng bình luận tác phẩm")
     @ResponseBody
     @GetMapping("/list")
     @RequiresPermissions("novel:bookComment:bookComment")
     public R list(@RequestParam Map<String, Object> params) {
-        //查询列表数据
+        // Truy vấn dữ liệu danh sách
         Query query = new Query(params);
         List<BookCommentDO> bookCommentList = bookCommentService.list(query);
         int total = bookCommentService.count(query);
@@ -55,14 +55,14 @@ public class BookCommentController {
         return R.ok().put("data", pageBean);
     }
 
-    @ApiOperation(value = "新增小说评论表页面", notes = "新增小说评论表页面")
+    @ApiOperation(value = "Trang thêm bảng bình luận tác phẩm", notes = "Trang thêm bảng bình luận tác phẩm")
     @GetMapping("/add")
     @RequiresPermissions("novel:bookComment:add")
     String add() {
         return "novel/bookComment/add";
     }
 
-    @ApiOperation(value = "修改小说评论表页面", notes = "修改小说评论表页面")
+    @ApiOperation(value = "Trang sửa bảng bình luận tác phẩm", notes = "Trang sửa bảng bình luận tác phẩm")
     @GetMapping("/edit/{id}")
     @RequiresPermissions("novel:bookComment:edit")
     String edit(@PathVariable("id") Long id, Model model) {
@@ -71,7 +71,7 @@ public class BookCommentController {
         return "novel/bookComment/edit";
     }
 
-    @ApiOperation(value = "查看小说评论表页面", notes = "查看小说评论表页面")
+    @ApiOperation(value = "Trang chi tiết bảng bình luận tác phẩm", notes = "Trang chi tiết bảng bình luận tác phẩm")
     @GetMapping("/detail/{id}")
     @RequiresPermissions("novel:bookComment:detail")
     String detail(@PathVariable("id") Long id, Model model) {
@@ -81,9 +81,9 @@ public class BookCommentController {
     }
 
     /**
-     * 保存
+     * Lưu
      */
-    @ApiOperation(value = "新增小说评论表", notes = "新增小说评论表")
+    @ApiOperation(value = "Thêm bảng bình luận tác phẩm", notes = "Thêm bảng bình luận tác phẩm")
     @ResponseBody
     @PostMapping("/save")
     @RequiresPermissions("novel:bookComment:add")
@@ -95,9 +95,9 @@ public class BookCommentController {
     }
 
     /**
-     * 修改
+     * Sửa
      */
-    @ApiOperation(value = "修改小说评论表", notes = "修改小说评论表")
+    @ApiOperation(value = "Sửa bảng bình luận tác phẩm", notes = "Sửa bảng bình luận tác phẩm")
     @ResponseBody
     @RequestMapping("/update")
     @RequiresPermissions("novel:bookComment:edit")
@@ -107,9 +107,9 @@ public class BookCommentController {
     }
 
     /**
-     * 删除
+     * Xóa
      */
-    @ApiOperation(value = "删除小说评论表", notes = "删除小说评论表")
+    @ApiOperation(value = "Xóa bảng bình luận tác phẩm", notes = "Xóa bảng bình luận tác phẩm")
     @PostMapping("/remove")
     @ResponseBody
     @RequiresPermissions("novel:bookComment:remove")
@@ -121,9 +121,9 @@ public class BookCommentController {
     }
 
     /**
-     * 删除
+     * Xóa
      */
-    @ApiOperation(value = "批量删除小说评论表", notes = "批量删除小说评论表")
+    @ApiOperation(value = "Xóa hàng loạt bảng bình luận tác phẩm", notes = "Xóa hàng loạt bảng bình luận tác phẩm")
     @PostMapping("/batchRemove")
     @ResponseBody
     @RequiresPermissions("novel:bookComment:batchRemove")

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <meta charset="utf-8">
 <head th:include="include :: header"></head>
 <body class="gray-bg">
@@ -12,7 +12,7 @@
                 <input id="id" name="id" th:value="${pay.id}"
                        type="hidden">
                                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">保留：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.payment.outTradeNo}+'：'">Mã giao dịch ngoài:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${pay.outTradeNo}">
@@ -22,7 +22,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">订单号：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.payment.tradeNo}+'：'">Mã đơn hàng:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${pay.tradeNo}">
@@ -32,7 +32,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">保留：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.payment.channel}+'：'">Kênh thanh toán:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${pay.payChannel}">
@@ -42,7 +42,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">交易香蕉币：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.payment.amount}+'：'">Số Xu giao dịch:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${pay.totalAmount}">
@@ -52,7 +52,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">支付用户ID：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.payment.userId}+'：'">ID người thanh toán:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${pay.userId}">
@@ -62,7 +62,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">支付状态：0：支付失败，1：支付成功，2：待支付：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.payment.status}+'：'">Trạng thái thanh toán (0: thất bại, 1: thành công, 2: chờ thanh toán):</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${pay.payStatus}">
@@ -72,7 +72,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">创建时间：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.audit.createdAt}+'：'">Thời gian tạo:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${pay.createTime}==null?null:${#dates.format(pay.createTime,'yyyy-MM-dd HH:mm:ss')}">
@@ -81,7 +81,7 @@
 
                     </div>
                                                                             <div class="form-group">
-                        <label class="col-sm-3 control-label">更新时间：</label>
+                        <label class="col-sm-3 control-label" th:text="#{admin.audit.updatedAt}+'：'">Thời gian cập nhật:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
                                  th:text="${pay.updateTime}==null?null:${#dates.format(pay.updateTime,'yyyy-MM-dd HH:mm:ss')}">

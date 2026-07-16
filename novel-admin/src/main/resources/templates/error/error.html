@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>500错误</title>
+    <title th:text="'500 - '+#{error.500.title}">500 - Lỗi máy chủ nội bộ</title>
     <meta name="keywords" content="">
     <meta name="description" content="">
     <link rel="shortcut icon" href="/favicon.ico"> <link href="/css/bootstrap.min.css?v=3.3.6" rel="stylesheet">
@@ -14,16 +14,15 @@
 <body class="gray-bg">
     <div class="middle-box text-center animated fadeInDown">
         <h1>500</h1>
-        <h3 class="font-bold">服务器内部错误</h3>
+        <h3 class="font-bold" th:text="#{error.500.title}">Lỗi máy chủ nội bộ</h3>
         <div class="error-desc">
-            	服务器好像出错了...<br/>
-            	您可以返回主页看看<br/>
+	            <span th:text="#{error.500.message}">Máy chủ gặp sự cố. Bạn có thể quay lại trang chủ.</span><br/>
             	<div th:text="${exception}"></div>
             	<div th:text="${url}"></div>
-            <a href="/" class="btn btn-primary m-t">主页</a>
+            <a href="/" class="btn btn-primary m-t" th:text="#{common.home}">Trang chủ</a>
         </div>
     </div>
-    <!-- 全局js -->
+    <!-- JavaScript dùng chung. -->
     <script src="/js/jquery.min.js?v=2.1.4"></script>
     <script src="/js/bootstrap.min.js?v=3.3.6"></script>
 </body>

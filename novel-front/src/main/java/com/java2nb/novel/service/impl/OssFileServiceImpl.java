@@ -35,7 +35,7 @@ public class OssFileServiceImpl implements FileService {
         if (filePath.contains(Constants.LOCAL_PIC_PREFIX)) {
             file = new File(picSavePath+filePath);
         } else {
-            //默认图片不存储
+            //Mặc định không lưu ảnh
             return filePath;
         }
 
@@ -46,16 +46,16 @@ public class OssFileServiceImpl implements FileService {
 
         OSSClient ossClient = new OSSClient(ossProperties.getEndpoint(), ossProperties.getKeyId(), ossProperties.getKeySecret());
         try {
-            //容器不存在，就创建
+            //Tạo container nếu chưa tồn tại
             if (!ossClient.doesBucketExist(ossProperties.getBucketName())) {
                 ossClient.createBucket(ossProperties.getBucketName());
                 CreateBucketRequest createBucketRequest = new CreateBucketRequest(ossProperties.getBucketName());
                 createBucketRequest.setCannedACL(CannedAccessControlList.PublicRead);
                 ossClient.createBucket(createBucketRequest);
             }
-            //上传文件
+            //Tải tệp lên
             PutObjectResult result = ossClient.putObject(new PutObjectRequest(ossProperties.getBucketName(), filePath, file));
-            //设置权限 这里是公开读
+            //Đặt quyền truy cập đọc công khai
             ossClient.setBucketAcl(ossProperties.getBucketName(), CannedAccessControlList.PublicRead);
 
             if(result != null) {
@@ -64,7 +64,7 @@ public class OssFileServiceImpl implements FileService {
         } catch (Exception e) {
             log.error(e.getMessage(), e);
         } finally {
-            //关闭
+            //Đóng
             ossClient.shutdown();
             file.delete();
         }

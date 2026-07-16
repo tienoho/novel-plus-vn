@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小说精品屋 - 文件管理器</title>
+    <title th:text="#{admin.file.title}">Novel Plus - Quản lý tệp</title>
     <meta name="keywords" content="">
     <meta name="description" content="">
     <link rel="shortcut icon" href="/favicon.ico">
@@ -29,28 +29,28 @@
                 <div class="ibox-content">
                     <div class="file-manager">
                         <button type="button" class="layui-btn" id="test1">
-                            <i class="fa fa-cloud"></i>上传文件
+                            <i class="fa fa-cloud"></i><span th:text="#{admin.file.upload}">Tải tệp lên</span>
                         </button>
                         <div class="hr-line-dashed"></div>
                         <ul class="folder-list" style="padding: 0">
                             <li><a href="javascript:void(0)" class="file-control hactive" :class="{'aactive':type === ''}"
-                                   v-on:click="changeType('')"><i class="fa fa-folder"></i>所有文件</a></li>
+                                   v-on:click="changeType('')"><i class="fa fa-folder"></i><span th:text="#{admin.file.all}">Tất cả tệp</span></a></li>
 
                             <li><a href="javascript:void(0)" class="file-control hactive" :class="{'aactive':type === 0}"
-                                   v-on:click="changeType(0)"><i class="fa fa-folder"></i>图片</a></li>
+                                   v-on:click="changeType(0)"><i class="fa fa-folder"></i><span th:text="#{admin.file.images}">Hình ảnh</span></a></li>
 
                             <li><a href="javascript:void(0)" :class="{'aactive':type === 1}"
-                                   v-on:click="changeType(1)" class="file-control hactive"><i class="fa fa-folder"></i>文档</a>
+                                   v-on:click="changeType(1)" class="file-control hactive"><i class="fa fa-folder"></i><span th:text="#{admin.file.documents}">Tài liệu</span></a>
                             </li>
 
                             <li><a href="javascript:void(0)" v-on:click="changeType(2)" :class="{'aactive':type === 2}"
-                                   class="file-control hactive"><i class="fa fa-folder"></i>视频</a></li>
+                                   class="file-control hactive"><i class="fa fa-folder"></i><span th:text="#{admin.file.videos}">Video</span></a></li>
 
                             <li><a href="javascript:void(0)" v-on:click="changeType(3)" :class="{'aactive':type === 3}"
-                                   class="file-control hactive"><i class="fa fa-folder"></i>音乐</a></li>
+                                   class="file-control hactive"><i class="fa fa-folder"></i><span th:text="#{admin.file.music}">Âm thanh</span></a></li>
 
                             <li><a href="javascript:void(0)" v-on:click="changeType(99)" :class="{'aactive':type === 99}"
-                                   class="file-control hactive"><i class="fa fa-folder"></i>其他</a></li>
+                                   class="file-control hactive"><i class="fa fa-folder"></i><span th:text="#{admin.file.other}">Khác</span></a></li>
                         </ul>
                     </div>
                 </div>
@@ -71,9 +71,9 @@
                                     <small>{{row.createDate}}</small>
                                 </div>
                                 &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;<button
-                                    class="btn btn-warning btn-xs copy" :url="row.url">复制
+                                    class="btn btn-warning btn-xs copy" :url="row.url" th:text="#{admin.file.copy}">Sao chép
                             </button>&nbsp; &nbsp; &nbsp; &nbsp;<button class="btn btn-danger btn-xs"
-                                                                        @click="remove(row.id)">删除
+                                                                        @click="remove(row.id)" th:text="#{common.deleteAction}">Xóa
                             </button>
                             </a>
                         </div>
@@ -88,7 +88,7 @@
     </div>
 </div>
 
-<!-- 全局js -->
+<!-- JavaScript dùng chung. -->
 <script src="/js/jquery.min.js?v=2.1.4"></script>
 <script src="/js/bootstrap.min.js?v=3.3.6"></script>
 <script src="/js/bootstrap-paginator.min.js"></script>
@@ -99,7 +99,17 @@
 <script src="/js/plugins/layer/layer.min.js"></script>
 <script src="/js/vue.min.js"></script>
 
-<script>
+<script th:inline="javascript">
+    const fileMessages = {
+        first: /*[[#{common.pagination.first}]]*/ 'Trang đầu',
+        previous: /*[[#{common.pagination.previous}]]*/ 'Trang trước',
+        next: /*[[#{common.pagination.next}]]*/ 'Trang sau',
+        last: /*[[#{common.pagination.last}]]*/ 'Trang cuối',
+        deleteConfirm: /*[[#{common.deleteConfirm}]]*/ 'Bạn có chắc muốn xóa bản ghi đã chọn?',
+        confirm: /*[[#{common.confirm}]]*/ 'Đồng ý',
+        cancel: /*[[#{common.cancel}]]*/ 'Hủy',
+        copied: /*[[#{admin.file.copied}]]*/ 'Đã sao chép đường dẫn tệp vào bộ nhớ tạm'
+    };
     var app = new Vue({
         el: '#app',
         data: {
@@ -124,23 +134,23 @@
             },
             page: function () {
                 var options = {
-                    currentPage: app.offset / 12 + 1, //当前页
-                    totalPages: Math.ceil(app.total / 12), //总页数
-                    numberofPages: 4, //显示的页数
+                    currentPage: app.offset / 12 + 1, // Trang hiện tại.
+                    totalPages: Math.ceil(app.total / 12), // Tổng số trang.
+                    numberofPages: 4, // Số trang hiển thị.
                     bootstrapMajorVersion: 3,
                     alignment: 'center',
                     size: 'large',
                     shouldShowPage: true,
-                    itemTexts: function (type, page, current) { //修改显示文字
+                    itemTexts: function (type, page, current) { // Tùy chỉnh nhãn phân trang.
                         switch (type) {
                             case "first":
-                                return "首页";
+                                return fileMessages.first;
                             case "prev":
-                                return "上一页";
+                                return fileMessages.previous;
                             case "next":
-                                return "下一页";
+                                return fileMessages.next;
                             case "last":
-                                return "尾页";
+                                return fileMessages.last;
                             case "page":
                                 return page;
                         }
@@ -153,8 +163,8 @@
                 $('#page').bootstrapPaginator(options);
             },
             remove: function (id) {
-                layer.confirm('确定要删除选中的记录？', {
-                    btn: ['确定', '取消']
+                layer.confirm(fileMessages.deleteConfirm, {
+                    btn: [fileMessages.confirm, fileMessages.cancel]
                 }, function () {
                     $.ajax({
                         url: "/common/sysFile/remove",
@@ -188,16 +198,16 @@
 <script type="text/javascript">
     var clipboard = new Clipboard('button.copy', {
         text: function (trigger) {
-            layer.msg('文件路径已复制到粘贴板');
+            layer.msg(fileMessages.copied);
             return $(trigger).attr('url');
         }
     });
     layui.use('upload', function () {
         var upload = layui.upload;
-        //执行实例
+        // Khởi tạo upload.
         var uploadInst = upload.render({
-            elem: '#test1', //绑定元素
-            url: '/common/sysFile/upload', //上传接口
+            elem: '#test1', // Phần tử liên kết.
+            url: '/common/sysFile/upload', // API tải lên.
             size: 1000,
             accept: 'file',
             done: function (r) {

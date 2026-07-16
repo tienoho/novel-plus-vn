@@ -1,56 +1,56 @@
-#端口号
+#Cổng
 server:
   port: 8085
 
 spring:
   data:
     redis:
-      #Redis服务器IP
+      #IP máy chủ Redis
       host: 127.0.0.1
-      #Redis服务器连接端口
+      #Cổng kết nối Redis
       port: 6379
-      #Redis服务器连接密码
+      #Mật khẩu kết nối Redis
       password: test123456
-      #连接超时时间（毫秒）
+      #Thời gian chờ kết nối (mili giây)
       timeout: 10000
 
 
 pic:
   save:
-    #图片保存方式, 1不保存，使用网络图片 ，2本地保存
+    #Cách lưu ảnh: 1 dùng ảnh mạng; 2 lưu cục bộ
     type: 2
-    #图片保存路径
+    #Đường dẫn lưu ảnh
     path: /var/pic
 
 
-#模版配置
+#Cấu hình template
 templates:
   name: green
 
-#小说内容保存配置
+#Cấu hình lưu nội dung tác phẩm
 content:
   save:
-    storage: db # 小说内容存储方式：db-数据库，txt-TXT文本
-    path: /Users/xiongxiaoyang/books  # 小说TXT文本保存路径
+    storage: db # Cách lưu nội dung: db cơ sở dữ liệu, txt văn bản TXT
+    path: /Users/xiongxiaoyang/books  # Đường dẫn lưu văn bản TXT của tác phẩm
 
 
 
-# HTTP 代理配置
+# Cấu hình proxy HTTP
 http:
   proxy:
-    # 是否开启 HTTP 代理，true-开启，false-不开启
+    # Bật proxy HTTP: true bật, false tắt
     enabled: false
-    # 代理 IP
+    # IP proxy
     ip: proxy.bestproxy.com
-    # 代理端口号
+    # Cổng proxy
     port: 2312
-    # 代理用户名
+    # Tên người dùng proxy
     username: bestproxy_u
-    # 代理密码
+    # Mật khẩu proxy
     password: bestproxy_p
 
 
---- #--------------------- Spring AI 配置----------------------
+--- #--------------------- Cấu hình Spring AI ----------------------
 spring:
   ai:
     openai:

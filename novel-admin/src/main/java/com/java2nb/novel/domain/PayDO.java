@@ -9,7 +9,7 @@ import java.util.Date;
 
 
 /**
- * 充值订单
+ * Đơn nạp tiền
  *
  * @author xiongxy
  * @email 1179705413@qq.com
@@ -20,33 +20,33 @@ public class PayDO implements Serializable {
     private static final long serialVersionUID = 1L;
 
 
-    //主键
-    //java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-    //所以通过序列化成字符串来解决
+    // Khóa chính
+    // Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+    // Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
     @JsonSerialize(using = LongToStringSerializer.class)
     private Long id;
-    //保留
-    //java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-    //所以通过序列化成字符串来解决
+    // Dự phòng
+    // Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+    // Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
     @JsonSerialize(using = LongToStringSerializer.class)
     private Long outTradeNo;
-    //订单号
+    // Mã đơn hàng
     private String tradeNo;
-    //保留
+    // Dự phòng
     private Integer payChannel;
-    //交易香蕉币
+    //Xu giao dịch
     private Integer totalAmount;
-    //支付用户ID
-    //java中的long能表示的范围比js中number大,也就意味着部分数值在js中存不下(变成不准确的值)
-    //所以通过序列化成字符串来解决
+    // ID người dùng thanh toán
+    // Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
+    // Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
     @JsonSerialize(using = LongToStringSerializer.class)
     private Long userId;
-    //支付状态：0：支付失败，1：支付成功，2：待支付
+    // Trạng thái thanh toán: 0 thất bại, 1 thành công, 2 đang chờ
     private Integer payStatus;
-    //创建时间
+    // Thời gian tạo
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
-    //更新时间
+    // Thời gian cập nhật
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date updateTime;
 
@@ -61,126 +61,126 @@ public class PayDO implements Serializable {
     }
 
     /**
-     * 设置：主键
+     * Đặt: khóa chính
      */
     public void setId(Long id) {
         this.id = id;
     }
 
     /**
-     * 获取：主键
+     * Lấy: khóa chính
      */
     public Long getId() {
         return id;
     }
 
     /**
-     * 设置：保留
+     * Đặt: dự phòng
      */
     public void setOutTradeNo(Long outTradeNo) {
         this.outTradeNo = outTradeNo;
     }
 
     /**
-     * 获取：保留
+     * Lấy: dự phòng
      */
     public Long getOutTradeNo() {
         return outTradeNo;
     }
 
     /**
-     * 设置：订单号
+     * Đặt: mã đơn hàng
      */
     public void setTradeNo(String tradeNo) {
         this.tradeNo = tradeNo;
     }
 
     /**
-     * 获取：订单号
+     * Lấy: mã đơn hàng
      */
     public String getTradeNo() {
         return tradeNo;
     }
 
     /**
-     * 设置：保留
+     * Đặt: dự phòng
      */
     public void setPayChannel(Integer payChannel) {
         this.payChannel = payChannel;
     }
 
     /**
-     * 获取：保留
+     * Lấy: dự phòng
      */
     public Integer getPayChannel() {
         return payChannel;
     }
 
     /**
-     * 设置：交易香蕉币
+     * Đặt: Xu giao dịch
      */
     public void setTotalAmount(Integer totalAmount) {
         this.totalAmount = totalAmount;
     }
 
     /**
-     * 获取：交易香蕉币
+     * Lấy: Xu giao dịch
      */
     public Integer getTotalAmount() {
         return totalAmount;
     }
 
     /**
-     * 设置：支付用户ID
+     * Đặt: ID người dùng thanh toán
      */
     public void setUserId(Long userId) {
         this.userId = userId;
     }
 
     /**
-     * 获取：支付用户ID
+     * Lấy: ID người dùng thanh toán
      */
     public Long getUserId() {
         return userId;
     }
 
     /**
-     * 设置：支付状态：0：支付失败，1：支付成功，2：待支付
+     * Đặt: trạng thái thanh toán: 0 thất bại, 1 thành công, 2 đang chờ
      */
     public void setPayStatus(Integer payStatus) {
         this.payStatus = payStatus;
     }
 
     /**
-     * 获取：支付状态：0：支付失败，1：支付成功，2：待支付
+     * Lấy: trạng thái thanh toán: 0 thất bại, 1 thành công, 2 đang chờ
      */
     public Integer getPayStatus() {
         return payStatus;
     }
 
     /**
-     * 设置：创建时间
+     * Đặt: thời gian tạo
      */
     public void setCreateTime(Date createTime) {
         this.createTime = createTime;
     }
 
     /**
-     * 获取：创建时间
+     * Lấy: thời gian tạo
      */
     public Date getCreateTime() {
         return createTime;
     }
 
     /**
-     * 设置：更新时间
+     * Đặt: thời gian cập nhật
      */
     public void setUpdateTime(Date updateTime) {
         this.updateTime = updateTime;
     }
 
     /**
-     * 获取：更新时间
+     * Lấy: thời gian cập nhật
      */
     public Date getUpdateTime() {
         return updateTime;

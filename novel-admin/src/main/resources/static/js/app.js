@@ -1,6 +1,6 @@
-//自定义js
+//JavaScript tùy chỉnh
 
-//公共配置
+//Cấu hình chung
 
 
 $(document).ready(function () {
@@ -8,25 +8,25 @@ $(document).ready(function () {
     // MetsiMenu
     $('#side-menu').metisMenu();
 
-    // 打开右侧边栏
+    // Mở thanh bên phải
     $('.right-sidebar-toggle').click(function () {
         $('#right-sidebar').toggleClass('sidebar-open');
     });
 
-    // 右侧边栏使用slimscroll
+    // Thanh bên phải dùng slimscroll
     $('.sidebar-container').slimScroll({
         height: '100%',
         railOpacity: 0.4,
         wheelStep: 10
     });
 
-    // 打开聊天窗口
+    // Mở cửa sổ trò chuyện
     $('.open-small-chat').click(function () {
         $(this).children().toggleClass('fa-comments').toggleClass('fa-remove');
         $('.small-chat-box').toggleClass('active');
     });
 
-    // 聊天窗口使用slimscroll
+    // Cửa sổ trò chuyện dùng slimscroll
     $('.small-chat-box .content').slimScroll({
         height: '234px',
         railOpacity: 0.4
@@ -41,7 +41,7 @@ $(document).ready(function () {
         return false;
     });
 
-    //固定菜单栏
+    //Cố định thanh menu
     $(function () {
         $('.sidebar-collapse').slimScroll({
             height: '100%',
@@ -51,14 +51,14 @@ $(document).ready(function () {
     });
 
 
-    // 菜单切换
+    // Chuyển menu
     $('.navbar-minimalize').click(function () {
         $("body").toggleClass("mini-navbar");
         SmoothlyMenu();
     });
 
 
-    // 侧边栏高度
+    // Chiều cao thanh bên
     function fix_height() {
         var heightWithoutNavbar = $("body > #wrapper").height() - 61;
         $(".sidebard-panel").css("min-height", heightWithoutNavbar + "px");
@@ -71,7 +71,7 @@ $(document).ready(function () {
         }
     });
 
-    //侧边栏滚动
+    //Cuộn thanh bên
     $(window).scroll(function () {
         if ($(window).scrollTop() > 0 && !$('body').hasClass('fixed-nav')) {
             $('#right-sidebar').addClass('sidebar-top');
@@ -97,7 +97,7 @@ $(document).ready(function () {
 
     $('.nav-close').click(NavToggle);
 
-    //ios浏览器兼容性处理
+    //Xử lý tương thích trình duyệt iOS
     if (/(iPhone|iPad|iPod|iOS)/i.test(navigator.userAgent)) {
         $('#content-main').css('overflow-y', 'auto');
     }
@@ -134,10 +134,10 @@ function SmoothlyMenu() {
 }
 
 
-//主题设置
+//Cài đặt giao diện
 $(function () {
 
-    // 顶部菜单固定
+    // Cố định menu trên
     $('#fixednavbar').click(function () {
         if ($('#fixednavbar').is(':checked')) {
             $(".navbar-static-top").removeClass('navbar-static-top').addClass('navbar-fixed-top');
@@ -163,7 +163,7 @@ $(function () {
     });
 
 
-    // 收起左侧菜单
+    // Thu gọn menu trái
     $('#collapsemenu').click(function () {
         if ($('#collapsemenu').is(':checked')) {
             $("body").addClass('mini-navbar');
@@ -183,7 +183,7 @@ $(function () {
         }
     });
 
-    // 固定宽度
+    // Cố định chiều rộng
     $('#boxedlayout').click(function () {
         if ($('#boxedlayout').is(':checked')) {
             $("body").addClass('boxed-layout');
@@ -207,7 +207,7 @@ $(function () {
         }
     });
 
-    // 默认主题
+    // Giao diện mặc định
     $('.s-skin-0').click(function () {
         $("body").removeClass("skin-1");
         $("body").removeClass("skin-2");
@@ -215,7 +215,7 @@ $(function () {
         return false;
     });
 
-    // 蓝色主题
+    // Giao diện xanh
     $('.s-skin-1').click(function () {
         $("body").removeClass("skin-2");
         $("body").removeClass("skin-3");
@@ -223,7 +223,7 @@ $(function () {
         return false;
     });
 
-    // 黄色主题
+    // Giao diện vàng
     $('.s-skin-3').click(function () {
         $("body").removeClass("skin-1");
         $("body").removeClass("skin-2");
@@ -272,7 +272,7 @@ $(function () {
     }
 });
 
-//判断浏览器是否支持html5本地存储
+//Kiểm tra hỗ trợ bộ nhớ cục bộ HTML5
 function localStorageSupport() {
     return (('localStorage' in window) && window['localStorage'] !== null)
 }

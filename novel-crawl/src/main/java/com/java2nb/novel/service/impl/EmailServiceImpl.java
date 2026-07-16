@@ -1,6 +1,7 @@
 package com.java2nb.novel.service.impl;
 
 import com.java2nb.novel.service.EmailService;
+import com.java2nb.novel.core.i18n.Messages;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class EmailServiceImpl implements EmailService {
 
     private final JavaMailSender javaMailSender;
     private final TemplateEngine templateEngine;
+    private final Messages messages;
 
     @Value("${spring.mail.username}")
     private String fromEmail;
@@ -55,7 +57,7 @@ public class EmailServiceImpl implements EmailService {
 
             javaMailSender.send(message);
         } catch (Exception e) {
-            log.error("发送邮件失败");
+            log.error(messages.get("crawl.log.emailFailed"));
             log.error(e.getMessage(), e);
         }
     }

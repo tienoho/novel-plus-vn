@@ -11,7 +11,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * 日期处理
+ * Xử lý ngày
  */
 public class DateUtils {
     private final static Logger logger = LoggerFactory.getLogger(DateUtils.class);
@@ -19,11 +19,11 @@ public class DateUtils {
     public final static String MONTH_PATTERN = "MM";
     public final static String DAY_PATTERN = "dd";
     /**
-     * 时间格式(yyyy-MM-dd)
+     * Định dạng ngày (yyyy-MM-dd)
      */
     public final static String DATE_PATTERN = "yyyy-MM-dd";
     /**
-     * 时间格式(yyyy-MM-dd HH:mm:ss)
+     * Định dạng thời gian (yyyy-MM-dd HH:mm:ss)
      */
     public final static String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
@@ -40,7 +40,7 @@ public class DateUtils {
     }
 
     /**
-     * 计算距离现在多久，非精确
+     * Tính khoảng thời gian đến hiện tại, gần đúng
      *
      * @param date
      * @return
@@ -54,20 +54,20 @@ public class DateUtils {
         long s = (l / 1000 - day * 24 * 60 * 60 - hour * 60 * 60 - min * 60);
         String r = "";
         if (day > 0) {
-            r += day + "天";
+            r += day + Messages.getDefault("time.unit.day");
         } else if (hour > 0) {
-            r += hour + "小时";
+            r += hour + Messages.getDefault("time.unit.hour");
         } else if (min > 0) {
-            r += min + "分";
+            r += min + Messages.getDefault("time.unit.minute");
         } else if (s > 0) {
-            r += s + "秒";
+            r += s + Messages.getDefault("time.unit.second");
         }
-        r += "前";
+        r += Messages.getDefault("time.ago");
         return r;
     }
 
     /**
-     * 计算距离现在多久，精确
+     * Tính khoảng thời gian đến hiện tại, chính xác
      *
      * @param date
      * @return
@@ -81,23 +81,23 @@ public class DateUtils {
         long s = (l / 1000 - day * 24 * 60 * 60 - hour * 60 * 60 - min * 60);
         String r = "";
         if (day > 0) {
-            r += day + "天";
+            r += day + Messages.getDefault("time.unit.day");
         }
         if (hour > 0) {
-            r += hour + "小时";
+            r += hour + Messages.getDefault("time.unit.hour");
         }
         if (min > 0) {
-            r += min + "分";
+            r += min + Messages.getDefault("time.unit.minute");
         }
         if (s > 0) {
-            r += s + "秒";
+            r += s + Messages.getDefault("time.unit.second");
         }
-        r += "前";
+        r += Messages.getDefault("time.ago");
         return r;
     }
 
     /**
-     * 获取过去第几天的日期
+     * Lấy ngày cách đây một số ngày
      *
      * @param past
      * @return
@@ -113,7 +113,7 @@ public class DateUtils {
     }
 
     /**
-     * 获取过去几天的日期集合
+     * Lấy tập ngày trong các ngày trước
      *
      * @param past
      * @return
@@ -123,7 +123,7 @@ public class DateUtils {
         for(int i = past - 1 ; i > 0 ; i--){
             result.add(getPastDate(i,date));
         }
-        //今天的日期
+        //Ngày hôm nay
         result.add(new SimpleDateFormat("yyyy-MM-dd").format(date));
         return result;
 

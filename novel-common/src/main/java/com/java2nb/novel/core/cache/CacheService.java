@@ -10,50 +10,50 @@ import java.util.List;
 public interface CacheService {
 
     /**
-     * 根据key获取缓存的String类型数据
+     * Lấy dữ liệu String trong bộ nhớ đệm theo khóa
      */
     String get(String key);
 
     /**
-     * 设置String类型的缓存
+     * Đặt bộ nhớ đệm kiểu String
      */
     void set(String key, String value);
 
     /**
-     * 设置一个有过期时间的String类型的缓存,单位秒
+     * Đặt bộ nhớ đệm String có thời hạn, đơn vị giây
      */
     void set(String key, String value, long timeout);
 
     /**
-     * 根据key获取缓存的Object类型数据
+     * Lấy dữ liệu Object trong bộ nhớ đệm theo khóa
      */
     <T> T getObject(String key, Class<T> clazz);
 
     <T> List<T> getList(String key, Class<T> clazz);
 
     /**
-     * 设置Object类型的缓存
+     * Đặt bộ nhớ đệm kiểu Object
      */
     void setObject(String key, Object value);
 
     /**
-     * 设置一个有过期时间的Object类型的缓存,单位秒
+     * Đặt bộ nhớ đệm Object có thời hạn, đơn vị giây
      */
     void setObject(String key, Object value, long timeout);
 
     /**
-     * 根据key删除缓存的数据
+     * Xóa dữ liệu bộ nhớ đệm theo khóa
      */
     void del(String key);
 
 
     /**
-     * 判断是否存在一个key
+     * Kiểm tra khóa có tồn tại hay không
      */
     boolean contains(String key);
 
     /**
-     * 设置key过期时间
+     * Đặt thời gian hết hạn cho khóa
      */
     void expire(String key, long timeout);
 

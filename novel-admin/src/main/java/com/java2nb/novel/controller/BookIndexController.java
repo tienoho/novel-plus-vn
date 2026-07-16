@@ -23,7 +23,7 @@ import com.java2nb.common.utils.Query;
 import com.java2nb.common.utils.R;
 
 /**
- * 小说目录表
+ * Bảng mục lục tác phẩm
  *
  * @author xiongxy
  * @email 1179705413@qq.com
@@ -42,12 +42,12 @@ public class BookIndexController {
         return "novel/bookIndex/bookIndex";
     }
 
-    @ApiOperation(value = "获取小说目录表列表", notes = "获取小说目录表列表")
+    @ApiOperation(value = "Lấy danh sách bảng mục lục tác phẩm", notes = "Lấy danh sách bảng mục lục tác phẩm")
     @ResponseBody
     @GetMapping("/list")
     @RequiresPermissions("novel:bookIndex:bookIndex")
     public R list(@RequestParam Map<String, Object> params) {
-        //查询列表数据
+        // Truy vấn dữ liệu danh sách
         Query query = new Query(params);
         List<BookIndexDO> bookIndexList = bookIndexService.list(query);
         int total = bookIndexService.count(query);
@@ -55,14 +55,14 @@ public class BookIndexController {
         return R.ok().put("data", pageBean);
     }
 
-    @ApiOperation(value = "新增小说目录表页面", notes = "新增小说目录表页面")
+    @ApiOperation(value = "Trang thêm bảng mục lục tác phẩm", notes = "Trang thêm bảng mục lục tác phẩm")
     @GetMapping("/add")
     @RequiresPermissions("novel:bookIndex:add")
     String add() {
         return "novel/bookIndex/add";
     }
 
-    @ApiOperation(value = "修改小说目录表页面", notes = "修改小说目录表页面")
+    @ApiOperation(value = "Trang sửa bảng mục lục tác phẩm", notes = "Trang sửa bảng mục lục tác phẩm")
     @GetMapping("/edit/{id}")
     @RequiresPermissions("novel:bookIndex:edit")
     String edit(@PathVariable("id") Long id, Model model) {
@@ -71,7 +71,7 @@ public class BookIndexController {
         return "novel/bookIndex/edit";
     }
 
-    @ApiOperation(value = "查看小说目录表页面", notes = "查看小说目录表页面")
+    @ApiOperation(value = "Trang chi tiết bảng mục lục tác phẩm", notes = "Trang chi tiết bảng mục lục tác phẩm")
     @GetMapping("/detail/{id}")
     @RequiresPermissions("novel:bookIndex:detail")
     String detail(@PathVariable("id") Long id, Model model) {
@@ -81,9 +81,9 @@ public class BookIndexController {
     }
 
     /**
-     * 保存
+     * Lưu
      */
-    @ApiOperation(value = "新增小说目录表", notes = "新增小说目录表")
+    @ApiOperation(value = "Thêm bảng mục lục tác phẩm", notes = "Thêm bảng mục lục tác phẩm")
     @ResponseBody
     @PostMapping("/save")
     @RequiresPermissions("novel:bookIndex:add")
@@ -95,9 +95,9 @@ public class BookIndexController {
     }
 
     /**
-     * 修改
+     * Sửa
      */
-    @ApiOperation(value = "修改小说目录表", notes = "修改小说目录表")
+    @ApiOperation(value = "Sửa bảng mục lục tác phẩm", notes = "Sửa bảng mục lục tác phẩm")
     @ResponseBody
     @RequestMapping("/update")
     @RequiresPermissions("novel:bookIndex:edit")
@@ -107,9 +107,9 @@ public class BookIndexController {
     }
 
     /**
-     * 删除
+     * Xóa
      */
-    @ApiOperation(value = "删除小说目录表", notes = "删除小说目录表")
+    @ApiOperation(value = "Xóa bảng mục lục tác phẩm", notes = "Xóa bảng mục lục tác phẩm")
     @PostMapping("/remove")
     @ResponseBody
     @RequiresPermissions("novel:bookIndex:remove")
@@ -121,9 +121,9 @@ public class BookIndexController {
     }
 
     /**
-     * 删除
+     * Xóa
      */
-    @ApiOperation(value = "批量删除小说目录表", notes = "批量删除小说目录表")
+    @ApiOperation(value = "Xóa hàng loạt bảng mục lục tác phẩm", notes = "Xóa hàng loạt bảng mục lục tác phẩm")
     @PostMapping("/batchRemove")
     @ResponseBody
     @RequiresPermissions("novel:bookIndex:batchRemove")

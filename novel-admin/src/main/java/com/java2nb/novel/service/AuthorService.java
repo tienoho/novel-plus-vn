@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 作者表
+ * Bảng tác giả
  * 
  * @author xiongxy
  * @email 1179705413@qq.com
