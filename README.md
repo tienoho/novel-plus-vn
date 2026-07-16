@@ -15,6 +15,9 @@ Các chức năng chính gồm đề xuất và tìm kiếm tác phẩm, bảng 
 
 - Mã nguồn: [GitHub](https://github.com/201206030/novel-plus)
 - Bản phát hành: [GitHub Releases](https://github.com/201206030/novel-plus/releases)
+- Runbook triển khai: [doc/deployment.md](doc/deployment.md)
+- Hướng dẫn tích hợp VNPAY: [doc/vnpay.md](doc/vnpay.md)
+- Hướng dẫn migration SQL: [doc/sql/readme.md](doc/sql/readme.md)
 - Tài liệu gốc: [docs.xxyopen.com](https://docs.xxyopen.com/course/novelplus/1.html)
 - Trang giới thiệu: [novel.xxyopen.com](https://novel.xxyopen.com)
 
@@ -163,6 +166,8 @@ VNPAY_RECONCILIATION_BATCH_SIZE=50
 
 Khi chuyển sang production, thay cả `VNPAY_PAY_URL`, `VNPAY_QUERY_URL`, mã website, khóa bí mật và IP máy chủ bằng thông tin VNPAY production. Không dùng Return URL để cộng Xu; hệ thống chỉ ghi nhận tiền từ IPN hoặc QueryDr có chữ ký hợp lệ, đúng merchant, đúng mã đơn, đúng kênh và đúng số tiền. Số Xu được chốt ngay lúc tạo đơn nên thay đổi tỷ lệ sau đó không làm sai đơn đang chờ. QueryDr tự đối soát các đơn quá 20 phút khi IPN bị gián đoạn; nhiều replica giành quyền xử lý bằng optimistic update và cập nhật số dư vẫn có tính idempotent. Mã kênh VNPAY trong `order_pay.pay_channel` là `4`; các đơn từ cổng thanh toán cũ vẫn được giữ để đối soát lịch sử nhưng không còn endpoint hoặc giao diện tạo giao dịch mới qua cổng đó.
 
+Xem [hướng dẫn VNPAY](doc/vnpay.md) để cấu hình merchant, khai báo IPN, hiểu trạng thái đơn, kiểm tra QueryDr và xử lý sự cố. Xem [runbook triển khai](doc/deployment.md) cho quy trình nâng cấp, sao lưu, healthcheck và rollback.
+
 Dừng stack:
 
 ```bash
@@ -202,15 +207,15 @@ Ví dụ cấu hình dùng endpoint tương thích OpenAI:
 spring:
   ai:
     openai:
-      base-url: ${AI_BASE_URL}
-      api-key: ${AI_API_KEY}
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+      api-key: ${OPENAI_API_KEY:disabled}
       chat:
         options:
-          model: ${AI_CHAT_MODEL}
+          model: ${OPENAI_CHAT_MODEL:gpt-4.1-mini}
       image:
-        enabled: true
+        enabled: ${AI_IMAGE_ENABLED:false}
         options:
-          model: ${AI_IMAGE_MODEL}
+          model: ${OPENAI_IMAGE_MODEL:gpt-image-1}
 ```
 
 Chất lượng và chi phí phụ thuộc nhà cung cấp và mô hình được cấu hình.

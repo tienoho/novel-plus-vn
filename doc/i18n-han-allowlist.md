@@ -31,7 +31,7 @@ Tài liệu này ghi nhận các vị trí được phép giữ chữ Hán sau k
 ## Ảnh và thương hiệu tích hợp
 
 - Logo runtime, logo theme, ảnh tải bìa và ảnh “máy chủ đang bận” đã được thay bằng tài nguyên ghi “Novel Plus” hoặc thông báo tiếng Việt.
-- `pay_wx.png`, `pay_zfb.png`: logo chính thức của cổng WeChat Pay/Alipay; giữ nguyên tên thương hiệu của dịch vụ thanh toán thực tế.
+- `pay_wx.png`, `pay_zfb.png`: asset legacy không còn được template/runtime tham chiếu. Tích hợp tạo giao dịch mới chỉ dùng VNPAY; giữ file để không mở rộng đợt Việt hóa sang xóa tài nguyên lịch sử.
 - `novel-admin/src/main/resources/static/img/{index.jpg,index_4.jpg,wenku_logo.png}`: ảnh minh họa của theme H+ và tài nguyên Baidu Wenku cũ, không được tham chiếu bởi template/runtime hiện tại.
 - Ảnh trong `images/cover` và các ảnh bìa ở theme blue là dữ liệu truyện mẫu, thuộc phạm vi nội dung không tự động dịch.
 
