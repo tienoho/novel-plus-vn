@@ -21,6 +21,11 @@
                         
 
                     </div>
+                    <div class="form-group" th:if="${pay.payChannel == 4}">
+                        <label class="col-sm-3 control-label" th:text="#{admin.payment.accountAmount}+'：'">Số Xu cam kết:</label>
+                        <div style="padding-top:8px" class="col-sm-8" th:text="${pay.accountAmount == null ? '-' : pay.accountAmount + ' Xu'}">
+                        </div>
+                    </div>
                                                                             <div class="form-group">
                         <label class="col-sm-3 control-label" th:text="#{admin.payment.tradeNo}+'：'">Mã đơn hàng:</label>
 
@@ -35,7 +40,7 @@
                         <label class="col-sm-3 control-label" th:text="#{admin.payment.channel}+'：'">Kênh thanh toán:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
-                                 th:text="${pay.payChannel}">
+                                 th:text="${pay.payChannel == 4 ? 'VNPAY' : pay.payChannel}">
                             </div>
                         
                         
@@ -45,7 +50,7 @@
                         <label class="col-sm-3 control-label" th:text="#{admin.payment.amount}+'：'">Số Xu giao dịch:</label>
 
                                                     <div style="padding-top:8px" class="col-sm-8"
-                                 th:text="${pay.totalAmount}">
+                                 th:text="${pay.payChannel == 4 ? pay.totalAmount + ' VND' : pay.totalAmount}">
                             </div>
                         
                         

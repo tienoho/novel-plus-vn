@@ -1,0 +1,39 @@
+mode:
+  type: Standalone
+  repository:
+    type: JDBC
+
+dataSources:
+  ds_1:
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    driverClassName: com.mysql.cj.jdbc.Driver
+    jdbcUrl: jdbc:mysql://__DB_HOST__:__DB_PORT__/__DB_NAME__?allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=__DB_TIMEZONE__
+    username: '__DB_USERNAME__'
+    password: '__DB_PASSWORD__'
+  ds_2:
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    driverClassName: com.mysql.cj.jdbc.Driver
+    jdbcUrl: jdbc:mysql://__DB_HOST__:__DB_PORT__/information_schema?allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=__DB_TIMEZONE__
+    username: '__DB_USERNAME__'
+    password: '__DB_PASSWORD__'
+
+rules:
+  - !SINGLE
+    tables:
+      - "*.*"
+  - !SHARDING
+    tables:
+      book_content:
+        actualDataNodes: ds_${1}.book_content${0..9}
+        tableStrategy:
+          standard:
+            shardingColumn: index_id
+            shardingAlgorithmName: bookContentSharding
+    shardingAlgorithms:
+      bookContentSharding:
+        type: INLINE
+        props:
+          algorithm-expression: book_content${index_id % 10}
+
+props:
+  sql-show: __SQL_SHOW__

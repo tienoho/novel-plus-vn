@@ -6,5 +6,6 @@
 4. Khi nâng cấp, xác định ngày của phiên bản đang dùng và chỉ chạy các migration xuất hiện sau ngày đó.
 5. Không sửa migration lịch sử đã được phát hành. Mọi thay đổi dữ liệu mới phải nằm trong một migration mới và có thể chạy lại an toàn.
 6. `20260712_vi_localization.sql` Việt hóa dữ liệu mặc định bằng điều kiện khớp chính xác, không ghi đè dữ liệu đã được quản trị viên tùy chỉnh.
+7. `20260716_vnpay_hardening.sql` lưu số Xu đã cam kết theo đơn, tạo unique index cho `out_trade_no` và index đối soát đơn chờ. Migration sẽ dừng nếu dữ liệu cũ có mã đơn trùng để bắt buộc đối soát thủ công trước khi tiếp tục.
 
 Luôn sao lưu cơ sở dữ liệu production và thử migration trên một bản sao trước khi triển khai.

@@ -1,5 +1,7 @@
 package com.java2nb.novel.service;
 
+import java.util.Date;
+import java.util.List;
 
 /**
  * @author 11797
@@ -12,18 +14,32 @@ public interface OrderService {
      *
      * @param payChannel kênh thanh toán
      * @param payAmount số tiền thanh toán
+     * @param accountAmount số Xu cam kết cấp cho người dùng
      * @param userId ID người dùng
      * @return mã đơn thương nhân
      */
-    Long createPayOrder(Byte payChannel, Integer payAmount, Long userId);
+    PayOrderCreation createPayOrder(Byte payChannel, Integer payAmount, Integer accountAmount, Long userId);
+
+    /**
+     * Đối chiếu dữ liệu VNPAY trả về với đơn đã lưu mà không thay đổi trạng thái đơn.
+     */
+    PayOrderState inspectPayOrder(Long outTradeNo, byte payChannel, int totalAmount);
+
+    /**
+     * Lấy một lô đơn chờ đủ tuổi để đối soát với cổng thanh toán.
+     */
+    List<PayOrderSnapshot> listPendingPayOrders(byte payChannel, Date createdAfter, Date createdBefore,
+                                                Date updatedBefore, int limit);
+
+    /**
+     * Giành quyền đối soát một đơn bằng optimistic update để nhiều replica không gọi QueryDr trùng nhau.
+     */
+    boolean claimPendingPayOrder(long id, Date expectedUpdateTime, Date claimedAt);
 
 
     /**
-     * Cập nhật trạng thái đơn hàng
-     *
-     * @param outTradeNo mã đơn thương nhân
-     * @param tradeNo mã đơn Alipay/WeChat
-     * @param payStatus trạng thái thanh toán
+     * Xử lý kết quả thanh toán đã được cổng thanh toán xác thực.
      */
-    void updatePayOrder(Long outTradeNo, String tradeNo, int payStatus);
+    PayOrderUpdateResult processPayOrder(Long outTradeNo, String tradeNo, byte payChannel, int totalAmount,
+                                         boolean successful);
 }

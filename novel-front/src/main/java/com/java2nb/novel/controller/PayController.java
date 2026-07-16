@@ -1,172 +1,150 @@
 package com.java2nb.novel.controller;
 
-import com.alibaba.fastjson.JSONObject;
-import com.alipay.api.AlipayClient;
-import com.alipay.api.DefaultAlipayClient;
-import com.alipay.api.internal.util.AlipaySignature;
-import com.alipay.api.request.AlipayTradePagePayRequest;
-import com.alipay.api.request.AlipayTradeWapPayRequest;
-import com.alipay.api.response.AlipayTradePagePayResponse;
-import com.alipay.api.response.AlipayTradeWapPayResponse;
 import com.java2nb.novel.core.bean.UserDetails;
-import com.java2nb.novel.core.config.AlipayProperties;
-import com.java2nb.novel.core.utils.ThreadLocalUtil;
+import com.java2nb.novel.core.config.VnpayProperties;
 import com.java2nb.novel.core.i18n.Messages;
+import com.java2nb.novel.core.utils.IpUtil;
 import com.java2nb.novel.service.OrderService;
+import com.java2nb.novel.service.PayOrderCreation;
+import com.java2nb.novel.service.PayOrderState;
+import com.java2nb.novel.service.PayOrderUpdateResult;
+import com.java2nb.novel.service.VnpayService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * @author 11797
- */
 @Controller
 @RequestMapping("pay")
 @RequiredArgsConstructor
 @Slf4j
 public class PayController extends BaseController {
 
+    private static final byte VNPAY_CHANNEL = 4;
 
-    private final AlipayProperties alipayConfig;
-
+    private final VnpayProperties vnpayProperties;
+    private final VnpayService vnpayService;
     private final OrderService orderService;
-
     private final Messages messages;
 
-
-    /**
-     * Thanh toán Alipay
-     */
     @SneakyThrows
-    @PostMapping("aliPay")
-    public void aliPay(Integer payAmount, HttpServletRequest request, HttpServletResponse httpResponse) {
-
+    @PostMapping("vnpay")
+    public void vnpay(Integer payAmount, HttpServletRequest request, HttpServletResponse response) {
         UserDetails userDetails = getUserDetails(request);
         if (userDetails == null) {
-            //Chưa đăng nhập, chuyển tới trang đăng nhập
-            httpResponse.sendRedirect("/user/login.html?originUrl=/pay/index.html");
-        } else {
-            //Tạo đơn nạp Xu
-            Long outTradeNo = orderService.createPayOrder((byte) 1, payAmount, userDetails.getId());
-            //Lấy AlipayClient đã khởi tạo
-            AlipayClient alipayClient = new DefaultAlipayClient(alipayConfig.getGatewayUrl(),
-                alipayConfig.getAppId(), alipayConfig.getMerchantPrivateKey(), "json", alipayConfig.getCharset(),
-                alipayConfig.getPublicKey(), alipayConfig.getSignType());
-            String form;
-            if (ThreadLocalUtil.getTemplateDir().contains("mobile")) {
-                // Trang di động
-                AlipayTradeWapPayRequest alipayRequest = new AlipayTradeWapPayRequest();
-                alipayRequest.setReturnUrl(alipayConfig.getReturnUrl());
-                //Đặt URL trả về và thông báo trong tham số chung
-                alipayRequest.setNotifyUrl(alipayConfig.getNotifyUrl());
-                /****** Tham số bắt buộc ******/
-                JSONObject bizContent = new JSONObject();
-                //Mã đơn của thương nhân, tự đặt và phải duy nhất
-                bizContent.put("out_trade_no", outTradeNo);
-                //Số tiền thanh toán tối thiểu 0,01 CNY
-                bizContent.put("total_amount", payAmount);
-                //Tiêu đề đơn hàng không được chứa ký tự đặc biệt
-                bizContent.put("subject", messages.get("payment.alipay.subject"));
-
-                /****** Tham số tùy chọn ******/
-                //Thanh toán web di động mặc định dùng QUICK_WAP_WAY
-                bizContent.put("product_code", "QUICK_WAP_WAY");
-
-                alipayRequest.setBizContent(bizContent.toString());
-                AlipayTradeWapPayResponse payResponse = alipayClient.pageExecute(alipayRequest);
-                form = payResponse.getBody();
-            } else {
-                // Trang máy tính
-                //Tạo request tương ứng với API
-                AlipayTradePagePayRequest alipayRequest = new AlipayTradePagePayRequest();
-                alipayRequest.setReturnUrl(alipayConfig.getReturnUrl());
-                //Đặt URL trả về và thông báo trong tham số chung
-                alipayRequest.setNotifyUrl(alipayConfig.getNotifyUrl());
-                //Điền tham số nghiệp vụ
-                alipayRequest.setBizContent("{" +
-                    "    \"out_trade_no\":\"" + outTradeNo + "\"," +
-                    "    \"product_code\":\"FAST_INSTANT_TRADE_PAY\"," +
-                    "    \"total_amount\":" + payAmount + "," +
-                    "    \"subject\":\"" + messages.get("payment.alipay.subject") + "\"" +
-                    "  }");
-                //Gọi SDK để tạo biểu mẫu
-                AlipayTradePagePayResponse payResponse = alipayClient.pageExecute(alipayRequest);
-                form = payResponse.getBody();
-
-            }
-
-            httpResponse.setContentType("text/html;charset=utf-8");
-            //Xuất trực tiếp biểu mẫu HTML hoàn chỉnh ra trang
-            httpResponse.getWriter().write(form);
-            httpResponse.getWriter().flush();
-            httpResponse.getWriter().close();
+            response.sendRedirect("/user/login.html?originUrl=/pay/index.html");
+            return;
+        }
+        if (!vnpayProperties.isConfigured()) {
+            response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, messages.get("payment.vnpay.unavailable"));
+            return;
+        }
+        if (payAmount == null || !vnpayProperties.isAllowedAmount(payAmount)) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, messages.get("payment.amount.invalid"));
+            return;
         }
 
-
+        int accountAmount = vnpayProperties.calculateXu(payAmount);
+        PayOrderCreation order = orderService.createPayOrder(VNPAY_CHANNEL, payAmount, accountAmount,
+            userDetails.getId());
+        response.sendRedirect(vnpayService.createPaymentUrl(order.outTradeNo(), payAmount,
+            IpUtil.getRealIp(request), order.createTime()));
     }
 
-    /**
-     * Thông báo thanh toán Alipay
-     */
     @SneakyThrows
-    @RequestMapping("aliPay/notify")
-    public void aliPayNotify(HttpServletRequest request, HttpServletResponse httpResponse) {
-
-        PrintWriter out = httpResponse.getWriter();
-
-        //Lấy thông tin POST từ Alipay
-        Map<String, String> params = new HashMap<>();
-        Map<String, String[]> requestParams = request.getParameterMap();
-        for (String name : requestParams.keySet()) {
-            String[] values = requestParams.get(name);
-            String valueStr = "";
-            for (int i = 0; i < values.length; i++) {
-                valueStr = (i == values.length - 1) ? valueStr + values[i]
-                    : valueStr + values[i] + ",";
+    @GetMapping("vnpay/return")
+    public void vnpayReturn(HttpServletRequest request, HttpServletResponse response) {
+        Map<String, String> params = singleValueParams(request);
+        String paymentStatus = "vnpay-failed";
+        if (vnpayService.verifySignature(params)) {
+            try {
+                long outTradeNo = Long.parseLong(params.get("vnp_TxnRef"));
+                Integer amountVnd = parseAmountVnd(params.get("vnp_Amount"));
+                if (amountVnd == null) {
+                    throw new IllegalArgumentException("Số tiền VNPAY không hợp lệ");
+                }
+                PayOrderState orderState = orderService.inspectPayOrder(outTradeNo, VNPAY_CHANNEL, amountVnd);
+                if ("00".equals(params.get("vnp_ResponseCode"))
+                    && "00".equals(params.get("vnp_TransactionStatus"))) {
+                    paymentStatus = switch (orderState) {
+                        case SUCCESS -> "vnpay-success";
+                        case PENDING -> "vnpay-processing";
+                        default -> "vnpay-failed";
+                    };
+                }
+            } catch (RuntimeException exception) {
+                log.debug("Dữ liệu Return URL VNPAY không hợp lệ", exception);
             }
-            params.put(name, valueStr);
         }
-
-        //Xác minh chữ ký
-        boolean signVerified = AlipaySignature.rsaCheckV1(params, alipayConfig.getPublicKey(),
-            alipayConfig.getCharset(), alipayConfig.getSignType());
-
-        if (signVerified) {
-            //Xác minh thành công
-            //Mã đơn thương nhân
-            String outTradeNo = new String(request.getParameter("out_trade_no").getBytes(StandardCharsets.ISO_8859_1),
-                StandardCharsets.UTF_8);
-
-            //Mã giao dịch Alipay
-            String tradeNo = new String(request.getParameter("trade_no").getBytes(StandardCharsets.ISO_8859_1),
-                StandardCharsets.UTF_8);
-
-            //Trạng thái giao dịch
-            String tradeStatus = new String(request.getParameter("trade_status").getBytes(StandardCharsets.ISO_8859_1),
-                StandardCharsets.UTF_8);
-
-            if ("TRADE_SUCCESS".equals(tradeStatus)) {
-                //Thanh toán thành công
-                orderService.updatePayOrder(Long.parseLong(outTradeNo), tradeNo, 1);
-            }
-
-            out.println("success");
-
-        } else {//Xác minh thất bại
-            out.println("fail");
-
-        }
-
+        response.sendRedirect("/pay/index.html?payment=" + paymentStatus);
     }
 
+    @ResponseBody
+    @GetMapping(value = "vnpay/ipn", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, String> vnpayIpn(HttpServletRequest request) {
+        Map<String, String> params = singleValueParams(request);
+        if (!vnpayService.verifySignature(params)) {
+            return ipnResponse("97", "Invalid checksum");
+        }
+
+        try {
+            Integer amountVnd = parseAmountVnd(params.get("vnp_Amount"));
+            if (amountVnd == null) {
+                return ipnResponse("04", "Invalid amount");
+            }
+            long outTradeNo = Long.parseLong(params.get("vnp_TxnRef"));
+            String tradeNo = params.get("vnp_TransactionNo");
+            boolean successful = "00".equals(params.get("vnp_ResponseCode"))
+                && "00".equals(params.get("vnp_TransactionStatus"));
+
+            PayOrderUpdateResult result = orderService.processPayOrder(outTradeNo, tradeNo, VNPAY_CHANNEL,
+                amountVnd, successful);
+            return switch (result) {
+                case SUCCESS -> ipnResponse("00", "Confirm success");
+                case ALREADY_PROCESSED -> ipnResponse("02", "Order already confirmed");
+                case NOT_FOUND, INVALID_CHANNEL -> ipnResponse("01", "Order not found");
+                case INVALID_AMOUNT -> ipnResponse("04", "Invalid amount");
+                case INVALID_ACCOUNT_AMOUNT -> ipnResponse("99", "Invalid account amount");
+            };
+        } catch (RuntimeException exception) {
+            log.warn("Không thể xử lý IPN VNPAY", exception);
+            return ipnResponse("99", "Unknown error");
+        }
+    }
+
+    private Map<String, String> singleValueParams(HttpServletRequest request) {
+        Map<String, String> params = new LinkedHashMap<>();
+        request.getParameterMap().forEach((key, values) -> {
+            if (values != null && values.length > 0) {
+                params.put(key, values[0]);
+            }
+        });
+        return params;
+    }
+
+    private Map<String, String> ipnResponse(String code, String message) {
+        return Map.of("RspCode", code, "Message", message);
+    }
+
+    private Integer parseAmountVnd(String rawAmountValue) {
+        try {
+            long rawAmount = Long.parseLong(rawAmountValue);
+            if (rawAmount <= 0 || rawAmount % 100 != 0) {
+                return null;
+            }
+            return Math.toIntExact(rawAmount / 100);
+        } catch (RuntimeException exception) {
+            return null;
+        }
+    }
 }

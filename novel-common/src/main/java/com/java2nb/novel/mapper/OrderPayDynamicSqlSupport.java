@@ -25,6 +25,8 @@ public final class OrderPayDynamicSqlSupport {
     @Generated("org.mybatis.generator.api.MyBatisGenerator")
     public static final SqlColumn<Integer> totalAmount = orderPay.totalAmount;
 
+    public static final SqlColumn<Integer> accountAmount = orderPay.accountAmount;
+
     @Generated("org.mybatis.generator.api.MyBatisGenerator")
     public static final SqlColumn<Long> userId = orderPay.userId;
 
@@ -48,6 +50,8 @@ public final class OrderPayDynamicSqlSupport {
         public final SqlColumn<Byte> payChannel = column("pay_channel", JDBCType.TINYINT);
 
         public final SqlColumn<Integer> totalAmount = column("total_amount", JDBCType.INTEGER);
+
+        public final SqlColumn<Integer> accountAmount = column("account_amount", JDBCType.INTEGER);
 
         public final SqlColumn<Long> userId = column("user_id", JDBCType.BIGINT);
 

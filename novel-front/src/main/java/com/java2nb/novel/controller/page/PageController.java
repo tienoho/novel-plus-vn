@@ -2,6 +2,7 @@ package com.java2nb.novel.controller.page;
 
 import com.java2nb.novel.controller.BaseController;
 import com.java2nb.novel.core.bean.UserDetails;
+import com.java2nb.novel.core.config.VnpayProperties;
 import com.java2nb.novel.core.utils.ThreadLocalUtil;
 import com.java2nb.novel.entity.*;
 import com.java2nb.novel.service.*;
@@ -42,6 +43,8 @@ public class PageController extends BaseController {
     private final ThreadPoolExecutor threadPoolExecutor;
 
     private final Map<String, BookContentService> bookContentServiceMap;
+
+    private final VnpayProperties vnpayProperties;
 
     @RequestMapping("{url}.html")
     public String module(@PathVariable("url") String url) {
@@ -136,7 +139,10 @@ public class PageController extends BaseController {
      * Trang nạp Xu
      */
     @RequestMapping("pay/index.html")
-    public String pay() {
+    public String pay(Model model) {
+        model.addAttribute("vnpayEnabled", vnpayProperties.isConfigured());
+        model.addAttribute("vnpayXuPerThousandVnd", vnpayProperties.getXuPerThousandVnd());
+        model.addAttribute("vnpayAllowedAmountsVnd", vnpayProperties.getDisplayAmountsVnd());
         return ThreadLocalUtil.getTemplateDir() + "pay/index.html";
     }
 

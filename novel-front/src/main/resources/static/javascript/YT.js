@@ -510,7 +510,7 @@ var DirtInfo = {
     SettleClass: [[0, novelMessage('legacyCash', 'Tiền mặt')], [1, novelMessage('legacyPrepaid', 'Khấu trừ trả trước')]],
     EnumSexClass: [[0, novelMessage('legacyUnlimited', 'Không giới hạn')], [1, novelMessage('legacyMale', 'Nam')], [2, novelMessage('legacyFemale', 'Nữ')]],
     EnumUserType: [[1, novelMessage('legacyMobileApp', 'Ứng dụng di động')], [2, novelMessage('legacyMobileWeb', 'Web di động')]],
-    EnumPayClass: [[1, novelMessage('legacyAlipay', 'Alipay')], [2, novelMessage('legacyWechat', 'WeChat')], [3, novelMessage('legacyWechatQr', 'Mã QR WeChat')], [100, novelMessage('legacyPhoneReward', 'Thưởng liên kết số điện thoại')]],
+    EnumPayClass: [[1, novelMessage('legacyPaymentChannel1', 'Kênh thanh toán cũ')], [2, novelMessage('legacyWechat', 'WeChat')], [3, novelMessage('legacyWechatQr', 'Mã QR WeChat')], [4, 'VNPAY'], [100, novelMessage('legacyPhoneReward', 'Thưởng liên kết số điện thoại')]],
     EnumPayStatus: [[0, novelMessage('legacyNewRequest', 'Yêu cầu mới')], [2, novelMessage('legacyRechargeFailed', 'Nạp tiền thất bại')], [3, novelMessage('legacySuccess', 'Thành công')]],
     EnumMoneyClass: [[0, novelMessage('legacyPurchase', 'Mua')], [1, novelMessage('legacyGift', 'Tặng')]],
     EnumUserFrom: [[1, novelMessage('legacyOther', 'Khác')], [2, novelMessage('legacyWeibo', 'Weibo')], [3, novelMessage('legacyQq', 'QQ')], [4, novelMessage('legacyWechat', 'WeChat')], [10, novelMessage('legacyAppRegister', 'Đăng ký qua ứng dụng')], [11, novelMessage('legacyWapRegister', 'Đăng ký qua web di động')], [12, novelMessage('legacyWeiboBind', 'Liên kết Weibo')], [13, novelMessage('legacyQqBind', 'Liên kết QQ')], [14, novelMessage('legacyWechatBind', 'Liên kết WeChat')]],

@@ -4,17 +4,18 @@
 <mapper namespace="com.java2nb.novel.dao.PayDao">
 
 	<select id="get" resultType="com.java2nb.novel.domain.PayDO">
-		select `id`,`out_trade_no`,`trade_no`,`pay_channel`,`total_amount`,`user_id`,`pay_status`,`create_time`,`update_time` from order_pay where id = #{value}
+		select `id`,`out_trade_no`,`trade_no`,`pay_channel`,`total_amount`,`account_amount`,`user_id`,`pay_status`,`create_time`,`update_time` from order_pay where id = #{value}
 	</select>
 
 	<select id="list" resultType="com.java2nb.novel.domain.PayDO">
-		select `id`,`out_trade_no`,`trade_no`,`pay_channel`,`total_amount`,`user_id`,`pay_status`,`create_time`,`update_time` from order_pay
+		select `id`,`out_trade_no`,`trade_no`,`pay_channel`,`total_amount`,`account_amount`,`user_id`,`pay_status`,`create_time`,`update_time` from order_pay
         <where>  
 		  		  <if test="id != null and id != ''"> and id = #{id} </if>
 		  		  <if test="outTradeNo != null and outTradeNo != ''"> and out_trade_no = #{outTradeNo} </if>
 		  		  <if test="tradeNo != null and tradeNo != ''"> and trade_no = #{tradeNo} </if>
 		  		  <if test="payChannel != null and payChannel != ''"> and pay_channel = #{payChannel} </if>
 		  		  <if test="totalAmount != null and totalAmount != ''"> and total_amount = #{totalAmount} </if>
+				  <if test="accountAmount != null and accountAmount != ''"> and account_amount = #{accountAmount} </if>
 		  		  <if test="userId != null and userId != ''"> and user_id = #{userId} </if>
 		  		  <if test="payStatus != null and payStatus != ''"> and pay_status = #{payStatus} </if>
 		  		  <if test="createTime != null and createTime != ''"> and create_time = #{createTime} </if>
@@ -41,6 +42,7 @@
 		  		  <if test="tradeNo != null and tradeNo != ''"> and trade_no = #{tradeNo} </if>
 		  		  <if test="payChannel != null and payChannel != ''"> and pay_channel = #{payChannel} </if>
 		  		  <if test="totalAmount != null and totalAmount != ''"> and total_amount = #{totalAmount} </if>
+				  <if test="accountAmount != null and accountAmount != ''"> and account_amount = #{accountAmount} </if>
 		  		  <if test="userId != null and userId != ''"> and user_id = #{userId} </if>
 		  		  <if test="payStatus != null and payStatus != ''"> and pay_status = #{payStatus} </if>
 		  		  <if test="createTime != null and createTime != ''"> and create_time = #{createTime} </if>
@@ -56,6 +58,7 @@
 			`trade_no`, 
 			`pay_channel`, 
 			`total_amount`, 
+			`account_amount`,
 			`user_id`, 
 			`pay_status`, 
 			`create_time`, 
@@ -68,6 +71,7 @@
 			#{tradeNo}, 
 			#{payChannel}, 
 			#{totalAmount}, 
+			#{accountAmount},
 			#{userId}, 
 			#{payStatus}, 
 			#{createTime}, 
@@ -83,6 +87,7 @@
 					<if test="tradeNo != null"> `trade_no`,  </if>
 					<if test="payChannel != null"> `pay_channel`,  </if>
 					<if test="totalAmount != null"> `total_amount`,  </if>
+					<if test="accountAmount != null"> `account_amount`,  </if>
 					<if test="userId != null"> `user_id`,  </if>
 					<if test="payStatus != null"> `pay_status`,  </if>
 					<if test="createTime != null"> `create_time`,  </if>
@@ -95,6 +100,7 @@
 					<if test="tradeNo != null"> #{tradeNo},  </if>
 					<if test="payChannel != null"> #{payChannel},  </if>
 					<if test="totalAmount != null"> #{totalAmount},  </if>
+					<if test="accountAmount != null"> #{accountAmount},  </if>
 					<if test="userId != null"> #{userId},  </if>
 					<if test="payStatus != null"> #{payStatus},  </if>
 					<if test="createTime != null"> #{createTime},  </if>
@@ -109,6 +115,7 @@
 			<if test="tradeNo != null">`trade_no` = #{tradeNo}, </if>
 			<if test="payChannel != null">`pay_channel` = #{payChannel}, </if>
 			<if test="totalAmount != null">`total_amount` = #{totalAmount}, </if>
+			<if test="accountAmount != null">`account_amount` = #{accountAmount}, </if>
 			<if test="userId != null">`user_id` = #{userId}, </if>
 			<if test="payStatus != null">`pay_status` = #{payStatus}, </if>
 			<if test="createTime != null">`create_time` = #{createTime}, </if>

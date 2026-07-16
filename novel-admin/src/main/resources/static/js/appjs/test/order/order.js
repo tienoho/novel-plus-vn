@@ -171,13 +171,13 @@ function load() {
                         
                                                                         {
                                 field: 'userId',
-                                title: adminMessage('test_order_buyerId', 'Open ID WeChat hoặc buyer_user_id Alipay')
+                                title: adminMessage('test_order_buyerId', 'Mã định danh người mua từ cổng thanh toán cũ')
                             },
 
                         
                                                                         {
                                 field: 'userLogonId',
-                                title: adminMessage('test_order_buyerAccount', 'Tài khoản khách hàng Alipay')
+                                title: adminMessage('test_order_buyerAccount', 'Tài khoản người mua từ cổng thanh toán cũ')
                             },
 
                         

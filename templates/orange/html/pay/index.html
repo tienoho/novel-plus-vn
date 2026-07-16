@@ -11,7 +11,8 @@
 <div th:replace="common/top :: top('')">
 </div>
 
-<form action="/pay/aliPay" method="post" id="payform" name="payform">
+<form action="/pay/vnpay" method="post" id="payform" name="payform" data-enabled="false"
+      th:attr="data-enabled=${vnpayEnabled}">
     <div class="main box_center cf">
 
         <div class="channelWrap channelPay cf">
@@ -26,40 +27,31 @@
                 </div>
                 <div class="payCon">
                     <h5 th:text="#{payment.method}">Chọn phương thức thanh toán</h5>
+                    <p style="color:#228b22" th:if="${param.payment != null and param.payment[0] == 'vnpay-success'}"
+                       th:text="#{payment.vnpay.return.success}">Thanh toán thành công. Số Xu đã được cập nhật.</p>
+                    <p style="color:#d58512" th:if="${param.payment != null and param.payment[0] == 'vnpay-processing'}"
+                       th:text="#{payment.vnpay.return.processing}">VNPAY đã tiếp nhận giao dịch. Hệ thống đang chờ IPN xác nhận.</p>
+                    <p class="red" th:if="${param.payment != null and param.payment[0] == 'vnpay-failed'}"
+                       th:text="#{payment.vnpay.return.failed}">Giao dịch VNPAY không thành công hoặc dữ liệu trả về không hợp lệ.</p>
+                    <p class="red" th:if="${!vnpayEnabled}" th:text="#{payment.vnpay.unavailable}">
+                        VNPAY chưa được cấu hình. Vui lòng liên hệ quản trị viên.
+                    </p>
                     <ul class="pay_way cf" id="ulPayType">
-                        <li class="on" valp="1"><img class="pay_pic" src="../images/pay_zfb.png" th:alt="#{payment.alipay}"/></li>
-                        <li valp="2"><img class="pay_pic" src="../images/pay_wx.png" th:alt="#{payment.wechat}"/></li>
+                        <li class="on" valp="4"><strong th:text="#{payment.vnpay}">VNPAY</strong></li>
 
                     </ul>
                     <h5 th:text="#{payment.amount}">Chọn số tiền nạp</h5>
                     <ul class="pay_way cf" id="ulZFWX">
-                        <li vals="10"><strong>10 CNY</strong><span class="pay_mn">1000 Xu</span></li>
-                        <li vals="30"><strong>30 CNY</strong><span class="pay_mn">3000 Xu</span></li>
-                        <li vals="50"><strong>50 CNY</strong><span class="pay_mn">5000 Xu</span></li>
-                        <li vals="100"><strong>100 CNY</strong><span class="pay_mn">10000 Xu</span></li>
-                        <li vals="200"><strong>200 CNY</strong><span class="pay_mn">20000 Xu</span></li>
-                        <li vals="500"><strong>500 CNY</strong><span class="pay_mn">50000 Xu</span></li>
-                    </ul>
-                    <ul class="pay_way cf" style="display:none;" id="ulPayPal">
-                        <li vals="20"><strong>20 USD</strong><span class="pay_mn">10000 Xu</span></li>
-                        <li vals="50" class="on"><strong>50 USD</strong><span class="pay_mn">25000 Xu<em class="red"></em></span>
-                        </li>
-                        <li vals="100"><strong>100 USD</strong><span class="pay_mn">50000 Xu<em class="red"></em></span>
+                        <li th:each="amount : ${vnpayAllowedAmountsVnd}" th:attr="vals=${amount}">
+                            <strong th:text="${#numbers.formatInteger(amount,1,'POINT')}+' VND'">10.000 VND</strong>
+                            <span class="pay_mn" th:text="${amount / 1000 * vnpayXuPerThousandVnd}+' '+#{payment.currency}">1000 Xu</span>
                         </li>
                     </ul>
                     <ul class="pay_Checkout" id="ulZFWXXJ">
-                        <li th:text="#{payment.exchange.cny}">Tỷ giá hiện tại: 1 CNY = 100 Xu</li>
-                        <li><span th:text="#{payment.total}+': '">Tổng thanh toán: </span><em class="red" id="showTotal">50 CNY</em>
-                            <span th:text="#{payment.receive}">Nhận được</span> <em class="red" id="showRemark">5000 Xu</em></li>
+                        <li th:text="#{payment.exchange.vnd(${vnpayXuPerThousandVnd})}">Tỷ giá hiện tại: 1.000 VND = 100 Xu</li>
+                        <li><span th:text="#{payment.total}+': '">Tổng thanh toán: </span><em class="red" id="showTotal">0 VND</em>
+                            <span th:text="#{payment.receive}">Nhận được</span> <em class="red" id="showRemark">0 Xu</em></li>
                         <li style="display:none"><a class="btn_red" href="pay_success.html"
-                                                    onclick="javascript:UserPay.sendPay();" th:text="#{payment.payNow}">Thanh toán ngay</a></li>
-                    </ul>
-                    <ul class="pay_Checkout" style="display:none;" id="ulPayPalXJ">
-                        <li th:text="#{payment.exchange.usd}">Tỷ giá hiện tại: 1 USD = 500 Xu</li>
-                        <li><span th:text="#{payment.total}+': '">Tổng thanh toán: </span><em class="red" id="showPayPalTotal">50 USD</em>
-                            <span th:text="#{payment.receive}">Nhận được</span> <em class="red" id="showPayPalRemark">25000 Xu</em>
-                        </li>
-                        <li style="display:none"><a class="btn_red" href="javascript:void(0);"
                                                     onclick="javascript:UserPay.sendPay();" th:text="#{payment.payNow}">Thanh toán ngay</a></li>
                     </ul>
                 </div>
@@ -120,10 +112,8 @@
 
     $("#ulZFWX").find("li").click(function () {
 
-        var payType = $("#ulPayType").find("li.on").attr("valp");
-
-        if (payType == 2) {
-            layer.alert(/*[[#{payment.wechat.unavailable}]]*/ 'Thanh toán WeChat chưa được hỗ trợ.');
+        if ($("#payform").attr("data-enabled") !== "true") {
+            layer.alert(/*[[#{payment.vnpay.unavailable}]]*/ 'VNPAY chưa được cấu hình. Vui lòng liên hệ quản trị viên.');
             return;
         }
 

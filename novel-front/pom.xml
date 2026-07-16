@@ -51,12 +51,6 @@
         </dependency>
 
         <dependency>
-            <groupId>com.alipay.sdk</groupId>
-            <artifactId>alipay-sdk-java</artifactId>
-            <version>${alipay-sdk-java.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
@@ -121,7 +115,7 @@
                                         <include name="*.*"/>
                                     </fileset>
                                     <fileset dir="${basedir}/src/main/resources">
-                                        <include name="application-alipay.yml"/>
+                                        <include name="application-vnpay.yml"/>
                                         <include name="application-website.yml"/>
                                     </fileset>
                                 </copy>

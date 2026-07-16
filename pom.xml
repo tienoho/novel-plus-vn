@@ -42,7 +42,6 @@
         <shardingsphere-jdbc.version>5.5.1</shardingsphere-jdbc.version>
         <aliyun-sdk-oss.version>3.16.3</aliyun-sdk-oss.version>
         <commons-fileupload.version>1.5</commons-fileupload.version>
-        <alipay-sdk-java.version>4.35.139.ALL</alipay-sdk-java.version>
         <xxyopen.version>1.0.0</xxyopen.version>
     </properties>
 

@@ -264,8 +264,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void addAmount(Long userId, int amount) {
-        userMapper.addUserBalance(userId, amount);
+    public boolean addAmount(Long userId, int amount) {
+        return userMapper.addUserBalance(userId, amount) == 1;
     }
 
     @Override

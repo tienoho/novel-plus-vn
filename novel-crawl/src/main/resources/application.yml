@@ -11,8 +11,8 @@ spring:
 
 # Tài khoản đăng nhập.
 admin:
-  username: admin
-  password: admin
+  username: ${CRAWLER_ADMIN_USERNAME:admin}
+  password: ${CRAWLER_ADMIN_PASSWORD:change-me-crawler-password}
 
 
 
@@ -33,16 +33,16 @@ crawl:
 # Máy chủ email.
 spring:
   mail:
-    host: smtp.163.com
+    host: ${MAIL_HOST:smtp.example.com}
     # Tên hiển thị của người gửi.
-    nickname: novel-plus
+    nickname: ${MAIL_NICKNAME:novel-plus}
     # Tài khoản email.
-    username: xxyopen@163.com
+    username: ${MAIL_USERNAME:disabled}
     # Mã ủy quyền ứng dụng của email.
-    password: novel123456
+    password: ${MAIL_PASSWORD:disabled}
     # Bảng mã.
     default-encoding: UTF-8
-    port: 465
+    port: ${MAIL_PORT:465}
     properties:
       mail:
         smtp:
@@ -51,7 +51,7 @@ spring:
             enable: true
             required: rue
           socketFactory:
-            port: 465
+            port: ${MAIL_PORT:465}
             class: javax.net.ssl.SSLSocketFactory
             fallback: false
 
@@ -63,6 +63,6 @@ disk-monitor:
   severe-threshold: 90.0
   critical-threshold: 95.0
   # Danh sách người nhận email cảnh báo, hỗ trợ nhiều địa chỉ.
-  recipients: xxyopen@foxmail.com,12345678@qq.com
+  recipients: ${DISK_MONITOR_RECIPIENTS:}
 
 

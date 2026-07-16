@@ -36,6 +36,8 @@ public class PayDO implements Serializable {
     private Integer payChannel;
     //Xu giao dịch
     private Integer totalAmount;
+    // Số Xu cam kết cấp cho đơn VNPAY
+    private Integer accountAmount;
     // ID người dùng thanh toán
     // Kiểu long của Java có phạm vi lớn hơn number của JavaScript, nên một số giá trị không thể biểu diễn chính xác trong JavaScript
     // Vì vậy, giá trị được tuần tự hóa thành chuỗi để xử lý
@@ -128,6 +130,14 @@ public class PayDO implements Serializable {
      */
     public Integer getTotalAmount() {
         return totalAmount;
+    }
+
+    public Integer getAccountAmount() {
+        return accountAmount;
+    }
+
+    public void setAccountAmount(Integer accountAmount) {
+        this.accountAmount = accountAmount;
     }
 
     /**

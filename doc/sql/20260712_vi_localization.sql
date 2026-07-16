@@ -1,6 +1,8 @@
 -- Việt hóa dữ liệu mặc định. Các điều kiện so khớp chính xác giúp bảo toàn dữ liệu đã tùy chỉnh
 -- và cho phép chạy migration nhiều lần mà không phát sinh thay đổi bổ sung.
 
+SET NAMES utf8mb4;
+
 UPDATE book_category
 SET name = CASE name
     WHEN '玄幻奇幻' THEN 'Huyền huyễn/Kỳ ảo'

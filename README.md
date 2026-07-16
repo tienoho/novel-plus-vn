@@ -55,7 +55,7 @@ novel-plus
 - Redis
 - Node.js để chạy kiểm tra cú pháp JavaScript first-party
 
-Các dịch vụ OSS, Alipay, AI và nguồn thu thập là tùy chọn; chỉ bật khi đã cấu hình thông tin tích hợp tương ứng.
+Các dịch vụ OSS, VNPAY, AI và nguồn thu thập là tùy chọn; chỉ bật khi đã cấu hình thông tin tích hợp tương ứng.
 
 ## Khởi tạo cơ sở dữ liệu
 
@@ -97,6 +97,77 @@ Các kiểm tra i18n xác minh:
 - không có key trùng;
 - Java, template và JavaScript first-party không chứa chuỗi Trung ngoài allowlist có giải thích;
 - locale mặc định cố định là `vi-VN`.
+
+## Deploy bằng Docker Compose
+
+Bộ Compose khởi động MySQL 8.4, Redis 7, migration Việt hóa, cổng đọc, crawler và trang quản trị. Docker image ứng dụng được build trực tiếp từ source bằng JDK 21; không cần build JAR trước trên máy host.
+
+1. Tạo tệp cấu hình riêng và thay toàn bộ giá trị `change-me`:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   Trên PowerShell:
+
+   ```powershell
+   Copy-Item .env.example .env
+   ```
+
+2. Build và khởi động toàn bộ stack:
+
+   ```bash
+   docker compose up -d --build
+   ```
+
+3. Kiểm tra trạng thái và log:
+
+   ```bash
+   docker compose ps --all
+   docker compose logs -f front crawl admin
+   ```
+
+Các địa chỉ mặc định:
+
+- front: `http://localhost:8083`
+- crawler: `http://localhost:8081`
+- admin: `http://localhost:8080`
+
+Tài khoản crawler lấy từ `CRAWLER_ADMIN_USERNAME` và `CRAWLER_ADMIN_PASSWORD` trong `.env`. Database mới có tài khoản quản trị seed `admin/admin`; phải đổi mật khẩu ngay sau lần đăng nhập đầu tiên.
+
+MySQL, Redis, ảnh tải lên và nội dung truyện dùng named volume nên được giữ lại khi chạy `docker compose down`. Lệnh `docker compose down -v` xóa toàn bộ volume và dữ liệu, chỉ dùng khi chủ động khởi tạo lại môi trường.
+
+Các migration `20260712_vi_localization.sql` và `20260716_vnpay_hardening.sql` chạy như một service one-shot ở mỗi lần khởi động. Cả hai có thể chạy lặp lại; migration VNPAY bổ sung số Xu đã chốt theo đơn và unique index cho mã giao dịch. Nếu database cũ đã có `out_trade_no` trùng, migration chủ động dừng để quản trị viên đối soát thay vì tự xóa hoặc gộp lịch sử. Khi nâng cấp từ phiên bản cũ hơn, vẫn phải chạy các migration trung gian theo [hướng dẫn SQL](doc/sql/readme.md).
+
+Các khóa AI, VNPAY, OSS và email là tùy chọn, được đọc từ `.env`; không ghi khóa thật vào source hoặc image. IPN VNPAY phải được cấu hình tại cổng merchant thành `https://<ten-mien>/pay/vnpay/ipn`; URL này cần HTTPS công khai. Trong production nên đặt reverse proxy TLS phía trước ba cổng HTTP, dùng Docker secrets hoặc secret manager và sao lưu volume MySQL định kỳ.
+
+Để bật VNPAY, cấu hình các biến sau trong `.env`:
+
+```dotenv
+VNPAY_ENABLED=true
+VNPAY_TMN_CODE=ma_website_do_vnpay_cap
+VNPAY_HASH_SECRET=khoa_bi_mat_do_vnpay_cap
+VNPAY_PAY_URL=https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+VNPAY_RETURN_URL=https://ten-mien-cua-ban/pay/vnpay/return
+VNPAY_QUERY_URL=https://sandbox.vnpayment.vn/merchant_webapi/api/transaction
+VNPAY_XU_PER_1000_VND=100
+VNPAY_ALLOWED_AMOUNTS_VND=10000,30000,50000,100000,200000,500000
+VNPAY_RECONCILIATION_ENABLED=true
+VNPAY_SERVER_IP=dia_chi_ip_cong_khai_cua_may_chu
+VNPAY_RECONCILIATION_DELAY_MS=300000
+VNPAY_RECONCILIATION_INITIAL_DELAY_MS=60000
+VNPAY_RECONCILIATION_MIN_AGE_MINUTES=20
+VNPAY_RECONCILIATION_MAX_AGE_DAYS=30
+VNPAY_RECONCILIATION_BATCH_SIZE=50
+```
+
+Khi chuyển sang production, thay cả `VNPAY_PAY_URL`, `VNPAY_QUERY_URL`, mã website, khóa bí mật và IP máy chủ bằng thông tin VNPAY production. Không dùng Return URL để cộng Xu; hệ thống chỉ ghi nhận tiền từ IPN hoặc QueryDr có chữ ký hợp lệ, đúng merchant, đúng mã đơn, đúng kênh và đúng số tiền. Số Xu được chốt ngay lúc tạo đơn nên thay đổi tỷ lệ sau đó không làm sai đơn đang chờ. QueryDr tự đối soát các đơn quá 20 phút khi IPN bị gián đoạn; nhiều replica giành quyền xử lý bằng optimistic update và cập nhật số dư vẫn có tính idempotent. Mã kênh VNPAY trong `order_pay.pay_channel` là `4`; các đơn từ cổng thanh toán cũ vẫn được giữ để đối soát lịch sử nhưng không còn endpoint hoặc giao diện tạo giao dịch mới qua cổng đó.
+
+Dừng stack:
+
+```bash
+docker compose down
+```
 
 ## Chạy ứng dụng
 

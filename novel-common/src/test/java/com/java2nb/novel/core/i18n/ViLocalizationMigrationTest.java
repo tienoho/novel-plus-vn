@@ -42,9 +42,14 @@ class ViLocalizationMigrationTest {
     void migrationUpdatesDefaultsPreservesCustomValuesAndIsIdempotent() throws Exception {
         String sql = Files.readString(findMigration(), StandardCharsets.UTF_8)
             .replaceAll("(?m)^\\s*--.*(?:\\R|$)", "");
-        List<UpdateSpec> updates = splitOutsideQuotes(sql, ';').stream()
+        List<String> statements = splitOutsideQuotes(sql, ';').stream()
             .map(String::trim)
             .filter(statement -> !statement.isEmpty())
+            .toList();
+        assertEquals(1, statements.stream().filter("SET NAMES utf8mb4"::equalsIgnoreCase).count(),
+            "Migration phải khai báo đúng một lần charset UTF-8");
+        List<UpdateSpec> updates = statements.stream()
+            .filter(statement -> !"SET NAMES utf8mb4".equalsIgnoreCase(statement))
             .map(this::parseUpdate)
             .toList();
 

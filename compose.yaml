@@ -1,0 +1,198 @@
+name: ${COMPOSE_PROJECT_NAME:-novel-plus}
+
+x-app-environment: &app-environment
+  TZ: ${TZ:-Asia/Ho_Chi_Minh}
+  SPRING_PROFILES_ACTIVE: prod
+  DB_HOST: mysql
+  DB_PORT: 3306
+  DB_NAME: ${MYSQL_DATABASE:-novel_plus}
+  DB_USERNAME: ${MYSQL_USER:-novel}
+  DB_PASSWORD: ${MYSQL_APP_PASSWORD:?Hãy đặt MYSQL_APP_PASSWORD trong tệp .env}
+  DB_TIMEZONE: ${DB_TIMEZONE:-Asia/Ho_Chi_Minh}
+  SHARDING_SQL_SHOW: ${SHARDING_SQL_SHOW:-false}
+
+x-app-defaults: &app-defaults
+  init: true
+  restart: unless-stopped
+  security_opt:
+    - no-new-privileges:true
+  depends_on:
+    migrate:
+      condition: service_completed_successfully
+    redis:
+      condition: service_healthy
+
+services:
+  mysql:
+    build:
+      context: ./doc/sql
+      dockerfile: Dockerfile
+    image: novel-plus/mysql:${IMAGE_TAG:-local}
+    environment:
+      TZ: ${TZ:-Asia/Ho_Chi_Minh}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Hãy đặt MYSQL_ROOT_PASSWORD trong tệp .env}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-novel_plus}
+      MYSQL_USER: ${MYSQL_USER:-novel}
+      MYSQL_PASSWORD: ${MYSQL_APP_PASSWORD:?Hãy đặt MYSQL_APP_PASSWORD trong tệp .env}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-time-zone=+07:00
+    volumes:
+      - mysql-data:/var/lib/mysql
+    expose:
+      - "3306"
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 45s
+    restart: unless-stopped
+
+  migrate:
+    image: mysql:8.4
+    environment:
+      MYSQL_PWD: ${MYSQL_APP_PASSWORD:?Hãy đặt MYSQL_APP_PASSWORD trong tệp .env}
+      MYSQL_USER: ${MYSQL_USER:-novel}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-novel_plus}
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        for migration in /migrations/20260712_vi_localization.sql /migrations/20260716_vnpay_hardening.sql; do
+          mysql --default-character-set=utf8mb4 --protocol=TCP --host=mysql --port=3306 --user="$$MYSQL_USER" "$$MYSQL_DATABASE" < "$$migration"
+        done
+    volumes:
+      - ./doc/sql/20260712_vi_localization.sql:/migrations/20260712_vi_localization.sql:ro
+      - ./doc/sql/20260716_vnpay_hardening.sql:/migrations/20260716_vnpay_hardening.sql:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: "no"
+
+  redis:
+    image: redis:7-alpine
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Hãy đặt REDIS_PASSWORD trong tệp .env}
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:?Hãy đặt REDIS_PASSWORD trong tệp .env}"]
+    volumes:
+      - redis-data:/data
+    expose:
+      - "6379"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+
+  front:
+    <<: *app-defaults
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile
+      target: front
+    image: novel-plus/front:${IMAGE_TAG:-local}
+    environment:
+      <<: *app-environment
+      SERVER_PORT: 8083
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD:?Hãy đặt REDIS_PASSWORD trong tệp .env}
+      TEMPLATES_NAME: ${NOVEL_THEME:-green}
+      PIC_SAVE_TYPE: 2
+      PIC_SAVE_STORAGE: local
+      PIC_SAVE_PATH: /data/pic
+      CONTENT_SAVE_STORAGE: db
+      CONTENT_SAVE_PATH: /data/books
+      JWT_SECRET: ${JWT_SECRET:?Hãy đặt JWT_SECRET trong tệp .env}
+      CACHE_MANAGER_PASSWORD: ${CACHE_MANAGER_PASSWORD:?Hãy đặt CACHE_MANAGER_PASSWORD trong tệp .env}
+      SPRING_AI_OPENAI_API_KEY: ${OPENAI_API_KEY:-disabled}
+      SPRING_AI_OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com}
+      SPRING_AI_OPENAI_IMAGE_ENABLED: ${AI_IMAGE_ENABLED:-false}
+      SPRING_AI_OPENAI_IMAGE_API_KEY: ${OPENAI_API_KEY:-disabled}
+      OPENAI_IMAGE_MODEL: ${OPENAI_IMAGE_MODEL:-gpt-image-1}
+      OPENAI_CHAT_MODEL: ${OPENAI_CHAT_MODEL:-gpt-4.1-mini}
+      VNPAY_ENABLED: ${VNPAY_ENABLED:-false}
+      VNPAY_TMN_CODE: ${VNPAY_TMN_CODE:-disabled}
+      VNPAY_HASH_SECRET: ${VNPAY_HASH_SECRET:-disabled}
+      VNPAY_PAY_URL: ${VNPAY_PAY_URL:-https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
+      VNPAY_RETURN_URL: ${VNPAY_RETURN_URL:-http://localhost:8083/pay/vnpay/return}
+      VNPAY_QUERY_URL: ${VNPAY_QUERY_URL:-https://sandbox.vnpayment.vn/merchant_webapi/api/transaction}
+      VNPAY_XU_PER_1000_VND: ${VNPAY_XU_PER_1000_VND:-100}
+      VNPAY_ALLOWED_AMOUNTS_VND: ${VNPAY_ALLOWED_AMOUNTS_VND:-10000,30000,50000,100000,200000,500000}
+      VNPAY_RECONCILIATION_ENABLED: ${VNPAY_RECONCILIATION_ENABLED:-true}
+      VNPAY_SERVER_IP: ${VNPAY_SERVER_IP:-127.0.0.1}
+      VNPAY_RECONCILIATION_DELAY_MS: ${VNPAY_RECONCILIATION_DELAY_MS:-300000}
+      VNPAY_RECONCILIATION_INITIAL_DELAY_MS: ${VNPAY_RECONCILIATION_INITIAL_DELAY_MS:-60000}
+      VNPAY_RECONCILIATION_MIN_AGE_MINUTES: ${VNPAY_RECONCILIATION_MIN_AGE_MINUTES:-20}
+      VNPAY_RECONCILIATION_MAX_AGE_DAYS: ${VNPAY_RECONCILIATION_MAX_AGE_DAYS:-30}
+      VNPAY_RECONCILIATION_BATCH_SIZE: ${VNPAY_RECONCILIATION_BATCH_SIZE:-50}
+      NOVEL_FILE_ENDPOINT: ${OSS_ENDPOINT:-disabled}
+      NOVEL_FILE_KEY_ID: ${OSS_KEY_ID:-disabled}
+      NOVEL_FILE_KEY_SECRET: ${OSS_KEY_SECRET:-disabled}
+      NOVEL_FILE_BUCKET_NAME: ${OSS_BUCKET_NAME:-disabled}
+      NOVEL_FILE_FILE_HOST: ${OSS_FILE_HOST:-pic}
+      NOVEL_FILE_WEB_URL: ${OSS_WEB_URL:-http://localhost:8083/pic}
+    ports:
+      - "${FRONT_PORT:-8083}:8083"
+    volumes:
+      - novel-media:/data/pic
+      - novel-books:/data/books
+
+  crawl:
+    <<: *app-defaults
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile
+      target: crawl
+    image: novel-plus/crawl:${IMAGE_TAG:-local}
+    environment:
+      <<: *app-environment
+      SERVER_PORT: 8081
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD:?Hãy đặt REDIS_PASSWORD trong tệp .env}
+      CRAWLER_ADMIN_USERNAME: ${CRAWLER_ADMIN_USERNAME:-admin}
+      CRAWLER_ADMIN_PASSWORD: ${CRAWLER_ADMIN_PASSWORD:?Hãy đặt CRAWLER_ADMIN_PASSWORD trong tệp .env}
+      CONTENT_SAVE_STORAGE: db
+      CONTENT_SAVE_PATH: /data/books
+      MAIL_HOST: ${MAIL_HOST:-smtp.example.com}
+      MAIL_PORT: ${MAIL_PORT:-465}
+      MAIL_NICKNAME: ${MAIL_NICKNAME:-novel-plus}
+      SPRING_MAIL_USERNAME: ${MAIL_USERNAME:-disabled}
+      SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD:-disabled}
+      DISK_MONITOR_ENABLED: ${DISK_MONITOR_ENABLED:-false}
+      DISK_MONITOR_RECIPIENTS: ${DISK_MONITOR_RECIPIENTS:-}
+    ports:
+      - "${CRAWL_PORT:-8081}:8081"
+    volumes:
+      - novel-media:/data/pic
+      - novel-books:/data/books
+
+  admin:
+    <<: *app-defaults
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile
+      target: admin
+    image: novel-plus/admin:${IMAGE_TAG:-local}
+    environment:
+      <<: *app-environment
+      SERVER_PORT: 80
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_REDIS_PASSWORD: ${REDIS_PASSWORD:?Hãy đặt REDIS_PASSWORD trong tệp .env}
+      JAVA2NB_UPLOAD_PATH: /data/pic/
+    ports:
+      - "${ADMIN_PORT:-8080}:80"
+    volumes:
+      - novel-media:/data/pic
+
+volumes:
+  mysql-data:
+  redis-data:
+  novel-media:
+  novel-books:

@@ -65,13 +65,33 @@ function load() {
 
                     {
                         field: 'totalAmount',
-                        title: adminMessage('paymentRechargeAmount', 'Số Xu nạp'),
+                        title: adminMessage('paymentRechargeAmount', 'Số tiền thanh toán'),
                         formatter: function (value, row, index) {
-                            return '¥' + value;
+                            return row.payChannel === 4
+                                ? new Intl.NumberFormat('vi-VN').format(value) + ' VND'
+                                : value + ' (' + adminMessage('paymentLegacyAmountUnit', 'đơn vị cũ') + ')';
                         }
                     },
 
+                    {
+                        field: 'accountAmount',
+                        title: adminMessage('paymentAccountAmount', 'Số Xu cam kết'),
+                        formatter: function (value, row) {
+                            return row.payChannel === 4 && value != null
+                                ? new Intl.NumberFormat('vi-VN').format(value) + ' Xu'
+                                : '-';
+                        }
+                    },
 
+                    {
+                        field: 'payChannel',
+                        title: adminMessage('paymentChannel', 'Kênh thanh toán'),
+                        formatter: function (value) {
+                            return value === 4
+                                ? adminMessage('paymentChannelVnpay', 'VNPAY')
+                                : adminMessage('paymentChannelLegacy', 'Kênh cũ') + ' (' + value + ')';
+                        }
+                    },
                     {
                         field: 'userName',
                         title: adminMessage('paymentRechargeUser', 'Người nạp')

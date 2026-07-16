@@ -35,7 +35,7 @@ import org.mybatis.dynamic.sql.util.mybatis3.MyBatis3Utils;
 @Mapper
 public interface OrderPayMapper {
     @Generated("org.mybatis.generator.api.MyBatisGenerator")
-    BasicColumn[] selectList = BasicColumn.columnList(id, outTradeNo, tradeNo, payChannel, totalAmount, userId, payStatus, createTime, updateTime);
+    BasicColumn[] selectList = BasicColumn.columnList(id, outTradeNo, tradeNo, payChannel, totalAmount, accountAmount, userId, payStatus, createTime, updateTime);
 
     @Generated("org.mybatis.generator.api.MyBatisGenerator")
     @SelectProvider(type=SqlProviderAdapter.class, method="select")
@@ -66,6 +66,7 @@ public interface OrderPayMapper {
         @Result(column="trade_no", property="tradeNo", jdbcType=JdbcType.VARCHAR),
         @Result(column="pay_channel", property="payChannel", jdbcType=JdbcType.TINYINT),
         @Result(column="total_amount", property="totalAmount", jdbcType=JdbcType.INTEGER),
+        @Result(column="account_amount", property="accountAmount", jdbcType=JdbcType.INTEGER),
         @Result(column="user_id", property="userId", jdbcType=JdbcType.BIGINT),
         @Result(column="pay_status", property="payStatus", jdbcType=JdbcType.TINYINT),
         @Result(column="create_time", property="createTime", jdbcType=JdbcType.TIMESTAMP),
@@ -102,6 +103,7 @@ public interface OrderPayMapper {
             .map(tradeNo).toProperty("tradeNo")
             .map(payChannel).toProperty("payChannel")
             .map(totalAmount).toProperty("totalAmount")
+            .map(accountAmount).toProperty("accountAmount")
             .map(userId).toProperty("userId")
             .map(payStatus).toProperty("payStatus")
             .map(createTime).toProperty("createTime")
@@ -117,6 +119,7 @@ public interface OrderPayMapper {
             .map(tradeNo).toProperty("tradeNo")
             .map(payChannel).toProperty("payChannel")
             .map(totalAmount).toProperty("totalAmount")
+            .map(accountAmount).toProperty("accountAmount")
             .map(userId).toProperty("userId")
             .map(payStatus).toProperty("payStatus")
             .map(createTime).toProperty("createTime")
@@ -132,6 +135,7 @@ public interface OrderPayMapper {
             .map(tradeNo).toPropertyWhenPresent("tradeNo", record::getTradeNo)
             .map(payChannel).toPropertyWhenPresent("payChannel", record::getPayChannel)
             .map(totalAmount).toPropertyWhenPresent("totalAmount", record::getTotalAmount)
+            .map(accountAmount).toPropertyWhenPresent("accountAmount", record::getAccountAmount)
             .map(userId).toPropertyWhenPresent("userId", record::getUserId)
             .map(payStatus).toPropertyWhenPresent("payStatus", record::getPayStatus)
             .map(createTime).toPropertyWhenPresent("createTime", record::getCreateTime)
@@ -173,6 +177,7 @@ public interface OrderPayMapper {
                 .set(tradeNo).equalTo(record::getTradeNo)
                 .set(payChannel).equalTo(record::getPayChannel)
                 .set(totalAmount).equalTo(record::getTotalAmount)
+                .set(accountAmount).equalTo(record::getAccountAmount)
                 .set(userId).equalTo(record::getUserId)
                 .set(payStatus).equalTo(record::getPayStatus)
                 .set(createTime).equalTo(record::getCreateTime)
@@ -186,6 +191,7 @@ public interface OrderPayMapper {
                 .set(tradeNo).equalToWhenPresent(record::getTradeNo)
                 .set(payChannel).equalToWhenPresent(record::getPayChannel)
                 .set(totalAmount).equalToWhenPresent(record::getTotalAmount)
+                .set(accountAmount).equalToWhenPresent(record::getAccountAmount)
                 .set(userId).equalToWhenPresent(record::getUserId)
                 .set(payStatus).equalToWhenPresent(record::getPayStatus)
                 .set(createTime).equalToWhenPresent(record::getCreateTime)
@@ -199,6 +205,7 @@ public interface OrderPayMapper {
             .set(tradeNo).equalTo(record::getTradeNo)
             .set(payChannel).equalTo(record::getPayChannel)
             .set(totalAmount).equalTo(record::getTotalAmount)
+            .set(accountAmount).equalTo(record::getAccountAmount)
             .set(userId).equalTo(record::getUserId)
             .set(payStatus).equalTo(record::getPayStatus)
             .set(createTime).equalTo(record::getCreateTime)
@@ -214,6 +221,7 @@ public interface OrderPayMapper {
             .set(tradeNo).equalToWhenPresent(record::getTradeNo)
             .set(payChannel).equalToWhenPresent(record::getPayChannel)
             .set(totalAmount).equalToWhenPresent(record::getTotalAmount)
+            .set(accountAmount).equalToWhenPresent(record::getAccountAmount)
             .set(userId).equalToWhenPresent(record::getUserId)
             .set(payStatus).equalToWhenPresent(record::getPayStatus)
             .set(createTime).equalToWhenPresent(record::getCreateTime)

@@ -124,7 +124,7 @@ public interface UserService {
      * Tăng số dư người dùng
      * @param userId ID người dùng
      * @param amount số dư cần tăng */
-    void addAmount(Long userId, int amount);
+    boolean addAmount(Long userId, int amount);
 
     /**
      * Kiểm tra người dùng đã mua chương hay chưa

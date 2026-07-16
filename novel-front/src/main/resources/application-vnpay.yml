@@ -1,0 +1,21 @@
+vnpay:
+  # Chỉ bật sau khi VNPAY cấp mã website và khóa bí mật cho merchant.
+  enabled: ${VNPAY_ENABLED:false}
+  tmn-code: ${VNPAY_TMN_CODE:disabled}
+  hash-secret: ${VNPAY_HASH_SECRET:disabled}
+  pay-url: ${VNPAY_PAY_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
+  return-url: ${VNPAY_RETURN_URL:http://localhost:8083/pay/vnpay/return}
+  query-url: ${VNPAY_QUERY_URL:https://sandbox.vnpayment.vn/merchant_webapi/api/transaction}
+  version: 2.1.0
+  locale: vn
+  order-type: other
+  time-zone: Asia/Ho_Chi_Minh
+  xu-per-thousand-vnd: ${VNPAY_XU_PER_1000_VND:100}
+  allowed-amounts-vnd: ${VNPAY_ALLOWED_AMOUNTS_VND:10000,30000,50000,100000,200000,500000}
+  reconciliation-enabled: ${VNPAY_RECONCILIATION_ENABLED:true}
+  server-ip: ${VNPAY_SERVER_IP:127.0.0.1}
+  reconciliation-delay-ms: ${VNPAY_RECONCILIATION_DELAY_MS:300000}
+  reconciliation-initial-delay-ms: ${VNPAY_RECONCILIATION_INITIAL_DELAY_MS:60000}
+  reconciliation-min-age-minutes: ${VNPAY_RECONCILIATION_MIN_AGE_MINUTES:20}
+  reconciliation-max-age-days: ${VNPAY_RECONCILIATION_MAX_AGE_DAYS:30}
+  reconciliation-batch-size: ${VNPAY_RECONCILIATION_BATCH_SIZE:50}

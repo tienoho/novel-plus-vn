@@ -1,9 +1,9 @@
 #OSS
 novel:
   file:
-    endpoint: oss-cn-shenzhen.aliyuncs.com #Địa chỉ thay đổi theo khu vực máy chủ
-    key-id: dhjjrue6767778878 #Lấy từ bảng điều khiển OSS
-    key-secret: dssdkkrkelrkellk44554 #Lấy từ bảng điều khiển OSS
-    bucket-name: novel #Tên bucket do bạn tạo bằng bảng điều khiển hoặc mã
-    file-host: pic #Đường dẫn tệp
-    web-url: https://xxyimg.oss-cn-hangzhou.aliyuncs.com #Địa chỉ web truy cập tệp OSS
+    endpoint: ${OSS_ENDPOINT:disabled} #Địa chỉ thay đổi theo khu vực máy chủ
+    key-id: ${OSS_KEY_ID:disabled} #Lấy từ bảng điều khiển OSS
+    key-secret: ${OSS_KEY_SECRET:disabled} #Lấy từ bảng điều khiển OSS
+    bucket-name: ${OSS_BUCKET_NAME:disabled} #Tên bucket do bạn tạo bằng bảng điều khiển hoặc mã
+    file-host: ${OSS_FILE_HOST:pic} #Đường dẫn tệp
+    web-url: ${OSS_WEB_URL:http://localhost:8083/pic} #Địa chỉ web truy cập tệp OSS

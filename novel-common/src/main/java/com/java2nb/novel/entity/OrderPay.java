@@ -19,6 +19,8 @@ public class OrderPay {
     @Generated("org.mybatis.generator.api.MyBatisGenerator")
     private Integer totalAmount;
 
+    private Integer accountAmount;
+
     @Generated("org.mybatis.generator.api.MyBatisGenerator")
     private Long userId;
 
@@ -79,6 +81,14 @@ public class OrderPay {
     @Generated("org.mybatis.generator.api.MyBatisGenerator")
     public void setTotalAmount(Integer totalAmount) {
         this.totalAmount = totalAmount;
+    }
+
+    public Integer getAccountAmount() {
+        return accountAmount;
+    }
+
+    public void setAccountAmount(Integer accountAmount) {
+        this.accountAmount = accountAmount;
     }
 
     @Generated("org.mybatis.generator.api.MyBatisGenerator")

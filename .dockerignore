@@ -1,0 +1,11 @@
+.git
+.github
+.idea
+.vscode
+.env
+**/.DS_Store
+**/*.iml
+**/logs
+**/target
+**/cachedata
+doc/sql/novel_plus_data.sql.zip

@@ -4,16 +4,16 @@ server:
 spring:
   profiles:
     active: dev
-    include: website,alipay,oss
+    include: website,vnpay,oss
 
 jwt:
-  secret: novel!#20191230
+  secret: ${JWT_SECRET:change-me-with-at-least-32-random-characters}
   expiration: 604800
 
 #Mật khẩu quản lý bộ nhớ đệm
 cache:
   manager:
-    password: novel@2020117
+    password: ${CACHE_MANAGER_PASSWORD:change-me-cache-password}
 
 
 # Chống tấn công XSS
@@ -49,16 +49,16 @@ spring:
   ai:
     openai:
       image:
-        enabled: true
-        base-url: https://api.siliconflow.cn
-        api-key: sk-jjtixmivxaccndqgkqfkbgkzvmbctdxogcrfbjzfttbouitt
+        enabled: ${AI_IMAGE_ENABLED:false}
+        base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+        api-key: ${OPENAI_API_KEY:disabled}
         options:
-          model: Kwai-Kolors/Kolors
+          model: ${OPENAI_IMAGE_MODEL:gpt-image-1}
           response_format: URL
-      api-key: sk-jjtixmivxaccndqgkqfkbgkzvmbctdxogcrfbjzfttbouitt
-      base-url: https://api.siliconflow.cn
+      api-key: ${OPENAI_API_KEY:disabled}
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com}
       chat:
         options:
-          model: deepseek-ai/DeepSeek-R1-0528-Qwen3-8B
+          model: ${OPENAI_CHAT_MODEL:gpt-4.1-mini}
 
 
