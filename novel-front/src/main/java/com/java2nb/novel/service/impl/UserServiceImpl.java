@@ -2,11 +2,15 @@ package com.java2nb.novel.service.impl;
 
 import com.github.pagehelper.PageHelper;
 import com.java2nb.novel.core.bean.UserDetails;
+import com.java2nb.novel.core.config.AuthorIncomeProperties;
 import com.java2nb.novel.core.enums.ResponseStatus;
 import com.java2nb.novel.entity.User;
 import com.java2nb.novel.entity.*;
 import com.java2nb.novel.mapper.*;
 import com.java2nb.novel.service.UserService;
+import com.java2nb.novel.service.wallet.InsufficientWalletBalanceException;
+import com.java2nb.novel.service.wallet.WalletLedgerService;
+import com.java2nb.novel.service.wallet.WalletPostResult;
 import com.java2nb.novel.vo.BookReadHistoryVO;
 import com.java2nb.novel.vo.BookShelfVO;
 import com.java2nb.novel.vo.UserFeedbackVO;
@@ -24,9 +28,12 @@ import org.mybatis.dynamic.sql.render.RenderingStrategies;
 import org.mybatis.dynamic.sql.select.render.SelectStatementProvider;
 import org.mybatis.dynamic.sql.update.render.UpdateStatementProvider;
 import org.springframework.beans.BeanUtils;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Date;
 import java.util.List;
 
@@ -55,6 +62,10 @@ public class UserServiceImpl implements UserService {
     private final UserFeedbackMapper userFeedbackMapper;
 
     private final UserBuyRecordMapper userBuyRecordMapper;
+
+    private final WalletLedgerService walletLedgerService;
+
+    private final AuthorIncomeProperties authorIncomeProperties;
 
     private final IdWorker idWorker = IdWorker.INSTANCE;
 
@@ -264,11 +275,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public boolean addAmount(Long userId, int amount) {
-        return userMapper.addUserBalance(userId, amount) == 1;
-    }
-
-    @Override
     public boolean queryIsBuyBookIndex(Long userId, Long bookIndexId) {
 
         return userBuyRecordMapper.count(c ->
@@ -278,25 +284,38 @@ public class UserServiceImpl implements UserService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void buyBookIndex(Long userId, UserBuyRecord buyRecord) {
-        //Truy vấn số dư người dùng
-        long balance = userInfo(userId).getAccountBalance();
-        if (balance < buyRecord.getBuyAmount()) {
-            //Số dư không đủ
+    public void buyBookIndex(Long userId, Long authorId, UserBuyRecord buyRecord) {
+        if (queryIsBuyBookIndex(userId, buyRecord.getBookIndexId())) {
+            return;
+        }
+        if (buyRecord.getBuyAmount() == null || buyRecord.getBuyAmount() <= 0) {
+            throw new IllegalArgumentException("Giá chương phải lớn hơn 0");
+        }
+        BigDecimal share = authorIncomeProperties.getShareProportion();
+        if (share == null || share.signum() < 0 || share.compareTo(BigDecimal.ONE) > 0) {
+            throw new IllegalStateException("Tỷ lệ chia doanh thu tác giả không hợp lệ");
+        }
+        long authorAmount = BigDecimal.valueOf(buyRecord.getBuyAmount())
+            .multiply(share)
+            .setScale(0, RoundingMode.DOWN)
+            .longValueExact();
+        WalletPostResult postResult;
+        try {
+            postResult = walletLedgerService.purchaseChapter(userId, authorId, buyRecord.getBuyAmount(),
+                authorAmount, String.valueOf(buyRecord.getBookIndexId()),
+                "CHAPTER_PURCHASE:" + userId + ":" + buyRecord.getBookIndexId());
+        } catch (InsufficientWalletBalanceException exception) {
             throw new BusinessException(ResponseStatus.USER_NO_BALANCE);
         }
         buyRecord.setUserId(userId);
         buyRecord.setCreateTime(new Date());
-        //Tạo bản ghi mua hàng
-        userBuyRecordMapper.insertSelective(buyRecord);
-
-        //Giảm số dư người dùng
-        userMapper.update(update(user)
-            .set(UserDynamicSqlSupport.accountBalance)
-            .equalTo(balance - buyRecord.getBuyAmount())
-            .where(id, isEqualTo(userId))
-            .build()
-            .render(RenderingStrategies.MYBATIS3));
+        try {
+            userBuyRecordMapper.insertSelective(buyRecord);
+        } catch (DuplicateKeyException exception) {
+            if (postResult != WalletPostResult.ALREADY_POSTED) {
+                throw exception;
+            }
+        }
     }
 
     @Override

@@ -12,6 +12,11 @@ import com.java2nb.novel.entity.AuthorIncomeDetail;
 import com.java2nb.novel.entity.Book;
 import com.java2nb.novel.service.AuthorService;
 import com.java2nb.novel.service.BookService;
+import com.java2nb.novel.service.finance.AuthorFinanceService;
+import com.java2nb.novel.service.finance.AuthorKycStatus;
+import com.java2nb.novel.service.finance.AuthorWithdrawalRow;
+import com.java2nb.novel.service.finance.KycSubmissionRequest;
+import com.java2nb.novel.service.finance.WithdrawalRequestInput;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +49,8 @@ public class AuthorController extends BaseController {
     private final ChatClient chatClient;
 
     private final OpenAiChatModel chatModel;
+
+    private final AuthorFinanceService authorFinanceService;
 
     /**
      * Kiểm tra bút danh đã tồn tại hay chưa.
@@ -201,6 +208,38 @@ public class AuthorController extends BaseController {
 
         return RestResult.ok(
             authorService.listIncomeMonthByPage(page, pageSize, getUserDetails(request).getId(), bookId));
+    }
+
+    /** Gửi hồ sơ KYC đã được mã hóa để chờ quản trị viên duyệt. */
+    @PostMapping("finance/kyc")
+    public RestResult<AuthorKycStatus> submitKyc(@RequestBody KycSubmissionRequest submission,
+                                                 HttpServletRequest request) {
+        Author author = checkAuthor(request);
+        long userId = getUserDetails(request).getId();
+        return RestResult.ok(authorFinanceService.submitKyc(author.getId(), userId, submission));
+    }
+
+    /** Xem trạng thái KYC mà không trả dữ liệu định danh rõ. */
+    @GetMapping("finance/kyc")
+    public RestResult<AuthorKycStatus> getKycStatus(HttpServletRequest request) {
+        Author author = checkAuthor(request);
+        return RestResult.ok(authorFinanceService.getKycStatus(author.getId()));
+    }
+
+    /** Xem số Xu doanh thu hiện có thể yêu cầu rút. */
+    @GetMapping("finance/revenue-balance")
+    public RestResult<Long> getRevenueBalance(HttpServletRequest request) {
+        Author author = checkAuthor(request);
+        return RestResult.ok(authorFinanceService.getAvailableRevenue(author.getId()));
+    }
+
+    /** Tạo yêu cầu rút và giữ Xu ngay trong sổ cái. */
+    @PostMapping("finance/withdrawals")
+    public RestResult<AuthorWithdrawalRow> requestWithdrawal(@RequestBody WithdrawalRequestInput input,
+                                                              HttpServletRequest request) {
+        Author author = checkAuthor(request);
+        long userId = getUserDetails(request).getId();
+        return RestResult.ok(authorFinanceService.requestWithdrawal(author.getId(), userId, input));
     }
 
     private Author checkAuthor(HttpServletRequest request) {

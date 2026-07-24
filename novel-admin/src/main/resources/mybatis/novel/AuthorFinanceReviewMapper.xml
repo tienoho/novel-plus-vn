@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.java2nb.novel.dao.AuthorFinanceReviewDao">
+
+    <sql id="kycColumns">
+        id, author_id, user_id, identity_type, identity_number_last4, bank_code, bank_account_last4,
+        status, submission_version, submitted_at, reviewed_at, reviewed_by, rejection_reason,
+        legal_name_ciphertext, date_of_birth_ciphertext, identity_number_ciphertext,
+        tax_code_ciphertext, bank_account_ciphertext, bank_account_name_ciphertext
+    </sql>
+
+    <select id="listKyc" resultType="com.java2nb.novel.domain.AuthorKycReviewDO">
+        SELECT <include refid="kycColumns"/>
+        FROM author_kyc_profile
+        <where>
+            <if test="status != null and status != ''">status = #{status}</if>
+            <if test="authorId != null and authorId != ''">AND author_id = #{authorId}</if>
+        </where>
+        ORDER BY submitted_at DESC, id DESC
+        <if test="offset != null and limit != null">LIMIT #{offset}, #{limit}</if>
+    </select>
+
+    <select id="countKyc" resultType="int">
+        SELECT COUNT(*) FROM author_kyc_profile
+        <where>
+            <if test="status != null and status != ''">status = #{status}</if>
+            <if test="authorId != null and authorId != ''">AND author_id = #{authorId}</if>
+        </where>
+    </select>
+
+    <select id="getKyc" resultType="com.java2nb.novel.domain.AuthorKycReviewDO">
+        SELECT <include refid="kycColumns"/>
+        FROM author_kyc_profile WHERE id = #{id} LIMIT 1
+    </select>
+
+    <update id="reviewKyc">
+        UPDATE author_kyc_profile
+        SET status = #{toStatus}, reviewed_at = CURRENT_TIMESTAMP(3), reviewed_by = #{reviewerId},
+            rejection_reason = #{reason}
+        WHERE id = #{id} AND status = 'PENDING' AND submission_version = #{expectedVersion}
+    </update>
+
+    <insert id="insertKycAudit">
+        INSERT INTO author_kyc_audit
+            (kyc_profile_id, author_id, user_id, event_type, from_status, to_status,
+             actor_type, actor_id, reason)
+        VALUES (#{profile.id}, #{profile.authorId}, #{profile.userId}, #{eventType}, #{profile.status}, #{toStatus},
+                'ADMIN', #{actorId}, #{reason})
+    </insert>
+
+    <sql id="withdrawalColumns">
+        id, withdrawal_no, author_id, user_id, requested_xu, vnd_per_xu,
+        gross_amount_vnd, withheld_tax_vnd, net_amount_vnd, bank_code, bank_account_last4,
+        status, payout_provider, provider_reference, requested_at, reviewed_at, paid_at,
+        rejection_reason, version
+    </sql>
+
+    <select id="listWithdrawals" resultType="com.java2nb.novel.domain.AuthorWithdrawalReviewDO">
+        SELECT <include refid="withdrawalColumns"/>
+        FROM author_withdrawal_request
+        <where>
+            <if test="status != null and status != ''">status = #{status}</if>
+            <if test="authorId != null and authorId != ''">AND author_id = #{authorId}</if>
+        </where>
+        ORDER BY requested_at DESC, id DESC
+        <if test="offset != null and limit != null">LIMIT #{offset}, #{limit}</if>
+    </select>
+
+    <select id="countWithdrawals" resultType="int">
+        SELECT COUNT(*) FROM author_withdrawal_request
+        <where>
+            <if test="status != null and status != ''">status = #{status}</if>
+            <if test="authorId != null and authorId != ''">AND author_id = #{authorId}</if>
+        </where>
+    </select>
+
+    <select id="getWithdrawal" resultType="com.java2nb.novel.domain.AuthorWithdrawalReviewDO">
+        SELECT <include refid="withdrawalColumns"/>, bank_account_ciphertext, bank_account_name_ciphertext
+        FROM author_withdrawal_request WHERE id = #{id} LIMIT 1
+    </select>
+
+    <update id="approveWithdrawal">
+        UPDATE author_withdrawal_request
+        SET status = 'APPROVED', withheld_tax_vnd = #{withheldTaxVnd}, net_amount_vnd = #{netAmountVnd},
+            reviewed_at = CURRENT_TIMESTAMP(3), reviewed_by = #{reviewerId}, version = version + 1
+        WHERE id = #{id} AND status = 'PENDING_REVIEW' AND version = #{expectedVersion}
+    </update>
+
+    <update id="requestWithdrawalRelease">
+        UPDATE author_withdrawal_request
+        SET status = 'RELEASE_PENDING', release_target_status = #{targetStatus},
+            rejection_reason = #{reason}, reviewed_at = CURRENT_TIMESTAMP(3), reviewed_by = #{reviewerId},
+            version = version + 1
+        WHERE id = #{id} AND status = #{expectedStatus} AND version = #{expectedVersion}
+    </update>
+
+    <update id="markWithdrawalProcessing">
+        UPDATE author_withdrawal_request
+        SET status = 'PROCESSING', reviewed_at = CURRENT_TIMESTAMP(3), reviewed_by = #{reviewerId},
+            version = version + 1
+        WHERE id = #{id} AND status = 'APPROVED' AND version = #{expectedVersion}
+    </update>
+
+    <update id="requestWithdrawalSettlement">
+        UPDATE author_withdrawal_request
+        SET status = 'SETTLEMENT_PENDING', provider_reference = #{providerReference},
+            paid_at = CURRENT_TIMESTAMP(3), reviewed_by = #{reviewerId}, version = version + 1
+        WHERE id = #{id} AND status = 'PROCESSING' AND version = #{expectedVersion}
+    </update>
+
+    <insert id="insertWithdrawalAudit">
+        INSERT INTO author_withdrawal_audit
+            (withdrawal_request_id, withdrawal_no, event_type, from_status, to_status,
+             actor_type, actor_id, reason)
+        VALUES (#{withdrawal.id}, #{withdrawal.withdrawalNo}, #{eventType}, #{withdrawal.status}, #{toStatus},
+                'ADMIN', #{actorId}, #{reason})
+    </insert>
+
+</mapper>

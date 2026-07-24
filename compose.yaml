@@ -53,19 +53,22 @@ services:
   migrate:
     image: mysql:8.4
     environment:
-      MYSQL_PWD: ${MYSQL_APP_PASSWORD:?Hãy đặt MYSQL_APP_PASSWORD trong tệp .env}
-      MYSQL_USER: ${MYSQL_USER:-novel}
+      # Migration cần quyền tạo trigger bất biến cho sổ cái; ứng dụng vẫn dùng MYSQL_USER ít quyền hơn.
+      MYSQL_PWD: ${MYSQL_ROOT_PASSWORD:?Hãy đặt MYSQL_ROOT_PASSWORD trong tệp .env}
+      MYSQL_USER: root
       MYSQL_DATABASE: ${MYSQL_DATABASE:-novel_plus}
     command:
       - /bin/sh
       - -ec
       - |
-        for migration in /migrations/20260712_vi_localization.sql /migrations/20260716_vnpay_hardening.sql; do
+        for migration in /migrations/20260712_vi_localization.sql /migrations/20260716_vnpay_hardening.sql /migrations/20260717_wallet_ledger.sql /migrations/20260718_author_payout.sql; do
           mysql --default-character-set=utf8mb4 --protocol=TCP --host=mysql --port=3306 --user="$$MYSQL_USER" "$$MYSQL_DATABASE" < "$$migration"
         done
     volumes:
       - ./doc/sql/20260712_vi_localization.sql:/migrations/20260712_vi_localization.sql:ro
       - ./doc/sql/20260716_vnpay_hardening.sql:/migrations/20260716_vnpay_hardening.sql:ro
+      - ./doc/sql/20260717_wallet_ledger.sql:/migrations/20260717_wallet_ledger.sql:ro
+      - ./doc/sql/20260718_author_payout.sql:/migrations/20260718_author_payout.sql:ro
     depends_on:
       mysql:
         condition: service_healthy
@@ -109,6 +112,7 @@ services:
       CONTENT_SAVE_PATH: /data/books
       JWT_SECRET: ${JWT_SECRET:?Hãy đặt JWT_SECRET trong tệp .env}
       CACHE_MANAGER_PASSWORD: ${CACHE_MANAGER_PASSWORD:?Hãy đặt CACHE_MANAGER_PASSWORD trong tệp .env}
+      PII_ENCRYPTION_KEY: ${PII_ENCRYPTION_KEY:-disabled}
       SPRING_AI_OPENAI_API_KEY: ${OPENAI_API_KEY:-disabled}
       SPRING_AI_OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com}
       SPRING_AI_OPENAI_IMAGE_ENABLED: ${AI_IMAGE_ENABLED:-false}
@@ -130,6 +134,11 @@ services:
       VNPAY_RECONCILIATION_MIN_AGE_MINUTES: ${VNPAY_RECONCILIATION_MIN_AGE_MINUTES:-20}
       VNPAY_RECONCILIATION_MAX_AGE_DAYS: ${VNPAY_RECONCILIATION_MAX_AGE_DAYS:-30}
       VNPAY_RECONCILIATION_BATCH_SIZE: ${VNPAY_RECONCILIATION_BATCH_SIZE:-50}
+      AUTHOR_PAYOUT_ENABLED: ${AUTHOR_PAYOUT_ENABLED:-false}
+      AUTHOR_PAYOUT_VND_PER_XU: ${AUTHOR_PAYOUT_VND_PER_XU:-10}
+      AUTHOR_PAYOUT_MIN_XU: ${AUTHOR_PAYOUT_MIN_XU:-100000}
+      AUTHOR_PAYOUT_REQUEST_OPEN_DAY: ${AUTHOR_PAYOUT_REQUEST_OPEN_DAY:-1}
+      AUTHOR_PAYOUT_REQUEST_CLOSE_DAY: ${AUTHOR_PAYOUT_REQUEST_CLOSE_DAY:-10}
       NOVEL_FILE_ENDPOINT: ${OSS_ENDPOINT:-disabled}
       NOVEL_FILE_KEY_ID: ${OSS_KEY_ID:-disabled}
       NOVEL_FILE_KEY_SECRET: ${OSS_KEY_SECRET:-disabled}
@@ -186,6 +195,7 @@ services:
       SPRING_REDIS_PORT: 6379
       SPRING_REDIS_PASSWORD: ${REDIS_PASSWORD:?Hãy đặt REDIS_PASSWORD trong tệp .env}
       JAVA2NB_UPLOAD_PATH: /data/pic/
+      PII_ENCRYPTION_KEY: ${PII_ENCRYPTION_KEY:-disabled}
     ports:
       - "${ADMIN_PORT:-8080}:80"
     volumes:

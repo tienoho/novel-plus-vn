@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.java2nb.novel.mapper.WalletLedgerMapper">
+
+    <insert id="insertWalletAccount">
+        INSERT IGNORE INTO wallet_account
+            (owner_type, owner_id, account_type, currency, available_balance, pending_balance, version, status)
+        VALUES (#{ownerType}, #{ownerId}, #{accountType}, 'XU', 0, 0, 0, 'ACTIVE')
+    </insert>
+
+    <select id="selectWalletAccount" resultType="com.java2nb.novel.service.wallet.WalletAccountRow">
+        SELECT id,
+               owner_type        AS ownerType,
+               owner_id          AS ownerId,
+               account_type      AS accountType,
+               available_balance AS availableBalance,
+               version
+        FROM wallet_account
+        WHERE owner_type = #{ownerType}
+          AND owner_id = #{ownerId}
+          AND account_type = #{accountType}
+          AND currency = 'XU'
+          AND status = 'ACTIVE'
+        LIMIT 1
+    </select>
+
+    <select id="lockWalletAccounts" resultType="com.java2nb.novel.service.wallet.WalletAccountRow">
+        SELECT id,
+               owner_type        AS ownerType,
+               owner_id          AS ownerId,
+               account_type      AS accountType,
+               available_balance AS availableBalance,
+               version
+        FROM wallet_account
+        WHERE id IN
+        <foreach collection="walletIds" item="walletId" open="(" separator="," close=")">
+            #{walletId}
+        </foreach>
+        ORDER BY id
+        FOR UPDATE
+    </select>
+
+    <insert id="insertTransaction">
+        INSERT INTO ledger_transaction
+            (transaction_no, idempotency_key, request_hash, business_type, business_id, currency,
+             total_amount, reversal_of_transaction_id, description)
+        VALUES (#{transactionNo}, #{idempotencyKey}, #{requestHash}, #{businessType}, #{businessId}, 'XU',
+                #{totalAmount}, #{reversalOfTransactionId}, #{description})
+    </insert>
+
+    <select id="selectTransactionByIdempotencyKey"
+            resultType="com.java2nb.novel.service.wallet.LedgerTransactionRow">
+        SELECT id,
+               request_hash  AS requestHash,
+               business_type AS businessType,
+               business_id   AS businessId,
+               total_amount  AS totalAmount,
+               reversal_of_transaction_id AS reversalOfTransactionId
+        FROM ledger_transaction
+        WHERE idempotency_key = #{idempotencyKey}
+        LIMIT 1
+    </select>
+
+    <select id="selectEntriesByTransactionId" resultType="com.java2nb.novel.service.wallet.WalletEntryRow">
+        SELECT we.wallet_account_id AS walletAccountId,
+               wa.owner_type        AS ownerType,
+               wa.owner_id          AS ownerId,
+               wa.account_type      AS accountType,
+               we.amount
+        FROM wallet_entry we
+        JOIN wallet_account wa ON wa.id = we.wallet_account_id
+        WHERE we.ledger_transaction_id = #{transactionId}
+        ORDER BY we.wallet_account_id
+    </select>
+
+    <update id="updateWalletBalance">
+        UPDATE wallet_account
+        SET available_balance = available_balance + #{amount},
+            version = version + 1
+        WHERE id = #{walletId}
+          AND version = #{expectedVersion}
+          AND (owner_type = 'SYSTEM' OR available_balance + #{amount} &gt;= 0)
+    </update>
+
+    <insert id="insertEntry">
+        INSERT INTO wallet_entry
+            (ledger_transaction_id, wallet_account_id, amount, balance_after)
+        VALUES (#{transactionId}, #{walletId}, #{amount}, #{balanceAfter})
+    </insert>
+
+    <update id="syncUserBalance">
+        UPDATE user
+        SET account_balance = #{balance},
+            update_time = CURRENT_TIMESTAMP
+        WHERE id = #{userId}
+    </update>
+
+    <select id="countReaderHistory" resultType="long">
+        SELECT COUNT(*)
+        FROM wallet_entry we
+        JOIN wallet_account wa ON wa.id = we.wallet_account_id
+        WHERE wa.owner_type = 'USER'
+          AND wa.owner_id = #{userId}
+          AND wa.account_type = 'READER_XU'
+          AND wa.currency = 'XU'
+    </select>
+
+    <select id="selectReaderHistory" resultType="com.java2nb.novel.service.wallet.WalletHistoryItem">
+        SELECT lt.transaction_no AS transactionNo,
+               lt.business_type  AS businessType,
+               lt.business_id    AS businessId,
+               we.amount,
+               we.balance_after  AS balanceAfter,
+               lt.description,
+               we.create_time    AS createTime
+        FROM wallet_entry we
+        JOIN wallet_account wa ON wa.id = we.wallet_account_id
+        JOIN ledger_transaction lt ON lt.id = we.ledger_transaction_id
+        WHERE wa.owner_type = 'USER'
+          AND wa.owner_id = #{userId}
+          AND wa.account_type = 'READER_XU'
+          AND wa.currency = 'XU'
+        ORDER BY we.id DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="selectAuthorAvailableBalance" resultType="long">
+        SELECT available_balance
+        FROM wallet_account
+        WHERE owner_type = 'AUTHOR'
+          AND owner_id = #{authorId}
+          AND account_type = 'AUTHOR_REVENUE_XU'
+          AND currency = 'XU'
+          AND status = 'ACTIVE'
+        LIMIT 1
+    </select>
+
+</mapper>

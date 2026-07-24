@@ -6,7 +6,8 @@ import com.java2nb.novel.service.PayOrderCreation;
 import com.java2nb.novel.service.PayOrderSnapshot;
 import com.java2nb.novel.service.PayOrderState;
 import com.java2nb.novel.service.PayOrderUpdateResult;
-import com.java2nb.novel.service.UserService;
+import com.java2nb.novel.service.wallet.WalletLedgerService;
+import com.java2nb.novel.service.wallet.WalletPostResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -21,7 +22,6 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -32,16 +32,17 @@ import static org.mockito.Mockito.when;
 class OrderServiceImplTest {
 
     private OrderPayMapper orderPayMapper;
-    private UserService userService;
+    private WalletLedgerService walletLedgerService;
     private OrderServiceImpl service;
 
     @BeforeEach
     void setUp() {
         orderPayMapper = mock(OrderPayMapper.class);
-        userService = mock(UserService.class);
-        service = new OrderServiceImpl(orderPayMapper, userService);
+        walletLedgerService = mock(WalletLedgerService.class);
+        service = new OrderServiceImpl(orderPayMapper, walletLedgerService);
         when(orderPayMapper.insertSelective(any(OrderPay.class))).thenReturn(1);
-        when(userService.addAmount(anyLong(), anyInt())).thenReturn(true);
+        when(walletLedgerService.creditReaderTopUp(anyLong(), anyLong(), any(), any()))
+            .thenReturn(WalletPostResult.POSTED);
     }
 
     @Test
@@ -85,7 +86,7 @@ class OrderServiceImplTest {
 
         assertThat(first).isEqualTo(PayOrderUpdateResult.SUCCESS);
         assertThat(retry).isEqualTo(PayOrderUpdateResult.ALREADY_PROCESSED);
-        verify(userService).addAmount(11L, 1_000);
+        verify(walletLedgerService).creditReaderTopUp(11L, 1_000L, "123", "VNPAY_TOP_UP:123");
     }
 
     @Test
@@ -96,14 +97,15 @@ class OrderServiceImplTest {
 
         assertThat(result).isEqualTo(PayOrderUpdateResult.INVALID_AMOUNT);
         verify(orderPayMapper, never()).update(any(UpdateStatementProvider.class));
-        verify(userService, never()).addAmount(any(Long.class), anyInt());
+        verify(walletLedgerService, never()).creditReaderTopUp(anyLong(), anyLong(), any(), any());
     }
 
     @Test
     void failsTheTransactionWhenTheUserBalanceCannotBeUpdated() {
         when(orderPayMapper.selectOne(any(SelectStatementProvider.class))).thenReturn(Optional.of(pendingOrder()));
         when(orderPayMapper.update(any(UpdateStatementProvider.class))).thenReturn(1);
-        when(userService.addAmount(11L, 1_000)).thenReturn(false);
+        when(walletLedgerService.creditReaderTopUp(11L, 1_000L, "123", "VNPAY_TOP_UP:123"))
+            .thenThrow(new IllegalStateException("Không thể đồng bộ số dư ví độc giả"));
 
         assertThatThrownBy(() -> service.processPayOrder(123L, "456", (byte) 4, 10_000, true))
             .isInstanceOf(IllegalStateException.class)
@@ -117,7 +119,7 @@ class OrderServiceImplTest {
         assertThat(service.inspectPayOrder(123L, (byte) 4, 10_000)).isEqualTo(PayOrderState.PENDING);
         assertThat(service.inspectPayOrder(123L, (byte) 4, 30_000)).isEqualTo(PayOrderState.INVALID_AMOUNT);
         verify(orderPayMapper, never()).update(any(UpdateStatementProvider.class));
-        verify(userService, never()).addAmount(any(Long.class), anyInt());
+        verify(walletLedgerService, never()).creditReaderTopUp(anyLong(), anyLong(), any(), any());
     }
 
     @Test

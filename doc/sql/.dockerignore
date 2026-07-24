@@ -3,3 +3,5 @@
 !novel_plus.sql
 !20260712_vi_localization.sql
 !20260716_vnpay_hardening.sql
+!20260717_wallet_ledger.sql
+!20260718_author_payout.sql

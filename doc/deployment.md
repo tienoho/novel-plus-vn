@@ -33,6 +33,8 @@ docker compose logs --tail=200 migrate front crawl admin
 
 Service `migrate` phải kết thúc với mã `0`. Ba service ứng dụng phải chuyển sang `healthy` sau giai đoạn khởi động.
 
+Service migration là container one-shot duy nhất dùng tài khoản MySQL root để tạo schema, index và trigger bất biến của sổ cái. `front`, `crawl` và `admin` luôn kết nối bằng `MYSQL_USER`/`MYSQL_APP_PASSWORD`; không dùng root cho runtime ứng dụng.
+
 Các cổng host mặc định:
 
 | Service | Địa chỉ |
@@ -82,7 +84,7 @@ Kiểm tra file dump không rỗng và định kỳ diễn tập phục hồi tr
    docker compose logs --since=10m migrate front crawl admin
    ```
 
-Migration `20260712_vi_localization.sql` và `20260716_vnpay_hardening.sql` có thể chạy lặp lại. Migration VNPAY chủ động dừng nếu phát hiện `out_trade_no` trùng để tránh tự sửa lịch sử thanh toán.
+Các migration từ `20260712_vi_localization.sql` đến `20260718_author_payout.sql` có thể chạy lặp lại. Migration VNPAY chủ động dừng nếu phát hiện `out_trade_no` trùng để tránh tự sửa lịch sử thanh toán. Migration sổ cái chỉ backfill số dư đầu kỳ một lần thông qua `platform_migration_history`; migration KYC/payout tạo audit trigger nhưng không tự sinh dữ liệu định danh.
 
 ## 5. Reverse proxy và TLS
 
@@ -111,6 +113,8 @@ Kiểm tra thêm:
 - kết nối Redis/MySQL;
 - trang nạp Xu hiển thị đúng trạng thái VNPAY;
 - log không chứa lỗi migration, checksum hoặc kết nối.
+
+Nếu nhận KYC, phải cấu hình `PII_ENCRYPTION_KEY` bằng khóa AES-256 Base64 lấy từ secret manager. Không bật `AUTHOR_PAYOUT_ENABLED` trước khi hoàn thành quy trình duyệt, chuyển khoản và đối soát mô tả trong [tài chính tác giả](author-finance.md).
 
 ## 7. Rollback
 

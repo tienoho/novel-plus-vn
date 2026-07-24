@@ -34,6 +34,17 @@ author:
     share-proportion: 0.7
     #Tỷ lệ quy đổi (CNY)
     exchange-proportion: 0.01
+  payout:
+    # Chỉ bật sau khi cấu hình mã hóa PII, quy trình duyệt KYC và vận hành chuyển khoản.
+    enabled: ${AUTHOR_PAYOUT_ENABLED:false}
+    vnd-per-xu: ${AUTHOR_PAYOUT_VND_PER_XU:10}
+    minimum-xu: ${AUTHOR_PAYOUT_MIN_XU:100000}
+    request-open-day: ${AUTHOR_PAYOUT_REQUEST_OPEN_DAY:1}
+    request-close-day: ${AUTHOR_PAYOUT_REQUEST_CLOSE_DAY:10}
+
+security:
+  pii:
+    encryption-key: ${PII_ENCRYPTION_KEY:disabled}
 
 #Quy tắc định giá chương
 book:

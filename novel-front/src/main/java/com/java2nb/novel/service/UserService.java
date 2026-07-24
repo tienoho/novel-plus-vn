@@ -121,12 +121,6 @@ public interface UserService {
 
 
     /**
-     * Tăng số dư người dùng
-     * @param userId ID người dùng
-     * @param amount số dư cần tăng */
-    boolean addAmount(Long userId, int amount);
-
-    /**
      * Kiểm tra người dùng đã mua chương hay chưa
      * @param userId ID người dùng
      * @param bookIndexId ID mục lục chương
@@ -137,9 +131,10 @@ public interface UserService {
     /**
      * Mua chương tác phẩm
      * @param userId ID người dùng
+     * @param authorId ID tác giả nhận doanh thu
      * @param buyRecord thông tin mua hàng
      * */
-    void buyBookIndex(Long userId, UserBuyRecord buyRecord);
+    void buyBookIndex(Long userId, Long authorId, UserBuyRecord buyRecord);
 
     /**
      * Truy vấn số người đăng ký tác phẩm trong khoảng thời gian

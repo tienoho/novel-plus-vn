@@ -17,6 +17,8 @@ Các chức năng chính gồm đề xuất và tìm kiếm tác phẩm, bảng 
 - Bản phát hành: [GitHub Releases](https://github.com/201206030/novel-plus/releases)
 - Runbook triển khai: [doc/deployment.md](doc/deployment.md)
 - Hướng dẫn tích hợp VNPAY: [doc/vnpay.md](doc/vnpay.md)
+- Kiến trúc ví và sổ cái: [doc/wallet-ledger.md](doc/wallet-ledger.md)
+- KYC và tài chính tác giả: [doc/author-finance.md](doc/author-finance.md)
 - Hướng dẫn migration SQL: [doc/sql/readme.md](doc/sql/readme.md)
 - Tài liệu gốc: [docs.xxyopen.com](https://docs.xxyopen.com/course/novelplus/1.html)
 - Trang giới thiệu: [novel.xxyopen.com](https://novel.xxyopen.com)
@@ -140,7 +142,7 @@ Tài khoản crawler lấy từ `CRAWLER_ADMIN_USERNAME` và `CRAWLER_ADMIN_PASS
 
 MySQL, Redis, ảnh tải lên và nội dung truyện dùng named volume nên được giữ lại khi chạy `docker compose down`. Lệnh `docker compose down -v` xóa toàn bộ volume và dữ liệu, chỉ dùng khi chủ động khởi tạo lại môi trường.
 
-Các migration `20260712_vi_localization.sql` và `20260716_vnpay_hardening.sql` chạy như một service one-shot ở mỗi lần khởi động. Cả hai có thể chạy lặp lại; migration VNPAY bổ sung số Xu đã chốt theo đơn và unique index cho mã giao dịch. Nếu database cũ đã có `out_trade_no` trùng, migration chủ động dừng để quản trị viên đối soát thay vì tự xóa hoặc gộp lịch sử. Khi nâng cấp từ phiên bản cũ hơn, vẫn phải chạy các migration trung gian theo [hướng dẫn SQL](doc/sql/readme.md).
+Các migration từ `20260712_vi_localization.sql` đến `20260718_author_payout.sql` chạy như một service one-shot ở mỗi lần khởi động và có thể chạy lặp lại. Chúng lần lượt bổ sung dữ liệu Việt hóa, hardening VNPAY, sổ cái kép, KYC và yêu cầu rút thu nhập. Nếu database cũ đã có `out_trade_no` trùng, migration chủ động dừng để quản trị viên đối soát thay vì tự xóa hoặc gộp lịch sử. Khi nâng cấp từ phiên bản cũ hơn, vẫn phải chạy các migration trung gian theo [hướng dẫn SQL](doc/sql/readme.md).
 
 Các khóa AI, VNPAY, OSS và email là tùy chọn, được đọc từ `.env`; không ghi khóa thật vào source hoặc image. IPN VNPAY phải được cấu hình tại cổng merchant thành `https://<ten-mien>/pay/vnpay/ipn`; URL này cần HTTPS công khai. Trong production nên đặt reverse proxy TLS phía trước ba cổng HTTP, dùng Docker secrets hoặc secret manager và sao lưu volume MySQL định kỳ.
 

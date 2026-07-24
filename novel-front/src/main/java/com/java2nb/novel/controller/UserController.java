@@ -6,10 +6,13 @@ import com.java2nb.novel.core.cache.CacheService;
 import com.java2nb.novel.core.enums.ResponseStatus;
 import com.java2nb.novel.core.utils.IpUtil;
 import com.java2nb.novel.core.utils.RandomValidateCodeUtil;
+import com.java2nb.novel.entity.Book;
+import com.java2nb.novel.entity.BookIndex;
 import com.java2nb.novel.entity.User;
 import com.java2nb.novel.entity.UserBuyRecord;
 import com.java2nb.novel.service.BookService;
 import com.java2nb.novel.service.UserService;
+import com.java2nb.novel.service.wallet.WalletLedgerService;
 import io.github.xxyopen.model.resp.RestResult;
 import io.github.xxyopen.web.valid.AddGroup;
 import io.github.xxyopen.web.valid.UpdateGroup;
@@ -38,6 +41,8 @@ public class UserController extends BaseController {
     private final UserService userService;
 
     private final BookService bookService;
+
+    private final WalletLedgerService walletLedgerService;
 
     /**
      * Đăng nhập
@@ -276,9 +281,30 @@ public class UserController extends BaseController {
         if (userDetails == null) {
             return RestResult.fail(ResponseStatus.NO_LOGIN);
         }
-        buyRecord.setBuyAmount(bookService.queryBookIndex(buyRecord.getBookIndexId()).getBookPrice());
-        userService.buyBookIndex(userDetails.getId(), buyRecord);
+        BookIndex bookIndex = bookService.queryBookIndex(buyRecord.getBookIndexId());
+        Book book = bookService.queryBookDetail(bookIndex.getBookId());
+        UserBuyRecord authoritativeRecord = new UserBuyRecord();
+        authoritativeRecord.setBookIndexId(bookIndex.getId());
+        authoritativeRecord.setBookIndexName(bookIndex.getIndexName());
+        authoritativeRecord.setBookId(book.getId());
+        authoritativeRecord.setBookName(book.getBookName());
+        authoritativeRecord.setBuyAmount(bookIndex.getBookPrice());
+        userService.buyBookIndex(userDetails.getId(), book.getAuthorId(), authoritativeRecord);
         return RestResult.ok();
+    }
+
+    /**
+     * Lịch sử biến động ví Xu của độc giả hiện tại.
+     */
+    @GetMapping("wallet/transactions")
+    public RestResult<?> listWalletTransactions(@RequestParam(value = "page", defaultValue = "1") int page,
+                                                @RequestParam(value = "limit", defaultValue = "20") int pageSize,
+                                                HttpServletRequest request) {
+        UserDetails userDetails = getUserDetails(request);
+        if (userDetails == null) {
+            return RestResult.fail(ResponseStatus.NO_LOGIN);
+        }
+        return RestResult.ok(walletLedgerService.listReaderHistory(userDetails.getId(), page, pageSize));
     }
 
 

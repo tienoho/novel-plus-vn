@@ -8,7 +8,7 @@ import com.java2nb.novel.service.PayOrderCreation;
 import com.java2nb.novel.service.PayOrderSnapshot;
 import com.java2nb.novel.service.PayOrderState;
 import com.java2nb.novel.service.PayOrderUpdateResult;
-import com.java2nb.novel.service.UserService;
+import com.java2nb.novel.service.wallet.WalletLedgerService;
 import lombok.RequiredArgsConstructor;
 import org.mybatis.dynamic.sql.render.RenderingStrategies;
 import org.mybatis.dynamic.sql.select.render.SelectStatementProvider;
@@ -40,7 +40,7 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderPayMapper orderPayMapper;
 
-    private final UserService userService;
+    private final WalletLedgerService walletLedgerService;
 
 
     @Override
@@ -158,9 +158,8 @@ public class OrderServiceImpl implements OrderService {
             return PayOrderUpdateResult.ALREADY_PROCESSED;
         }
         if (successful) {
-            if (!userService.addAmount(orderPay.getUserId(), orderPay.getAccountAmount())) {
-                throw new IllegalStateException("Không thể cập nhật số dư cho người dùng của đơn thanh toán");
-            }
+            walletLedgerService.creditReaderTopUp(orderPay.getUserId(), orderPay.getAccountAmount(),
+                String.valueOf(outTradeNo), "VNPAY_TOP_UP:" + outTradeNo);
         }
         return PayOrderUpdateResult.SUCCESS;
     }

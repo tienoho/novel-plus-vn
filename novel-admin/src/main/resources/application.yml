@@ -39,3 +39,7 @@ mybatis:
 
 logging:
   config: classpath:logback-boot.xml
+
+security:
+  pii:
+    encryption-key: ${PII_ENCRYPTION_KEY:disabled}

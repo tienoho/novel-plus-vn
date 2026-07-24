@@ -7,6 +7,8 @@
 5. Không sửa migration lịch sử đã được phát hành. Mọi thay đổi dữ liệu mới phải nằm trong một migration mới và có thể chạy lại an toàn.
 6. `20260712_vi_localization.sql` Việt hóa dữ liệu mặc định bằng điều kiện khớp chính xác, không ghi đè dữ liệu đã được quản trị viên tùy chỉnh.
 7. `20260716_vnpay_hardening.sql` lưu số Xu đã cam kết theo đơn, tạo unique index cho `out_trade_no` và index đối soát đơn chờ. Migration sẽ dừng nếu dữ liệu cũ có mã đơn trùng để bắt buộc đối soát thủ công trước khi tiếp tục.
+8. `20260717_wallet_ledger.sql` tạo ví độc giả, ví doanh thu tác giả và sổ cái kép bất biến. Migration khởi tạo số dư ví độc giả từ `user.account_balance` đúng một lần, đồng thời ghi giao dịch số dư đầu kỳ cân bằng với tài khoản phát hành Xu của hệ thống.
+9. `20260718_author_payout.sql` tạo hồ sơ KYC tác giả, yêu cầu rút thu nhập và audit trail bất biến. Các trường CCCD/hộ chiếu, mã số thuế và tài khoản ngân hàng chỉ nhận ciphertext từ ứng dụng; migration không chứa hoặc tự sinh dữ liệu định danh.
 
 ## Nâng cấp database đang hoạt động
 

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<meta charset="utf-8">
+<head th:include="include :: header"></head>
+<body class="gray-bg">
+<div class="wrapper wrapper-content">
+    <div class="col-sm-12">
+        <div class="ibox">
+            <div class="ibox-title">
+                <h5 th:text="#{admin.authorFinance.title}">Tài chính tác giả</h5>
+            </div>
+            <div class="ibox-content">
+                <ul class="nav nav-tabs">
+                    <li class="active"><a data-toggle="tab" href="#kycPanel"
+                                          th:text="#{admin.authorFinance.kycTab}">Hồ sơ KYC</a></li>
+                    <li><a data-toggle="tab" href="#withdrawalPanel"
+                           th:text="#{admin.authorFinance.withdrawalTab}">Yêu cầu rút tiền</a></li>
+                </ul>
+
+                <div class="tab-content m-t-md">
+                    <div id="kycPanel" class="tab-pane active">
+                        <form id="kycSearchForm" class="form-inline" onsubmit="reloadKyc(); return false;">
+                            <div class="form-group">
+                                <label for="kycAuthorId" th:text="#{admin.authorFinance.authorId}">Mã tác giả</label>
+                                <input id="kycAuthorId" name="authorId" type="number" min="1" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="kycStatus" th:text="#{admin.authorFinance.status}">Trạng thái</label>
+                                <select id="kycStatus" name="status" class="form-control">
+                                    <option value="" th:text="#{admin.authorFinance.allStatuses}">Tất cả</option>
+                                    <option value="PENDING" th:text="#{admin.authorFinance.status.pending}">Chờ duyệt</option>
+                                    <option value="VERIFIED" th:text="#{admin.authorFinance.status.verified}">Đã xác minh</option>
+                                    <option value="REJECTED" th:text="#{admin.authorFinance.status.rejected}">Đã từ chối</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-success" th:text="#{common.query}">Tra cứu</button>
+                        </form>
+                        <table id="kycTable" data-mobile-responsive="true"></table>
+                    </div>
+
+                    <div id="withdrawalPanel" class="tab-pane">
+                        <form id="withdrawalSearchForm" class="form-inline"
+                              onsubmit="reloadWithdrawals(); return false;">
+                            <div class="form-group">
+                                <label for="withdrawalAuthorId" th:text="#{admin.authorFinance.authorId}">Mã tác giả</label>
+                                <input id="withdrawalAuthorId" name="authorId" type="number" min="1"
+                                       class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="withdrawalStatus" th:text="#{admin.authorFinance.status}">Trạng thái</label>
+                                <select id="withdrawalStatus" name="status" class="form-control">
+                                    <option value="" th:text="#{admin.authorFinance.allStatuses}">Tất cả</option>
+                                    <option value="PENDING_REVIEW" th:text="#{admin.authorFinance.status.pendingReview}">Chờ duyệt</option>
+                                    <option value="APPROVED" th:text="#{admin.authorFinance.status.approved}">Đã duyệt</option>
+                                    <option value="PROCESSING" th:text="#{admin.authorFinance.status.processing}">Đang chuyển khoản</option>
+                                    <option value="SETTLEMENT_PENDING" th:text="#{admin.authorFinance.status.settlementPending}">Chờ tất toán</option>
+                                    <option value="RELEASE_PENDING" th:text="#{admin.authorFinance.status.releasePending}">Chờ hoàn Xu</option>
+                                    <option value="PAID" th:text="#{admin.authorFinance.status.paid}">Đã thanh toán</option>
+                                    <option value="REJECTED" th:text="#{admin.authorFinance.status.rejected}">Đã từ chối</option>
+                                    <option value="FAILED" th:text="#{admin.authorFinance.status.failed}">Thất bại</option>
+                                    <option value="CANCELLED" th:text="#{admin.authorFinance.status.cancelled}">Đã hủy</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-success" th:text="#{common.query}">Tra cứu</button>
+                        </form>
+                        <table id="withdrawalTable" data-mobile-responsive="true"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    window.AuthorFinancePermissions = {pii: false, kyc: false, payout: false};
+</script>
+<div shiro:hasPermission="novel:authorFinance:pii">
+    <script type="text/javascript">window.AuthorFinancePermissions.pii = true;</script>
+</div>
+<div shiro:hasPermission="novel:authorFinance:kyc">
+    <script type="text/javascript">window.AuthorFinancePermissions.kyc = true;</script>
+</div>
+<div shiro:hasPermission="novel:authorFinance:payout">
+    <script type="text/javascript">window.AuthorFinancePermissions.payout = true;</script>
+</div>
+
+<div th:include="include :: footer"></div>
+<script th:inline="javascript">
+    window.AuthorFinanceI18n = {
+        actions: /*[[#{common.actions}]]*/ 'Thao tác',
+        operationSuccess: /*[[#{common.operationSuccess}]]*/ 'Thao tác thành công',
+        connectionError: /*[[#{common.connectionError}]]*/ 'Lỗi kết nối',
+        authorId: /*[[#{admin.authorFinance.authorId}]]*/ 'Mã tác giả',
+        identity: /*[[#{admin.authorFinance.identity}]]*/ 'Định danh',
+        bankAccount: /*[[#{admin.authorFinance.bankAccount}]]*/ 'Tài khoản ngân hàng',
+        status: /*[[#{admin.authorFinance.status}]]*/ 'Trạng thái',
+        submittedAt: /*[[#{admin.authorFinance.submittedAt}]]*/ 'Thời gian gửi',
+        viewPii: /*[[#{admin.authorFinance.viewPii}]]*/ 'Xem KYC',
+        approve: /*[[#{admin.authorFinance.approve}]]*/ 'Duyệt',
+        reject: /*[[#{admin.authorFinance.reject}]]*/ 'Từ chối',
+        kycDetail: /*[[#{admin.authorFinance.kycDetail}]]*/ 'Chi tiết KYC',
+        legalName: /*[[#{admin.authorFinance.legalName}]]*/ 'Họ tên pháp lý',
+        dateOfBirth: /*[[#{admin.authorFinance.dateOfBirth}]]*/ 'Ngày sinh',
+        identityNumber: /*[[#{admin.authorFinance.identityNumber}]]*/ 'Số giấy tờ',
+        taxCode: /*[[#{admin.authorFinance.taxCode}]]*/ 'Mã số thuế',
+        bankCode: /*[[#{admin.authorFinance.bankCode}]]*/ 'Ngân hàng',
+        bankAccountName: /*[[#{admin.authorFinance.bankAccountName}]]*/ 'Tên chủ tài khoản',
+        viewPayoutDetails: /*[[#{admin.authorFinance.viewPayoutDetails}]]*/ 'Xem tài khoản nhận',
+        payoutDetail: /*[[#{admin.authorFinance.payoutDetail}]]*/ 'Tài khoản nhận tiền đã chốt',
+        rejectReason: /*[[#{admin.authorFinance.rejectReason}]]*/ 'Nhập lý do từ chối (10–500 ký tự)',
+        confirmApproveKyc: /*[[#{admin.authorFinance.confirmApproveKyc}]]*/ 'Xác nhận hồ sơ KYC này đã được kiểm tra?',
+        withdrawalNo: /*[[#{admin.authorFinance.withdrawalNo}]]*/ 'Mã yêu cầu',
+        requestedXu: /*[[#{admin.authorFinance.requestedXu}]]*/ 'Số Xu',
+        grossVnd: /*[[#{admin.authorFinance.grossVnd}]]*/ 'Tổng tiền (VND)',
+        taxVnd: /*[[#{admin.authorFinance.taxVnd}]]*/ 'Thuế khấu trừ (VND)',
+        netVnd: /*[[#{admin.authorFinance.netVnd}]]*/ 'Thực nhận (VND)',
+        requestedAt: /*[[#{admin.authorFinance.requestedAt}]]*/ 'Thời gian yêu cầu',
+        approveWithdrawal: /*[[#{admin.authorFinance.approveWithdrawal}]]*/ 'Duyệt rút tiền',
+        taxPrompt: /*[[#{admin.authorFinance.taxPrompt}]]*/ 'Nhập số thuế khấu trừ bằng VND',
+        startProcessing: /*[[#{admin.authorFinance.startProcessing}]]*/ 'Bắt đầu chuyển khoản',
+        confirmProcessing: /*[[#{admin.authorFinance.confirmProcessing}]]*/ 'Xác nhận bắt đầu chuyển khoản ngân hàng?',
+        markPaid: /*[[#{admin.authorFinance.markPaid}]]*/ 'Đã chuyển khoản',
+        providerReferencePrompt: /*[[#{admin.authorFinance.providerReferencePrompt}]]*/ 'Nhập mã tham chiếu giao dịch ngân hàng',
+        markFailed: /*[[#{admin.authorFinance.markFailed}]]*/ 'Chuyển khoản thất bại',
+        invalidNonNegativeInteger: /*[[#{admin.authorFinance.invalidNonNegativeInteger}]]*/ 'Vui lòng nhập số nguyên không âm',
+        pending: /*[[#{admin.authorFinance.status.pending}]]*/ 'Chờ duyệt',
+        verified: /*[[#{admin.authorFinance.status.verified}]]*/ 'Đã xác minh',
+        rejected: /*[[#{admin.authorFinance.status.rejected}]]*/ 'Đã từ chối',
+        pendingReview: /*[[#{admin.authorFinance.status.pendingReview}]]*/ 'Chờ duyệt',
+        approved: /*[[#{admin.authorFinance.status.approved}]]*/ 'Đã duyệt',
+        processing: /*[[#{admin.authorFinance.status.processing}]]*/ 'Đang chuyển khoản',
+        settlementPending: /*[[#{admin.authorFinance.status.settlementPending}]]*/ 'Chờ tất toán',
+        releasePending: /*[[#{admin.authorFinance.status.releasePending}]]*/ 'Chờ hoàn Xu',
+        paid: /*[[#{admin.authorFinance.status.paid}]]*/ 'Đã thanh toán',
+        failed: /*[[#{admin.authorFinance.status.failed}]]*/ 'Thất bại',
+        cancelled: /*[[#{admin.authorFinance.status.cancelled}]]*/ 'Đã hủy'
+    };
+</script>
+<script type="text/javascript" src="/js/appjs/novel/authorFinance/authorFinance.js"></script>
+</body>
+</html>

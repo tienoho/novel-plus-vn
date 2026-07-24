@@ -7,10 +7,12 @@ Novel Plus dùng giao thức VNPAY 2.1.0 với HMAC-SHA512. VNPAY là kênh tạ
 1. Người dùng đăng nhập, chọn mệnh giá trên `/pay/index.html` và gửi `POST /pay/vnpay`.
 2. Backend chỉ chấp nhận mệnh giá thuộc allowlist, chốt số Xu vào `order_pay.account_amount`, tạo mã đơn duy nhất rồi chuyển hướng sang VNPAY.
 3. VNPAY đưa trình duyệt về `GET /pay/vnpay/return`. Return URL chỉ kiểm tra chữ ký và trạng thái đơn để hiển thị kết quả; không cộng Xu.
-4. VNPAY gọi `GET /pay/vnpay/ipn`. IPN kiểm tra checksum, mã đơn, kênh và số tiền trước khi cập nhật đơn và số dư trong cùng transaction.
+4. VNPAY gọi `GET /pay/vnpay/ipn`. IPN kiểm tra checksum, mã đơn, kênh và số tiền trước khi cập nhật đơn, ghi giao dịch sổ cái kép và đồng bộ projection số dư trong cùng transaction.
 5. Scheduler QueryDr đối soát đơn chờ khi IPN bị mất hoặc gián đoạn.
 
 Callback lặp không cộng Xu lần hai. Số Xu dùng khi hoàn tất lấy từ đơn đã lưu, không tính lại theo tỷ lệ hiện tại.
+
+Chi tiết tài khoản đối ứng, idempotency và kiểm toán nằm trong [kiến trúc ví và sổ cái](wallet-ledger.md).
 
 ## 2. Cấu hình merchant
 
