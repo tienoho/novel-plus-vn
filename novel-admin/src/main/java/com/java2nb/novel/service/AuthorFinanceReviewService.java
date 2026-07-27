@@ -23,4 +23,5 @@ public interface AuthorFinanceReviewService {
     void markProcessing(long id, long expectedVersion, long actorId);
     void markPaid(long id, long expectedVersion, String providerReference, long actorId);
     void markFailed(long id, long expectedVersion, String reason, long actorId);
+    void executeAutoPayout(long id, long actorId);
 }

@@ -34,7 +34,7 @@ mybatis:
   configuration:
     #Tự ánh xạ cột có dấu gạch dưới sang thuộc tính camelCase của Java
     map-underscore-to-camel-case: true
-  mapper-locations: mybatis/**/*Mapper.xml
+  mapper-locations: classpath*:mybatis/**/*Mapper.xml
   typeAliasesPackage: com.java2nb.**.domain
 
 logging:
@@ -43,3 +43,10 @@ logging:
 security:
   pii:
     encryption-key: ${PII_ENCRYPTION_KEY:disabled}
+
+novel:
+  common:
+    i18n:
+      enabled: false
+    web-advice:
+      enabled: false

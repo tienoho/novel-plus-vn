@@ -1,0 +1,23 @@
+{
+  "id": "/",
+  "name": "Novel Plus Việt Nam",
+  "short_name": "Novel Plus",
+  "description": "Nền tảng đọc và sáng tác truyện dành cho người Việt.",
+  "lang": "vi",
+  "dir": "ltr",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#159957",
+  "categories": ["books", "education", "entertainment"],
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "256x256",
+      "type": "image/x-icon",
+      "purpose": "any"
+    }
+  ]
+}

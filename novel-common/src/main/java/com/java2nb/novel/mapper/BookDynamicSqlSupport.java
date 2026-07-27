@@ -88,6 +88,16 @@ public final class BookDynamicSqlSupport {
     @Generated("org.mybatis.generator.api.MyBatisGenerator")
     public static final SqlColumn<Byte> crawlIsStop = book.crawlIsStop;
 
+    public static final SqlColumn<Byte> ageRating = book.ageRating;
+
+    public static final SqlColumn<Byte> auditStatus = book.auditStatus;
+
+    public static final SqlColumn<String> auditReason = book.auditReason;
+
+    public static final SqlColumn<Byte> coverAuditStatus = book.coverAuditStatus;
+
+    public static final SqlColumn<String> coverAuditReason = book.coverAuditReason;
+
     @Generated("org.mybatis.generator.api.MyBatisGenerator")
     public static final class Book extends SqlTable {
         public final SqlColumn<Long> id = column("id", JDBCType.BIGINT);
@@ -141,6 +151,16 @@ public final class BookDynamicSqlSupport {
         public final SqlColumn<Date> crawlLastTime = column("crawl_last_time", JDBCType.TIMESTAMP);
 
         public final SqlColumn<Byte> crawlIsStop = column("crawl_is_stop", JDBCType.TINYINT);
+
+        public final SqlColumn<Byte> ageRating = column("age_rating", JDBCType.TINYINT);
+
+        public final SqlColumn<Byte> auditStatus = column("audit_status", JDBCType.TINYINT);
+
+        public final SqlColumn<String> auditReason = column("audit_reason", JDBCType.VARCHAR);
+
+        public final SqlColumn<Byte> coverAuditStatus = column("cover_audit_status", JDBCType.TINYINT);
+
+        public final SqlColumn<String> coverAuditReason = column("cover_audit_reason", JDBCType.VARCHAR);
 
         public Book() {
             super("book");

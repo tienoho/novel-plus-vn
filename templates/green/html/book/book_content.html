@@ -25,6 +25,8 @@
 </style>
 <div th:replace="common/js :: js"></div>
 <script src="/javascript/bookdetail.js" type="text/javascript"></script>
+<script src="/javascript/reader-analytics.js" type="text/javascript"></script>
+<script src="/javascript/reader-tools.js?v=4" type="text/javascript"></script>
 <script type="text/javascript">
     BookDetail.SetReadFontFamilyClear(0);
     var font = localStorage.getItem("fonts");
@@ -42,6 +44,10 @@
 <input type="hidden" id="preIndexName" th:value="${bookIndex.indexName}"/>
 
 <input type="hidden" id="preContentId" th:value="${bookIndex.id}"/>
+<input type="hidden" id="analyticsEnabled" th:value="${!needBuy}"/>
+<input type="hidden" id="readerContentAvailable" value="true" th:if="${!needBuy}"/>
+<input type="hidden" id="offlineEligible" value="true"
+       th:if="${bookIndex.isVip == null || bookIndex.isVip != 1}"/>
 <input type="hidden" id="preIndexId" th:value="${preBookIndexId}"/>
 <input type="hidden" id="nextIndexId" th:value="${nextBookIndexId}"/>
 <input type="hidden" id="logo" th:value="${application.website.logo}"/>

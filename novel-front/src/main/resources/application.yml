@@ -1,6 +1,15 @@
 server:
   port: 8083
 
+novel:
+  payment:
+    vietqr:
+      enabled: ${VIETQR_ENABLED:false}
+      bank-bin: ${VIETQR_BANK_BIN:disabled}
+      account-no: ${VIETQR_ACCOUNT_NO:disabled}
+      account-name: ${VIETQR_ACCOUNT_NAME:disabled}
+      secret-token: ${VIETQR_WEBHOOK_SECRET:disabled}
+
 spring:
   profiles:
     active: dev
@@ -23,10 +32,14 @@ xss:
   # Đường dẫn loại trừ (nhiều giá trị cách nhau bằng dấu phẩy)
   excludes: /system/notice/*
   # Đường dẫn cần lọc (nhiều giá trị cách nhau bằng dấu phẩy)
-  urlPatterns: /book/addCommentReply,/book/addBookComment,/user/addFeedBack,/author/addBook,/author/addBookContent,/author/updateBookContent,/author/register.html
+  urlPatterns: /book/addCommentReply,/book/addBookComment,/user/addFeedBack,/author/addBook,/author/addBookContent,/author/updateBookContent,/author/drafts/autosave,/author/register.html
 
 
 author:
+  editor:
+    schedule-batch-size: ${AUTHOR_EDITOR_SCHEDULE_BATCH_SIZE:20}
+    schedule-delay-ms: ${AUTHOR_EDITOR_SCHEDULE_DELAY_MS:30000}
+    schedule-initial-delay-ms: ${AUTHOR_EDITOR_SCHEDULE_INITIAL_DELAY_MS:30000}
   income:
     #Tỷ lệ thu nhập sau thuế
     tax-rate: 0.9
@@ -41,6 +54,11 @@ author:
     minimum-xu: ${AUTHOR_PAYOUT_MIN_XU:100000}
     request-open-day: ${AUTHOR_PAYOUT_REQUEST_OPEN_DAY:1}
     request-close-day: ${AUTHOR_PAYOUT_REQUEST_CLOSE_DAY:10}
+
+notification:
+  chapter:
+    schedule-delay-ms: ${NOTIFICATION_CHAPTER_SCHEDULE_DELAY_MS:15000}
+    schedule-initial-delay-ms: ${NOTIFICATION_CHAPTER_SCHEDULE_INITIAL_DELAY_MS:15000}
 
 security:
   pii:

@@ -16,6 +16,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.ResultMap;
 import org.apache.ibatis.annotations.Results;
+import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.SelectProvider;
 import org.apache.ibatis.annotations.UpdateProvider;
 import org.apache.ibatis.type.JdbcType;
@@ -36,8 +37,17 @@ import org.mybatis.dynamic.sql.util.mybatis3.MyBatis3Utils;
 
 @Mapper
 public interface BookMapper {
+    @Select("SELECT id, author_id, word_count, last_index_id FROM book WHERE id = #{bookId} FOR UPDATE")
+    @Results({
+        @Result(column = "id", property = "id", id = true),
+        @Result(column = "author_id", property = "authorId"),
+        @Result(column = "word_count", property = "wordCount"),
+        @Result(column = "last_index_id", property = "lastIndexId")
+    })
+    Book lockById(Long bookId);
+
     @Generated("org.mybatis.generator.api.MyBatisGenerator")
-    BasicColumn[] selectList = BasicColumn.columnList(id, workDirection, catId, catName, picUrl, bookName, authorId, authorName, bookDesc, score, bookStatus, visitCount, wordCount, commentCount, yesterdayBuy, lastIndexId, lastIndexName, lastIndexUpdateTime, isVip, status, updateTime, createTime, crawlSourceId, crawlBookId, crawlLastTime, crawlIsStop);
+    BasicColumn[] selectList = BasicColumn.columnList(id, workDirection, catId, catName, picUrl, bookName, authorId, authorName, bookDesc, score, bookStatus, visitCount, wordCount, commentCount, yesterdayBuy, lastIndexId, lastIndexName, lastIndexUpdateTime, isVip, status, updateTime, createTime, crawlSourceId, crawlBookId, crawlLastTime, crawlIsStop, ageRating, auditStatus, auditReason, coverAuditStatus, coverAuditReason);
 
     @Generated("org.mybatis.generator.api.MyBatisGenerator")
     @SelectProvider(type = SqlProviderAdapter.class, method = "select")
@@ -88,7 +98,12 @@ public interface BookMapper {
             @Result(column = "crawl_source_id", property = "crawlSourceId", jdbcType = JdbcType.INTEGER),
             @Result(column = "crawl_book_id", property = "crawlBookId", jdbcType = JdbcType.VARCHAR),
             @Result(column = "crawl_last_time", property = "crawlLastTime", jdbcType = JdbcType.TIMESTAMP),
-            @Result(column = "crawl_is_stop", property = "crawlIsStop", jdbcType = JdbcType.TINYINT)
+            @Result(column = "crawl_is_stop", property = "crawlIsStop", jdbcType = JdbcType.TINYINT),
+            @Result(column = "age_rating", property = "ageRating", jdbcType = JdbcType.TINYINT),
+            @Result(column = "audit_status", property = "auditStatus", jdbcType = JdbcType.TINYINT),
+            @Result(column = "audit_reason", property = "auditReason", jdbcType = JdbcType.VARCHAR),
+            @Result(column = "cover_audit_status", property = "coverAuditStatus", jdbcType = JdbcType.TINYINT),
+            @Result(column = "cover_audit_reason", property = "coverAuditReason", jdbcType = JdbcType.VARCHAR)
     })
     List<Book> selectMany(SelectStatementProvider selectStatement);
 
@@ -142,6 +157,8 @@ public interface BookMapper {
                         .map(crawlBookId).toProperty("crawlBookId")
                         .map(crawlLastTime).toProperty("crawlLastTime")
                         .map(crawlIsStop).toProperty("crawlIsStop")
+                        .map(coverAuditStatus).toProperty("coverAuditStatus")
+                        .map(coverAuditReason).toProperty("coverAuditReason")
         );
     }
 
@@ -174,6 +191,8 @@ public interface BookMapper {
                         .map(crawlBookId).toProperty("crawlBookId")
                         .map(crawlLastTime).toProperty("crawlLastTime")
                         .map(crawlIsStop).toProperty("crawlIsStop")
+                        .map(coverAuditStatus).toProperty("coverAuditStatus")
+                        .map(coverAuditReason).toProperty("coverAuditReason")
         );
     }
 
@@ -206,6 +225,11 @@ public interface BookMapper {
                         .map(crawlBookId).toPropertyWhenPresent("crawlBookId", record::getCrawlBookId)
                         .map(crawlLastTime).toPropertyWhenPresent("crawlLastTime", record::getCrawlLastTime)
                         .map(crawlIsStop).toPropertyWhenPresent("crawlIsStop", record::getCrawlIsStop)
+                        .map(ageRating).toPropertyWhenPresent("ageRating", record::getAgeRating)
+                        .map(auditStatus).toPropertyWhenPresent("auditStatus", record::getAuditStatus)
+                        .map(auditReason).toPropertyWhenPresent("auditReason", record::getAuditReason)
+                        .map(coverAuditStatus).toPropertyWhenPresent("coverAuditStatus", record::getCoverAuditStatus)
+                        .map(coverAuditReason).toPropertyWhenPresent("coverAuditReason", record::getCoverAuditReason)
         );
     }
 
@@ -263,7 +287,9 @@ public interface BookMapper {
                 .set(crawlSourceId).equalTo(record::getCrawlSourceId)
                 .set(crawlBookId).equalTo(record::getCrawlBookId)
                 .set(crawlLastTime).equalTo(record::getCrawlLastTime)
-                .set(crawlIsStop).equalTo(record::getCrawlIsStop);
+                .set(crawlIsStop).equalTo(record::getCrawlIsStop)
+                .set(coverAuditStatus).equalTo(record::getCoverAuditStatus)
+                .set(coverAuditReason).equalTo(record::getCoverAuditReason);
     }
 
     @Generated("org.mybatis.generator.api.MyBatisGenerator")
@@ -293,7 +319,9 @@ public interface BookMapper {
                 .set(crawlSourceId).equalToWhenPresent(record::getCrawlSourceId)
                 .set(crawlBookId).equalToWhenPresent(record::getCrawlBookId)
                 .set(crawlLastTime).equalToWhenPresent(record::getCrawlLastTime)
-                .set(crawlIsStop).equalToWhenPresent(record::getCrawlIsStop);
+                .set(crawlIsStop).equalToWhenPresent(record::getCrawlIsStop)
+                .set(coverAuditStatus).equalToWhenPresent(record::getCoverAuditStatus)
+                .set(coverAuditReason).equalToWhenPresent(record::getCoverAuditReason);
     }
 
     @Generated("org.mybatis.generator.api.MyBatisGenerator")
@@ -324,6 +352,8 @@ public interface BookMapper {
                         .set(crawlBookId).equalTo(record::getCrawlBookId)
                         .set(crawlLastTime).equalTo(record::getCrawlLastTime)
                         .set(crawlIsStop).equalTo(record::getCrawlIsStop)
+                        .set(coverAuditStatus).equalTo(record::getCoverAuditStatus)
+                        .set(coverAuditReason).equalTo(record::getCoverAuditReason)
                         .where(id, isEqualTo(record::getId))
         );
     }
@@ -356,6 +386,11 @@ public interface BookMapper {
                         .set(crawlBookId).equalToWhenPresent(record::getCrawlBookId)
                         .set(crawlLastTime).equalToWhenPresent(record::getCrawlLastTime)
                         .set(crawlIsStop).equalToWhenPresent(record::getCrawlIsStop)
+                        .set(ageRating).equalToWhenPresent(record::getAgeRating)
+                        .set(auditStatus).equalToWhenPresent(record::getAuditStatus)
+                        .set(auditReason).equalToWhenPresent(record::getAuditReason)
+                        .set(coverAuditStatus).equalToWhenPresent(record::getCoverAuditStatus)
+                        .set(coverAuditReason).equalToWhenPresent(record::getCoverAuditReason)
                         .where(id, isEqualTo(record::getId))
         );
     }

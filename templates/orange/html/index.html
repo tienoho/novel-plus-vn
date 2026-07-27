@@ -108,7 +108,7 @@
     <div class="channelWrap channelPic cf">
         <div class="leftBox">
             <div class="title">
-                <h2 th:text="#{home.featured}">Đề xuất nổi bật</h2>
+                <h2 th:text="${personalizedRecommendations} ? #{home.forYou} : #{home.featured}">Đề xuất nổi bật</h2>
             </div>
             <div class="picRecommend cf" id="classicBooks" th:if="${bookMap['4']}">
                 <div class="itemsList" th:each="book : ${bookMap['4']}">

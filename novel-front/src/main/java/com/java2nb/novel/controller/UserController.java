@@ -10,6 +10,7 @@ import com.java2nb.novel.entity.Book;
 import com.java2nb.novel.entity.BookIndex;
 import com.java2nb.novel.entity.User;
 import com.java2nb.novel.entity.UserBuyRecord;
+import com.java2nb.novel.entity.UserBuyRecord;
 import com.java2nb.novel.service.BookService;
 import com.java2nb.novel.service.UserService;
 import com.java2nb.novel.service.wallet.WalletLedgerService;
@@ -44,14 +45,26 @@ public class UserController extends BaseController {
 
     private final WalletLedgerService walletLedgerService;
 
+    private final com.java2nb.novel.common.service.TotpService totpService;
+
     /**
      * Đăng nhập
      */
     @PostMapping("login")
+    @com.java2nb.novel.common.annotation.RateLimit(count = 5, timeWindowSeconds = 60, limitType = com.java2nb.novel.common.annotation.LimitType.IP)
+    @com.java2nb.novel.common.annotation.AuditLog(module = "AUTH", eventType = "AUTH_LOGIN", detail = "Nguoi dung dang nhap")
     public RestResult<Map<String, Object>> login(User user) {
 
         //Đăng nhập
         UserDetails userDetails = userService.login(user);
+
+        if (totpService != null && totpService.is2faEnabled(userDetails.getId())) {
+            String preAuthToken = totpService.createPreAuthToken(userDetails.getId(), userDetails.getUsername());
+            Map<String, Object> data = new HashMap<>(2);
+            data.put("need2FA", true);
+            data.put("preAuthToken", preAuthToken);
+            return RestResult.ok(data);
+        }
 
         Map<String, Object> data = new HashMap<>(1);
         data.put("token", jwtTokenUtil.generateToken(userDetails));
@@ -63,7 +76,6 @@ public class UserController extends BaseController {
 
     /**
      * Đăng ký
-     */
     @PostMapping("register")
     public RestResult<?> register(@Validated({AddGroup.class}) User user,
         @RequestParam(value = "velCode", defaultValue = "") String velCode, HttpServletRequest request) {

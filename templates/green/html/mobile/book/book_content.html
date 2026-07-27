@@ -40,6 +40,9 @@
     <input type="hidden" id="contentIdHidden" th:value="${bookIndex.id}"/>
     <input type="hidden" id="indexNameHidden" th:value="${bookIndex.indexName}"/>
     <input type="hidden" id="indexNumHidden" th:value="${bookIndex.indexNum}"/>
+    <input type="hidden" id="offlineEligible" value="true"
+           th:if="${bookIndex.isVip == null || bookIndex.isVip != 1}"/>
+    <input type="hidden" id="readerContentAvailable" value="true" th:if="${!needBuy}"/>
 
     <div style="height:50px;line-height:50px;text-align:center" class="layui-header header header-doc layui-bg-cyan">
         <div style="width:10%;float:left;margin-left:10px"><a href="javascript:history.go(-1)"><i style="font-size:20px;color:#fff" class="layui-icon">&#xe65c;</i></a></div>
@@ -54,7 +57,6 @@
         <a id="fontbig" class="sizebg" onclick="nr_setbg('big')" th:text="#{reader.font.large}">Lớn</a>
         <a id="fontmiddle" class="button sizebgon" onclick="nr_setbg('middle')" th:text="#{reader.font.medium}">Vừa</a>
         <a id="fontsmall" class="sizebg" onclick="nr_setbg('small')" th:text="#{reader.font.small}">Nhỏ</a>
-        <a href="javascript:speakChapter()" style="margin-left:10px" th:title="#{reader.speak}" aria-label="Đọc chương">🔊</a>
     </p>
 
     <div class="indexDiv" style="height:42px;line-height:42px;text-align:center;background:#f2f2f2">
@@ -64,6 +66,7 @@
     </div>
 
     <div th:replace="mobile/common/js :: js"></div>
+    <script src="/javascript/reader-tools.js?v=4"></script>
     <div id="chaptercontent" class="Readarea ReadAjax_content screen_container" style="color:#000;font-size:20px" th:if="${!needBuy}">
         <p style="width:100%;text-align:center;overflow:auto;-webkit-overflow-scrolling:touch"><span th:utext="${bookContent.content}"></span></p>
     </div>
@@ -81,7 +84,7 @@
 </div>
 <div th:replace="mobile/common/footer :: footer"></div>
 
-<script src="/mobile/js/read.js"></script>
+<script src="/mobile/js/read.js?v=4"></script>
 <script>getset();getset1();</script>
 <script th:inline="javascript">
     (function(){
@@ -118,20 +121,6 @@
     function enterPreIndexPage(bookId,bookIndexId){ window.location.href=bookIndexId!=0?'/book/'+bookId+'/'+bookIndexId+'.html':'/book/indexList-'+bookId+'.html'; }
     function enterNextIndexPage(bookId,bookIndexId){ window.location.href=bookIndexId!=0?'/book/'+bookId+'/'+bookIndexId+'.html':'/book/indexList-'+bookId+'.html'; }
 
-    $(window).on('beforeunload',function(){ if(speechSynthesis.speaking) speechSynthesis.cancel(); });
-    function speakChapter(){
-        if(speechSynthesis.speaking&&!speechSynthesis.paused){ speechSynthesis.pause();return; }
-        if(speechSynthesis.speaking&&speechSynthesis.paused){ speechSynthesis.resume();return; }
-        speak({text:$('#chaptercontent').text(),speechRate:0.5,pitch:1,lang:'vi-VN'});
-    }
-    function speak(options){
-        if(!window.SpeechSynthesisUtterance){ console.warn(/*[[#{reader.speech.unsupported}]]*/ 'Trình duyệt hiện tại không hỗ trợ đọc văn bản.');return; }
-        if(!options.text)return;
-        var utterance=new SpeechSynthesisUtterance();
-        utterance.text=options.text;utterance.rate=options.speechRate||1;utterance.lang=options.lang||'vi-VN';utterance.volume=options.volume||1;utterance.pitch=options.pitch||1;utterance.voice=options.voice||null;
-        speechSynthesis.speak(utterance);
-        return utterance;
-    }
 </script>
 </body>
 </html>

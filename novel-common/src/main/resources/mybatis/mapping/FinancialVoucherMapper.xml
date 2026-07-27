@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.java2nb.novel.common.dao.FinancialVoucherDao">
+
+    <resultMap id="BaseResultMap" type="com.java2nb.novel.common.entity.FinancialVoucherDO">
+        <id column="id" property="id" />
+        <result column="voucher_no" property="voucherNo" />
+        <result column="voucher_type" property="voucherType" />
+        <result column="reference_type" property="referenceType" />
+        <result column="reference_id" property="referenceId" />
+        <result column="payer_name" property="payerName" />
+        <result column="payer_tax_code" property="payerTaxCode" />
+        <result column="payee_name" property="payeeName" />
+        <result column="payee_tax_code" property="payeeTaxCode" />
+        <result column="gross_amount_vnd" property="grossAmountVnd" />
+        <result column="tax_amount_vnd" property="taxAmountVnd" />
+        <result column="net_amount_vnd" property="netAmountVnd" />
+        <result column="currency" property="currency" />
+        <result column="status" property="status" />
+        <result column="issued_at" property="issuedAt" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, voucher_no, voucher_type, reference_type, reference_id, payer_name, payer_tax_code,
+        payee_name, payee_tax_code, gross_amount_vnd, tax_amount_vnd, net_amount_vnd, currency,
+        status, issued_at, create_time, update_time
+    </sql>
+
+    <insert id="insert" parameterType="com.java2nb.novel.common.entity.FinancialVoucherDO" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO financial_voucher (
+            voucher_no, voucher_type, reference_type, reference_id, payer_name, payer_tax_code,
+            payee_name, payee_tax_code, gross_amount_vnd, tax_amount_vnd, net_amount_vnd, currency,
+            status, issued_at, create_time, update_time
+        ) VALUES (
+            #{voucherNo}, #{voucherType}, #{referenceType}, #{referenceId}, #{payerName}, #{payerTaxCode},
+            #{payeeName}, #{payeeTaxCode}, #{grossAmountVnd}, #{taxAmountVnd}, #{netAmountVnd}, #{currency},
+            #{status}, NOW(), NOW(), NOW()
+        )
+    </insert>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM financial_voucher
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectByVoucherNo" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM financial_voucher
+        WHERE voucher_no = #{voucherNo}
+    </select>
+
+    <select id="selectByReference" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM financial_voucher
+        WHERE reference_type = #{referenceType} AND reference_id = #{referenceId}
+        LIMIT 1
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM financial_voucher
+        <where>
+            <if test="voucherNo != null and voucherNo != ''">
+                AND voucher_no LIKE CONCAT('%', #{voucherNo}, '%')
+            </if>
+            <if test="voucherType != null and voucherType != ''">
+                AND voucher_type = #{voucherType}
+            </if>
+            <if test="referenceType != null and referenceType != ''">
+                AND reference_type = #{referenceType}
+            </if>
+            <if test="referenceId != null and referenceId != ''">
+                AND reference_id = #{referenceId}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <if test="startDate != null and startDate != ''">
+                AND issued_at &gt;= #{startDate}
+            </if>
+            <if test="endDate != null and endDate != ''">
+                AND issued_at &lt;= #{endDate}
+            </if>
+        </where>
+        ORDER BY id DESC
+        <if test="offset != null and limit != null">
+            LIMIT #{offset}, #{limit}
+        </if>
+    </select>
+
+    <select id="countList" resultType="int">
+        SELECT COUNT(*)
+        FROM financial_voucher
+        <where>
+            <if test="voucherNo != null and voucherNo != ''">
+                AND voucher_no LIKE CONCAT('%', #{voucherNo}, '%')
+            </if>
+            <if test="voucherType != null and voucherType != ''">
+                AND voucher_type = #{voucherType}
+            </if>
+            <if test="referenceType != null and referenceType != ''">
+                AND reference_type = #{referenceType}
+            </if>
+            <if test="referenceId != null and referenceId != ''">
+                AND reference_id = #{referenceId}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <if test="startDate != null and startDate != ''">
+                AND issued_at &gt;= #{startDate}
+            </if>
+            <if test="endDate != null and endDate != ''">
+                AND issued_at &lt;= #{endDate}
+            </if>
+        </where>
+    </select>
+
+    <update id="updateStatus">
+        UPDATE financial_voucher
+        SET status = #{status}, update_time = NOW()
+        WHERE voucher_no = #{voucherNo}
+    </update>
+
+</mapper>

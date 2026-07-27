@@ -231,7 +231,7 @@ public interface BookService {
      * @param content nội dung chương
      * @param isVip có thu phí hay không
      * @param authorId ID tác giả   */
-    void addBookContent(Long bookId, String indexName, String content, Byte isVip, Long authorId);
+    Long addBookContent(Long bookId, String indexName, String content, Byte isVip, Long authorId);
 
 
     /**
@@ -304,4 +304,8 @@ public interface BookService {
     PageBean<BookCommentReplyVO> listCommentReplyByPage(Long userId, Long commentId, int page, int pageSize);
 
     BookComment getBookComment(Long commentId);
+
+    List<BookContentHistory> listChapterHistory(Long indexId, Long authorId);
+
+    Map<String, Object> compareChapterHistory(Long indexId, Integer v1, Integer v2, Long authorId);
 }

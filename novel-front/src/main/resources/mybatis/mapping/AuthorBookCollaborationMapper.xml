@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.java2nb.novel.mapper.AuthorBookCollaborationMapper">
+
+    <resultMap id="access" type="com.java2nb.novel.service.collaboration.AuthorBookAccess">
+        <id column="book_id" property="bookId"/>
+        <result column="owner_author_id" property="ownerAuthorId"/>
+        <result column="actor_author_id" property="actorAuthorId"/>
+        <result column="collaboration_role" property="role"/>
+        <result column="is_owner" property="owner"/>
+        <result column="can_edit_book" property="canEditBook"/>
+        <result column="can_publish_book" property="canPublishBook"/>
+        <result column="can_manage_chapters" property="canManageChapters"/>
+        <result column="can_publish_chapters" property="canPublishChapters"/>
+        <result column="can_manage_story" property="canManageStory"/>
+        <result column="can_view_analytics" property="canViewAnalytics"/>
+    </resultMap>
+
+    <resultMap id="candidate" type="com.java2nb.novel.service.collaboration.AuthorBookCandidateRow">
+        <id column="author_id" property="authorId"/>
+        <result column="user_id" property="userId"/>
+        <result column="username" property="username"/>
+        <result column="pen_name" property="penName"/>
+    </resultMap>
+
+    <resultMap id="collaborator" type="com.java2nb.novel.service.collaboration.AuthorBookCollaboratorRow">
+        <id column="id" property="id"/>
+        <result column="book_id" property="bookId"/>
+        <result column="owner_author_id" property="ownerAuthorId"/>
+        <result column="collaborator_author_id" property="collaboratorAuthorId"/>
+        <result column="username" property="username"/>
+        <result column="pen_name" property="penName"/>
+        <result column="role" property="role"/>
+        <result column="can_edit_book" property="canEditBook"/>
+        <result column="can_publish_book" property="canPublishBook"/>
+        <result column="can_manage_chapters" property="canManageChapters"/>
+        <result column="can_publish_chapters" property="canPublishChapters"/>
+        <result column="can_manage_story" property="canManageStory"/>
+        <result column="can_view_analytics" property="canViewAnalytics"/>
+        <result column="version" property="version"/>
+        <result column="created_by_author_id" property="createdByAuthorId"/>
+        <result column="updated_by_author_id" property="updatedByAuthorId"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <sql id="collaboratorColumns">
+        c.id, c.book_id, c.owner_author_id, c.collaborator_author_id,
+        u.username, a.pen_name, c.role,
+        c.can_edit_book, c.can_publish_book, c.can_manage_chapters,
+        c.can_publish_chapters, c.can_manage_story, c.can_view_analytics,
+        c.version, c.created_by_author_id, c.updated_by_author_id,
+        c.create_time, c.update_time
+    </sql>
+
+    <sql id="bookAccessColumns">
+        CASE WHEN b.author_id = #{actorAuthorId} THEN 'OWNER' ELSE c.role END AS collaborationRole,
+        CASE WHEN b.author_id = #{actorAuthorId} THEN 1 ELSE 0 END AS ownerAccess,
+        CASE WHEN b.author_id = #{actorAuthorId} THEN 1 ELSE c.can_edit_book END AS canEditBook,
+        CASE WHEN b.author_id = #{actorAuthorId} THEN 1 ELSE c.can_publish_book END AS canPublishBook,
+        CASE WHEN b.author_id = #{actorAuthorId} THEN 1 ELSE c.can_manage_chapters END AS canManageChapters,
+        CASE WHEN b.author_id = #{actorAuthorId} THEN 1 ELSE c.can_publish_chapters END AS canPublishChapters,
+        CASE WHEN b.author_id = #{actorAuthorId} THEN 1 ELSE c.can_manage_story END AS canManageStory,
+        CASE WHEN b.author_id = #{actorAuthorId} THEN 1 ELSE c.can_view_analytics END AS canViewAnalytics
+    </sql>
+
+    <select id="selectAccess" resultMap="access">
+        SELECT b.id AS book_id,
+               b.author_id AS owner_author_id,
+               #{actorAuthorId} AS actor_author_id,
+               CASE WHEN b.author_id = #{actorAuthorId} THEN 'OWNER' ELSE c.role END AS collaboration_role,
+               CASE WHEN b.author_id = #{actorAuthorId} THEN 1 ELSE 0 END AS is_owner,
+               CASE WHEN b.author_id = #{actorAuthorId} THEN 1 ELSE c.can_edit_book END AS can_edit_book,
+               CASE WHEN b.author_id = #{actorAuthorId} THEN 1 ELSE c.can_publish_book END AS can_publish_book,
+               CASE WHEN b.author_id = #{actorAuthorId} THEN 1 ELSE c.can_manage_chapters END AS can_manage_chapters,
+               CASE WHEN b.author_id = #{actorAuthorId} THEN 1 ELSE c.can_publish_chapters END AS can_publish_chapters,
+               CASE WHEN b.author_id = #{actorAuthorId} THEN 1 ELSE c.can_manage_story END AS can_manage_story,
+               CASE WHEN b.author_id = #{actorAuthorId} THEN 1 ELSE c.can_view_analytics END AS can_view_analytics
+        FROM book b
+        LEFT JOIN author_book_collaborator c
+          ON c.book_id = b.id AND c.collaborator_author_id = #{actorAuthorId}
+        WHERE b.id = #{bookId}
+          AND (b.author_id = #{actorAuthorId} OR c.id IS NOT NULL)
+        LIMIT 1
+    </select>
+
+    <select id="listAccessibleBooks" resultType="com.java2nb.novel.entity.Book">
+        SELECT b.id, b.book_name, b.pic_url, b.cat_name, b.visit_count, b.yesterday_buy,
+               b.last_index_update_time, b.update_time, b.word_count, b.last_index_name,
+               b.status, b.author_id,
+               <include refid="bookAccessColumns"/>
+        FROM book b
+        LEFT JOIN author_book_collaborator c
+          ON c.book_id = b.id AND c.collaborator_author_id = #{actorAuthorId}
+        WHERE b.author_id = #{actorAuthorId} OR c.id IS NOT NULL
+        ORDER BY b.create_time DESC
+    </select>
+
+    <select id="listChapterManageableBooks" resultType="com.java2nb.novel.entity.Book">
+        SELECT b.id, b.book_name, b.author_id,
+               <include refid="bookAccessColumns"/>
+        FROM book b
+        LEFT JOIN author_book_collaborator c
+          ON c.book_id = b.id AND c.collaborator_author_id = #{actorAuthorId}
+        WHERE b.author_id = #{actorAuthorId}
+           OR (c.id IS NOT NULL AND c.can_manage_chapters = 1)
+        ORDER BY b.create_time DESC
+    </select>
+
+    <select id="findActiveCandidates" resultMap="candidate">
+        SELECT a.id AS author_id, a.user_id, u.username, a.pen_name
+        FROM author a
+        JOIN user u ON u.id = a.user_id
+        WHERE (u.username = #{identity} OR a.tel_phone = #{identity})
+          AND COALESCE(a.status, 0) = 0
+          AND COALESCE(u.status, 0) = 0
+        ORDER BY CASE WHEN u.username = #{identity} THEN 0 ELSE 1 END, a.id
+    </select>
+
+    <select id="listCollaborators" resultMap="collaborator">
+        SELECT <include refid="collaboratorColumns"/>
+        FROM author_book_collaborator c
+        JOIN author a ON a.id = c.collaborator_author_id
+        JOIN user u ON u.id = a.user_id
+        WHERE c.book_id = #{bookId} AND c.owner_author_id = #{ownerAuthorId}
+        ORDER BY c.create_time, c.id
+    </select>
+
+    <select id="selectCollaborator" resultMap="collaborator">
+        SELECT <include refid="collaboratorColumns"/>
+        FROM author_book_collaborator c
+        JOIN author a ON a.id = c.collaborator_author_id
+        JOIN user u ON u.id = a.user_id
+        WHERE c.id = #{collaboratorId}
+          AND c.book_id = #{bookId}
+          AND c.owner_author_id = #{ownerAuthorId}
+        LIMIT 1
+    </select>
+
+    <select id="selectByAuthor" resultMap="collaborator">
+        SELECT <include refid="collaboratorColumns"/>
+        FROM author_book_collaborator c
+        JOIN author a ON a.id = c.collaborator_author_id
+        JOIN user u ON u.id = a.user_id
+        WHERE c.book_id = #{bookId} AND c.collaborator_author_id = #{collaboratorAuthorId}
+        LIMIT 1
+    </select>
+
+    <insert id="insertCollaborator" parameterType="com.java2nb.novel.service.collaboration.AuthorBookCollaboratorRow"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO author_book_collaborator
+            (book_id, owner_author_id, collaborator_author_id, role,
+             can_edit_book, can_publish_book, can_manage_chapters,
+             can_publish_chapters, can_manage_story, can_view_analytics,
+             version, created_by_author_id, updated_by_author_id)
+        VALUES
+            (#{bookId}, #{ownerAuthorId}, #{collaboratorAuthorId}, #{role},
+             #{canEditBook}, #{canPublishBook}, #{canManageChapters},
+             #{canPublishChapters}, #{canManageStory}, #{canViewAnalytics},
+             0, #{createdByAuthorId}, #{updatedByAuthorId})
+    </insert>
+
+    <update id="updateCollaborator">
+        UPDATE author_book_collaborator
+        SET role = #{row.role},
+            can_edit_book = #{row.canEditBook},
+            can_publish_book = #{row.canPublishBook},
+            can_manage_chapters = #{row.canManageChapters},
+            can_publish_chapters = #{row.canPublishChapters},
+            can_manage_story = #{row.canManageStory},
+            can_view_analytics = #{row.canViewAnalytics},
+            updated_by_author_id = #{actorAuthorId},
+            version = version + 1
+        WHERE id = #{row.id}
+          AND book_id = #{row.bookId}
+          AND owner_author_id = #{row.ownerAuthorId}
+          AND version = #{expectedVersion}
+    </update>
+
+    <delete id="deleteCollaborator">
+        DELETE FROM author_book_collaborator
+        WHERE id = #{collaboratorId}
+          AND book_id = #{bookId}
+          AND owner_author_id = #{ownerAuthorId}
+          AND version = #{expectedVersion}
+    </delete>
+
+    <insert id="insertAudit">
+        INSERT INTO author_book_collaborator_audit
+            (collaborator_record_id, book_id, owner_author_id, collaborator_author_id,
+             event_type, role, can_edit_book, can_publish_book, can_manage_chapters,
+             can_publish_chapters, can_manage_story, can_view_analytics, version, actor_author_id)
+        VALUES
+            (#{row.id}, #{row.bookId}, #{row.ownerAuthorId}, #{row.collaboratorAuthorId},
+             #{eventType}, #{row.role}, #{row.canEditBook}, #{row.canPublishBook},
+             #{row.canManageChapters}, #{row.canPublishChapters}, #{row.canManageStory},
+             #{row.canViewAnalytics}, #{row.version}, #{actorAuthorId})
+    </insert>
+
+</mapper>

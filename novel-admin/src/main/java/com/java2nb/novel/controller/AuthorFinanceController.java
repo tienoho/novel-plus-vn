@@ -127,4 +127,12 @@ public class AuthorFinanceController extends BaseController {
         service.markFailed(id, expectedVersion, reason, getUserId());
         return R.ok();
     }
+
+    @ResponseBody
+    @PostMapping("/withdrawals/{id}/auto-payout")
+    @RequiresPermissions("novel:authorFinance:payout")
+    public R autoPayout(@PathVariable long id) {
+        service.executeAutoPayout(id, getUserId());
+        return R.ok();
+    }
 }

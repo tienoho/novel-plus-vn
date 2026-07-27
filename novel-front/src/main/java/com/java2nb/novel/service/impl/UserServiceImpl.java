@@ -231,12 +231,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User userInfo(Long userId) {
-        SelectStatementProvider selectStatement = select(username, nickName, userPhoto, userSex, accountBalance)
+        SelectStatementProvider selectStatement = select(username, nickName, userPhoto, userSex, accountBalance,
+                dateOfBirth, isAgeVerified)
             .from(user)
             .where(id, isEqualTo(userId))
             .build()
             .render(RenderingStrategies.MYBATIS3);
-        return userMapper.selectMany(selectStatement).get(0);
+        return userMapper.selectMany(selectStatement).stream().findFirst().orElse(null);
     }
 
     @Override
@@ -247,6 +248,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void updateUserInfo(Long userId, User user) {
+        boolean changesDateOfBirth = user.getDateOfBirth() != null;
+        user.setIsAgeVerified(changesDateOfBirth ? (byte) 0 : null);
         user.setId(userId);
         user.setUpdateTime(new Date());
         userMapper.updateByPrimaryKeySelective(user);

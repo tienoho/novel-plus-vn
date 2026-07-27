@@ -29,7 +29,7 @@ import org.mybatis.dynamic.sql.util.mybatis3.MyBatis3Utils;
 @Mapper
 public interface UserMapper {
     @Generated("org.mybatis.generator.api.MyBatisGenerator")
-    BasicColumn[] selectList = BasicColumn.columnList(id, username, password, nickName, userPhoto, userSex, accountBalance, status, createTime, updateTime);
+    BasicColumn[] selectList = BasicColumn.columnList(id, username, password, nickName, userPhoto, userSex, accountBalance, status, createTime, updateTime, dateOfBirth, isAgeVerified);
 
     @Generated("org.mybatis.generator.api.MyBatisGenerator")
     @SelectProvider(type=SqlProviderAdapter.class, method="select")
@@ -64,7 +64,9 @@ public interface UserMapper {
         @Result(column="account_balance", property="accountBalance", jdbcType=JdbcType.BIGINT),
         @Result(column="status", property="status", jdbcType=JdbcType.TINYINT),
         @Result(column="create_time", property="createTime", jdbcType=JdbcType.TIMESTAMP),
-        @Result(column="update_time", property="updateTime", jdbcType=JdbcType.TIMESTAMP)
+        @Result(column="update_time", property="updateTime", jdbcType=JdbcType.TIMESTAMP),
+        @Result(column="date_of_birth", property="dateOfBirth", jdbcType=JdbcType.DATE),
+        @Result(column="is_age_verified", property="isAgeVerified", jdbcType=JdbcType.TINYINT)
     })
     List<User> selectMany(SelectStatementProvider selectStatement);
 
@@ -134,6 +136,8 @@ public interface UserMapper {
             .map(status).toPropertyWhenPresent("status", record::getStatus)
             .map(createTime).toPropertyWhenPresent("createTime", record::getCreateTime)
             .map(updateTime).toPropertyWhenPresent("updateTime", record::getUpdateTime)
+            .map(dateOfBirth).toPropertyWhenPresent("dateOfBirth", record::getDateOfBirth)
+            .map(isAgeVerified).toPropertyWhenPresent("isAgeVerified", record::getIsAgeVerified)
         );
     }
 
@@ -220,6 +224,8 @@ public interface UserMapper {
             .set(status).equalToWhenPresent(record::getStatus)
             .set(createTime).equalToWhenPresent(record::getCreateTime)
             .set(updateTime).equalToWhenPresent(record::getUpdateTime)
+            .set(dateOfBirth).equalToWhenPresent(record::getDateOfBirth)
+            .set(isAgeVerified).equalToWhenPresent(record::getIsAgeVerified)
             .where(id, isEqualTo(record::getId))
         );
     }

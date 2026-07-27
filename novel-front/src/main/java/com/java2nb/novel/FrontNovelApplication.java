@@ -24,7 +24,7 @@ import java.net.InetAddress;
 @EnableScheduling
 @EnableCaching
 @ServletComponentScan
-@MapperScan(basePackages = {"com.java2nb.novel.mapper"})
+@MapperScan(basePackages = {"com.java2nb.novel.mapper", "com.java2nb.novel.common.dao"})
 @Slf4j
 public class FrontNovelApplication {
 

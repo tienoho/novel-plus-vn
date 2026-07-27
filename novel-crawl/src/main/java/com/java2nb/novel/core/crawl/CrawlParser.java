@@ -357,7 +357,7 @@ public class CrawlParser {
             if (!indexList.isEmpty()) {
                 //Nếu thu thập được chương mới nhất, cập nhật thông tin chương mới nhất của truyện
                 //Lấy chương mới nhất vừa thu thập
-                BookIndex lastIndex = indexList.getLast();
+                BookIndex lastIndex = indexList.get(indexList.size() - 1);
                 book.setLastIndexId(lastIndex.getId());
                 book.setLastIndexName(lastIndex.getIndexName());
                 book.setLastIndexUpdateTime(currentDate);

@@ -9,6 +9,18 @@
 7. `20260716_vnpay_hardening.sql` lưu số Xu đã cam kết theo đơn, tạo unique index cho `out_trade_no` và index đối soát đơn chờ. Migration sẽ dừng nếu dữ liệu cũ có mã đơn trùng để bắt buộc đối soát thủ công trước khi tiếp tục.
 8. `20260717_wallet_ledger.sql` tạo ví độc giả, ví doanh thu tác giả và sổ cái kép bất biến. Migration khởi tạo số dư ví độc giả từ `user.account_balance` đúng một lần, đồng thời ghi giao dịch số dư đầu kỳ cân bằng với tài khoản phát hành Xu của hệ thống.
 9. `20260718_author_payout.sql` tạo hồ sơ KYC tác giả, yêu cầu rút thu nhập và audit trail bất biến. Các trường CCCD/hộ chiếu, mã số thuế và tài khoản ngân hàng chỉ nhận ciphertext từ ứng dụng; migration không chứa hoặc tự sinh dữ liệu định danh.
+10. `20260720_refund_reconciliation_vietqr.sql` tạo state machine refund/chargeback, clearing hoàn tiền, audit bất biến, cấu hình kênh thanh toán và bảng đối soát ngân hàng.
+11. `20260725_moderation_copyright.sql` tạo dữ liệu kiểm duyệt, báo cáo bản quyền, bằng chứng sở hữu và các cột phân loại độ tuổi. Mọi `ALTER TABLE` kiểm tra `information_schema` trước khi chạy để migration có thể lặp lại.
+12. `20260725_reports_security.sql` tạo báo cáo doanh thu/chứng từ kỹ thuật, audit bảo mật, 2FA và menu quản trị tương ứng. Migration không bật phát hành chứng từ hoặc tự điền pháp nhân/mã số thuế.
+13. `20260726_author_editor.sql` tạo bản nháp chương riêng tư, optimistic version, lịch xuất bản và audit trạng thái bất biến.
+14. `20260726_simhash_storage.sql` đồng bộ `book_index.sim_hash` thành chuỗi nhị phân 64 ký tự; giá trị số cũ được chuyển sang đúng biểu diễn bit và migration có thể chạy lặp.
+15. `20260726_cover_moderation.sql` thêm trạng thái/lý do kiểm duyệt bìa và index hàng đợi. Bìa legacy được coi là đã duyệt; ứng dụng đặt bìa mới hoặc được thay lại về trạng thái chờ duyệt.
+16. `20260726_author_analytics.sql` tạo event đọc chương ẩn danh, unique idempotency và trigger append-only phục vụ completion/retention theo chương.
+17. `20260726_vietnamese_search.sql` thêm cột tìm kiếm sinh tự động với collation bỏ qua dấu và FULLTEXT ngram. Migration không sửa tên truyện/tác giả nguồn nhưng có thể rebuild bảng `book` khi tạo index.
+18. `20260726_chapter_notifications.sql` tạo quan hệ theo dõi tác giả, outbox chương lần đầu được duyệt và hộp thông báo. Migration không backfill chương cũ để tránh gửi hàng loạt khi nâng cấp; unique key bảo đảm một chương chỉ tạo một event và mỗi độc giả chỉ nhận một thông báo cho chương đó.
+19. `20260727_recommendation.sql` thêm index pool tác phẩm đã duyệt và index lịch sử mua theo tài khoản/tác phẩm. Migration chỉ tạo index còn thiếu, không sửa dữ liệu hành vi hoặc nội dung.
+20. `20260727_author_story_bible.sql` tạo kho tư liệu riêng tư theo tác phẩm cho dàn ý, nhân vật, địa điểm và dòng thời gian. Mọi thao tác runtime phải lọc đồng thời `author_id` và `book_id`; cột `version` chống ghi đè giữa nhiều tab.
+21. `20260727_author_collaboration.sql` tạo vai trò đồng tác giả/biên tập viên, sáu quyền theo tác phẩm, optimistic version và audit thay đổi quyền bất biến. Chủ sở hữu tác phẩm có toàn quyền ngầm định; migration không cấp quyền tài chính, KYC, bản quyền hoặc quản trị cộng tác viên.
 
 ## Nâng cấp database đang hoạt động
 
@@ -36,5 +48,7 @@
    ```
 
 7. Khởi động ứng dụng và kiểm tra log của service `migrate`, `front`, `crawl` và `admin`.
+
+Migration tìm kiếm tiếng Việt phải được đo trên bản sao production trước khi nâng cấp. Với bảng `book` lớn, dành cửa sổ bảo trì đủ để tạo hai cột stored và FULLTEXT index; không hủy migration giữa lúc `ALTER TABLE` đang chạy. MySQL phải dùng `ngram_token_size=2`; nếu thay đổi cấu hình này phải rebuild index và chạy lại integration tìm kiếm.
 
 Luôn thử migration trên một bản sao dữ liệu production trước. Không dùng `docker compose down -v` trong quy trình nâng cấp vì lệnh này xóa volume MySQL.

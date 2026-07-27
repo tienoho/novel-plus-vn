@@ -5,6 +5,11 @@ import com.java2nb.novel.dao.AuthorFinanceReviewDao;
 import com.java2nb.novel.domain.AuthorKycReviewDO;
 import com.java2nb.novel.domain.AuthorWithdrawalReviewDO;
 import com.java2nb.novel.service.AuthorFinanceReviewService;
+import com.java2nb.novel.core.payment.PaymentAdapter;
+import com.java2nb.novel.core.payment.PaymentAdapterFactory;
+import com.java2nb.novel.core.payment.PayoutRequest;
+import com.java2nb.novel.core.payment.PayoutResult;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,11 +21,14 @@ public class AuthorFinanceReviewServiceImpl implements AuthorFinanceReviewServic
 
     private final AuthorFinanceReviewDao dao;
     private final AdminPiiCryptoService piiCryptoService;
+    @Autowired(required = false)
+    private PaymentAdapterFactory paymentAdapterFactory;
 
     public AuthorFinanceReviewServiceImpl(AuthorFinanceReviewDao dao, AdminPiiCryptoService piiCryptoService) {
         this.dao = dao;
         this.piiCryptoService = piiCryptoService;
     }
+
 
     @Override
     public List<AuthorKycReviewDO> listKyc(Map<String, Object> params) {
@@ -166,6 +174,48 @@ public class AuthorFinanceReviewServiceImpl implements AuthorFinanceReviewServic
         requestRelease(withdrawal, expectedVersion, "FAILED", requireReason(reason), actorId,
             "PAYMENT_FAILED");
     }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void executeAutoPayout(long id, long actorId) {
+        AuthorWithdrawalReviewDO state = requireWithdrawal(id);
+        if (!"APPROVED".equals(state.getStatus())) {
+            throw new IllegalStateException("Chỉ có thể tự động chuyển khoản cho yêu cầu ở trạng thái APPROVED");
+        }
+        if (paymentAdapterFactory == null) {
+            throw new IllegalStateException("Chưa cấu hình adapter payout ngân hàng");
+        }
+        PaymentAdapter napasAdapter = paymentAdapterFactory.findAdapter((byte) 6)
+            .orElseThrow(() -> new IllegalStateException("Chưa cấu hình adapter payout ngân hàng/NAPAS"));
+        AuthorWithdrawalReviewDO withdrawal = getWithdrawalPayoutDetail(id, actorId);
+        long currentVersion = withdrawal.getVersion();
+        markProcessing(id, currentVersion, actorId);
+
+        AuthorWithdrawalReviewDO processingWithdrawal = requireWithdrawal(id);
+        long processingVersion = processingWithdrawal.getVersion();
+
+        long amountVnd = withdrawal.getNetAmountVnd() != null && withdrawal.getNetAmountVnd() > 0
+            ? withdrawal.getNetAmountVnd()
+            : (withdrawal.getGrossAmountVnd() - (withdrawal.getWithheldTaxVnd() != null ? withdrawal.getWithheldTaxVnd() : 0L));
+
+        PayoutRequest request = PayoutRequest.builder()
+            .payoutNo(withdrawal.getWithdrawalNo())
+            .amountVnd(amountVnd)
+            .bankBin(withdrawal.getBankCode() != null ? withdrawal.getBankCode() : "970422")
+            .bankAccount(withdrawal.getBankAccount())
+            .bankAccountName(withdrawal.getBankAccountName())
+            .description("CHUYEN KHOAN TAC GIA " + withdrawal.getWithdrawalNo())
+            .build();
+
+        PayoutResult payoutResult = napasAdapter.processPayout(request);
+
+        if (payoutResult.isSuccess()) {
+            markPaid(id, processingVersion, payoutResult.getProviderReference(), actorId);
+        } else {
+            markFailed(id, processingVersion, payoutResult.getErrorMessage() != null ? payoutResult.getErrorMessage() : "Chuyển khoản NAPAS 247 thất bại", actorId);
+        }
+    }
+
 
     private void requestRelease(AuthorWithdrawalReviewDO withdrawal, long expectedVersion, String targetStatus,
                                 String reason, long actorId, String eventType) {

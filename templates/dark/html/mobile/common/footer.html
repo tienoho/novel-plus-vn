@@ -1,9 +1,11 @@
 <div th:fragment="footer"  style="height: 60px;line-height: 60px;text-align: center" class="layui-footer footer footer-demo layui-bg-cyan">
     <!-- Các liên kết thể loại cũ không còn hiển thị. -->
     <a href="/?to=pc" style="font-size: 14px;color: #92B8B1;margin-left: 8px" th:text="#{site.desktopVersion}">Phiên bản máy tính</a>
+    <a href="/user/notifications.html" style="font-size:14px;color:#92B8B1;margin-left:8px"><span th:text="#{notification.title}">Thông báo</span><b data-notification-badge style="display:none;margin-left:2px;padding:1px 4px;border-radius:8px;background:#e64a19;color:#fff;font-size:10px">0</b></a>
 
 
     <div style="float: right"><a href="#top"><i class="layui-icon"
                                                 style="margin-right:15px;font-size: 30px;color:#92B8B1 ">&#xe604;</i></a>
     </div>
+    <script src="/javascript/notification-badge.js" defer></script>
 </div>

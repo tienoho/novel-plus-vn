@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.java2nb.novel.dao.RevenueReportDao">
+
+    <select id="selectRecharges" resultType="map">
+        SELECT
+            id,
+            out_trade_no AS outTradeNo,
+            total_amount AS totalAmount,
+            account_amount AS accountAmount,
+            pay_status AS payStatus,
+            create_time AS createTime
+        FROM order_pay
+        WHERE pay_status = 1
+        <if test="startDate != null and startDate != ''">
+            AND create_time &gt;= #{startDate}
+        </if>
+        <if test="endDate != null and endDate != ''">
+            AND create_time &lt;= #{endDate}
+        </if>
+        ORDER BY create_time ASC
+    </select>
+
+    <select id="selectPayouts" resultType="map">
+        SELECT
+            id,
+            gross_amount_vnd AS grossAmountVnd,
+            withheld_tax_vnd AS withheldTaxVnd,
+            net_amount_vnd AS netAmountVnd,
+            status,
+            create_time AS createTime,
+            update_time AS updateTime
+        FROM author_withdrawal_request
+        WHERE status IN ('APPROVED', 'PAID')
+        <if test="startDate != null and startDate != ''">
+            AND create_time &gt;= #{startDate}
+        </if>
+        <if test="endDate != null and endDate != ''">
+            AND create_time &lt;= #{endDate}
+        </if>
+        ORDER BY create_time ASC
+    </select>
+
+    <select id="selectXuConsumptions" resultType="map">
+        SELECT
+            id,
+            buy_amount AS buyAmount,
+            create_time AS createTime
+        FROM user_buy_record
+        <where>
+            <if test="startDate != null and startDate != ''">
+                AND create_time &gt;= #{startDate}
+            </if>
+            <if test="endDate != null and endDate != ''">
+                AND create_time &lt;= #{endDate}
+            </if>
+        </where>
+        ORDER BY create_time ASC
+    </select>
+
+</mapper>

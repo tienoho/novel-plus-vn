@@ -8,6 +8,9 @@ import com.java2nb.novel.core.enums.ResponseStatus;
 import com.java2nb.novel.core.i18n.Messages;
 import com.java2nb.novel.core.utils.Constants;
 import com.java2nb.novel.core.utils.FileUtil;
+import com.java2nb.novel.core.utils.ContentHashUtil;
+import com.java2nb.novel.core.utils.SimHashUtil;
+import com.java2nb.novel.core.utils.SensitiveWordFilter;
 import com.java2nb.novel.core.utils.StringUtil;
 import com.java2nb.novel.entity.Book;
 import com.java2nb.novel.entity.*;
@@ -16,6 +19,9 @@ import com.java2nb.novel.service.AuthorService;
 import com.java2nb.novel.service.BookService;
 import com.java2nb.novel.service.FileService;
 import com.java2nb.novel.service.LikeService;
+import com.java2nb.novel.service.collaboration.AuthorBookCollaborationService;
+import com.java2nb.novel.service.collaboration.BookPermission;
+import com.java2nb.novel.service.search.VietnameseSearchMatcher;
 import com.java2nb.novel.vo.*;
 import io.github.xxyopen.model.page.PageBean;
 import io.github.xxyopen.model.page.builder.pagehelper.PageBuilder;
@@ -25,6 +31,7 @@ import io.github.xxyopen.web.util.BeanUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.DateUtils;
 import org.mybatis.dynamic.sql.SortSpecification;
 import org.mybatis.dynamic.sql.render.RenderingStrategies;
@@ -64,6 +71,8 @@ import static org.mybatis.dynamic.sql.select.SelectDSL.select;
 @RequiredArgsConstructor
 @Slf4j
 public class BookServiceImpl implements BookService {
+    private static final int FUZZY_SEARCH_CANDIDATE_LIMIT = 500;
+
     private final Messages messages;
 
     /**
@@ -86,11 +95,15 @@ public class BookServiceImpl implements BookService {
 
     private final FrontBookCommentReplyMapper bookCommentReplyMapper;
 
+    private final BookContentHistoryMapper bookContentHistoryMapper;
+
     private final BookAuthorMapper bookAuthorMapper;
 
     private final CacheService cacheService;
 
     private final AuthorService authorService;
+
+    private final AuthorBookCollaborationService collaborationService;
 
     private final FileService fileService;
 
@@ -203,6 +216,8 @@ public class BookServiceImpl implements BookService {
     @Override
     public PageBean<?> searchByPage(BookSpVO params, int page, int pageSize) {
 
+        params.setKeyword(normalizeSearchKeyword(params.getKeyword()));
+
         if (params.getUpdatePeriod() != null) {
             long cur = System.currentTimeMillis();
             long period = params.getUpdatePeriod() * 24 * 3600 * 1000;
@@ -211,9 +226,24 @@ public class BookServiceImpl implements BookService {
         }
 
         PageHelper.startPage(page, pageSize);
+        PageBean<BookVO> directResults = PageBuilder.build(bookMapper.searchByPage(params));
+        if (params.getKeyword() == null || directResults.getTotal() > 0) {
+            return directResults;
+        }
 
-        return PageBuilder.build(bookMapper.searchByPage(params));
+        List<BookVO> ranked = VietnameseSearchMatcher.rank(params.getKeyword(),
+            bookMapper.searchFuzzyCandidates(params, FUZZY_SEARCH_CANDIDATE_LIMIT));
+        int safePage = Math.max(1, page);
+        int safePageSize = Math.max(1, pageSize);
+        long requestedOffset = (long) (safePage - 1) * safePageSize;
+        int fromIndex = (int) Math.min(ranked.size(), requestedOffset);
+        int toIndex = (int) Math.min(ranked.size(), (long) fromIndex + safePageSize);
+        return PageBean.of(safePage, safePageSize, ranked.size(), ranked.subList(fromIndex, toIndex));
 
+    }
+
+    static String normalizeSearchKeyword(String keyword) {
+        return StringUtils.isBlank(keyword) ? null : StringUtils.normalizeSpace(keyword);
     }
 
     @Override
@@ -248,7 +278,8 @@ public class BookServiceImpl implements BookService {
             BookIndexDynamicSqlSupport.indexName, BookIndexDynamicSqlSupport.updateTime,
             BookIndexDynamicSqlSupport.isVip)
             .from(bookIndex)
-            .where(BookIndexDynamicSqlSupport.bookId, isEqualTo(bookId));
+            .where(BookIndexDynamicSqlSupport.bookId, isEqualTo(bookId))
+            .and(BookIndexDynamicSqlSupport.auditStatus, isEqualTo((byte) 1));
         if ("index_num desc".equals(orderBy)) {
             where.orderBy(BookIndexDynamicSqlSupport.indexNum.descending());
         }
@@ -264,7 +295,8 @@ public class BookServiceImpl implements BookService {
             BookIndexDynamicSqlSupport.bookId, BookIndexDynamicSqlSupport.indexNum,
             BookIndexDynamicSqlSupport.indexName, BookIndexDynamicSqlSupport.wordCount,
             BookIndexDynamicSqlSupport.bookPrice, BookIndexDynamicSqlSupport.updateTime,
-            BookIndexDynamicSqlSupport.isVip, BookIndexDynamicSqlSupport.storageType)
+            BookIndexDynamicSqlSupport.isVip, BookIndexDynamicSqlSupport.storageType,
+            BookIndexDynamicSqlSupport.auditStatus)
             .from(bookIndex)
             .where(BookIndexDynamicSqlSupport.id, isEqualTo(bookIndexId))
             .build()
@@ -278,6 +310,7 @@ public class BookServiceImpl implements BookService {
             .from(bookIndex)
             .where(BookIndexDynamicSqlSupport.bookId, isEqualTo(bookId))
             .and(BookIndexDynamicSqlSupport.indexNum, isLessThan(indexNum))
+            .and(BookIndexDynamicSqlSupport.auditStatus, isEqualTo((byte) 1))
             .orderBy(BookIndexDynamicSqlSupport.indexNum.descending())
             .limit(1)
             .build()
@@ -296,6 +329,7 @@ public class BookServiceImpl implements BookService {
             .from(bookIndex)
             .where(BookIndexDynamicSqlSupport.bookId, isEqualTo(bookId))
             .and(BookIndexDynamicSqlSupport.indexNum, isGreaterThan(indexNum))
+            .and(BookIndexDynamicSqlSupport.auditStatus, isEqualTo((byte) 1))
             .orderBy(BookIndexDynamicSqlSupport.indexNum)
             .limit(1)
             .build()
@@ -347,6 +381,11 @@ public class BookServiceImpl implements BookService {
             authorId, authorName, picUrl, bookDesc, wordCount, lastIndexUpdateTime)
             .from(book)
             .where(wordCount, isGreaterThan(0))
+            .and(lastIndexId, isNotNull())
+            .and(status, isEqualTo((byte) 1))
+            .and(auditStatus, isEqualTo((byte) 1))
+            .and(coverAuditStatus, isEqualTo((byte) 1))
+            .and(ageRating, isEqualTo((byte) 0))
             .orderBy(sortSpecification)
             .limit(limit)
             .build()
@@ -365,6 +404,7 @@ public class BookServiceImpl implements BookService {
         SelectStatementProvider selectStatement = select(count(BookIndexDynamicSqlSupport.id))
             .from(bookIndex)
             .where(BookIndexDynamicSqlSupport.bookId, isEqualTo(bookId))
+            .and(BookIndexDynamicSqlSupport.auditStatus, isEqualTo((byte) 1))
             .build()
             .render(RenderingStrategies.MYBATIS3);
 
@@ -381,11 +421,15 @@ public class BookServiceImpl implements BookService {
         SelectStatementProvider selectStatement = select(BookIndexDynamicSqlSupport.id)
             .from(bookIndex)
             .where(BookIndexDynamicSqlSupport.bookId, isEqualTo(bookId))
+            .and(BookIndexDynamicSqlSupport.auditStatus, isEqualTo((byte) 1))
             .orderBy(BookIndexDynamicSqlSupport.indexNum)
             .limit(1)
             .build()
             .render(RenderingStrategies.MYBATIS3);
-        return bookIndexMapper.selectMany(selectStatement).get(0).getId();
+        return bookIndexMapper.selectMany(selectStatement).stream()
+            .findFirst()
+            .map(BookIndex::getId)
+            .orElse(null);
     }
 
     @Override
@@ -507,15 +551,7 @@ public class BookServiceImpl implements BookService {
 
         Author author = authorService.queryAuthor(userId);
         PageHelper.startPage(page, pageSize);
-
-        SelectStatementProvider selectStatement = select(id, bookName, picUrl, catName, visitCount, yesterdayBuy,
-            lastIndexUpdateTime, updateTime, wordCount, lastIndexName, status)
-            .from(book)
-            .where(authorId, isEqualTo(author.getId()))
-            .orderBy(BookDynamicSqlSupport.createTime.descending())
-            .build()
-            .render(RenderingStrategies.MYBATIS3);
-        return PageBuilder.build(bookMapper.selectMany(selectStatement));
+        return PageBuilder.build(collaborationService.listAccessibleBooks(author.getId()));
 
     }
 
@@ -558,6 +594,10 @@ public class BookServiceImpl implements BookService {
                 bookMapper.update(update(BookDynamicSqlSupport.book)
                     .set(BookDynamicSqlSupport.picUrl)
                     .equalTo(picUrl)
+                    .set(BookDynamicSqlSupport.coverAuditStatus)
+                    .equalTo((byte) 0)
+                    .set(BookDynamicSqlSupport.coverAuditReason)
+                    .equalToNull()
                     .set(updateTime)
                     .equalTo(currentDate)
                     .where(id, isEqualTo(book.getId()))
@@ -570,23 +610,22 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public void updateBookStatus(Long bookId, Byte status, Long authorId) {
+        collaborationService.requirePermission(authorId, bookId, BookPermission.PUBLISH_BOOK);
         bookMapper.update(update(book)
             .set(BookDynamicSqlSupport.status)
             .equalTo(status)
             .where(id, isEqualTo(bookId))
-            .and(BookDynamicSqlSupport.authorId, isEqualTo(authorId))
             .build()
             .render(RenderingStrategies.MYBATIS3));
     }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void addBookContent(Long bookId, String indexName, String content, Byte isVip, Long authorId) {
-
-        Book book = queryBookDetail(bookId);
-        if (!authorId.equals(book.getAuthorId())) {
-            //Không được cập nhật tác phẩm của người khác
-            return;
+    public Long addBookContent(Long bookId, String indexName, String content, Byte isVip, Long authorId) {
+        collaborationService.requirePermission(authorId, bookId, BookPermission.PUBLISH_CHAPTERS);
+        Book book = bookMapper.lockById(bookId);
+        if (book == null) {
+            throw new IllegalArgumentException("Không tìm thấy tác phẩm");
         }
         Long lastIndexId = idWorker.nextId();
         Date currentDate = new Date();
@@ -603,13 +642,36 @@ public class BookServiceImpl implements BookService {
             .set(BookDynamicSqlSupport.wordCount)
             .equalTo(book.getWordCount() + wordCount)
             .where(id, isEqualTo(bookId))
-            .and(BookDynamicSqlSupport.authorId, isEqualTo(authorId))
             .build()
             .render(RenderingStrategies.MYBATIS3));
 
         //Tính giá
         int bookPrice = new BigDecimal(wordCount).multiply(bookPriceConfig.getValue())
             .divide(bookPriceConfig.getWordCount(), 0, RoundingMode.DOWN).intValue();
+        String contentHash = ContentHashUtil.sha256Hex(content);
+        String simHash = SimHashUtil.getSimHash(content);
+        byte auditStatus = 1;
+
+        if (SensitiveWordFilter.getInstance().containsSensitiveWord(content)
+            || SensitiveWordFilter.getInstance().containsSensitiveWord(indexName)) {
+            auditStatus = 0;
+        } else {
+            SelectStatementProvider selectStatement = select(BookIndexDynamicSqlSupport.id, BookIndexDynamicSqlSupport.contentHash, BookIndexDynamicSqlSupport.simHash)
+                .from(BookIndexDynamicSqlSupport.bookIndex)
+                .where(BookIndexDynamicSqlSupport.contentHash, isNotNull())
+                .build().render(RenderingStrategies.MYBATIS3);
+            List<BookIndex> existingChapters = bookIndexMapper.selectMany(selectStatement);
+            for (BookIndex existing : existingChapters) {
+                if (contentHash.equalsIgnoreCase(existing.getContentHash())) {
+                    auditStatus = 0;
+                    break;
+                }
+                if (existing.getSimHash() != null && SimHashUtil.isSimilar(simHash, existing.getSimHash(), 3)) {
+                    auditStatus = 0;
+                    break;
+                }
+            }
+        }
 
         //Cập nhật bảng mục lục tác phẩm
         int indexNum = 0;
@@ -624,6 +686,9 @@ public class BookServiceImpl implements BookService {
         lastBookIndex.setBookId(bookId);
         lastBookIndex.setIsVip(isVip);
         lastBookIndex.setBookPrice(bookPrice);
+        lastBookIndex.setContentHash(contentHash);
+        lastBookIndex.setSimHash(simHash);
+        lastBookIndex.setAuditStatus(auditStatus);
         lastBookIndex.setCreateTime(currentDate);
         lastBookIndex.setUpdateTime(currentDate);
         bookIndexMapper.insertSelective(lastBookIndex);
@@ -634,7 +699,22 @@ public class BookServiceImpl implements BookService {
         bookContent.setContent(content);
         bookContentMapper.insertSelective(bookContent);
 
+        // Chapter version snapshotting
+        BookContentHistory history = new BookContentHistory();
+        history.setBookId(bookId);
+        history.setIndexId(lastIndexId);
+        history.setVersionNum(1);
+        history.setIndexName(indexName);
+        history.setContent(content);
+        history.setWordCount(wordCount);
+        history.setContentHash(contentHash);
+        history.setModifiedBy(authorId);
+        history.setModifiedType((byte) 1);
+        history.setChangeReason("Tạo mới chương");
+        history.setCreateTime(currentDate);
+        bookContentHistoryMapper.insertSelective(history);
 
+        return lastIndexId;
     }
 
     @Override
@@ -652,237 +732,242 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public List<Book> queryBookList(Long authorId) {
-
-        return bookMapper.selectMany(select(id, bookName)
-            .from(book)
-            .where(BookDynamicSqlSupport.authorId, isEqualTo(authorId))
-            .build()
-            .render(RenderingStrategies.MYBATIS3));
+        return collaborationService.listChapterManageableBooks(authorId);
     }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void deleteIndex(Long indexId, Long authorId) {
-
-        //Truy vấn thông tin bảng chương
-        List<BookIndex> bookIndices = bookIndexMapper.selectMany(
-            select(BookIndexDynamicSqlSupport.bookId, BookIndexDynamicSqlSupport.wordCount)
-                .from(bookIndex)
-                .where(BookIndexDynamicSqlSupport.id, isEqualTo(indexId)).build().render(RenderingStrategies.MYBATIS3));
-        if (bookIndices.size() > 0) {
-            BookIndex bookIndex = bookIndices.get(0);
-            //Lấy ID tác phẩm
-            Long bookId = bookIndex.getBookId();
-            //Truy vấn thông tin bảng tác phẩm
-            List<Book> books = bookMapper.selectMany(
-                select(wordCount, BookDynamicSqlSupport.authorId)
-                    .from(book)
-                    .where(id, isEqualTo(bookId))
-                    .build()
-                    .render(RenderingStrategies.MYBATIS3));
-            if (books.size() > 0) {
-                Book book = books.get(0);
-                int wordCount = book.getWordCount();
-                //ID tác giả trùng người đăng nhập nên có thể xóa tác phẩm
-                if (book.getAuthorId().equals(authorId)) {
-                    //Xóa bản ghi mục lục và nội dung
-                    bookIndexMapper.deleteByPrimaryKey(indexId);
-                    bookContentMapper.delete(
-                        deleteFrom(bookContent).where(BookContentDynamicSqlSupport.indexId, isEqualTo(indexId)).build()
-                            .render(RenderingStrategies.MYBATIS3));
-                    //Cập nhật tổng số chữ
-                    wordCount = wordCount - bookIndex.getWordCount();
-                    //Cập nhật chương mới nhất
-                    Long lastIndexId = null;
-                    String lastIndexName = null;
-                    Date lastIndexUpdateTime = null;
-                    List<BookIndex> lastBookIndices = bookIndexMapper.selectMany(
-                        select(BookIndexDynamicSqlSupport.id, BookIndexDynamicSqlSupport.indexName,
-                            BookIndexDynamicSqlSupport.createTime)
-                            .from(BookIndexDynamicSqlSupport.bookIndex)
-                            .where(BookIndexDynamicSqlSupport.bookId, isEqualTo(bookId))
-                            .orderBy(BookIndexDynamicSqlSupport.indexNum.descending())
-                            .limit(1)
-                            .build()
-                            .render(RenderingStrategies.MYBATIS3));
-                    if (lastBookIndices.size() > 0) {
-                        BookIndex lastBookIndex = lastBookIndices.get(0);
-                        lastIndexId = lastBookIndex.getId();
-                        lastIndexName = lastBookIndex.getIndexName();
-                        lastIndexUpdateTime = lastBookIndex.getCreateTime();
-
-                    }
-                    //Cập nhật thông tin bảng chính tác phẩm
-                    bookMapper.update(update(BookDynamicSqlSupport.book)
-                        .set(BookDynamicSqlSupport.wordCount)
-                        .equalTo(wordCount)
-                        .set(updateTime)
-                        .equalTo(new Date())
-                        .set(BookDynamicSqlSupport.lastIndexId)
-                        .equalTo(lastIndexId)
-                        .set(BookDynamicSqlSupport.lastIndexName)
-                        .equalTo(lastIndexName)
-                        .set(BookDynamicSqlSupport.lastIndexUpdateTime)
-                        .equalTo(lastIndexUpdateTime)
-                        .where(id, isEqualTo(bookId))
-                        .build()
-                        .render(RenderingStrategies.MYBATIS3));
-
-
-                }
-            }
-
-
+        BookIndex lockedBookIndex = bookIndexMapper.lockById(indexId);
+        if (lockedBookIndex == null) {
+            throw new IllegalArgumentException("Không tìm thấy chương");
+        }
+        Long bookId = lockedBookIndex.getBookId();
+        collaborationService.requirePermission(authorId, bookId, BookPermission.PUBLISH_CHAPTERS);
+        Book lockedBook = bookMapper.lockById(bookId);
+        if (lockedBook == null) {
+            throw new IllegalArgumentException("Không tìm thấy tác phẩm");
         }
 
+        bookIndexMapper.deleteByPrimaryKey(indexId);
+        bookContentMapper.delete(
+            deleteFrom(bookContent).where(BookContentDynamicSqlSupport.indexId, isEqualTo(indexId)).build()
+                .render(RenderingStrategies.MYBATIS3));
 
+        int aggregateWordCount = Math.max(0,
+            Objects.requireNonNullElse(lockedBook.getWordCount(), 0)
+                - Objects.requireNonNullElse(lockedBookIndex.getWordCount(), 0));
+        Long lastIndexId = null;
+        String lastIndexName = null;
+        Date lastIndexUpdateTime = null;
+        List<BookIndex> lastBookIndices = bookIndexMapper.selectMany(
+            select(BookIndexDynamicSqlSupport.id, BookIndexDynamicSqlSupport.indexName,
+                BookIndexDynamicSqlSupport.createTime)
+                .from(BookIndexDynamicSqlSupport.bookIndex)
+                .where(BookIndexDynamicSqlSupport.bookId, isEqualTo(bookId))
+                .orderBy(BookIndexDynamicSqlSupport.indexNum.descending())
+                .limit(1)
+                .build()
+                .render(RenderingStrategies.MYBATIS3));
+        if (!lastBookIndices.isEmpty()) {
+            BookIndex lastBookIndex = lastBookIndices.get(0);
+            lastIndexId = lastBookIndex.getId();
+            lastIndexName = lastBookIndex.getIndexName();
+            lastIndexUpdateTime = lastBookIndex.getCreateTime();
+        }
+        bookMapper.update(update(BookDynamicSqlSupport.book)
+            .set(BookDynamicSqlSupport.wordCount).equalTo(aggregateWordCount)
+            .set(updateTime).equalTo(new Date())
+            .set(BookDynamicSqlSupport.lastIndexId).equalTo(lastIndexId)
+            .set(BookDynamicSqlSupport.lastIndexName).equalTo(lastIndexName)
+            .set(BookDynamicSqlSupport.lastIndexUpdateTime).equalTo(lastIndexUpdateTime)
+            .where(id, isEqualTo(bookId))
+            .build()
+            .render(RenderingStrategies.MYBATIS3));
     }
 
     @Override
     public void updateIndexName(Long indexId, String indexName, Long authorId) {
-        //Truy vấn thông tin bảng chương
-        List<BookIndex> bookIndices = bookIndexMapper.selectMany(
-            select(BookIndexDynamicSqlSupport.bookId, BookIndexDynamicSqlSupport.wordCount)
-                .from(bookIndex)
-                .where(BookIndexDynamicSqlSupport.id, isEqualTo(indexId)).build().render(RenderingStrategies.MYBATIS3));
-        if (bookIndices.size() > 0) {
-            BookIndex bookIndex = bookIndices.get(0);
-            //Lấy ID tác phẩm
-            Long bookId = bookIndex.getBookId();
-            //Truy vấn thông tin bảng tác phẩm
-            List<Book> books = bookMapper.selectMany(
-                select(wordCount, BookDynamicSqlSupport.authorId)
-                    .from(book)
-                    .where(id, isEqualTo(bookId))
-                    .build()
-                    .render(RenderingStrategies.MYBATIS3));
-            if (books.size() > 0) {
-                Book book = books.get(0);
-                //ID tác giả trùng với người đăng nhập, vì vậy có thể sửa tác phẩm
-                if (book.getAuthorId().equals(authorId)) {
-
-                    bookIndexMapper.update(
-                        update(BookIndexDynamicSqlSupport.bookIndex)
-                            .set(BookIndexDynamicSqlSupport.indexName)
-                            .equalTo(indexName)
-                            .set(BookIndexDynamicSqlSupport.updateTime)
-                            .equalTo(new Date())
-                            .where(BookIndexDynamicSqlSupport.id, isEqualTo(indexId))
-                            .build()
-                            .render(RenderingStrategies.MYBATIS3));
-
-
-                }
-            }
-
-
+        BookIndex index = bookIndexMapper.selectByPrimaryKey(indexId).orElse(null);
+        if (index == null) {
+            throw new IllegalArgumentException("Không tìm thấy chương");
         }
+        collaborationService.requirePermission(authorId, index.getBookId(), BookPermission.PUBLISH_CHAPTERS);
+        bookIndexMapper.update(
+            update(BookIndexDynamicSqlSupport.bookIndex)
+                .set(BookIndexDynamicSqlSupport.indexName)
+                .equalTo(indexName)
+                .set(BookIndexDynamicSqlSupport.updateTime)
+                .equalTo(new Date())
+                .where(BookIndexDynamicSqlSupport.id, isEqualTo(indexId))
+                .build()
+                .render(RenderingStrategies.MYBATIS3));
     }
 
     @Override
     public String queryIndexContent(Long indexId, Long authorId) {
-        //Truy vấn thông tin bảng chương
-        List<BookIndex> bookIndices = bookIndexMapper.selectMany(
-            select(BookIndexDynamicSqlSupport.bookId, BookIndexDynamicSqlSupport.wordCount)
-                .from(bookIndex)
-                .where(BookIndexDynamicSqlSupport.id, isEqualTo(indexId)).build().render(RenderingStrategies.MYBATIS3));
-        if (bookIndices.size() > 0) {
-            BookIndex bookIndex = bookIndices.get(0);
-            //Lấy ID tác phẩm
-            Long bookId = bookIndex.getBookId();
-            //Truy vấn thông tin bảng tác phẩm
-            List<Book> books = bookMapper.selectMany(
-                select(wordCount, BookDynamicSqlSupport.authorId)
-                    .from(book)
-                    .where(id, isEqualTo(bookId))
-                    .build()
-                    .render(RenderingStrategies.MYBATIS3));
-            if (books.size() > 0) {
-                Book book = books.get(0);
-                //ID tác giả trùng người đăng nhập, tác phẩm do người dùng này xuất bản
-                if (book.getAuthorId().equals(authorId)) {
-                    return bookContentMapper.selectMany(
-                            select(content)
-                                .from(bookContent)
-                                .where(BookContentDynamicSqlSupport.indexId, isEqualTo(indexId))
-                                .limit(1)
-                                .build().render(RenderingStrategies.MYBATIS3))
-                        .get(0).getContent();
-                }
-
-            }
+        BookIndex index = bookIndexMapper.selectByPrimaryKey(indexId).orElse(null);
+        if (index == null) {
+            throw new IllegalArgumentException("Không tìm thấy chương");
         }
-        return "";
+        collaborationService.requirePermission(authorId, index.getBookId(), BookPermission.MANAGE_CHAPTERS);
+        return bookContentMapper.selectMany(
+                select(content)
+                    .from(bookContent)
+                    .where(BookContentDynamicSqlSupport.indexId, isEqualTo(indexId))
+                    .limit(1)
+                    .build().render(RenderingStrategies.MYBATIS3))
+            .stream().findFirst().map(BookContent::getContent).orElse("");
     }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void updateBookContent(Long indexId, String indexName, String content, Long authorId) {
+        BookIndex lockedIndex = bookIndexMapper.lockById(indexId);
+        if (lockedIndex == null) {
+            throw new IllegalArgumentException("Không tìm thấy chương cần cập nhật");
+        }
 
-        //Truy vấn thông tin bảng chương
-        List<BookIndex> bookIndices = bookIndexMapper.selectMany(
-            select(BookIndexDynamicSqlSupport.bookId, BookIndexDynamicSqlSupport.wordCount)
-                .from(bookIndex)
-                .where(BookIndexDynamicSqlSupport.id, isEqualTo(indexId)).build().render(RenderingStrategies.MYBATIS3));
-        if (bookIndices.size() > 0) {
-            BookIndex bookIndex = bookIndices.get(0);
-            //Lấy ID tác phẩm
-            Long bookId = bookIndex.getBookId();
-            //Truy vấn thông tin bảng tác phẩm
-            List<Book> books = bookMapper.selectMany(
-                select(wordCount, BookDynamicSqlSupport.authorId)
-                    .from(book)
-                    .where(id, isEqualTo(bookId))
-                    .build()
-                    .render(RenderingStrategies.MYBATIS3));
-            if (books.size() > 0) {
-                Book book = books.get(0);
-                //ID tác giả trùng với người đăng nhập, vì vậy có thể sửa tác phẩm
-                if (book.getAuthorId().equals(authorId)) {
-                    Date currentDate = new Date();
-                    int wordCount = StringUtil.getStrValidWordCount(content);
+        Long bookId = lockedIndex.getBookId();
+        collaborationService.requirePermission(authorId, bookId, BookPermission.PUBLISH_CHAPTERS);
+        Book lockedBook = bookMapper.lockById(bookId);
+        if (lockedBook == null) {
+            throw new IllegalArgumentException("Không tìm thấy tác phẩm");
+        }
 
-                    //Tính giá
-                    int bookPrice = new BigDecimal(wordCount).multiply(bookPriceConfig.getValue())
-                        .divide(bookPriceConfig.getWordCount(), 0, RoundingMode.DOWN).intValue();
+        BookContent existingContent = bookContentMapper.selectMany(
+                select(BookContentDynamicSqlSupport.content)
+                    .from(bookContent)
+                    .where(BookContentDynamicSqlSupport.indexId, isEqualTo(indexId))
+                    .limit(1)
+                    .build().render(RenderingStrategies.MYBATIS3))
+            .stream().findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy nội dung chương cần cập nhật"));
+        SelectStatementProvider versionQuery = select(
+                org.mybatis.dynamic.sql.SqlBuilder.count(BookContentHistoryDynamicSqlSupport.id))
+            .from(BookContentHistoryDynamicSqlSupport.bookContentHistory)
+            .where(BookContentHistoryDynamicSqlSupport.indexId, isEqualTo(indexId))
+            .build().render(RenderingStrategies.MYBATIS3);
+        long historyCount = bookContentHistoryMapper.count(versionQuery);
 
-                    //Cập nhật bảng mục lục tác phẩm
-                    bookIndexMapper.update(
-                        update(BookIndexDynamicSqlSupport.bookIndex)
-                            .set(BookIndexDynamicSqlSupport.indexName)
-                            .equalTo(indexName)
-                            .set(BookIndexDynamicSqlSupport.wordCount)
-                            .equalTo(wordCount)
-                            .set(BookIndexDynamicSqlSupport.bookPrice)
-                            .equalTo(bookPrice)
-                            .set(BookIndexDynamicSqlSupport.updateTime)
-                            .equalTo(currentDate)
-                            .where(BookIndexDynamicSqlSupport.id, isEqualTo(indexId))
-                            .build().render(RenderingStrategies.MYBATIS3));
+        Date currentDate = new Date();
+        int oldWordCount = Objects.requireNonNullElse(lockedIndex.getWordCount(), 0);
+        if (historyCount == 0) {
+            BookContentHistory original = new BookContentHistory();
+            original.setBookId(bookId);
+            original.setIndexId(indexId);
+            original.setVersionNum(1);
+            original.setIndexName(lockedIndex.getIndexName());
+            original.setContent(existingContent.getContent());
+            original.setWordCount(oldWordCount);
+            original.setContentHash(StringUtils.defaultIfBlank(lockedIndex.getContentHash(),
+                ContentHashUtil.sha256Hex(existingContent.getContent())));
+            original.setModifiedBy(authorId);
+            original.setModifiedType((byte) 1);
+            original.setChangeReason("Phiên bản trước lần chỉnh sửa đầu tiên");
+            original.setCreateTime(currentDate);
+            bookContentHistoryMapper.insertSelective(original);
+        }
+        int nextVersion = historyCount == 0 ? 2 : Math.toIntExact(historyCount + 1);
+        int newWordCount = StringUtil.getStrValidWordCount(content);
+        int bookPrice = new BigDecimal(newWordCount).multiply(bookPriceConfig.getValue())
+            .divide(bookPriceConfig.getWordCount(), 0, RoundingMode.DOWN).intValue();
 
-                    //Cập nhật bảng nội dung tác phẩm
-                    bookContentMapper.update(
-                        update(BookContentDynamicSqlSupport.bookContent)
-                            .set(BookContentDynamicSqlSupport.content)
-                            .equalTo(content)
-                            .where(BookContentDynamicSqlSupport.indexId, isEqualTo(indexId))
-                            .build().render(RenderingStrategies.MYBATIS3));
-
+        String contentHash = ContentHashUtil.sha256Hex(content);
+        String simHash = SimHashUtil.getSimHash(content);
+        byte auditStatus = 1;
+        if (SensitiveWordFilter.getInstance().containsSensitiveWord(content)
+            || SensitiveWordFilter.getInstance().containsSensitiveWord(indexName)) {
+            auditStatus = 0;
+        } else {
+            SelectStatementProvider selectStatement = select(BookIndexDynamicSqlSupport.id,
+                    BookIndexDynamicSqlSupport.contentHash, BookIndexDynamicSqlSupport.simHash)
+                .from(BookIndexDynamicSqlSupport.bookIndex)
+                .where(BookIndexDynamicSqlSupport.contentHash, isNotNull())
+                .build().render(RenderingStrategies.MYBATIS3);
+            List<BookIndex> existingChapters = bookIndexMapper.selectMany(selectStatement);
+            for (BookIndex existing : existingChapters) {
+                if (!existing.getId().equals(indexId)
+                    && (contentHash.equalsIgnoreCase(existing.getContentHash())
+                    || existing.getSimHash() != null && SimHashUtil.isSimilar(simHash, existing.getSimHash(), 3))) {
+                    auditStatus = 0;
+                    break;
                 }
             }
-
         }
+
+        bookIndexMapper.update(
+            update(BookIndexDynamicSqlSupport.bookIndex)
+                .set(BookIndexDynamicSqlSupport.indexName)
+                .equalTo(indexName)
+                .set(BookIndexDynamicSqlSupport.wordCount)
+                .equalTo(newWordCount)
+                .set(BookIndexDynamicSqlSupport.bookPrice)
+                .equalTo(bookPrice)
+                .set(BookIndexDynamicSqlSupport.contentHash)
+                .equalTo(contentHash)
+                .set(BookIndexDynamicSqlSupport.simHash)
+                .equalTo(simHash)
+                .set(BookIndexDynamicSqlSupport.auditStatus)
+                .equalTo(auditStatus)
+                .set(BookIndexDynamicSqlSupport.updateTime)
+                .equalTo(currentDate)
+                .where(BookIndexDynamicSqlSupport.id, isEqualTo(indexId))
+                .build().render(RenderingStrategies.MYBATIS3));
+
+        bookContentMapper.update(
+            update(BookContentDynamicSqlSupport.bookContent)
+                .set(BookContentDynamicSqlSupport.content)
+                .equalTo(content)
+                .where(BookContentDynamicSqlSupport.indexId, isEqualTo(indexId))
+                .build().render(RenderingStrategies.MYBATIS3));
+
+        int aggregateWordCount = Math.max(0,
+            Objects.requireNonNullElse(lockedBook.getWordCount(), 0) - oldWordCount + newWordCount);
+        if (indexId.equals(lockedBook.getLastIndexId())) {
+            bookMapper.update(update(BookDynamicSqlSupport.book)
+                .set(BookDynamicSqlSupport.wordCount).equalTo(aggregateWordCount)
+                .set(BookDynamicSqlSupport.lastIndexName).equalTo(indexName)
+                .set(BookDynamicSqlSupport.lastIndexUpdateTime).equalTo(currentDate)
+                .set(BookDynamicSqlSupport.updateTime).equalTo(currentDate)
+                .where(id, isEqualTo(bookId))
+                .build().render(RenderingStrategies.MYBATIS3));
+        } else {
+            bookMapper.update(update(BookDynamicSqlSupport.book)
+                .set(BookDynamicSqlSupport.wordCount).equalTo(aggregateWordCount)
+                .set(BookDynamicSqlSupport.updateTime).equalTo(currentDate)
+                .where(id, isEqualTo(bookId))
+                .build().render(RenderingStrategies.MYBATIS3));
+        }
+
+        BookContentHistory history = new BookContentHistory();
+        history.setBookId(bookId);
+        history.setIndexId(indexId);
+        history.setVersionNum(nextVersion);
+        history.setIndexName(indexName);
+        history.setContent(content);
+        history.setWordCount(newWordCount);
+        history.setContentHash(contentHash);
+        history.setModifiedBy(authorId);
+        history.setModifiedType((byte) 1);
+        history.setChangeReason("Cập nhật nội dung chương");
+        history.setCreateTime(currentDate);
+        bookContentHistoryMapper.insertSelective(history);
     }
 
     @Override
     public void updateBookPic(Long bookId, String bookPic, Long authorId) {
+        collaborationService.requirePermission(authorId, bookId, BookPermission.EDIT_BOOK);
         bookMapper.update(update(book)
             .set(picUrl)
             .equalTo(bookPic)
+            .set(BookDynamicSqlSupport.coverAuditStatus)
+            .equalTo((byte) 0)
+            .set(BookDynamicSqlSupport.coverAuditReason)
+            .equalToNull()
             .set(updateTime)
             .equalTo(new Date())
             .where(id, isEqualTo(bookId))
-            .and(BookDynamicSqlSupport.authorId, isEqualTo(authorId))
             .build()
             .render(RenderingStrategies.MYBATIS3));
     }
@@ -920,5 +1005,48 @@ public class BookServiceImpl implements BookService {
         return bookCommentMapper.selectByPrimaryKey(commentId).orElse(null);
     }
 
+    @Override
+    public List<BookContentHistory> listChapterHistory(Long indexId, Long authorId) {
+        requireChapterOwnership(indexId, authorId);
+        SelectStatementProvider selectStatement = select(BookContentHistoryDynamicSqlSupport.bookContentHistory.allColumns())
+            .from(BookContentHistoryDynamicSqlSupport.bookContentHistory)
+            .where(BookContentHistoryDynamicSqlSupport.indexId, isEqualTo(indexId))
+            .orderBy(BookContentHistoryDynamicSqlSupport.versionNum.descending())
+            .build()
+            .render(RenderingStrategies.MYBATIS3);
+        return bookContentHistoryMapper.selectMany(selectStatement);
+    }
 
+    @Override
+    public Map<String, Object> compareChapterHistory(Long indexId, Integer v1, Integer v2, Long authorId) {
+        requireChapterOwnership(indexId, authorId);
+        SelectStatementProvider selectStatement1 = select(BookContentHistoryDynamicSqlSupport.bookContentHistory.allColumns())
+            .from(BookContentHistoryDynamicSqlSupport.bookContentHistory)
+            .where(BookContentHistoryDynamicSqlSupport.indexId, isEqualTo(indexId))
+            .and(BookContentHistoryDynamicSqlSupport.versionNum, isEqualTo(v1))
+            .build()
+            .render(RenderingStrategies.MYBATIS3);
+        BookContentHistory h1 = bookContentHistoryMapper.selectOne(selectStatement1).orElse(null);
+
+        SelectStatementProvider selectStatement2 = select(BookContentHistoryDynamicSqlSupport.bookContentHistory.allColumns())
+            .from(BookContentHistoryDynamicSqlSupport.bookContentHistory)
+            .where(BookContentHistoryDynamicSqlSupport.indexId, isEqualTo(indexId))
+            .and(BookContentHistoryDynamicSqlSupport.versionNum, isEqualTo(v2))
+            .build()
+            .render(RenderingStrategies.MYBATIS3);
+        BookContentHistory h2 = bookContentHistoryMapper.selectOne(selectStatement2).orElse(null);
+
+        Map<String, Object> result = new HashMap<>(4);
+        result.put("v1", h1);
+        result.put("v2", h2);
+        return result;
+    }
+
+    private void requireChapterOwnership(Long indexId, Long authorId) {
+        BookIndex index = bookIndexMapper.selectByPrimaryKey(indexId).orElse(null);
+        if (index == null) {
+            throw new IllegalArgumentException("Không tìm thấy chương");
+        }
+        collaborationService.requirePermission(authorId, index.getBookId(), BookPermission.MANAGE_CHAPTERS);
+    }
 }

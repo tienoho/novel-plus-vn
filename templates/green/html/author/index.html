@@ -43,7 +43,9 @@
 
             <ul class="log_list">
                 <li><a class="link_4 on" href="/author/index.html" th:text="#{author.management}">Quản lý truyện</a></li>
+                <li><a class="link_4" href="/author/draft_list.html" th:text="#{author.draft.management}">Quản lý bản nháp</a></li>
                 <li><a class="link_2" href="/author/author_income_detail.html" th:text="#{author.income}">Thu nhập nhuận bút</a></li>
+                <li><a class="link_2" href="/author/author_analytics.html" th:text="#{author.analytics}">Phân tích độc giả</a></li>
                 <!-- Các liên kết crawler cũ không được kích hoạt trong khu vực tác giả. -->
             </ul>
 
@@ -145,6 +147,9 @@
     const updatedText = /*[[#{reader.updated}]]*/ 'Cập nhật';
     const chapterManagementText = /*[[#{author.chapterManagement}]]*/ 'Quản lý chương';
     const incomeQueryText = /*[[#{author.incomeQuery}]]*/ 'Xem thu nhập';
+    const analyticsQueryText = /*[[#{author.analytics.query}]]*/ 'Xem phân tích';
+    const storyBibleText = /*[[#{author.story.open}]]*/ 'Kho tư liệu';
+    const collaboratorManagementText = /*[[#{author.collaboration.open}]]*/ 'Cộng tác viên';
     const workInfoText = /*[[#{author.workInfo}]]*/ 'Thông tin tác phẩm';
     const networkErrorText = /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng';
     const selectUploadText = /*[[#{user.avatar.select}]]*/ 'Vui lòng chọn tệp ảnh để tải lên.';
@@ -187,17 +192,34 @@
                         var bookListHtml = "";
                         for (var i = 0; i < bookList.length; i++) {
                             var book = bookList[i];
+                            var coverInput = "";
+                            if (book.canEditBook === true) {
+                                coverInput = "<input class=\"opacity\" onchange=\"picChange('" + book.id + "')\"" +
+                                    " type=\"file\" id=\"file" + book.id + "\" name=\"file\" title=\"" + coverChangeText + "\"" +
+                                    " style=\"z-index:100;cursor:pointer;left:30px;top:0;width:60px;height:80px;opacity:0;position:absolute\"/>";
+                            }
+                            var actionHtml = "";
+                            if (book.canManageChapters === true || book.canPublishChapters === true) {
+                                actionHtml += "<a target='_blank' class='redBtn' href='/author/index_list.html?bookId=" + book.id + "'>" + chapterManagementText + "</a><br/>";
+                            }
+                            if (book.canManageStory === true) {
+                                actionHtml += "<a target='_blank' href='/author/story_bible.html?bookId=" + book.id + "'>" + storyBibleText + "</a><br/>";
+                            }
+                            if (book.ownerAccess === true) {
+                                actionHtml += "<a target='_blank' href='/author/author_income_detail.html?bookId=" + book.id + "'>" + incomeQueryText + "</a><br/>";
+                                actionHtml += "<a target='_blank' href='/author/collaborators.html?bookId=" + book.id + "'>" + collaboratorManagementText + "</a><br/>";
+                            }
+                            if (book.canViewAnalytics === true) {
+                                actionHtml += "<a target='_blank' href='/author/author_analytics.html?bookId=" + book.id + "'>" + analyticsQueryText + "</a><br/>";
+                            }
+                            actionHtml += "<a target='_blank' href='/book/" + book.id + ".html'>" + workInfoText + "</a>";
                             bookListHtml += (" <tr class=\"book_list\" vals=\"291\">\n" +
                                 /* "                            <td class=\"style bookclass\">\n" +
                                  "                                ["+(i+1)+"]\n" +
                                  "                            </td>\n" +*/
 
                                 "                            <td style=\"position: relative\" class=\"goread\">\n" +
-                                "<input class=\"opacity\" onchange=\"picChange('" + book.id + "')\"\n" +
-                                "                                           type=\"file\" id=\"file" + book.id + "\" name=\"file\"\n" +
-                                "                                           title=\"" + coverChangeText + "\"\n" +
-                                "                                           style=\"z-index: 100;cursor: pointer;left: 30px; top: 0px; width: 60px; height: 80px; opacity: 0; position: absolute;  \"\n" +
-                                "                                    />" +
+                                coverInput +
                                 "<img id=\"cover" + book.id + "\" width='50' height='70' src='" + book.picUrl + "'/><br/>" +                                "                                " + book.bookName + "</td>\n" +
                                 "                            <td class=\"goread\" >"
                                 + book.catName + "</td>\n" +
@@ -215,10 +237,7 @@
                                 "                            <td class=\"goread\" valsc=\"291|2037554|1\">"
                                 + book.wordCount + "</td>\n" +
 
-                                " <td class=\"goread\" id='opt" + book.id + "'>" +
-                                "<a target='_blank' class='redBtn' href='/author/index_list.html?bookId=" + book.id + "'>" + chapterManagementText + "</a><br/>" +
-                                "<a target='_blank' href='/author/author_income_detail.html?bookId=" + book.id + "'>" + incomeQueryText + "</a><br/>" +
-                                "<a target='_blank' href='/book/" + book.id + ".html'>" + workInfoText + "</a>" +
+                                " <td class=\"goread\" id='opt" + book.id + "'>" + actionHtml +
                                 "</td>                     </tr>");
                         }
                         $("#bookList").html(bookListHtml);

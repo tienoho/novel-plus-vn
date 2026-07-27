@@ -133,4 +133,34 @@ public class BookIndex {
     public void setUpdateTime(Date updateTime) {
         this.updateTime = updateTime;
     }
+
+    private Byte auditStatus = 1;
+
+    private String contentHash;
+
+    private String simHash;
+
+    public Byte getAuditStatus() {
+        return auditStatus;
+    }
+
+    public void setAuditStatus(Byte auditStatus) {
+        this.auditStatus = auditStatus;
+    }
+
+    public String getContentHash() {
+        return contentHash;
+    }
+
+    public void setContentHash(String contentHash) {
+        this.contentHash = contentHash == null ? null : contentHash.trim();
+    }
+
+    public String getSimHash() {
+        return simHash;
+    }
+
+    public void setSimHash(String simHash) {
+        this.simHash = simHash == null ? null : simHash.trim();
+    }
 }

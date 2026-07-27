@@ -53,6 +53,22 @@
             color: #3eaf7c;
         }
 
+        .mobile-search-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .mobile-search-input {
+            flex: 1 1 auto;
+            min-width: 0;
+            width: auto;
+        }
+
+        .mobile-search-action {
+            flex: 0 0 auto;
+            width: auto;
+        }
+
         .container {
             display: flex;
             overflow-x: auto; /* Cho phép cuộn ngang. */
@@ -125,14 +141,14 @@
 
 
 <div class="layui-container" style="padding-left: 2%">
-    <div class="layui-row">
+    <div class="layui-row mobile-search-row">
 
-        <div class="layui-col-xs10 layui-col-sm10 layui-col-md11 layui-col-lg11">
+        <div class="layui-col-xs10 layui-col-sm10 layui-col-md11 layui-col-lg11 mobile-search-input">
             <input id="title" type="text" name="title" required lay-verify="required" th:placeholder="#{book.search.placeholder}"
                    autocomplete="off"
                    class="layui-input">
         </div>
-        <div class="layui-col-xs1" style="padding: 0 1% 1%">
+        <div class="layui-col-xs1 mobile-search-action">
             <button onclick="searchBooks()" class="layui-btn" lay-submit lay-filter="formDemo" th:text="#{common.search}">Tìm kiếm</button>
         </div>
     </div>
@@ -142,7 +158,7 @@
 <div class="layui-collapse layui-col-lg10">
     <div class="layui-colla-item">
         <blockquote class="layui-elem-quote" style="text-align: left;font-size: 16px">
-            <span th:text="#{home.featured}">Đề xuất nổi bật</span>
+            <span th:text="${personalizedRecommendations} ? #{home.forYou} : #{home.featured}">Đề xuất nổi bật</span>
         </blockquote>
 
         <div class="container" style="padding-bottom: 10px">

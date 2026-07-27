@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.java2nb.novel.mapper.AuthorChapterDraftMapper">
+    <resultMap id="DraftResult" type="com.java2nb.novel.entity.AuthorChapterDraft">
+        <id column="id" property="id" />
+        <result column="draft_no" property="draftNo" />
+        <result column="client_key" property="clientKey" />
+        <result column="author_id" property="authorId" />
+        <result column="book_id" property="bookId" />
+        <result column="index_id" property="indexId" />
+        <result column="index_name" property="indexName" />
+        <result column="content" property="content" />
+        <result column="is_vip" property="isVip" />
+        <result column="status" property="status" />
+        <result column="version" property="version" />
+        <result column="scheduled_at" property="scheduledAt" />
+        <result column="published_index_id" property="publishedIndexId" />
+        <result column="last_autosave_at" property="lastAutosaveAt" />
+        <result column="last_error" property="lastError" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <sql id="DraftColumns">
+        id, draft_no, client_key, author_id, book_id, index_id, index_name, content, is_vip,
+        status, version, scheduled_at, published_index_id, last_autosave_at, last_error,
+        create_time, update_time
+    </sql>
+
+    <sql id="DraftColumnsD">
+        d.id, d.draft_no, d.client_key, d.author_id, d.book_id, d.index_id, d.index_name, d.content, d.is_vip,
+        d.status, d.version, d.scheduled_at, d.published_index_id, d.last_autosave_at, d.last_error,
+        d.create_time, d.update_time
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO author_chapter_draft
+            (draft_no, client_key, author_id, book_id, index_id, index_name, content, is_vip,
+             status, version, scheduled_at, published_index_id, last_autosave_at, last_error)
+        VALUES
+            (#{draftNo}, #{clientKey}, #{authorId}, #{bookId}, #{indexId}, #{indexName}, #{content}, #{isVip},
+             #{status}, #{version}, #{scheduledAt}, #{publishedIndexId}, #{lastAutosaveAt}, #{lastError})
+    </insert>
+
+    <select id="selectById" resultMap="DraftResult">
+        SELECT <include refid="DraftColumns" />
+        FROM author_chapter_draft
+        WHERE id = #{id}
+        LIMIT 1
+    </select>
+
+    <select id="selectByClientKey" resultMap="DraftResult">
+        SELECT <include refid="DraftColumns" />
+        FROM author_chapter_draft
+        WHERE author_id = #{authorId} AND client_key = #{clientKey}
+        LIMIT 1
+    </select>
+
+    <select id="listByAuthor" resultMap="DraftResult">
+        SELECT <include refid="DraftColumnsD" />
+        FROM author_chapter_draft d
+        JOIN book b ON b.id = d.book_id
+        LEFT JOIN author_book_collaborator c
+          ON c.book_id = d.book_id AND c.collaborator_author_id = #{authorId}
+        WHERE d.author_id = #{authorId}
+          AND (b.author_id = #{authorId} OR c.can_manage_chapters = 1)
+        <if test="status != null and status != ''">
+            AND d.status = #{status}
+        </if>
+        ORDER BY d.update_time DESC, d.id DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countByAuthor" resultType="long">
+        SELECT COUNT(*)
+        FROM author_chapter_draft d
+        JOIN book b ON b.id = d.book_id
+        LEFT JOIN author_book_collaborator c
+          ON c.book_id = d.book_id AND c.collaborator_author_id = #{authorId}
+        WHERE d.author_id = #{authorId}
+          AND (b.author_id = #{authorId} OR c.can_manage_chapters = 1)
+        <if test="status != null and status != ''">
+            AND d.status = #{status}
+        </if>
+    </select>
+
+    <select id="listDueScheduled" resultMap="DraftResult">
+        SELECT <include refid="DraftColumns" />
+        FROM author_chapter_draft
+        WHERE status = 'SCHEDULED' AND scheduled_at &lt;= #{now}
+        ORDER BY scheduled_at, id
+        LIMIT #{limit}
+    </select>
+
+    <update id="updateAutosave">
+        UPDATE author_chapter_draft
+        SET index_name = #{indexName},
+            content = #{content},
+            is_vip = #{isVip},
+            last_autosave_at = #{now},
+            last_error = NULL,
+            version = version + 1
+        WHERE id = #{id}
+          AND author_id = #{authorId}
+          AND version = #{expectedVersion}
+          AND status = 'DRAFT'
+    </update>
+
+    <update id="schedule">
+        UPDATE author_chapter_draft
+        SET status = 'SCHEDULED', scheduled_at = #{scheduledAt}, last_error = NULL, version = version + 1
+        WHERE id = #{id} AND author_id = #{authorId} AND version = #{expectedVersion} AND status = 'DRAFT'
+    </update>
+
+    <update id="cancelSchedule">
+        UPDATE author_chapter_draft
+        SET status = 'DRAFT', scheduled_at = NULL, last_error = NULL, version = version + 1
+        WHERE id = #{id} AND author_id = #{authorId} AND version = #{expectedVersion} AND status = 'SCHEDULED'
+    </update>
+
+    <update id="claimForPublishing">
+        UPDATE author_chapter_draft
+        SET status = 'PUBLISHING', last_error = NULL, version = version + 1
+        WHERE id = #{id} AND author_id = #{authorId} AND version = #{expectedVersion} AND status = #{fromStatus}
+    </update>
+
+    <update id="markPublished">
+        UPDATE author_chapter_draft
+        SET status = 'PUBLISHED', published_index_id = #{publishedIndexId}, scheduled_at = NULL,
+            last_error = NULL, version = version + 1
+        WHERE id = #{id} AND author_id = #{authorId} AND version = #{expectedVersion} AND status = 'PUBLISHING'
+    </update>
+
+    <update id="recordLastError">
+        UPDATE author_chapter_draft
+        SET last_error = #{message}
+        WHERE id = #{id} AND status = 'SCHEDULED'
+    </update>
+
+    <insert id="insertEvent">
+        INSERT INTO author_chapter_draft_event
+            (draft_id, draft_no, event_type, from_status, to_status, actor_type, actor_id, detail)
+        VALUES
+            (#{draftId}, #{draftNo}, #{eventType}, #{fromStatus}, #{toStatus}, #{actorType}, #{actorId}, #{detail})
+    </insert>
+</mapper>

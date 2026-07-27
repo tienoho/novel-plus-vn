@@ -9,6 +9,17 @@ COPY . .
 RUN --mount=type=cache,target=/root/.m2 \
     mvn -B -ntp -Pcentral-repo -DskipTests -Dmaven.antrun.skip=true package
 
+# Runtime là lớp nền dùng chung; file tồn tại trong theme được chép sau để ghi đè.
+RUN set -eux; \
+    mkdir -p /workspace/packaged-themes; \
+    for theme in green orange dark blue; do \
+        mkdir -p "/workspace/packaged-themes/$theme/html" "/workspace/packaged-themes/$theme/static"; \
+        cp -a /workspace/novel-front/src/main/resources/templates/. "/workspace/packaged-themes/$theme/html/"; \
+        cp -a /workspace/novel-front/src/main/resources/static/. "/workspace/packaged-themes/$theme/static/"; \
+        cp -a "/workspace/templates/$theme/html/." "/workspace/packaged-themes/$theme/html/"; \
+        cp -a "/workspace/templates/$theme/static/." "/workspace/packaged-themes/$theme/static/"; \
+    done
+
 FROM eclipse-temurin:21-jre-jammy AS runtime
 
 RUN apt-get update \
@@ -31,7 +42,7 @@ ENTRYPOINT ["/usr/local/bin/novel-entrypoint"]
 
 FROM runtime AS front
 COPY --from=builder --chown=novel:novel /workspace/novel-front/target/novel-front-*.jar /app/app.jar
-COPY --chown=novel:novel templates /app/templates
+COPY --from=builder --chown=novel:novel /workspace/packaged-themes /app/templates
 USER novel
 EXPOSE 8083
 HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=10 \

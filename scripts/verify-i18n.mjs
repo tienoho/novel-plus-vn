@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
+import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -220,6 +221,21 @@ let allowedHanFiles = 0;
 let parsedJsFiles = 0;
 let parsedInlineScripts = 0;
 
+function parseJavaScript(source) {
+    if (/^\s*(?:import|export)\s/mu.test(source)) {
+        const result = spawnSync(process.execPath, ["--input-type=module", "--check"], {
+            input: source,
+            encoding: "utf8"
+        });
+        if (result.error) throw result.error;
+        if (result.status !== 0) {
+            throw new SyntaxError((result.stderr || result.stdout || "ES module không hợp lệ").trim());
+        }
+        return;
+    }
+    new Function(source);
+}
+
 for (const absolute of textFiles) {
     const relative = normalizePath(absolute);
     const content = fs.readFileSync(absolute, "utf8");
@@ -240,7 +256,7 @@ for (const absolute of allFiles.filter((file) => path.extname(file) === ".js")) 
     if (wholeFileAllowance(relative) || /\/static\/sql\//u.test("/" + relative)) continue;
     const source = fs.readFileSync(absolute, "utf8");
     try {
-        new Function(source);
+        parseJavaScript(source);
         parsedJsFiles++;
     } catch (error) {
         failures.push(relative + ": JavaScript không parse được: " + error.message);
@@ -260,7 +276,7 @@ for (const absolute of allFiles.filter((file) => path.extname(file) === ".html")
         const source = scriptMatch[2];
         if (/\bsrc\s*=/iu.test(attributes) || /application\/(?:ld\+json|json)/iu.test(attributes) || !source.trim()) continue;
         try {
-            new Function(source);
+            parseJavaScript(source);
         } catch (error) {
             failures.push(relative + "#script" + scriptIndex + ": JavaScript template thô không parse được: " + error.message);
             continue;
@@ -269,7 +285,7 @@ for (const absolute of allFiles.filter((file) => path.extname(file) === ".html")
             .replace(/\[\[[\s\S]*?\]\]/gu, "null")
             .replace(/\[\([\s\S]*?\)\]/gu, "null");
         try {
-            new Function(rendered);
+            parseJavaScript(rendered);
             parsedInlineScripts++;
         } catch (error) {
             failures.push(relative + "#script" + scriptIndex + ": JavaScript sau mô phỏng render không parse được: " + error.message);

@@ -18,7 +18,13 @@ import java.sql.Connection;
 
 @EnableTransactionManagement
 @ServletComponentScan
-@MapperScan("com.java2nb.*.dao")
+@MapperScan(basePackages = {
+    "com.java2nb.common.dao",
+    "com.java2nb.novel.dao",
+    "com.java2nb.system.dao",
+    "com.java2nb.novel.common.dao",
+    "com.java2nb.novel.mapper"
+})
 @SpringBootApplication(exclude = {
     org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class
 })

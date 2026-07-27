@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title th:text="${application.website.name}+' - '+#{notification.title}">Thông báo</title>
+    <div th:include="mobile/common/css :: css"></div>
+</head>
+<body>
+<div style="height:50px;line-height:50px;text-align:center" class="layui-header header header-doc layui-bg-cyan">
+    <div style="float:left;margin-left:10px"><a href="javascript:history.go(-1)"><i style="font-size:20px;color:#fff" class="layui-icon">&#xe65c;</i></a></div>
+    <b th:text="#{notification.title}">Thông báo</b>
+    <button id="markAllRead" class="layui-btn layui-btn-xs" style="float:right;margin:14px 10px 0 0" th:text="#{notification.markAllRead}">Đã đọc tất cả</button>
+</div>
+<div id="notificationEmpty" style="display:none;padding:50px 15px;text-align:center;color:#888" th:text="#{notification.empty}"></div>
+<div id="notificationList"></div>
+<div id="notificationPage" style="text-align:center;padding:12px"></div>
+<div th:replace="mobile/common/footer :: footer"></div>
+<div th:replace="mobile/common/js :: js"></div>
+<script th:inline="javascript">
+    const notificationMessages = {
+        newChapter: /*[[#{notification.newChapter}]]*/ 'Chương mới',
+        readChapter: /*[[#{notification.readChapter}]]*/ 'Đọc chương',
+        markRead: /*[[#{notification.markRead}]]*/ 'Đánh dấu đã đọc',
+        previousPage: /*[[#{notification.previousPage}]]*/ 'Trang trước',
+        nextPage: /*[[#{notification.nextPage}]]*/ 'Trang sau',
+        networkError: /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng'
+    };
+    function loadNotifications(curr,limit) {
+        $.getJSON('/user/notifications',{curr:curr,limit:limit}).done(function(result) {
+            if(result.code===1001){location.href='/user/login.html?originUrl='+encodeURIComponent(location.href);return;}
+            if(result.code!==200){layer.alert(result.msg);return;}
+            var page=result.data,list=page.list||[];
+            $('#notificationList').empty();$('#notificationEmpty').toggle(list.length===0);
+            list.forEach(function(item){
+                var card=$('<div>').css({padding:'14px',margin:'8px',background:'#f5f5f5',borderLeft:item.read?'3px solid #ccc':'3px solid #3eaf7c'});
+                $('<div>').css({fontWeight:item.read?'normal':'bold'}).text(notificationMessages.newChapter+': '+(item.bookName||'')+' — '+(item.chapterName||'')).appendTo(card);
+                $('<div>').css({color:'#999',marginTop:'6px'}).text(new Date(item.createTime).toLocaleString('vi-VN')).appendTo(card);
+                var actions=$('<div>').css({marginTop:'8px'}).appendTo(card);
+                $('<a>').attr('href','/book/'+item.bookId+'/'+item.chapterId+'.html').text(notificationMessages.readChapter).appendTo(actions);
+                if(!item.read){$('<a>').attr('href','javascript:void(0)').css({marginLeft:'18px'}).text(notificationMessages.markRead).on('click',function(){$.post('/user/notifications/'+item.id+'/read',function(){document.dispatchEvent(new Event('novel:notifications-changed'));loadNotifications(1,20);});}).appendTo(actions);}
+                $('#notificationList').append(card);
+            });
+            layui.laypage.render({elem:'notificationPage',count:page.total,curr:page.pageNum,limit:page.pageSize,
+                prev:notificationMessages.previousPage,next:notificationMessages.nextPage,
+                jump:function(obj,first){if(!first)loadNotifications(obj.curr,obj.limit);}});
+        }).fail(function(){layer.alert(notificationMessages.networkError);});
+    }
+    $('#markAllRead').on('click',function(){$.post('/user/notifications/read-all',function(){document.dispatchEvent(new Event('novel:notifications-changed'));loadNotifications(1,20);});});
+    loadNotifications(1,20);
+</script>
+</body>
+</html>

@@ -33,6 +33,8 @@ docker compose logs --tail=200 migrate front crawl admin
 
 Service `migrate` phải kết thúc với mã `0`. Ba service ứng dụng phải chuyển sang `healthy` sau giai đoạn khởi động.
 
+Migration `20260726_vietnamese_search.sql` có thể rebuild bảng `book` để tạo cột stored và FULLTEXT ngram. Trên production, phải đo trước trên bản sao dữ liệu và bố trí cửa sổ bảo trì; không khởi động `front` với mã tìm kiếm mới trước khi migration này hoàn tất.
+
 Service migration là container one-shot duy nhất dùng tài khoản MySQL root để tạo schema, index và trigger bất biến của sổ cái. `front`, `crawl` và `admin` luôn kết nối bằng `MYSQL_USER`/`MYSQL_APP_PASSWORD`; không dùng root cho runtime ứng dụng.
 
 Các cổng host mặc định:
@@ -84,7 +86,7 @@ Kiểm tra file dump không rỗng và định kỳ diễn tập phục hồi tr
    docker compose logs --since=10m migrate front crawl admin
    ```
 
-Các migration từ `20260712_vi_localization.sql` đến `20260718_author_payout.sql` có thể chạy lặp lại. Migration VNPAY chủ động dừng nếu phát hiện `out_trade_no` trùng để tránh tự sửa lịch sử thanh toán. Migration sổ cái chỉ backfill số dư đầu kỳ một lần thông qua `platform_migration_history`; migration KYC/payout tạo audit trigger nhưng không tự sinh dữ liệu định danh.
+Các migration từ `20260712_vi_localization.sql` đến `20260727_recommendation.sql` được Compose chạy theo thứ tự và phải chạy lặp lại an toàn. Migration VNPAY chủ động dừng nếu phát hiện `out_trade_no` trùng để tránh tự sửa lịch sử thanh toán. Migration sổ cái chỉ backfill số dư đầu kỳ một lần thông qua `platform_migration_history`; các migration KYC, refund, kiểm duyệt, báo cáo và editor tạo schema/audit cần thiết nhưng không tự sinh dữ liệu định danh. Migration SimHash đổi giá trị số cũ sang chuỗi bit 64 ký tự để đồng bộ với model Java và bảo toàn dữ liệu phát hiện trùng. Migration bìa giữ bìa legacy ở trạng thái đã duyệt và tạo queue riêng cho mọi bìa mới hoặc được thay lại. Migration analytics tạo event đọc ẩn danh append-only; cần chốt chính sách retention trước production. Migration notification chỉ thu sự kiện chương được duyệt sau thời điểm nâng cấp, không gửi lại chương cũ. Migration recommendation chỉ thêm index phục vụ pool đã duyệt và lịch sử mua, không sửa hành vi độc giả.
 
 ## 5. Reverse proxy và TLS
 
@@ -112,9 +114,37 @@ Kiểm tra thêm:
 - quyền ghi/đọc ảnh tải lên;
 - kết nối Redis/MySQL;
 - trang nạp Xu hiển thị đúng trạng thái VNPAY;
+- refund chỉ chuyển `REQUESTED → APPROVED` sau khi giữ đủ Xu, chỉ chuyển `APPROVED → REVERSED` khi có mã xác nhận provider; nhánh provider fail phải trả Xu và đưa `REFUND_CLEARING` về 0;
+- chargeback toàn phần khi độc giả đã tiêu Xu phải đưa ví sang `DEBT`; nạp mới bù nợ trước và mọi giao dịch vẫn có tổng entry bằng 0;
+- trang `/novel/authorFinance` chỉ hiển thị dữ liệu rõ cho tài khoản có quyền `novel:authorFinance:pii`;
+- thử một yêu cầu rút bị từ chối và một yêu cầu thanh toán thành công; cả hai phải đưa `PAYOUT_CLEARING` về 0;
+- retry yêu cầu rút với cùng khóa idempotency không được tạo hold hoặc mã yêu cầu thứ hai;
+- theo dõi/bỏ theo dõi một tác giả, xuất bản một chương thử và xác minh độc giả chỉ nhận một thông báo dù đồng thời theo dõi cả truyện lẫn tác giả;
+- badge chưa đọc, đánh dấu một thông báo và đánh dấu tất cả đã đọc hoạt động trên desktop/mobile;
 - log không chứa lỗi migration, checksum hoặc kết nối.
 
-Nếu nhận KYC, phải cấu hình `PII_ENCRYPTION_KEY` bằng khóa AES-256 Base64 lấy từ secret manager. Không bật `AUTHOR_PAYOUT_ENABLED` trước khi hoàn thành quy trình duyệt, chuyển khoản và đối soát mô tả trong [tài chính tác giả](author-finance.md).
+### Giám sát thông báo chương mới
+
+Worker fan-out chỉ chạy trong `front`. Khi `front` dừng, trigger database vẫn giữ event ở trạng thái `PENDING`; không mất sự kiện. Worker retry theo backoff 1, 2, 4, 8, 16, 32 rồi tối đa 60 phút và chuyển sang `FAILED` sau lần lỗi thứ 10. Theo dõi backlog bằng:
+
+```sql
+SELECT status, COUNT(*) AS event_count, MIN(create_time) AS oldest_event
+FROM chapter_publish_event
+GROUP BY status;
+
+SELECT id, chapter_id, attempts, next_attempt_time, last_error
+FROM chapter_publish_event
+WHERE status = 'FAILED'
+ORDER BY id;
+```
+
+Không tự xóa hoặc đổi trạng thái event lỗi trước khi xử lý nguyên nhân trong `last_error`. Sau khi đã khắc phục, quản trị viên có thể đưa từng event về hàng đợi bằng thao tác có kiểm soát theo [hướng dẫn thông báo chương mới](chapter-notifications.md). Hai biến `NOTIFICATION_CHAPTER_SCHEDULE_DELAY_MS` và `NOTIFICATION_CHAPTER_SCHEDULE_INITIAL_DELAY_MS` điều chỉnh nhịp worker; chỉ giảm sau khi đo tải MySQL.
+
+Nếu nhận KYC, phải cấu hình cùng một `PII_ENCRYPTION_KEY` AES-256 Base64 từ secret manager cho `front` và `admin`. Không bật `AUTHOR_PAYOUT_ENABLED` trước khi hoàn thành quy trình bốn mắt, chuyển khoản, đối soát ngân hàng và chính sách thuế mô tả trong [tài chính tác giả](author-finance.md).
+
+VietQR mặc định tắt và chỉ được bật khi có tài khoản nhận tiền thật cùng webhook secret ngẫu nhiên tối thiểu 32 ký tự. Tích hợp hiện là QR chuyển khoản + webhook xác thực; không tự suy đoán giao dịch thành công. Adapter NAPAS chưa có hợp đồng/API ngân hàng thật sẽ trả `PROVIDER_NOT_CONFIGURED`, không sinh mã giao dịch giả. `MANUAL_BANK` cho payout cũng chỉ ghi nhận thao tác vận hành và mã tham chiếu.
+
+Phát hành chứng từ tài chính mặc định tắt. Chỉ đặt `FINANCIAL_VOUCHER_ISSUANCE_ENABLED=true` sau khi đã cấu hình `PLATFORM_LEGAL_NAME`, `PLATFORM_TAX_CODE` và được phê duyệt cách tính/ghi nhận thuế. Các file PDF/CSV/JSON trong module này là chứng từ vận hành kỹ thuật, không mặc nhiên là hóa đơn điện tử hợp pháp.
 
 ## 7. Rollback
 
@@ -127,6 +157,8 @@ docker compose up -d --force-recreate front
 ```
 
 ## 8. Kiểm tra trước khi phát hành
+
+Profile Maven `central-repo` là một phần của quy trình đóng gói Docker: profile này ghi đè cả repository dependency và plugin sang Maven Central. Không xóa profile hoặc đổi ID repository mà không kiểm tra lại effective POM, vì Dockerfile bật profile này để tránh phụ thuộc độ sẵn sàng của mirror Aliyun.
 
 ```bash
 mvn -B -ntp -Pcentral-repo test

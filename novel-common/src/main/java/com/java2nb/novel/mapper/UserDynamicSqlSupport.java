@@ -40,6 +40,10 @@ public final class UserDynamicSqlSupport {
     @Generated("org.mybatis.generator.api.MyBatisGenerator")
     public static final SqlColumn<Date> updateTime = user.updateTime;
 
+    public static final SqlColumn<Date> dateOfBirth = user.dateOfBirth;
+
+    public static final SqlColumn<Byte> isAgeVerified = user.isAgeVerified;
+
     @Generated("org.mybatis.generator.api.MyBatisGenerator")
     public static final class User extends SqlTable {
         public final SqlColumn<Long> id = column("id", JDBCType.BIGINT);
@@ -61,6 +65,10 @@ public final class UserDynamicSqlSupport {
         public final SqlColumn<Date> createTime = column("create_time", JDBCType.TIMESTAMP);
 
         public final SqlColumn<Date> updateTime = column("update_time", JDBCType.TIMESTAMP);
+
+        public final SqlColumn<Date> dateOfBirth = column("date_of_birth", JDBCType.DATE);
+
+        public final SqlColumn<Byte> isAgeVerified = column("is_age_verified", JDBCType.TINYINT);
 
         public User() {
             super("user");

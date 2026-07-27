@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.java2nb.novel.mapper.AuthorStoryMapper">
+
+    <resultMap id="storyItem" type="com.java2nb.novel.service.story.AuthorStoryItemRow">
+        <id column="id" property="id"/>
+        <result column="author_id" property="authorId"/>
+        <result column="book_id" property="bookId"/>
+        <result column="item_type" property="type"/>
+        <result column="title" property="title"/>
+        <result column="content" property="content"/>
+        <result column="timeline_label" property="timelineLabel"/>
+        <result column="sort_order" property="sortOrder"/>
+        <result column="version" property="version"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <sql id="columns">
+        id, author_id, book_id, item_type, title, content, timeline_label,
+        sort_order, version, create_time, update_time
+    </sql>
+
+    <select id="list" resultMap="storyItem">
+        SELECT <include refid="columns"/>
+        FROM author_story_item
+        WHERE author_id = #{authorId} AND book_id = #{bookId}
+        <if test="type != null">
+            AND item_type = #{type}
+        </if>
+        ORDER BY sort_order, id
+    </select>
+
+    <select id="selectById" resultMap="storyItem">
+        SELECT <include refid="columns"/>
+        FROM author_story_item
+        WHERE id = #{itemId}
+        LIMIT 1
+    </select>
+
+    <select id="selectOwned" resultMap="storyItem">
+        SELECT <include refid="columns"/>
+        FROM author_story_item
+        WHERE id = #{itemId} AND author_id = #{authorId}
+        LIMIT 1
+    </select>
+
+    <insert id="insert" parameterType="com.java2nb.novel.service.story.AuthorStoryItemRow"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO author_story_item
+            (author_id, book_id, item_type, title, content, timeline_label, sort_order, version)
+        VALUES
+            (#{authorId}, #{bookId}, #{type}, #{title}, #{content}, #{timelineLabel}, #{sortOrder}, 0)
+    </insert>
+
+    <update id="updateOwned">
+        UPDATE author_story_item
+        SET item_type = #{type}, title = #{title}, content = #{content},
+            timeline_label = #{timelineLabel}, sort_order = #{sortOrder}, version = version + 1
+        WHERE id = #{itemId} AND author_id = #{authorId} AND version = #{expectedVersion}
+    </update>
+
+    <delete id="deleteOwned">
+        DELETE FROM author_story_item
+        WHERE id = #{itemId} AND author_id = #{authorId} AND version = #{expectedVersion}
+    </delete>
+
+</mapper>

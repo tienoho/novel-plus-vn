@@ -148,6 +148,9 @@
 
 <div style="text-align: center;height: 45px;line-height: 45px">
     <a th:href="'/book/'+${book.id}+'/'+${firstBookIndexId}+'.html'" type="button" class="layui-btn layui-btn-sm layui-btn-radius" th:text="#{book.readNow}">Đọc ngay</a>
+    <button th:if="${book.authorId != null}" type="button" data-author-follow class="layui-btn layui-btn-sm layui-btn-radius"
+            th:attr="data-author-id=${book.authorId},data-text-follow=#{notification.followAuthor},data-text-following=#{notification.followingAuthor},data-text-unfollow=#{notification.unfollowAuthor},data-network-error=#{auth.networkError}"
+            th:text="#{notification.followAuthor}">Theo dõi tác giả</button>
 <!--
     <button type="button" onclick="downloadFile()" class="layui-btn layui-btn-sm layui-btn-radius layui-bg-normal" th:text="#{book.downloadTxt}">Tải TXT</button>
 -->
@@ -189,6 +192,7 @@
 </body>
 <div th:replace="/common/js :: js">
 </div>
+<script src="/javascript/author-follow.js" defer></script>
 <script>
     // Kiểm tra truyện đã có trong tủ sách hay chưa
     $.ajax({

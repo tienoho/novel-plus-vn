@@ -38,13 +38,24 @@ public enum ResponseStatus implements IResultCode {
     INVITE_CODE_INVALID(4001, "author.invite.invalid"),
     AUTHOR_STATUS_FORBIDDEN(4002, "author.status.forbidden")
     , BOOKNAME_EXISTS(4003,"author.book.nameExists"),
+    CHAPTER_DUPLICATE_EXISTS(4004, "Chương truyện này đã tồn tại (nội dung trùng lặp)"),
+    CONTENT_AUDIT_PENDING(4005, "Nội dung đang chờ kiểm duyệt"),
+    AUTHOR_STORY_ITEM_NOT_FOUND(4006, "author.story.item.notFound"),
+    AUTHOR_STORY_VERSION_CONFLICT(4007, "author.story.versionConflict"),
+    AUTHOR_STORY_INVALID_TYPE(4008, "author.story.invalidType"),
+    AUTHOR_BOOK_ACCESS_FORBIDDEN(4009, "author.collaboration.access.forbidden"),
+    AUTHOR_COLLABORATOR_NOT_FOUND(4010, "author.collaboration.notFound"),
+    AUTHOR_COLLABORATOR_INVALID(4011, "author.collaboration.invalid"),
+    AUTHOR_COLLABORATION_VERSION_CONFLICT(4012, "author.collaboration.versionConflict"),
 
     /**
      * Lỗi liên quan đến tác phẩm
      */
-    BOOK_EXISTS(5001,"book.exists")
+    BOOK_EXISTS(5001,"book.exists"),
+    AGE_RESTRICTED(5002, "Giới hạn độ tuổi: Bạn chưa đủ tuổi để truy cập tác phẩm này"),
+    COPYRIGHT_TAKEDOWN(5003, "Tác phẩm/chương truyện đã bị gỡ do vi phạm bản quyền"),
+    BOOK_NOT_AVAILABLE(5004, "book.notAvailable"),
 
-            ,
     /**
      * Lỗi liên quan đến công cụ tìm kiếm
      * */

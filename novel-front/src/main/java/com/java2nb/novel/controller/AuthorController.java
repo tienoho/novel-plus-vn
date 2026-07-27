@@ -10,8 +10,14 @@ import com.java2nb.novel.entity.Author;
 import com.java2nb.novel.entity.AuthorIncome;
 import com.java2nb.novel.entity.AuthorIncomeDetail;
 import com.java2nb.novel.entity.Book;
+import com.java2nb.novel.dto.author.DraftAutosaveRequest;
+import com.java2nb.novel.dto.author.DraftScheduleRequest;
+import com.java2nb.novel.service.AuthorChapterDraftService;
 import com.java2nb.novel.service.AuthorService;
 import com.java2nb.novel.service.BookService;
+import com.java2nb.novel.service.analytics.AuthorAnalyticsPage;
+import com.java2nb.novel.service.analytics.AuthorAnalyticsService;
+import com.java2nb.novel.service.analytics.AuthorAnalyticsSummary;
 import com.java2nb.novel.service.finance.AuthorFinanceService;
 import com.java2nb.novel.service.finance.AuthorKycStatus;
 import com.java2nb.novel.service.finance.AuthorWithdrawalRow;
@@ -27,11 +33,34 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatModel;
+import io.swagger.v3.oas.annotations.Operation;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.http.MediaType;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
 import java.util.Date;
+import java.time.LocalDate;
+
+import com.java2nb.novel.core.enums.CopyrightReportStatusEnum;
+import com.java2nb.novel.core.utils.ContentHashUtil;
+import com.java2nb.novel.entity.*;
+import com.java2nb.novel.mapper.*;
+import static org.mybatis.dynamic.sql.SqlBuilder.isEqualTo;
+import static org.mybatis.dynamic.sql.select.SelectDSL.select;
+import org.mybatis.dynamic.sql.render.RenderingStrategies;
+import org.mybatis.dynamic.sql.select.render.SelectStatementProvider;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author 11797
@@ -46,11 +75,200 @@ public class AuthorController extends BaseController {
 
     private final BookService bookService;
 
+    private final AuthorChapterDraftService chapterDraftService;
+
     private final ChatClient chatClient;
 
     private final OpenAiChatModel chatModel;
 
     private final AuthorFinanceService authorFinanceService;
+
+    private final AuthorAnalyticsService authorAnalyticsService;
+
+    private final CopyrightAppealMapper copyrightAppealMapper;
+
+    private final BookOwnershipProofMapper bookOwnershipProofMapper;
+
+    private final CopyrightReportMapper copyrightReportMapper;
+
+    /** Tổng hợp lượt đọc, giữ chân và doanh thu của một truyện thuộc tác giả hiện tại. */
+    @GetMapping("analytics/summary")
+    public RestResult<AuthorAnalyticsSummary> getAnalyticsSummary(
+        @RequestParam("bookId") long bookId,
+        @RequestParam(value = "startDate", required = false)
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+        @RequestParam(value = "endDate", required = false)
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+        HttpServletRequest request) {
+        Author author = checkAuthor(request);
+        return RestResult.ok(authorAnalyticsService.getSummary(author.getId(), bookId, startDate, endDate));
+    }
+
+    /** Phân tích theo chương, có phân trang và kiểm tra ownership ở service. */
+    @GetMapping("analytics/chapters")
+    public RestResult<AuthorAnalyticsPage> getChapterAnalytics(
+        @RequestParam("bookId") long bookId,
+        @RequestParam(value = "startDate", required = false)
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+        @RequestParam(value = "endDate", required = false)
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+        @RequestParam(value = "page", defaultValue = "1") int page,
+        @RequestParam(value = "limit", defaultValue = "20") int limit,
+        HttpServletRequest request) {
+        Author author = checkAuthor(request);
+        return RestResult.ok(
+            authorAnalyticsService.getChapterAnalytics(author.getId(), bookId, startDate, endDate, page, limit));
+    }
+
+    /**
+     * Nộp đơn kháng nghị gỡ bỏ bản quyền
+     */
+    @PostMapping("copyright/appeal")
+    public RestResult<Void> submitCopyrightAppeal(@RequestBody CopyrightAppeal appeal, HttpServletRequest request) {
+        Author author = checkAuthor(request);
+        appeal.setAuthorId(author.getId());
+        appeal.setStatus((byte) 0); // 0: Chờ duyệt
+        appeal.setCreateTime(new Date());
+        copyrightAppealMapper.insertSelective(appeal);
+
+        if (appeal.getReportId() != null) {
+            CopyrightReport report = copyrightReportMapper.selectByPrimaryKey(appeal.getReportId()).orElse(null);
+            if (report != null) {
+                report.setStatus((byte) CopyrightReportStatusEnum.COUNTER_NOTICE_RECEIVED.getCode());
+                report.setUpdateTime(new Date());
+                copyrightReportMapper.updateByPrimaryKeySelective(report);
+            }
+        }
+        return RestResult.ok();
+    }
+
+    /**
+     * Danh sách kháng nghị của tác giả
+     */
+    @GetMapping("copyright/appeals")
+    public RestResult<List<CopyrightAppeal>> listCopyrightAppeals(HttpServletRequest request) {
+        Author author = checkAuthor(request);
+        SelectStatementProvider selectStatement = select(CopyrightAppealDynamicSqlSupport.copyrightAppeal.allColumns())
+            .from(CopyrightAppealDynamicSqlSupport.copyrightAppeal)
+            .where(CopyrightAppealDynamicSqlSupport.authorId, isEqualTo(author.getId()))
+            .orderBy(CopyrightAppealDynamicSqlSupport.createTime.descending())
+            .build().render(RenderingStrategies.MYBATIS3);
+        return RestResult.ok(copyrightAppealMapper.selectMany(selectStatement));
+    }
+
+    /**
+     * Tải lên bằng chứng sở hữu bản quyền tác phẩm
+     */
+    @PostMapping("ownershipProof/upload")
+    public RestResult<Void> uploadOwnershipProof(@RequestBody BookOwnershipProof proof, HttpServletRequest request) {
+        Author author = checkAuthor(request);
+        proof.setAuthorId(author.getId());
+
+        String hashContent = proof.getNote() != null ? proof.getNote() : proof.getFileUrl();
+        if (hashContent != null) {
+            proof.setFileHash(ContentHashUtil.sha256Hex(hashContent));
+        }
+        proof.setVerificationStatus((byte) 0); // 0: Chờ xác thực
+        proof.setCreateTime(new Date());
+        bookOwnershipProofMapper.insertSelective(proof);
+        return RestResult.ok();
+    }
+
+    /**
+     * Truy vấn danh sách bằng chứng sở hữu của tác giả
+     */
+    @GetMapping("ownershipProof/list")
+    public RestResult<List<BookOwnershipProof>> listOwnershipProofs(@RequestParam("bookId") Long bookId, HttpServletRequest request) {
+        Author author = checkAuthor(request);
+        SelectStatementProvider selectStatement = select(BookOwnershipProofDynamicSqlSupport.bookOwnershipProof.allColumns())
+            .from(BookOwnershipProofDynamicSqlSupport.bookOwnershipProof)
+            .where(BookOwnershipProofDynamicSqlSupport.bookId, isEqualTo(bookId))
+            .and(BookOwnershipProofDynamicSqlSupport.authorId, isEqualTo(author.getId()))
+            .build().render(RenderingStrategies.MYBATIS3);
+        return RestResult.ok(bookOwnershipProofMapper.selectMany(selectStatement));
+    }
+
+    /**
+     * Lịch sử phiên bản chỉnh sửa chương
+     */
+    @GetMapping("chapterHistory/{indexId}")
+    public RestResult<List<BookContentHistory>> listChapterHistory(@PathVariable("indexId") Long indexId, HttpServletRequest request) {
+        Author author = checkAuthor(request);
+        return RestResult.ok(bookService.listChapterHistory(indexId, author.getId()));
+    }
+
+    /**
+     * So sánh 2 phiên bản lịch sử chương
+     */
+    @GetMapping("chapterHistory/compare")
+    public RestResult<Map<String, Object>> compareChapterHistory(@RequestParam("indexId") Long indexId,
+        @RequestParam("v1") Integer v1, @RequestParam("v2") Integer v2, HttpServletRequest request) {
+        Author author = checkAuthor(request);
+        return RestResult.ok(bookService.compareChapterHistory(indexId, v1, v2, author.getId()));
+    }
+
+    /** Tự lưu bản nháp theo khóa idempotency của trình soạn thảo. */
+    @PostMapping("drafts/autosave")
+    public RestResult<AuthorChapterDraft> autosaveDraft(@RequestBody DraftAutosaveRequest input,
+                                                         HttpServletRequest request) {
+        Author author = checkAuthor(request);
+        return RestResult.ok(chapterDraftService.autosave(author.getId(), input));
+    }
+
+    /** Đọc một bản nháp thuộc tác giả hiện tại. */
+    @GetMapping("drafts/{draftId}")
+    public RestResult<AuthorChapterDraft> getDraft(@PathVariable("draftId") Long draftId,
+                                                    HttpServletRequest request) {
+        Author author = checkAuthor(request);
+        return RestResult.ok(chapterDraftService.get(author.getId(), draftId));
+    }
+
+    /** Danh sách bản nháp, có thể lọc theo trạng thái. */
+    @GetMapping("drafts")
+    public RestResult<Map<String, Object>> listDrafts(
+        @RequestParam(value = "status", required = false) String status,
+        @RequestParam(value = "page", defaultValue = "1") int page,
+        @RequestParam(value = "limit", defaultValue = "20") int pageSize,
+        HttpServletRequest request) {
+        Author author = checkAuthor(request);
+        return RestResult.ok(Map.of(
+            "items", chapterDraftService.list(author.getId(), status, page, pageSize),
+            "total", chapterDraftService.count(author.getId(), status),
+            "page", Math.max(page, 1),
+            "limit", Math.max(1, Math.min(pageSize, 100))
+        ));
+    }
+
+    /** Đặt lịch xuất bản cho một bản nháp hoàn chỉnh. */
+    @PostMapping("drafts/{draftId}/schedule")
+    public RestResult<AuthorChapterDraft> scheduleDraft(@PathVariable("draftId") Long draftId,
+                                                         @RequestBody DraftScheduleRequest input,
+                                                         HttpServletRequest request) {
+        Author author = checkAuthor(request);
+        if (input == null || input.getExpectedVersion() == null) {
+            throw new IllegalArgumentException("Thiếu phiên bản bản nháp");
+        }
+        return RestResult.ok(chapterDraftService.schedule(author.getId(), draftId,
+            input.getExpectedVersion(), input.getScheduledAt()));
+    }
+
+    /** Hủy lịch và đưa bản nháp về trạng thái có thể chỉnh sửa. */
+    @PostMapping("drafts/{draftId}/cancel-schedule")
+    public RestResult<AuthorChapterDraft> cancelDraftSchedule(@PathVariable("draftId") Long draftId,
+                                                               @RequestParam("expectedVersion") Long expectedVersion,
+                                                               HttpServletRequest request) {
+        Author author = checkAuthor(request);
+        return RestResult.ok(chapterDraftService.cancelSchedule(author.getId(), draftId, expectedVersion));
+    }
+
+    /** Xuất bản ngay; transaction đồng thời tất toán trạng thái bản nháp. */
+    @PostMapping("drafts/{draftId}/publish")
+    public RestResult<AuthorChapterDraft> publishDraft(@PathVariable("draftId") Long draftId,
+                                                        @RequestParam("expectedVersion") Long expectedVersion,
+                                                        HttpServletRequest request) {
+        Author author = checkAuthor(request);
+        return RestResult.ok(chapterDraftService.publishNow(author.getId(), draftId, expectedVersion));
+    }
 
     /**
      * Kiểm tra bút danh đã tồn tại hay chưa.

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.java2nb.novel.common.dao.User2faDao">
+
+    <resultMap id="BaseResultMap" type="com.java2nb.novel.common.entity.User2faDO">
+        <id column="id" property="id" />
+        <result column="user_id" property="userId" />
+        <result column="secret_key_ciphertext" property="secretKeyCiphertext" />
+        <result column="is_enabled" property="isEnabled" />
+        <result column="backup_codes_json" property="backupCodesJson" />
+        <result column="enabled_at" property="enabledAt" />
+        <result column="last_verified_at" property="lastVerifiedAt" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, user_id, secret_key_ciphertext, is_enabled, backup_codes_json, enabled_at, last_verified_at, create_time, update_time
+    </sql>
+
+    <insert id="insert" parameterType="com.java2nb.novel.common.entity.User2faDO" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user_2fa (
+            user_id, secret_key_ciphertext, is_enabled, backup_codes_json, enabled_at, last_verified_at, create_time, update_time
+        ) VALUES (
+            #{userId}, #{secretKeyCiphertext}, #{isEnabled}, #{backupCodesJson}, #{enabledAt}, #{lastVerifiedAt}, NOW(), NOW()
+        )
+    </insert>
+
+    <select id="selectByUserId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM user_2fa
+        WHERE user_id = #{userId}
+    </select>
+
+    <update id="updateStatusAndBackupCodes" parameterType="com.java2nb.novel.common.entity.User2faDO">
+        UPDATE user_2fa
+        SET is_enabled = #{isEnabled},
+            backup_codes_json = #{backupCodesJson},
+            enabled_at = #{enabledAt},
+            last_verified_at = #{lastVerifiedAt},
+            update_time = NOW()
+        WHERE user_id = #{userId}
+    </update>
+
+    <delete id="deleteByUserId">
+        DELETE FROM user_2fa WHERE user_id = #{userId}
+    </delete>
+
+</mapper>

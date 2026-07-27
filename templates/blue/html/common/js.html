@@ -5,6 +5,8 @@
             register: /*[[#{site.register}]]*/ 'Đăng ký',
             logout: /*[[#{site.logout}]]*/ 'Đăng xuất',
             networkError: /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng',
+            notice: /*[[#{common.notice}]]*/ 'Thông báo',
+            cancel: /*[[#{common.cancel}]]*/ 'Hủy',
             loginFirst: /*[[#{header.loginFirst}]]*/ 'Vui lòng đăng nhập trước',
             expand: /*[[#{book.expand}]]*/ 'Mở rộng',
             collapse: /*[[#{book.collapse}]]*/ 'Thu gọn',
@@ -69,6 +71,30 @@
             categoryFantasyRomance: /*[[#{book.category.fantasyRomance}]]*/ 'Ngôn tình huyễn tưởng',
             categorySchool: /*[[#{book.category.school}]]*/ 'Học đường',
             penNameExists: /*[[#{author.penName.exists}]]*/ 'Bút danh đã tồn tại, vui lòng chọn tên khác.',
+            readerTools: /*[[#{reader.tools}]]*/ 'Công cụ đọc',
+            readerTtsReady: /*[[#{reader.tts.ready}]]*/ 'Sẵn sàng đọc tiếng Việt.',
+            readerTtsPlay: /*[[#{reader.tts.play}]]*/ 'Đọc',
+            readerTtsPause: /*[[#{reader.tts.pause}]]*/ 'Tạm dừng',
+            readerTtsResume: /*[[#{reader.tts.resume}]]*/ 'Tiếp tục',
+            readerTtsStop: /*[[#{reader.tts.stop}]]*/ 'Dừng',
+            readerTtsStopped: /*[[#{reader.tts.stopped}]]*/ 'Đã dừng đọc.',
+            readerTtsPaused: /*[[#{reader.tts.paused}]]*/ 'Đã tạm dừng.',
+            readerTtsSpeaking: /*[[#{reader.tts.speaking}]]*/ 'Đang đọc chương.',
+            readerTtsFinished: /*[[#{reader.tts.finished}]]*/ 'Đã đọc xong chương.',
+            readerTtsError: /*[[#{reader.tts.error}]]*/ 'Không thể đọc chương này.',
+            readerTtsUnsupported: /*[[#{reader.speech.unsupported}]]*/ 'Trình duyệt không hỗ trợ đọc văn bản.',
+            readerTtsRate: /*[[#{reader.tts.rate}]]*/ 'Tốc độ',
+            readerTtsVoice: /*[[#{reader.tts.voice}]]*/ 'Giọng đọc',
+            readerTtsVoiceAuto: /*[[#{reader.tts.voiceAuto}]]*/ 'Tự động',
+            readerLineHeight: /*[[#{reader.lineHeight}]]*/ 'Giãn dòng',
+            readerOfflineSave: /*[[#{reader.offline.save}]]*/ 'Lưu offline',
+            readerOfflineSaving: /*[[#{reader.offline.saving}]]*/ 'Đang lưu chương...',
+            readerOfflineSaved: /*[[#{reader.offline.saved}]]*/ 'Đã lưu chương để đọc offline.',
+            readerOfflineError: /*[[#{reader.offline.error}]]*/ 'Không thể lưu chương offline.',
+            readerOfflineFreeOnly: /*[[#{reader.offline.freeOnly}]]*/ 'Chỉ chương miễn phí được lưu offline.',
+            readerOfflineLibrary: /*[[#{reader.offline.library}]]*/ 'Thư viện offline',
+            readerDataSaverOn: /*[[#{reader.dataSaver.on}]]*/ 'Tiết kiệm dữ liệu: Bật',
+            readerDataSaverOff: /*[[#{reader.dataSaver.off}]]*/ 'Tiết kiệm dữ liệu: Tắt',
             blueShelfTitle: /*[[#{user.bookshelf.localTitle('{0}')}]]*/ 'Tủ sách của tôi ({0} truyện)',
             blueShelfNote: /*[[#{user.bookshelf.localNote}]]*/ 'Truyện đã đọc được tự động lưu trên thiết bị này.',
             blueLastChapter: /*[[#{user.bookshelf.lastChapter}]]*/ 'Chương đọc gần nhất',
@@ -88,6 +114,8 @@
     </script>
     <script src="/javascript/jquery-1.8.0.min.js" type="text/javascript"></script>
     <script src="/layui/layui.all.js" type="text/javascript"></script>
+    <script src="/javascript/layer-i18n.js" type="text/javascript"></script>
     <script src="/javascript/header.js" type="text/javascript"></script>
     <script src="/javascript/common.js" type="text/javascript"></script>
+    <script src="/javascript/pwa-register.js" type="text/javascript"></script>
 </th:block>

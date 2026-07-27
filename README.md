@@ -9,7 +9,7 @@
 
 Novel Plus là hệ thống quản lý và đọc truyện đa nền tảng, hỗ trợ giao diện máy tính và thiết bị di động. Dự án gồm cổng đọc, khu vực tác giả, trang quản trị nền tảng và trình quản lý thu thập dữ liệu.
 
-Các chức năng chính gồm đề xuất và tìm kiếm tác phẩm, bảng xếp hạng, đọc chương, bình luận, tủ sách, lịch sử đọc, quản lý tác giả, nạp Xu, mua chương, tin tức, báo cáo thống kê, nhiều giao diện, nhiều nguồn thu thập và hỗ trợ sáng tác bằng AI.
+Các chức năng chính gồm đề xuất và tìm kiếm tiếng Việt có dấu/không dấu, chịu lỗi chính tả nhẹ, bảng xếp hạng, đọc chương, bình luận, tủ sách, lịch sử đọc, theo dõi tác giả/truyện và thông báo chương mới, quản lý tác giả, nạp Xu, mua chương, tin tức, báo cáo thống kê, nhiều giao diện, nhiều nguồn thu thập và hỗ trợ sáng tác bằng AI.
 
 ## Liên kết
 
@@ -19,6 +19,13 @@ Các chức năng chính gồm đề xuất và tìm kiếm tác phẩm, bảng 
 - Hướng dẫn tích hợp VNPAY: [doc/vnpay.md](doc/vnpay.md)
 - Kiến trúc ví và sổ cái: [doc/wallet-ledger.md](doc/wallet-ledger.md)
 - KYC và tài chính tác giả: [doc/author-finance.md](doc/author-finance.md)
+- Biên bản nghiệm thu P0: [doc/p0-acceptance.md](doc/p0-acceptance.md)
+- Trình soạn thảo, bản nháp và lịch xuất bản: [doc/author-editor.md](doc/author-editor.md)
+- Analytics lượt đọc, giữ chân và doanh thu: [doc/author-analytics.md](doc/author-analytics.md)
+- Tìm kiếm tiếng Việt và sửa lỗi chính tả: [doc/vietnamese-search.md](doc/vietnamese-search.md)
+- Theo dõi tác giả và thông báo chương mới: [doc/chapter-notifications.md](doc/chapter-notifications.md)
+- PWA, đọc offline, tiết kiệm dữ liệu và TTS tiếng Việt: [doc/reader-pwa.md](doc/reader-pwa.md)
+- Đề xuất theo hành vi, thể loại và lịch sử đọc: [doc/recommendation.md](doc/recommendation.md)
 - Hướng dẫn migration SQL: [doc/sql/readme.md](doc/sql/readme.md)
 - Tài liệu gốc: [docs.xxyopen.com](https://docs.xxyopen.com/course/novelplus/1.html)
 - Trang giới thiệu: [novel.xxyopen.com](https://novel.xxyopen.com)
@@ -142,9 +149,11 @@ Tài khoản crawler lấy từ `CRAWLER_ADMIN_USERNAME` và `CRAWLER_ADMIN_PASS
 
 MySQL, Redis, ảnh tải lên và nội dung truyện dùng named volume nên được giữ lại khi chạy `docker compose down`. Lệnh `docker compose down -v` xóa toàn bộ volume và dữ liệu, chỉ dùng khi chủ động khởi tạo lại môi trường.
 
-Các migration từ `20260712_vi_localization.sql` đến `20260718_author_payout.sql` chạy như một service one-shot ở mỗi lần khởi động và có thể chạy lặp lại. Chúng lần lượt bổ sung dữ liệu Việt hóa, hardening VNPAY, sổ cái kép, KYC và yêu cầu rút thu nhập. Nếu database cũ đã có `out_trade_no` trùng, migration chủ động dừng để quản trị viên đối soát thay vì tự xóa hoặc gộp lịch sử. Khi nâng cấp từ phiên bản cũ hơn, vẫn phải chạy các migration trung gian theo [hướng dẫn SQL](doc/sql/readme.md).
+Các migration từ `20260712_vi_localization.sql` đến `20260727_recommendation.sql` chạy như một service one-shot ở mỗi lần khởi động và có thể chạy lặp lại. Chúng bổ sung dữ liệu Việt hóa, hardening VNPAY, sổ cái kép, KYC/rút thu nhập, refund/chargeback/VietQR, kiểm duyệt-bản quyền, báo cáo-bảo mật, editor bản nháp, kiểu lưu SimHash nhất quán, queue kiểm duyệt bìa, analytics tác giả, tìm kiếm tiếng Việt, thông báo chương và index recommendation. Nếu database cũ đã có `out_trade_no` trùng, migration chủ động dừng để quản trị viên đối soát thay vì tự xóa hoặc gộp lịch sử. Khi nâng cấp từ phiên bản cũ hơn, vẫn phải chạy các migration trung gian theo [hướng dẫn SQL](doc/sql/readme.md).
 
 Các khóa AI, VNPAY, OSS và email là tùy chọn, được đọc từ `.env`; không ghi khóa thật vào source hoặc image. IPN VNPAY phải được cấu hình tại cổng merchant thành `https://<ten-mien>/pay/vnpay/ipn`; URL này cần HTTPS công khai. Trong production nên đặt reverse proxy TLS phía trước ba cổng HTTP, dùng Docker secrets hoặc secret manager và sao lưu volume MySQL định kỳ.
+
+VietQR mặc định tắt và yêu cầu tài khoản nhận tiền thật cùng webhook secret tối thiểu 32 ký tự. NAPAS/payout ngân hàng không giả lập thành công khi chưa có hợp đồng adapter thật. Phát hành chứng từ cũng mặc định tắt cho tới khi cấu hình pháp nhân/MST và hoàn tất phê duyệt thuế; các báo cáo kỹ thuật không thay thế hóa đơn điện tử hợp pháp.
 
 Để bật VNPAY, cấu hình các biến sau trong `.env`:
 

@@ -10,6 +10,9 @@ x-app-environment: &app-environment
   DB_PASSWORD: ${MYSQL_APP_PASSWORD:?Hãy đặt MYSQL_APP_PASSWORD trong tệp .env}
   DB_TIMEZONE: ${DB_TIMEZONE:-Asia/Ho_Chi_Minh}
   SHARDING_SQL_SHOW: ${SHARDING_SQL_SHOW:-false}
+  FINANCIAL_VOUCHER_ISSUANCE_ENABLED: ${FINANCIAL_VOUCHER_ISSUANCE_ENABLED:-false}
+  PLATFORM_LEGAL_NAME: ${PLATFORM_LEGAL_NAME:-}
+  PLATFORM_TAX_CODE: ${PLATFORM_TAX_CODE:-}
 
 x-app-defaults: &app-defaults
   init: true
@@ -61,7 +64,7 @@ services:
       - /bin/sh
       - -ec
       - |
-        for migration in /migrations/20260712_vi_localization.sql /migrations/20260716_vnpay_hardening.sql /migrations/20260717_wallet_ledger.sql /migrations/20260718_author_payout.sql; do
+        for migration in /migrations/20260712_vi_localization.sql /migrations/20260716_vnpay_hardening.sql /migrations/20260717_wallet_ledger.sql /migrations/20260718_author_payout.sql /migrations/20260720_refund_reconciliation_vietqr.sql /migrations/20260725_moderation_copyright.sql /migrations/20260725_reports_security.sql /migrations/20260726_author_editor.sql /migrations/20260726_simhash_storage.sql /migrations/20260726_cover_moderation.sql /migrations/20260726_author_analytics.sql /migrations/20260726_vietnamese_search.sql /migrations/20260726_chapter_notifications.sql /migrations/20260727_recommendation.sql /migrations/20260727_author_story_bible.sql /migrations/20260727_author_collaboration.sql; do
           mysql --default-character-set=utf8mb4 --protocol=TCP --host=mysql --port=3306 --user="$$MYSQL_USER" "$$MYSQL_DATABASE" < "$$migration"
         done
     volumes:
@@ -69,6 +72,18 @@ services:
       - ./doc/sql/20260716_vnpay_hardening.sql:/migrations/20260716_vnpay_hardening.sql:ro
       - ./doc/sql/20260717_wallet_ledger.sql:/migrations/20260717_wallet_ledger.sql:ro
       - ./doc/sql/20260718_author_payout.sql:/migrations/20260718_author_payout.sql:ro
+      - ./doc/sql/20260720_refund_reconciliation_vietqr.sql:/migrations/20260720_refund_reconciliation_vietqr.sql:ro
+      - ./doc/sql/20260725_moderation_copyright.sql:/migrations/20260725_moderation_copyright.sql:ro
+      - ./doc/sql/20260725_reports_security.sql:/migrations/20260725_reports_security.sql:ro
+      - ./doc/sql/20260726_author_editor.sql:/migrations/20260726_author_editor.sql:ro
+      - ./doc/sql/20260726_simhash_storage.sql:/migrations/20260726_simhash_storage.sql:ro
+      - ./doc/sql/20260726_cover_moderation.sql:/migrations/20260726_cover_moderation.sql:ro
+      - ./doc/sql/20260726_author_analytics.sql:/migrations/20260726_author_analytics.sql:ro
+      - ./doc/sql/20260726_vietnamese_search.sql:/migrations/20260726_vietnamese_search.sql:ro
+      - ./doc/sql/20260726_chapter_notifications.sql:/migrations/20260726_chapter_notifications.sql:ro
+      - ./doc/sql/20260727_recommendation.sql:/migrations/20260727_recommendation.sql:ro
+      - ./doc/sql/20260727_author_story_bible.sql:/migrations/20260727_author_story_bible.sql:ro
+      - ./doc/sql/20260727_author_collaboration.sql:/migrations/20260727_author_collaboration.sql:ro
     depends_on:
       mysql:
         condition: service_healthy
@@ -134,11 +149,21 @@ services:
       VNPAY_RECONCILIATION_MIN_AGE_MINUTES: ${VNPAY_RECONCILIATION_MIN_AGE_MINUTES:-20}
       VNPAY_RECONCILIATION_MAX_AGE_DAYS: ${VNPAY_RECONCILIATION_MAX_AGE_DAYS:-30}
       VNPAY_RECONCILIATION_BATCH_SIZE: ${VNPAY_RECONCILIATION_BATCH_SIZE:-50}
+      VIETQR_ENABLED: ${VIETQR_ENABLED:-false}
+      VIETQR_BANK_BIN: ${VIETQR_BANK_BIN:-disabled}
+      VIETQR_ACCOUNT_NO: ${VIETQR_ACCOUNT_NO:-disabled}
+      VIETQR_ACCOUNT_NAME: ${VIETQR_ACCOUNT_NAME:-disabled}
+      VIETQR_WEBHOOK_SECRET: ${VIETQR_WEBHOOK_SECRET:-disabled}
       AUTHOR_PAYOUT_ENABLED: ${AUTHOR_PAYOUT_ENABLED:-false}
       AUTHOR_PAYOUT_VND_PER_XU: ${AUTHOR_PAYOUT_VND_PER_XU:-10}
       AUTHOR_PAYOUT_MIN_XU: ${AUTHOR_PAYOUT_MIN_XU:-100000}
       AUTHOR_PAYOUT_REQUEST_OPEN_DAY: ${AUTHOR_PAYOUT_REQUEST_OPEN_DAY:-1}
       AUTHOR_PAYOUT_REQUEST_CLOSE_DAY: ${AUTHOR_PAYOUT_REQUEST_CLOSE_DAY:-10}
+      AUTHOR_EDITOR_SCHEDULE_BATCH_SIZE: ${AUTHOR_EDITOR_SCHEDULE_BATCH_SIZE:-20}
+      AUTHOR_EDITOR_SCHEDULE_DELAY_MS: ${AUTHOR_EDITOR_SCHEDULE_DELAY_MS:-30000}
+      AUTHOR_EDITOR_SCHEDULE_INITIAL_DELAY_MS: ${AUTHOR_EDITOR_SCHEDULE_INITIAL_DELAY_MS:-30000}
+      NOTIFICATION_CHAPTER_SCHEDULE_DELAY_MS: ${NOTIFICATION_CHAPTER_SCHEDULE_DELAY_MS:-15000}
+      NOTIFICATION_CHAPTER_SCHEDULE_INITIAL_DELAY_MS: ${NOTIFICATION_CHAPTER_SCHEDULE_INITIAL_DELAY_MS:-15000}
       NOVEL_FILE_ENDPOINT: ${OSS_ENDPOINT:-disabled}
       NOVEL_FILE_KEY_ID: ${OSS_KEY_ID:-disabled}
       NOVEL_FILE_KEY_SECRET: ${OSS_KEY_SECRET:-disabled}
@@ -147,6 +172,12 @@ services:
       NOVEL_FILE_WEB_URL: ${OSS_WEB_URL:-http://localhost:8083/pic}
     ports:
       - "${FRONT_PORT:-8083}:8083"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8083/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     volumes:
       - novel-media:/data/pic
       - novel-books:/data/books
@@ -173,10 +204,17 @@ services:
       MAIL_NICKNAME: ${MAIL_NICKNAME:-novel-plus}
       SPRING_MAIL_USERNAME: ${MAIL_USERNAME:-disabled}
       SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD:-disabled}
+      MANAGEMENT_HEALTH_MAIL_ENABLED: ${CRAWLER_MAIL_HEALTH_ENABLED:-false}
       DISK_MONITOR_ENABLED: ${DISK_MONITOR_ENABLED:-false}
       DISK_MONITOR_RECIPIENTS: ${DISK_MONITOR_RECIPIENTS:-}
     ports:
       - "${CRAWL_PORT:-8081}:8081"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider --user=\"$$CRAWLER_ADMIN_USERNAME\" --password=\"$$CRAWLER_ADMIN_PASSWORD\" http://localhost:8081/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     volumes:
       - novel-media:/data/pic
       - novel-books:/data/books
@@ -198,6 +236,12 @@ services:
       PII_ENCRYPTION_KEY: ${PII_ENCRYPTION_KEY:-disabled}
     ports:
       - "${ADMIN_PORT:-8080}:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     volumes:
       - novel-media:/data/pic
 

@@ -52,6 +52,9 @@
                     <span id="cFavs"><a href="javascript:void(0);" class="btn_ora_white btn_addsj"
                                         onclick="javascript:BookDetail.AddFavorites(37,0,0);" th:text="#{book.addShelf}">Thêm vào tủ sách</a>
                     </span>
+                    <button th:if="${book.authorId != null}" type="button" class="btn_ora_white" style="background:#fff" data-author-follow
+                            th:attr="data-author-id=${book.authorId},data-text-follow=#{notification.followAuthor},data-text-following=#{notification.followingAuthor},data-text-unfollow=#{notification.unfollowAuthor},data-network-error=#{auth.networkError}"
+                            th:text="#{notification.followAuthor}">Theo dõi tác giả</button>
                 </div>
             </div>
         </div>
@@ -230,6 +233,7 @@
 <div th:replace="common/js :: js"></div>
 <script src="/javascript/bookdetail.js?v=1.1" type="text/javascript"></script>
 <script src="/javascript/ufans.js?v=1" type="text/javascript"></script>
+<script src="/javascript/author-follow.js" defer></script>
 
 
 <div class="maskBox" style="display:none" onclick="javascript:uFans.closeBox();"></div>

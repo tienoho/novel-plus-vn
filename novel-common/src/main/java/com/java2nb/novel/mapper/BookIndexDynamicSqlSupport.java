@@ -40,6 +40,12 @@ public final class BookIndexDynamicSqlSupport {
     @Generated("org.mybatis.generator.api.MyBatisGenerator")
     public static final SqlColumn<Date> updateTime = bookIndex.updateTime;
 
+    public static final SqlColumn<Byte> auditStatus = bookIndex.auditStatus;
+
+    public static final SqlColumn<String> contentHash = bookIndex.contentHash;
+
+    public static final SqlColumn<String> simHash = bookIndex.simHash;
+
     @Generated("org.mybatis.generator.api.MyBatisGenerator")
     public static final class BookIndex extends SqlTable {
         public final SqlColumn<Long> id = column("id", JDBCType.BIGINT);
@@ -61,6 +67,12 @@ public final class BookIndexDynamicSqlSupport {
         public final SqlColumn<Date> createTime = column("create_time", JDBCType.TIMESTAMP);
 
         public final SqlColumn<Date> updateTime = column("update_time", JDBCType.TIMESTAMP);
+
+        public final SqlColumn<Byte> auditStatus = column("audit_status", JDBCType.TINYINT);
+
+        public final SqlColumn<String> contentHash = column("content_hash", JDBCType.CHAR);
+
+        public final SqlColumn<String> simHash = column("sim_hash", JDBCType.CHAR);
 
         public BookIndex() {
             super("book_index");

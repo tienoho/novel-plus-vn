@@ -9,10 +9,11 @@ Novel Plus dùng sổ cái kép cho mọi biến động Xu. `wallet_account` l�
 | `SYSTEM:0` | `SYSTEM_ISSUANCE` | Tài khoản đối ứng khi phát hành Xu từ nạp tiền hoặc thưởng |
 | `SYSTEM:0` | `PLATFORM_REVENUE` | Phần doanh thu nền tảng từ mua chương |
 | `SYSTEM:0` | `PAYOUT_CLEARING` | Xu đã giữ cho yêu cầu rút thu nhập đang xử lý |
+| `SYSTEM:0` | `REFUND_CLEARING` | Xu đã giữ trong lúc chờ provider xác nhận hoàn VND |
 | `USER:<id>` | `READER_XU` | Số Xu khả dụng của độc giả |
 | `AUTHOR:<id>` | `AUTHOR_REVENUE_XU` | Doanh thu Xu khả dụng của tác giả |
 
-Tài khoản hệ thống có thể âm để biểu diễn nguồn phát hành. Ví người dùng/tác giả không được âm; schema và service đều kiểm tra quy tắc này.
+Tài khoản hệ thống có thể âm để biểu diễn nguồn phát hành. Ví tác giả và ví độc giả trong nghiệp vụ tự nguyện không được âm. Riêng chargeback là sự kiện bắt buộc từ ngân hàng nên được phép đưa ví độc giả xuống âm và chuyển trạng thái ví sang `DEBT`; nạp Xu tiếp theo bù nợ trước và tự đưa ví về `ACTIVE` khi số dư không còn âm.
 
 ## Giao dịch và bút toán
 
@@ -31,7 +32,10 @@ Các loại nghiệp vụ nền hiện có:
 | `REWARD` | Tài khoản phát hành → ví độc giả |
 | `CHAPTER_PURCHASE` | Ví độc giả → ví tác giả + doanh thu nền tảng |
 | `AUTHOR_WITHDRAWAL_HOLD` | Ví doanh thu tác giả → clearing chờ payout |
-| Giao dịch refund/chargeback | Đảo chính xác entry của giao dịch gốc |
+| `REFUND_HOLD` | Ví độc giả → clearing hoàn tiền |
+| `REFUND_SETTLED` | Clearing hoàn tiền → tài khoản phát hành sau khi provider xác nhận |
+| `REFUND_RELEASE` | Clearing hoàn tiền → ví độc giả khi provider thất bại |
+| `CHARGEBACK` | Đảo chính xác giao dịch nạp Xu gốc; ví độc giả có thể thành `DEBT` |
 
 Tỷ lệ chia doanh thu tác giả lấy từ `author.income.share-proportion`; phần Xu lẻ được làm tròn xuống cho tác giả và phần còn lại vào ví nền tảng.
 
@@ -44,6 +48,20 @@ Khóa hiện tại:
 - VNPAY: `VNPAY_TOP_UP:<out_trade_no>`;
 - mua chương: `CHAPTER_PURCHASE:<user_id>:<book_index_id>`;
 - reward/refund: caller phải cung cấp khóa ổn định từ nghiệp vụ nguồn.
+
+## Hoàn tiền và chargeback
+
+Refund hiện chỉ hỗ trợ toàn phần. Trạng thái được chuyển bằng điều kiện trạng thái trong SQL để hai quản trị viên không thể xử lý đồng thời:
+
+```text
+REQUESTED --approve--> APPROVED --provider confirm--> REVERSED
+                              \--provider fail-----> FAILED
+REQUESTED --reject--------------------------------> REJECTED
+```
+
+`APPROVED` chỉ có nghĩa hệ thống đã giữ Xu vào `REFUND_CLEARING`; chưa được coi là đã hoàn VND. Chỉ endpoint xác nhận provider kèm `providerReference` mới chuyển sang `REVERSED` và tất toán clearing. Nếu provider từ chối/thất bại, nhánh `FAILED` trả đủ Xu đã giữ về độc giả.
+
+Chargeback cũng chỉ hỗ trợ toàn phần và đi thẳng tới `REVERSED` sau khi vận hành xác minh sự kiện ngân hàng. Mỗi đơn nạp chỉ có tối đa một refund hoặc chargeback để tránh hoàn trùng. `order_refund_audit` bị trigger chặn sửa/xóa; không cập nhật audit lịch sử để “sửa” trạng thái.
 
 Unique `(user_id, book_index_id)` trong `user_buy_record` và khóa ledger cùng bảo vệ request mua chương lặp.
 

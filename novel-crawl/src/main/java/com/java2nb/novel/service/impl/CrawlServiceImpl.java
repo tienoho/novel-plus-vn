@@ -345,7 +345,7 @@ public class CrawlServiceImpl implements CrawlService {
                 page = 1;
                 try {
                     // Sau lượt đầu, tạm dừng một phút.
-                    Thread.sleep(Duration.ofMinutes(1));
+                    Thread.sleep(Duration.ofMinutes(1).toMillis());
                 } catch (InterruptedException e) {
                     log.error(e.getMessage(), e);
                     //1. Với thao tác chặn như sleep, wait, receiver hoặc accept

@@ -81,55 +81,47 @@ public class PayController {
     }
 
     /**
-     * Lưu
+     * Lưu - Bị khóa để bảo vệ tính bất biến sổ cái kép
      */
     @ApiOperation(value = "Thêm đơn nạp tiền", notes = "Thêm đơn nạp tiền")
     @ResponseBody
     @PostMapping("/save")
     @RequiresPermissions("novel:pay:add")
-    public R save( PayDO pay) {
-        if (payService.save(pay) > 0) {
-            return R.ok();
-        }
-        return R.error();
+    public R save(PayDO pay) {
+        return R.error("Không được tạo trực tiếp đơn nạp tiền qua Admin. Vui lòng thực hiện qua cổng thanh toán.");
     }
 
     /**
-     * Sửa
+     * Sửa - Bị khóa để bảo vệ tính bất biến sổ cái kép
      */
     @ApiOperation(value = "Sửa đơn nạp tiền", notes = "Sửa đơn nạp tiền")
     @ResponseBody
     @RequestMapping("/update")
     @RequiresPermissions("novel:pay:edit")
-    public R update( PayDO pay) {
-            payService.update(pay);
-        return R.ok();
+    public R update(PayDO pay) {
+        return R.error("Không được sửa trực tiếp đơn nạp tiền. Vui lòng sử dụng quy trình Hoàn tiền (Refund/Chargeback).");
     }
 
     /**
-     * Xóa
+     * Xóa - Bị khóa để bảo vệ tính bất biến sổ cái kép
      */
     @ApiOperation(value = "Xóa đơn nạp tiền", notes = "Xóa đơn nạp tiền")
     @PostMapping("/remove")
     @ResponseBody
     @RequiresPermissions("novel:pay:remove")
-    public R remove( Long id) {
-        if (payService.remove(id) > 0) {
-            return R.ok();
-        }
-        return R.error();
+    public R remove(Long id) {
+        return R.error("Không được xóa trực tiếp đơn nạp tiền. Vui lòng sử dụng quy trình Hoàn tiền (Refund/Chargeback).");
     }
 
     /**
-     * Xóa
+     * Xóa hàng loạt - Bị khóa để bảo vệ tính bất biến sổ cái kép
      */
     @ApiOperation(value = "Xóa hàng loạt đơn nạp tiền", notes = "Xóa hàng loạt đơn nạp tiền")
     @PostMapping("/batchRemove")
     @ResponseBody
     @RequiresPermissions("novel:pay:batchRemove")
     public R remove(@RequestParam("ids[]") Long[] ids) {
-            payService.batchRemove(ids);
-        return R.ok();
+        return R.error("Không được xóa hàng loạt đơn nạp tiền. Vui lòng sử dụng quy trình Hoàn tiền (Refund/Chargeback).");
     }
 
 }

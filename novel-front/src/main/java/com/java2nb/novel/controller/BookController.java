@@ -1,13 +1,14 @@
 package com.java2nb.novel.controller;
 
 import com.java2nb.novel.core.bean.UserDetails;
+import com.java2nb.novel.common.annotation.RateLimit;
 import com.java2nb.novel.core.enums.ResponseStatus;
+import com.java2nb.novel.core.utils.AgeRatingUtil;
 import com.java2nb.novel.core.utils.IpUtil;
 import com.java2nb.novel.entity.*;
-import com.java2nb.novel.service.BookContentService;
-import com.java2nb.novel.service.BookService;
-import com.java2nb.novel.service.IpLocationService;
-import com.java2nb.novel.service.LikeService;
+import com.java2nb.novel.dto.analytics.ReaderAnalyticsEventInput;
+import com.java2nb.novel.service.*;
+import com.java2nb.novel.service.analytics.AuthorAnalyticsService;
 import com.java2nb.novel.vo.*;
 import io.github.xxyopen.model.page.PageBean;
 import io.github.xxyopen.model.page.builder.pagehelper.PageBuilder;
@@ -38,6 +39,20 @@ public class BookController extends BaseController {
     private final IpLocationService ipLocationService;
 
     private final LikeService likeService;
+
+    private final UserService userService;
+
+    private final AuthorAnalyticsService authorAnalyticsService;
+
+    /**
+     * Ghi sự kiện đọc chương đã ẩn danh. clientEventId bảo đảm retry không nhân đôi dữ liệu.
+     */
+    @PostMapping("analytics/read-event")
+    @RateLimit(key = "reader-analytics", count = 120, timeWindowSeconds = 60)
+    public RestResult<Void> recordReadEvent(@RequestBody ReaderAnalyticsEventInput input) {
+        authorAnalyticsService.recordReadEvent(input);
+        return RestResult.ok();
+    }
 
     /**
      * Truy vấn dữ liệu cấu hình tác phẩm trang chủ
@@ -92,8 +107,13 @@ public class BookController extends BaseController {
      * Truy vấn thông tin chi tiết tác phẩm
      */
     @GetMapping("queryBookDetail/{id}")
-    public RestResult<Book> queryBookDetail(@PathVariable("id") Long id) {
-        return RestResult.ok(bookService.queryBookDetail(id));
+    public RestResult<Book> queryBookDetail(@PathVariable("id") Long id, HttpServletRequest request) {
+        Book book = bookService.queryBookDetail(id);
+        ResponseStatus denialReason = AgeRatingUtil.publicBookDenialReason(book, currentUserProfile(request));
+        if (denialReason != null) {
+            return (RestResult) RestResult.fail(denialReason);
+        }
+        return RestResult.ok(book);
     }
 
 
@@ -119,10 +139,20 @@ public class BookController extends BaseController {
      * Truy vấn thông tin chương
      */
     @GetMapping("queryBookIndexAbout")
-    public RestResult<Map<String, Object>> queryBookIndexAbout(Long bookId, Long lastBookIndexId) {
+    public RestResult<Map<String, Object>> queryBookIndexAbout(Long bookId, Long lastBookIndexId,
+        HttpServletRequest request) {
+        Book book = bookService.queryBookDetail(bookId);
+        ResponseStatus bookDenial = AgeRatingUtil.publicBookDenialReason(book, currentUserProfile(request));
+        if (bookDenial != null) {
+            return (RestResult) RestResult.fail(bookDenial);
+        }
         Map<String, Object> data = new HashMap<>(2);
         data.put("bookIndexCount", bookService.queryIndexCount(bookId));
         BookIndex bookIndex = bookService.queryBookIndex(lastBookIndexId);
+        ResponseStatus chapterDenial = AgeRatingUtil.publicChapterDenialReason(bookIndex, bookId);
+        if (chapterDenial != null) {
+            return (RestResult) RestResult.fail(chapterDenial);
+        }
         String lastBookContent = bookContentServiceMap.get(bookIndex.getStorageType())
             .queryBookContent(bookId, lastBookIndexId).getContent();
         if (lastBookContent.length() > 42) {
@@ -130,6 +160,11 @@ public class BookController extends BaseController {
         }
         data.put("lastBookContent", lastBookContent);
         return RestResult.ok(data);
+    }
+
+    private User currentUserProfile(HttpServletRequest request) {
+        UserDetails userDetails = getUserDetails(request);
+        return userDetails == null ? null : userService.userInfo(userDetails.getId());
     }
 
     /**
@@ -165,6 +200,8 @@ public class BookController extends BaseController {
      * Thêm đánh giá
      */
     @PostMapping("addBookComment")
+    @com.java2nb.novel.common.annotation.RateLimit(key = "comment", count = 10, timeWindowSeconds = 60, limitType = com.java2nb.novel.common.annotation.LimitType.USER)
+    @com.java2nb.novel.common.annotation.AuditLog(module = "CONTENT", eventType = "ADD_COMMENT", detail = "Nguoi dung viet binh luan/danh gia")
     public RestResult<?> addBookComment(BookComment comment, HttpServletRequest request) {
         UserDetails userDetails = getUserDetails(request);
         if (userDetails == null) {
@@ -201,14 +238,6 @@ public class BookController extends BaseController {
 
     /**
      * Thêm phản hồi
-     */
-    @PostMapping("addCommentReply")
-    public RestResult<?> addCommentReply(BookCommentReply commentReply, HttpServletRequest request) {
-        UserDetails userDetails = getUserDetails(request);
-        if (userDetails == null) {
-            return RestResult.fail(ResponseStatus.NO_LOGIN);
-        }
-        commentReply.setLocation(ipLocationService.getLocation(IpUtil.getRealIp(request)));
         bookService.addBookCommentReply(userDetails.getId(), commentReply);
         return RestResult.ok();
     }

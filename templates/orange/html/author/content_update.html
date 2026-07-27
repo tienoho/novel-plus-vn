@@ -29,6 +29,7 @@
 
             <ul class="log_list">
                 <li><a class="link_4 on" href="/author/index.html" th:text="#{author.management}">Quản lý truyện</a></li>
+                <li><a class="link_4" href="/author/draft_list.html" th:text="#{author.draft.management}">Quản lý bản nháp</a></li>
                 <li><a class="link_2" href="/author/author_income_detail.html" th:text="#{author.income}">Thu nhập nhuận bút</a></li>
             </ul>
 
@@ -50,10 +51,18 @@
                                 <textarea  name="bookContent" rows="30" cols="80" id="bookContent"
                                           class="textarea"></textarea>
                                 </li>
-                                <li style="margin-top: 10px"><input type="button" onclick="addBookContent()" name="btnRegister" th:value="#{common.submit}"
-                                           id="btnRegister" class="btn_red">
-
-
+                                <li style="margin-top: 10px">
+                                    <input type="button" id="btnSaveDraft" class="btn_ora_white"
+                                           th:value="#{author.draft.save}" value="Lưu bản nháp">
+                                    <input type="datetime-local" id="draftScheduleAt"
+                                           th:title="#{author.draft.scheduleAt}" title="Thời gian xuất bản">
+                                    <input type="button" id="btnScheduleDraft" class="btn_ora_white"
+                                           th:value="#{author.draft.schedule}" value="Lên lịch">
+                                    <input type="button" id="btnCancelSchedule" class="btn_ora_white"
+                                           th:value="#{author.draft.cancelSchedule}" value="Hủy lịch">
+                                    <input type="button" name="btnRegister" th:value="#{author.draft.publishNow}"
+                                           value="Xuất bản ngay" id="btnRegister" class="btn_red">
+                                    <span id="draftStatus" style="margin-left: 10px"></span>
                                 </li>
                             </ul>
                         </div>
@@ -102,6 +111,7 @@
 <script src="/javascript/header.js" type="text/javascript"></script>
 <script src="/javascript/user.js" type="text/javascript"></script>
 <script src="/javascript/common.js" type="text/javascript"></script>
+<script src="/javascript/author-editor.js" type="text/javascript"></script>
 
 <script language="javascript" type="text/javascript" th:inline="javascript">
     const paidLabelText = /*[[#{author.chapter.paid}]]*/ 'Có thu phí';
@@ -110,11 +120,45 @@
     const chapterNameRequiredText = /*[[#{author.chapter.name.required}]]*/ 'Tên chương không được để trống.';
     const chapterContentRequiredText = /*[[#{author.chapter.content.required}]]*/ 'Nội dung chương không được để trống.';
     const networkErrorText = /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng';
+    const draftMessages = {
+        saving: /*[[#{author.draft.saving}]]*/ 'Đang tự lưu...',
+        saved: /*[[#{author.draft.saved}]]*/ 'Đã tự lưu',
+        restored: /*[[#{author.draft.restored}]]*/ 'Đã khôi phục bản nháp',
+        saveFailed: /*[[#{author.draft.saveFailed}]]*/ 'Không thể lưu bản nháp',
+        publishFailed: /*[[#{author.draft.publishFailed}]]*/ 'Không thể xuất bản chương',
+        scheduled: /*[[#{author.draft.scheduled}]]*/ 'Đã lên lịch xuất bản',
+        scheduleRequired: /*[[#{author.draft.scheduleRequired}]]*/ 'Vui lòng chọn thời gian xuất bản',
+        scheduleFailed: /*[[#{author.draft.scheduleFailed}]]*/ 'Không thể lên lịch xuất bản',
+        scheduleCancelled: /*[[#{author.draft.scheduleCancelled}]]*/ 'Đã hủy lịch xuất bản',
+        scheduledReadOnly: /*[[#{author.draft.scheduledReadOnly}]]*/ 'Bản nháp đã lên lịch; hãy hủy lịch trước khi chỉnh sửa',
+        restoreFailed: /*[[#{author.draft.restoreFailed}]]*/ 'Không thể tải bản nháp; mã bản nháp vẫn được giữ để thử lại'
+    };
 
     var bookId = getSearchString("bookId");
     var indexId = getSearchString("indexId");
     var indexName = decodeURI(decodeURI(getSearchString("indexName")));
     var isVip = getSearchString("isVip");
+    var authorEditor = null;
+
+    function initializeAuthorEditor() {
+        if (authorEditor) return;
+        authorEditor = NovelAuthorEditor.create({
+            bookId: bookId,
+            indexId: indexId,
+            titleSelector: '#bookIndex',
+            contentSelector: '#bookContent',
+            vipSelector: 'input[name=isVip]',
+            statusSelector: '#draftStatus',
+            saveSelector: '#btnSaveDraft',
+            publishSelector: '#btnRegister',
+            scheduleSelector: '#draftScheduleAt',
+            scheduleButtonSelector: '#btnScheduleDraft',
+            cancelScheduleSelector: '#btnCancelSchedule',
+            redirectUrl: '/author/index_list.html?bookId=' + bookId,
+            messages: draftMessages
+        });
+        authorEditor.init();
+    }
 
     $("#bookIndex").val(indexName);
     if(isVip == 1){
@@ -136,7 +180,8 @@
         success: function (data) {
             if (data.code == 200) {
 
-                $("#bookContent").html(data.data);
+                $("#bookContent").val(data.data);
+                initializeAuthorEditor();
 
 
 

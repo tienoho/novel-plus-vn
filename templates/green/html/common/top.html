@@ -30,6 +30,8 @@
                 </div>
             </div>
             <div class="bookShelf fr" id="headerUserInfo">
+                <a class="sj_link" href="/user/notifications.html"><span th:text="#{notification.title}">Thông báo</span><b data-notification-badge style="display:none;margin-left:3px;padding:1px 5px;border-radius:9px;background:#e64a19;color:#fff;font-size:11px">0</b></a>
+                <i class="line mr20">|</i>
                 <a class="sj_link" href="/user/favorites.html" th:text="#{user.bookshelf}">Tủ sách</a>
                 <span class="user_link"><i class="line mr20">|</i><a href="/user/login.html" class="mr15" th:text="#{site.login}">Đăng nhập</a><a
                         href="/user/register.html" th:text="#{site.register}">Đăng ký</a></span>
@@ -49,4 +51,5 @@
             </ul>
         </div>
     </div>
+    <script src="/javascript/notification-badge.js" defer></script>
 </div>

@@ -25,5 +25,18 @@ logging:
 pagehelper:
   helper-dialect: mysql
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,metrics,prometheus"
+  endpoint:
+    health:
+      show-details: always
 
-
+# Chỉ bật phát hành chứng từ sau khi pháp nhân và chính sách thuế đã được xác minh.
+financial:
+  voucher:
+    issuance-enabled: ${FINANCIAL_VOUCHER_ISSUANCE_ENABLED:false}
+    platform-legal-name: ${PLATFORM_LEGAL_NAME:}
+    platform-tax-code: ${PLATFORM_TAX_CODE:}

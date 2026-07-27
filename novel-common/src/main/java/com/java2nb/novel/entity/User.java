@@ -13,7 +13,6 @@ public class User {
     @Generated("org.mybatis.generator.api.MyBatisGenerator")
     private Long id;
 
-
     @NotBlank(groups = {AddGroup.class}, message = "{validation.user.phone.required}")
     @Pattern(groups = {AddGroup.class}, regexp = "^1[3|4|5|6|7|8|9][0-9]{9}$", message = "{validation.user.phone.invalid}")
     @Null(groups = {UpdateGroup.class})
@@ -58,6 +57,11 @@ public class User {
     @Null(groups = {AddGroup.class, UpdateGroup.class})
     @Generated("org.mybatis.generator.api.MyBatisGenerator")
     private Date updateTime;
+
+    private Date dateOfBirth;
+
+    @Null(groups = {AddGroup.class, UpdateGroup.class})
+    private Byte isAgeVerified;
 
     @Generated("org.mybatis.generator.api.MyBatisGenerator")
     public Long getId() {
@@ -157,5 +161,21 @@ public class User {
     @Generated("org.mybatis.generator.api.MyBatisGenerator")
     public void setUpdateTime(Date updateTime) {
         this.updateTime = updateTime;
+    }
+
+    public Date getDateOfBirth() {
+        return dateOfBirth;
+    }
+
+    public void setDateOfBirth(Date dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
+    }
+
+    public Byte getIsAgeVerified() {
+        return isAgeVerified;
+    }
+
+    public void setIsAgeVerified(Byte isAgeVerified) {
+        this.isAgeVerified = isAgeVerified;
     }
 }

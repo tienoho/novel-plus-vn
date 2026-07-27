@@ -105,6 +105,9 @@ function getset1(){
 
 // Áp dụng cài đặt cho trang đọc.
 function set(intype,p){
+    if (!nr_body || !nr1) {
+        return;
+    }
 
     // Các phần tử tiêu đề/đánh dấu của giao diện cũ không còn được sử dụng.
 

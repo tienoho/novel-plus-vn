@@ -342,4 +342,134 @@ public class Book implements Serializable{
     public void setCrawlIsStop(Byte crawlIsStop) {
         this.crawlIsStop = crawlIsStop;
     }
+
+    private Byte ageRating = 0;
+
+    private Byte auditStatus = 1;
+
+    private String auditReason;
+
+    private Byte coverAuditStatus = 0;
+
+    private String coverAuditReason;
+
+    private String collaborationRole;
+
+    private Boolean ownerAccess;
+
+    private Boolean canEditBook;
+
+    private Boolean canPublishBook;
+
+    private Boolean canManageChapters;
+
+    private Boolean canPublishChapters;
+
+    private Boolean canManageStory;
+
+    private Boolean canViewAnalytics;
+
+    public Byte getAgeRating() {
+        return ageRating;
+    }
+
+    public void setAgeRating(Byte ageRating) {
+        this.ageRating = ageRating;
+    }
+
+    public Byte getAuditStatus() {
+        return auditStatus;
+    }
+
+    public void setAuditStatus(Byte auditStatus) {
+        this.auditStatus = auditStatus;
+    }
+
+    public String getAuditReason() {
+        return auditReason;
+    }
+
+    public void setAuditReason(String auditReason) {
+        this.auditReason = auditReason == null ? null : auditReason.trim();
+    }
+
+    public Byte getCoverAuditStatus() {
+        return coverAuditStatus;
+    }
+
+    public void setCoverAuditStatus(Byte coverAuditStatus) {
+        this.coverAuditStatus = coverAuditStatus;
+    }
+
+    public String getCoverAuditReason() {
+        return coverAuditReason;
+    }
+
+    public void setCoverAuditReason(String coverAuditReason) {
+        this.coverAuditReason = coverAuditReason == null ? null : coverAuditReason.trim();
+    }
+
+    public String getCollaborationRole() {
+        return collaborationRole;
+    }
+
+    public void setCollaborationRole(String collaborationRole) {
+        this.collaborationRole = collaborationRole;
+    }
+
+    public Boolean getOwnerAccess() {
+        return ownerAccess;
+    }
+
+    public void setOwnerAccess(Boolean ownerAccess) {
+        this.ownerAccess = ownerAccess;
+    }
+
+    public Boolean getCanEditBook() {
+        return canEditBook;
+    }
+
+    public void setCanEditBook(Boolean canEditBook) {
+        this.canEditBook = canEditBook;
+    }
+
+    public Boolean getCanPublishBook() {
+        return canPublishBook;
+    }
+
+    public void setCanPublishBook(Boolean canPublishBook) {
+        this.canPublishBook = canPublishBook;
+    }
+
+    public Boolean getCanManageChapters() {
+        return canManageChapters;
+    }
+
+    public void setCanManageChapters(Boolean canManageChapters) {
+        this.canManageChapters = canManageChapters;
+    }
+
+    public Boolean getCanPublishChapters() {
+        return canPublishChapters;
+    }
+
+    public void setCanPublishChapters(Boolean canPublishChapters) {
+        this.canPublishChapters = canPublishChapters;
+    }
+
+    public Boolean getCanManageStory() {
+        return canManageStory;
+    }
+
+    public void setCanManageStory(Boolean canManageStory) {
+        this.canManageStory = canManageStory;
+    }
+
+    public Boolean getCanViewAnalytics() {
+        return canViewAnalytics;
+    }
+
+    public void setCanViewAnalytics(Boolean canViewAnalytics) {
+        this.canViewAnalytics = canViewAnalytics;
+    }
 }

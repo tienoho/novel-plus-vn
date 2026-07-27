@@ -78,6 +78,25 @@ class WalletLedgerServiceImplTest {
     }
 
     @Test
+    void topUpReducesReaderDebtBeforeRestoringActiveBalance() {
+        WalletAccountRow issuance = wallet(1L, "SYSTEM", 0L, "SYSTEM_ISSUANCE", -1_000L, 2L);
+        WalletAccountRow reader = wallet(2L, "USER", 11L, "READER_XU", -400L, 3L);
+        addWallet(issuance);
+        addWallet(reader);
+        when(mapper.selectTransactionByIdempotencyKey("VNPAY_TOP_UP:DEBT"))
+            .thenReturn(null, transaction(51L, null, "TOP_UP", "DEBT", 200L));
+        when(mapper.lockWalletAccounts(List.of(1L, 2L))).thenReturn(List.of(issuance, reader));
+        when(mapper.updateWalletBalanceAllowReaderDebt(2L, 3L, 200L)).thenReturn(1);
+
+        assertThat(service.creditReaderTopUp(11L, 200L, "DEBT", "VNPAY_TOP_UP:DEBT"))
+            .isEqualTo(WalletPostResult.POSTED);
+
+        verify(mapper).insertEntry(51L, 1L, -200L, -1_200L);
+        verify(mapper).insertEntry(51L, 2L, 200L, -200L);
+        verify(mapper).syncUserBalance(11L, -200L);
+    }
+
+    @Test
     void splitsPurchaseBetweenAuthorAndPlatform() {
         WalletAccountRow reader = wallet(1L, "USER", 11L, "READER_XU", 100L, 0L);
         WalletAccountRow author = wallet(2L, "AUTHOR", 22L, "AUTHOR_REVENUE_XU", 5L, 0L);

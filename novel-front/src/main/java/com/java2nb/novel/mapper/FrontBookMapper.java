@@ -15,9 +15,18 @@ public interface FrontBookMapper extends BookMapper {
 
     List<BookVO> searchByPage(BookSpVO params);
 
+    List<BookVO> searchFuzzyCandidates(@Param("params") BookSpVO params, @Param("limit") int limit);
+
     void addVisitCount(@Param("bookId") Long bookId, @Param("visitCount") Integer visitCount);
 
     List<Book> listRecBookByCatId(@Param("catId") Integer catId);
+
+    List<Book> listRecommendations(@Param("userId") Long userId,
+        @Param("preferredCatId") Integer preferredCatId,
+        @Param("maxAgeRating") Byte maxAgeRating,
+        @Param("excludedBookId") Long excludedBookId,
+        @Param("excludeKnown") boolean excludeKnown,
+        @Param("limit") int limit);
 
     void addCommentCount(@Param("bookId") Long bookId);
 

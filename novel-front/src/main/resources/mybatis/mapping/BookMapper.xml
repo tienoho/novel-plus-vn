@@ -3,13 +3,7 @@
 
 <mapper namespace="com.java2nb.novel.mapper.FrontBookMapper">
 
-    <select id="searchByPage" parameterType="com.java2nb.novel.vo.BookSpVO" resultType="com.java2nb.novel.vo.BookVO">
-        select
-        id,cat_id,cat_name,book_name,author_id,author_name,word_count,last_index_id,last_index_name,score,pic_url,book_status,last_index_update_time,book_desc
-        from book where word_count > 0
-        <if test="keyword != null and keyword != ''">
-            and (book_name like concat('%',#{keyword},'%') or author_name like concat('%',#{keyword},'%'))
-        </if>
+    <sql id="searchFilters">
         <if test="workDirection != null">
             and work_direction = #{workDirection}
         </if>
@@ -31,10 +25,104 @@
         <if test="updateTimeMin != null">
             and last_index_update_time >= #{updateTimeMin}
         </if>
-        <if test="sort != null">
-            order by ${sort} desc
-        </if>
+    </sql>
 
+    <sql id="fuzzySearchFilters">
+        <if test="params.workDirection != null">
+            and work_direction = #{params.workDirection}
+        </if>
+        <if test="params.catId != null">
+            and cat_id = #{params.catId}
+        </if>
+        <if test="params.isVip != null">
+            and is_vip = #{params.isVip}
+        </if>
+        <if test="params.bookStatus != null">
+            and book_status = #{params.bookStatus}
+        </if>
+        <if test="params.wordCountMin != null">
+            and word_count >= #{params.wordCountMin}
+        </if>
+        <if test="params.wordCountMax != null">
+            and word_count <![CDATA[ < ]]> #{params.wordCountMax}
+        </if>
+        <if test="params.updateTimeMin != null">
+            and last_index_update_time >= #{params.updateTimeMin}
+        </if>
+    </sql>
+
+    <select id="searchByPage" parameterType="com.java2nb.novel.vo.BookSpVO" resultType="com.java2nb.novel.vo.BookVO">
+        SELECT id, cat_id, cat_name, book_name, author_id, author_name, word_count,
+               last_index_id, last_index_name, score, pic_url, book_status,
+               last_index_update_time, book_desc
+        FROM book
+        WHERE word_count &gt; 0
+          AND last_index_id IS NOT NULL
+          AND status = 1
+          AND audit_status = 1
+          AND cover_audit_status = 1
+          AND COALESCE(age_rating, 0) = 0
+        <if test="keyword != null and keyword != ''">
+            <if test="keyword.length() &gt;= 2">
+                and MATCH(book_name_search, author_name_search)
+                    AGAINST(#{keyword} IN NATURAL LANGUAGE MODE) &gt; 0
+            </if>
+            and (book_name_search LIKE concat('%', #{keyword}, '%')
+              or author_name_search LIKE concat('%', #{keyword}, '%'))
+        </if>
+        <include refid="searchFilters"/>
+        <choose>
+            <when test="keyword != null and keyword != ''">
+                ORDER BY
+                    CASE
+                        WHEN book_name_search = #{keyword} OR author_name_search = #{keyword} THEN 3
+                        WHEN book_name_search LIKE concat(#{keyword}, '%')
+                          OR author_name_search LIKE concat(#{keyword}, '%') THEN 2
+                        ELSE 1
+                    END DESC,
+                    CASE
+                        WHEN book_name_search LIKE concat('%', #{keyword}, '%')
+                         AND author_name_search LIKE concat('%', #{keyword}, '%')
+                        THEN LEAST(
+                            ABS(CHAR_LENGTH(book_name_search) - CHAR_LENGTH(#{keyword})),
+                            ABS(CHAR_LENGTH(author_name_search) - CHAR_LENGTH(#{keyword}))
+                        )
+                        WHEN book_name_search LIKE concat('%', #{keyword}, '%')
+                        THEN ABS(CHAR_LENGTH(book_name_search) - CHAR_LENGTH(#{keyword}))
+                        ELSE ABS(CHAR_LENGTH(author_name_search) - CHAR_LENGTH(#{keyword}))
+                    END ASC
+                <if test="sort != null">
+                    , ${sort} DESC
+                </if>
+                , visit_count DESC
+            </when>
+            <when test="sort != null">
+                ORDER BY ${sort} DESC
+            </when>
+        </choose>
+    </select>
+
+    <select id="searchFuzzyCandidates" resultType="com.java2nb.novel.vo.BookVO">
+        SELECT id, cat_id, cat_name, book_name, author_id, author_name, word_count,
+               last_index_id, last_index_name, score, pic_url, book_status,
+               last_index_update_time, book_desc
+        FROM book
+        WHERE word_count &gt; 0
+          AND last_index_id IS NOT NULL
+          AND status = 1
+          AND audit_status = 1
+          AND cover_audit_status = 1
+          AND COALESCE(age_rating, 0) = 0
+          AND MATCH(book_name_search, author_name_search)
+              AGAINST(#{params.keyword} IN NATURAL LANGUAGE MODE) &gt; 0
+        <include refid="fuzzySearchFilters"/>
+        ORDER BY MATCH(book_name_search, author_name_search)
+                     AGAINST(#{params.keyword} IN NATURAL LANGUAGE MODE) DESC
+        <if test="params.sort != null">
+            , ${params.sort} DESC
+        </if>
+        , visit_count DESC
+        LIMIT #{limit}
     </select>
 
     <update id="addVisitCount">
@@ -48,7 +136,90 @@
         from book
         where cat_id = #{catId}
           and word_count > 0
-        order by RAND() LIMIT 4
+          and last_index_id is not null
+          and status = 1
+          and audit_status = 1
+          and cover_audit_status = 1
+          and coalesce(age_rating, 0) = 0
+        order by score desc, visit_count desc, last_index_update_time desc, id desc
+        LIMIT 4
+    </select>
+
+    <select id="listRecommendations" resultType="com.java2nb.novel.entity.Book">
+        select b.id, b.cat_id, b.cat_name, b.book_name, b.author_id, b.author_name,
+               b.pic_url, b.book_desc, b.score, b.book_status, b.visit_count,
+               b.word_count, b.comment_count, b.last_index_id, b.last_index_name,
+               b.last_index_update_time, b.is_vip, b.status, b.age_rating,
+               b.audit_status, b.cover_audit_status
+        from book b
+        <if test="userId != null">
+            left join (
+                select weighted.cat_id, sum(weighted.signal_weight) as affinity_score
+                from (
+                    select shelf_book.cat_id, 5 as signal_weight
+                    from user_bookshelf shelf
+                    inner join book shelf_book on shelf.book_id = shelf_book.id
+                    where shelf.user_id = #{userId}
+                    union all
+                    select history_book.cat_id, 3 as signal_weight
+                    from user_read_history history
+                    inner join book history_book on history.book_id = history_book.id
+                    where history.user_id = #{userId}
+                    union all
+                    select purchase_book.cat_id, 8 as signal_weight
+                    from (
+                        select distinct book_id
+                        from user_buy_record
+                        where user_id = #{userId}
+                          and book_id is not null
+                    ) purchase
+                    inner join book purchase_book on purchase.book_id = purchase_book.id
+                ) weighted
+                group by weighted.cat_id
+            ) affinity on affinity.cat_id = b.cat_id
+        </if>
+        where b.status = 1
+          and b.word_count &gt; 0
+          and b.last_index_id is not null
+          and b.audit_status = 1
+          and b.cover_audit_status = 1
+          and coalesce(b.age_rating, 0) &lt;= #{maxAgeRating}
+        <if test="excludedBookId != null">
+          and b.id != #{excludedBookId}
+        </if>
+        <if test="userId != null and excludeKnown">
+          and not exists (
+              select 1 from user_bookshelf known_shelf
+              where known_shelf.user_id = #{userId} and known_shelf.book_id = b.id
+          )
+          and not exists (
+              select 1 from user_read_history known_history
+              where known_history.user_id = #{userId} and known_history.book_id = b.id
+          )
+          and not exists (
+              select 1 from user_buy_record known_purchase
+              where known_purchase.user_id = #{userId} and known_purchase.book_id = b.id
+          )
+        </if>
+        order by
+        <choose>
+            <when test="userId != null and preferredCatId != null">
+                coalesce(affinity.affinity_score, 0)
+                + case when b.cat_id = #{preferredCatId} then 4 else 0 end desc,
+            </when>
+            <when test="userId != null">
+                coalesce(affinity.affinity_score, 0) desc,
+            </when>
+            <when test="preferredCatId != null">
+                case when b.cat_id = #{preferredCatId} then 4 else 0 end desc,
+            </when>
+        </choose>
+        coalesce(b.score, 0) desc,
+        coalesce(b.visit_count, 0) desc,
+        coalesce(b.comment_count, 0) desc,
+        b.last_index_update_time desc,
+        b.id desc
+        limit #{limit}
     </select>
 
 
@@ -71,7 +242,14 @@
 
         select id, book_name, author_name, pic_url, book_desc, score
         from book
-        ORDER BY score, RAND() LIMIT #{limit};
+        where status = 1
+          and word_count &gt; 0
+          and last_index_id is not null
+          and audit_status = 1
+          and cover_audit_status = 1
+          and coalesce(age_rating, 0) = 0
+        ORDER BY score desc, visit_count desc, last_index_update_time desc, id desc
+        LIMIT #{limit};
     </select>
 
 </mapper>

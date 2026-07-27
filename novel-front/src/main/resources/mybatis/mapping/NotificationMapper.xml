@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.java2nb.novel.mapper.NotificationMapper">
+
+    <select id="listPendingEventIds" resultType="long">
+        SELECT id
+        FROM chapter_publish_event
+        WHERE status = 'PENDING'
+          AND next_attempt_time &lt;= #{now}
+        ORDER BY id
+        LIMIT #{limit}
+    </select>
+
+    <update id="claimEvent">
+        UPDATE chapter_publish_event
+        SET status = 'PROCESSING', last_error = NULL
+        WHERE id = #{id} AND status = 'PENDING' AND next_attempt_time &lt;= CURRENT_TIMESTAMP
+    </update>
+
+    <select id="selectClaimedEvent" resultType="com.java2nb.novel.service.notification.ChapterPublishEventRow">
+        SELECT id, chapter_id, book_id, author_id, book_name, chapter_name
+        FROM chapter_publish_event
+        WHERE id = #{id} AND status = 'PROCESSING'
+    </select>
+
+    <insert id="fanOut" parameterType="com.java2nb.novel.service.notification.ChapterPublishEventRow">
+        INSERT IGNORE INTO user_notification
+            (user_id, notification_type, book_id, author_id, chapter_id, book_name, chapter_name, create_time)
+        SELECT follower.user_id, 'NEW_CHAPTER', #{bookId}, #{authorId}, #{chapterId},
+               #{bookName}, #{chapterName}, CURRENT_TIMESTAMP
+        FROM (
+            SELECT user_id FROM user_bookshelf WHERE book_id = #{bookId}
+            UNION
+            SELECT user_id FROM user_author_follow WHERE author_id = #{authorId}
+        ) follower
+    </insert>
+
+    <update id="markProcessed">
+        UPDATE chapter_publish_event
+        SET status = 'PROCESSED', processed_time = #{now}, last_error = NULL
+        WHERE id = #{id} AND status = 'PROCESSING'
+    </update>
+
+    <update id="recordFailure">
+        UPDATE chapter_publish_event
+        SET status = CASE WHEN attempts + 1 &gt;= 10 THEN 'FAILED' ELSE 'PENDING' END,
+            next_attempt_time = DATE_ADD(#{now}, INTERVAL LEAST(60, POW(2, LEAST(attempts, 6))) MINUTE),
+            last_error = #{error},
+            attempts = attempts + 1
+        WHERE id = #{id} AND status = 'PENDING'
+    </update>
+
+    <select id="authorExists" resultType="int">
+        SELECT COUNT(*)
+        FROM book
+        WHERE author_id = #{authorId} AND audit_status = 1
+    </select>
+
+    <insert id="followAuthor">
+        INSERT IGNORE INTO user_author_follow (user_id, author_id, create_time)
+        VALUES (#{userId}, #{authorId}, CURRENT_TIMESTAMP)
+    </insert>
+
+    <delete id="unfollowAuthor">
+        DELETE FROM user_author_follow WHERE user_id = #{userId} AND author_id = #{authorId}
+    </delete>
+
+    <select id="isFollowingAuthor" resultType="int">
+        SELECT COUNT(*) FROM user_author_follow WHERE user_id = #{userId} AND author_id = #{authorId}
+    </select>
+
+    <select id="listNotifications" resultType="com.java2nb.novel.service.notification.UserNotificationRow">
+        SELECT id, notification_type, book_id, author_id, chapter_id, book_name, chapter_name,
+               is_read AS `read`, read_time, create_time
+        FROM user_notification
+        WHERE user_id = #{userId}
+        ORDER BY id DESC
+    </select>
+
+    <select id="countUnread" resultType="long">
+        SELECT COUNT(*) FROM user_notification WHERE user_id = #{userId} AND is_read = 0
+    </select>
+
+    <update id="markRead">
+        UPDATE user_notification
+        SET is_read = 1, read_time = COALESCE(read_time, #{now})
+        WHERE id = #{notificationId} AND user_id = #{userId} AND is_read = 0
+    </update>
+
+    <update id="markAllRead">
+        UPDATE user_notification
+        SET is_read = 1, read_time = COALESCE(read_time, #{now})
+        WHERE user_id = #{userId} AND is_read = 0
+    </update>
+
+</mapper>

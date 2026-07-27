@@ -1,6 +1,7 @@
 package com.java2nb.novel.vo;
 
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.util.Date;
@@ -12,6 +13,7 @@ import java.util.Date;
 @Data
 public class BookSpVO {
 
+    @Size(max = 100, message = "{validation.search.keyword.length}")
     private String keyword;
 
     private Byte workDirection;

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.java2nb.novel.common.dao.SysAuditLogDao">
+
+    <resultMap id="BaseResultMap" type="com.java2nb.novel.common.entity.SysAuditLogDO">
+        <id column="id" property="id" />
+        <result column="module" property="module" />
+        <result column="event_type" property="eventType" />
+        <result column="actor_id" property="actorId" />
+        <result column="actor_username" property="actorUsername" />
+        <result column="actor_ip" property="actorIp" />
+        <result column="user_agent" property="userAgent" />
+        <result column="request_url" property="requestUrl" />
+        <result column="request_params" property="requestParams" />
+        <result column="status" property="status" />
+        <result column="detail" property="detail" />
+        <result column="create_time" property="createTime" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, module, event_type, actor_id, actor_username, actor_ip, user_agent, request_url,
+        request_params, status, detail, create_time
+    </sql>
+
+    <insert id="insert" parameterType="com.java2nb.novel.common.entity.SysAuditLogDO" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sys_audit_log (
+            module, event_type, actor_id, actor_username, actor_ip, user_agent, request_url,
+            request_params, status, detail, create_time
+        ) VALUES (
+            #{module}, #{eventType}, #{actorId}, #{actorUsername}, #{actorIp}, #{userAgent}, #{requestUrl},
+            #{requestParams}, #{status}, #{detail}, NOW()
+        )
+    </insert>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM sys_audit_log
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM sys_audit_log
+        <where>
+            <if test="module != null and module != ''">
+                AND module = #{module}
+            </if>
+            <if test="eventType != null and eventType != ''">
+                AND event_type = #{eventType}
+            </if>
+            <if test="actorId != null">
+                AND actor_id = #{actorId}
+            </if>
+            <if test="actorUsername != null and actorUsername != ''">
+                AND actor_username LIKE CONCAT('%', #{actorUsername}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <if test="startDate != null and startDate != ''">
+                AND create_time &gt;= #{startDate}
+            </if>
+            <if test="endDate != null and endDate != ''">
+                AND create_time &lt;= #{endDate}
+            </if>
+        </where>
+        ORDER BY id DESC
+        <if test="offset != null and limit != null">
+            LIMIT #{offset}, #{limit}
+        </if>
+    </select>
+
+    <select id="countList" resultType="int">
+        SELECT COUNT(*)
+        FROM sys_audit_log
+        <where>
+            <if test="module != null and module != ''">
+                AND module = #{module}
+            </if>
+            <if test="eventType != null and eventType != ''">
+                AND event_type = #{eventType}
+            </if>
+            <if test="actorId != null">
+                AND actor_id = #{actorId}
+            </if>
+            <if test="actorUsername != null and actorUsername != ''">
+                AND actor_username LIKE CONCAT('%', #{actorUsername}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <if test="startDate != null and startDate != ''">
+                AND create_time &gt;= #{startDate}
+            </if>
+            <if test="endDate != null and endDate != ''">
+                AND create_time &lt;= #{endDate}
+            </if>
+        </where>
+    </select>
+
+</mapper>

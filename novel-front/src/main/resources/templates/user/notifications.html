@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="vi">
+<head th:replace="common/header :: common_head(~{::title},~{::meta},~{::link},~{})">
+    <title th:text="#{notification.title}+'_'+${application.website.name}">Thông báo</title>
+    <meta name="keywords" th:content="#{notification.title}+','+${application.website.name}"/>
+    <meta name="description" th:content="#{notification.title}"/>
+    <link rel="stylesheet" href="/css/user.css"/>
+</head>
+<body>
+<div th:replace="common/top :: top('')"></div>
+<div class="main box_center cf">
+    <div class="userBox cf">
+        <div class="my_l">
+            <ul class="log_list">
+                <li><a class="link_1" href="/user/userinfo.html" th:text="#{user.center}">Tài khoản của tôi</a></li>
+                <li><a class="link_4" href="/user/favorites.html" th:text="#{user.bookshelf}">Tủ sách</a></li>
+                <li><a class="on" href="/user/notifications.html" th:text="#{notification.title}">Thông báo</a></li>
+                <li><a class="link_8" href="/user/setup.html" th:text="#{user.settings}">Cài đặt tài khoản</a></li>
+            </ul>
+        </div>
+        <div class="my_r">
+            <div class="my_bookshelf">
+                <div class="title cf">
+                    <h2 class="fl"><a href="javascript:void(0)" class="red" th:text="#{notification.title}">Thông báo</a></h2>
+                    <a class="fr" id="markAllRead" href="javascript:void(0)" th:text="#{notification.markAllRead}">Đánh dấu tất cả đã đọc</a>
+                </div>
+                <div id="notificationEmpty" style="display:none;padding:45px 20px;text-align:center;color:#888" th:text="#{notification.empty}">Bạn chưa có thông báo nào.</div>
+                <ul id="notificationList" style="padding:0 20px"></ul>
+                <div class="pageBox cf" id="notificationPage"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div th:replace="common/footer :: footer"></div>
+<div th:replace="common/js :: js"></div>
+<script th:inline="javascript">
+    const notificationMessages = {
+        newChapter: /*[[#{notification.newChapter}]]*/ 'Chương mới',
+        readChapter: /*[[#{notification.readChapter}]]*/ 'Đọc chương',
+        markRead: /*[[#{notification.markRead}]]*/ 'Đánh dấu đã đọc',
+        previousPage: /*[[#{notification.previousPage}]]*/ 'Trang trước',
+        nextPage: /*[[#{notification.nextPage}]]*/ 'Trang sau',
+        networkError: /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng'
+    };
+
+    function formatNotificationTime(value) {
+        var date = new Date(value);
+        return isNaN(date.getTime()) ? String(value || '') : date.toLocaleString('vi-VN');
+    }
+
+    function renderNotification(item) {
+        var row = $('<li>').css({padding:'16px 0',borderBottom:'1px solid #eee',opacity:item.read ? '.72' : '1'});
+        var title = $('<div>').css({fontWeight:item.read ? 'normal' : 'bold',fontSize:'15px'})
+            .text(notificationMessages.newChapter + ': ' + (item.bookName || '') + ' — ' + (item.chapterName || ''));
+        var meta = $('<div>').css({marginTop:'7px',color:'#999'}).text(formatNotificationTime(item.createTime));
+        var actions = $('<div>').css({marginTop:'8px'});
+        $('<a>').attr('href','/book/'+item.bookId+'/'+item.chapterId+'.html').text(notificationMessages.readChapter).appendTo(actions);
+        if (!item.read) {
+            $('<a>').attr('href','javascript:void(0)').css({marginLeft:'18px'}).text(notificationMessages.markRead)
+                .on('click', function () { markNotificationRead(item.id); }).appendTo(actions);
+        }
+        return row.append(title, meta, actions);
+    }
+
+    function loadNotifications(curr, limit) {
+        $.getJSON('/user/notifications', {curr:curr,limit:limit}).done(function (result) {
+            if (result.code === 1001) {
+                location.href='/user/login.html?originUrl='+encodeURIComponent(location.href);
+                return;
+            }
+            if (result.code !== 200) { layer.alert(result.msg); return; }
+            var page=result.data, list=page.list || [];
+            $('#notificationList').empty();
+            $('#notificationEmpty').toggle(list.length === 0);
+            list.forEach(function (item) { $('#notificationList').append(renderNotification(item)); });
+            layui.laypage.render({elem:'notificationPage',count:page.total,curr:page.pageNum,limit:page.pageSize,
+                prev:notificationMessages.previousPage,next:notificationMessages.nextPage,
+                jump:function (obj, first) { if (!first) loadNotifications(obj.curr,obj.limit); }});
+        }).fail(function () { layer.alert(notificationMessages.networkError); });
+    }
+
+    function markNotificationRead(id) {
+        $.post('/user/notifications/'+id+'/read').done(function () {
+            document.dispatchEvent(new Event('novel:notifications-changed'));
+            loadNotifications(1,20);
+        });
+    }
+    $('#markAllRead').on('click', function () {
+        $.post('/user/notifications/read-all').done(function () {
+            document.dispatchEvent(new Event('novel:notifications-changed'));
+            loadNotifications(1,20);
+        });
+    });
+    loadNotifications(1,20);
+</script>
+</body>
+</html>

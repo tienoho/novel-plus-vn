@@ -8,7 +8,7 @@ public interface CacheKey {
     /**
      * Cấu hình tác phẩm trang chủ
      * */
-    String INDEX_BOOK_SETTINGS_KEY = "indexBookSettingsKey:v2";
+    String INDEX_BOOK_SETTINGS_KEY = "indexBookSettingsKey:v3";
 
     /**
      * Tin tức trang chủ
@@ -18,7 +18,7 @@ public interface CacheKey {
     /**
      * Bảng lượt xem trang chủ
      * */
-    String INDEX_CLICK_BANK_BOOK_KEY = "indexClickBankBookKey";
+    String INDEX_CLICK_BANK_BOOK_KEY = "indexClickBankBookKey:v2";
 
     /**
      * Liên kết bạn bè trang chủ
@@ -28,13 +28,13 @@ public interface CacheKey {
     /**
      * Bảng tác phẩm mới trang chủ
      * */
-    String INDEX_NEW_BOOK_KEY = "indexNewBookKey";
+    String INDEX_NEW_BOOK_KEY = "indexNewBookKey:v2";
 
 
     /**
      * Bảng cập nhật trang chủ
      * */
-    String INDEX_UPDATE_BOOK_KEY = "indexUpdateBookKey";
+    String INDEX_UPDATE_BOOK_KEY = "indexUpdateBookKey:v2";
 
     /**
      * Khóa lưu thư mục mẫu

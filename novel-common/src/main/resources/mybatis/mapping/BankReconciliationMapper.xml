@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.java2nb.novel.mapper.BankReconciliationMapper">
+
+    <resultMap id="BatchResultMap" type="com.java2nb.novel.entity.BankReconciliationBatch">
+        <id column="id" property="id" />
+        <result column="batch_no" property="batchNo" />
+        <result column="pay_channel" property="payChannel" />
+        <result column="reconcile_date" property="reconcileDate" />
+        <result column="total_transactions" property="totalTransactions" />
+        <result column="matched_transactions" property="matchedTransactions" />
+        <result column="mismatched_transactions" property="mismatchedTransactions" />
+        <result column="total_amount_vnd" property="totalAmountVnd" />
+        <result column="status" property="status" />
+        <result column="create_time" property="createTime" />
+    </resultMap>
+
+    <resultMap id="ItemResultMap" type="com.java2nb.novel.entity.BankReconciliationItem">
+        <id column="id" property="id" />
+        <result column="batch_id" property="batchId" />
+        <result column="out_trade_no" property="outTradeNo" />
+        <result column="bank_trade_no" property="bankTradeNo" />
+        <result column="amount_vnd" property="amountVnd" />
+        <result column="match_status" property="matchStatus" />
+        <result column="discrepancy_reason" property="discrepancyReason" />
+        <result column="create_time" property="createTime" />
+    </resultMap>
+
+    <insert id="insertBatch" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO bank_reconciliation_batch (
+            batch_no, pay_channel, reconcile_date, total_transactions,
+            matched_transactions, mismatched_transactions, total_amount_vnd, status
+        ) VALUES (
+            #{batchNo}, #{payChannel}, #{reconcileDate}, #{totalTransactions},
+            #{matchedTransactions}, #{mismatchedTransactions}, #{totalAmountVnd}, #{status}
+        )
+    </insert>
+
+    <insert id="insertItem" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO bank_reconciliation_item (
+            batch_id, out_trade_no, bank_trade_no, amount_vnd, match_status, discrepancy_reason
+        ) VALUES (
+            #{batchId}, #{outTradeNo}, #{bankTradeNo}, #{amountVnd}, #{matchStatus}, #{discrepancyReason}
+        )
+    </insert>
+
+    <select id="selectBatchById" resultMap="BatchResultMap">
+        SELECT * FROM bank_reconciliation_batch WHERE id = #{id}
+    </select>
+
+    <select id="selectBatchByNo" resultMap="BatchResultMap">
+        SELECT * FROM bank_reconciliation_batch WHERE batch_no = #{batchNo}
+    </select>
+
+    <select id="listBatches" resultMap="BatchResultMap">
+        SELECT * FROM bank_reconciliation_batch
+        <where>
+            <if test="payChannel != null">
+                AND pay_channel = #{payChannel}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY id DESC
+        <if test="offset != null and limit != null">
+            LIMIT #{offset}, #{limit}
+        </if>
+    </select>
+
+    <select id="countBatches" resultType="int">
+        SELECT COUNT(*) FROM bank_reconciliation_batch
+        <where>
+            <if test="payChannel != null">
+                AND pay_channel = #{payChannel}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+    </select>
+
+    <select id="listItemsByBatchId" resultMap="ItemResultMap">
+        SELECT * FROM bank_reconciliation_item WHERE batch_id = #{batchId} ORDER BY id ASC
+    </select>
+
+    <update id="updateBatchSummary">
+        UPDATE bank_reconciliation_batch
+        SET total_transactions = #{totalTransactions},
+            matched_transactions = #{matchedTransactions},
+            mismatched_transactions = #{mismatchedTransactions},
+            total_amount_vnd = #{totalAmountVnd},
+            status = #{status}
+        WHERE id = #{id}
+    </update>
+
+</mapper>

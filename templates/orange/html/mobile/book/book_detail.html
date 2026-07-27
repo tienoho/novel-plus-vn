@@ -49,6 +49,9 @@
     <div style="text-align:center;height:45px;line-height:45px">
         <a th:href="'/book/'+${book.id}+'/'+${firstBookIndexId}+'.html'" type="button" style="background-color:#3eaf7c!important" class="layui-btn layui-btn-sm layui-btn-radius" th:text="#{book.readNow}">Đọc ngay</a>
         <button type="button" id="cFavs" onclick="addInShell()" style="border:1px solid #3eaf7c;color:#3eaf7c;background-color:#fff!important" class="layui-btn layui-btn-sm layui-btn-radius" th:text="#{book.addShelf}">Thêm vào tủ sách</button>
+        <button th:if="${book.authorId != null}" type="button" data-author-follow style="border:1px solid #3eaf7c;color:#3eaf7c;background:#fff" class="layui-btn layui-btn-sm layui-btn-radius"
+                th:attr="data-author-id=${book.authorId},data-text-follow=#{notification.followAuthor},data-text-following=#{notification.followingAuthor},data-text-unfollow=#{notification.unfollowAuthor},data-network-error=#{auth.networkError}"
+                th:text="#{notification.followAuthor}">Theo dõi tác giả</button>
     </div>
     <p style="line-height:23px;padding:10px;font-size:14px;color:#333" th:utext="${book.bookDesc}"></p>
 
@@ -64,6 +67,7 @@
 </div>
 <div th:replace="mobile/common/footer :: footer"></div>
 <div th:replace="mobile/common/js :: js"></div>
+<script src="/javascript/author-follow.js" defer></script>
 <script th:inline="javascript">
     const inShelfText = /*[[#{book.inShelf}]]*/ 'Đã lưu';
     const addShelfText = /*[[#{book.addShelf}]]*/ 'Thêm vào tủ sách';

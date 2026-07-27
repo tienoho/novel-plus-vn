@@ -3,13 +3,18 @@ package com.java2nb.novel.controller.page;
 import com.java2nb.novel.controller.BaseController;
 import com.java2nb.novel.core.bean.UserDetails;
 import com.java2nb.novel.core.config.VnpayProperties;
+import com.java2nb.novel.core.enums.ResponseStatus;
+import com.java2nb.novel.core.exception.BusinessException;
+import com.java2nb.novel.core.utils.AgeRatingUtil;
 import com.java2nb.novel.core.utils.ThreadLocalUtil;
 import com.java2nb.novel.entity.*;
 import com.java2nb.novel.service.*;
+import com.java2nb.novel.service.recommendation.RecommendationService;
 import com.java2nb.novel.vo.BookCommentVO;
 import com.java2nb.novel.vo.BookSettingVO;
 import io.github.xxyopen.model.page.PageBean;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +25,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -39,6 +45,8 @@ public class PageController extends BaseController {
     private final AuthorService authorService;
 
     private final UserService userService;
+
+    private final RecommendationService recommendationService;
 
     private final ThreadPoolExecutor threadPoolExecutor;
 
@@ -83,14 +91,22 @@ public class PageController extends BaseController {
      */
     @SneakyThrows
     @RequestMapping(path = {"/", "/index", "/index.html"})
-    public String index(Model model) {
+    public String index(Model model, HttpServletRequest request) {
+        UserDetails userDetails = getUserDetails(request);
+        Long userId = userDetails == null ? null : userDetails.getId();
+        User userProfile = userId == null ? null : userService.userInfo(userId);
         //Luồng tải thông tin cơ bản tác phẩm trên trang chủ
         CompletableFuture<Map<String, List<BookSettingVO>>> bookCompletableFuture = CompletableFuture.supplyAsync(
             bookService::listBookSettingVO, threadPoolExecutor);
+        CompletableFuture<List<BookSettingVO>> recommendationCompletableFuture = CompletableFuture.supplyAsync(
+            () -> recommendationService.recommendHomeBooks(userId, userProfile, 6), threadPoolExecutor);
         //Luồng tải tin tức trang chủ
         CompletableFuture<List<News>> newsCompletableFuture = CompletableFuture.supplyAsync(newsService::listIndexNews,
             threadPoolExecutor);
-        model.addAttribute("bookMap", bookCompletableFuture.get());
+        Map<String, List<BookSettingVO>> bookMap = new HashMap<>(bookCompletableFuture.get());
+        bookMap.put("4", recommendationCompletableFuture.get());
+        model.addAttribute("bookMap", bookMap);
+        model.addAttribute("personalizedRecommendations", userId != null);
         model.addAttribute("newsList", newsCompletableFuture.get());
         return ThreadLocalUtil.getTemplateDir() + "index";
     }
@@ -125,6 +141,12 @@ public class PageController extends BaseController {
     @RequestMapping("user/favorites.html")
     public String favorites() {
         return ThreadLocalUtil.getTemplateDir() + "user/favorites";
+    }
+
+    /** Trang hộp thông báo của độc giả. */
+    @RequestMapping("user/notifications.html")
+    public String notifications() {
+        return ThreadLocalUtil.getTemplateDir() + "user/notifications";
     }
 
     /**
@@ -170,7 +192,10 @@ public class PageController extends BaseController {
      */
     @SneakyThrows
     @RequestMapping("/book/{bookId}.html")
-    public String bookDetail(@PathVariable("bookId") Long bookId, Model model) {
+    public String bookDetail(@PathVariable("bookId") Long bookId, Model model, HttpServletRequest request) {
+        UserDetails userDetails = getUserDetails(request);
+        Long userId = userDetails == null ? null : userDetails.getId();
+        User userProfile = userId == null ? null : userService.userInfo(userId);
         //Luồng tải thông tin cơ bản tác phẩm
         CompletableFuture<Book> bookCompletableFuture = CompletableFuture.supplyAsync(() -> {
             //Truy vấn tác phẩm
@@ -195,14 +220,16 @@ public class PageController extends BaseController {
             }
             return null;
         }, threadPoolExecutor);
-        //Luồng tải đề xuất ngẫu nhiên chạy sau khi tải xong thông tin tác phẩm
+        //Luồng tải đề xuất an toàn chạy sau khi tải xong thông tin tác phẩm
         CompletableFuture<List<Book>> recBookCompletableFuture = bookCompletableFuture.thenApplyAsync((book) -> {
-            List<Book> books = bookService.listRecBookByCatId(book.getCatId());
-            log.debug("Đã tải xong danh sách tác phẩm đề xuất ngẫu nhiên");
+            List<Book> books = recommendationService.recommendBooks(userId, userProfile, book.getCatId(), bookId, 4);
+            log.debug("Đã tải xong danh sách tác phẩm đề xuất");
             return books;
         }, threadPoolExecutor);
 
-        model.addAttribute("book", bookCompletableFuture.get());
+        Book book = bookCompletableFuture.get();
+        requirePublicBookAccess(book, userProfile);
+        model.addAttribute("book", book);
         model.addAttribute("firstBookIndexId", firstBookIndexIdCompletableFuture.get());
         model.addAttribute("recBooks", recBookCompletableFuture.get());
         model.addAttribute("bookCommentPageBean", bookCommentPageBeanCompletableFuture.get());
@@ -215,8 +242,9 @@ public class PageController extends BaseController {
      */
     @SneakyThrows
     @RequestMapping("/book/indexList-{bookId}.html")
-    public String indexList(@PathVariable("bookId") Long bookId, Model model) {
+    public String indexList(@PathVariable("bookId") Long bookId, Model model, HttpServletRequest request) {
         Book book = bookService.queryBookDetail(bookId);
+        requirePublicBookAccess(book, currentUserProfile(request));
         model.addAttribute("book", book);
         List<BookIndex> bookIndexList = bookService.queryIndexList(bookId, null, 1, null);
         model.addAttribute("bookIndexList", bookIndexList);
@@ -230,7 +258,11 @@ public class PageController extends BaseController {
     @SneakyThrows
     @RequestMapping("/book/{bookId}/{bookIndexId}.html")
     public String bookContent(@PathVariable("bookId") Long bookId, @PathVariable("bookIndexId") Long bookIndexId,
-        HttpServletRequest request, Model model) {
+        HttpServletRequest request, HttpServletResponse response, Model model) {
+        response.setHeader("Cache-Control", "private, no-store, max-age=0");
+        response.setHeader("Pragma", "no-cache");
+        response.addHeader("Vary", "Cookie");
+        response.addHeader("Vary", "Authorization");
         //Luồng tải thông tin cơ bản tác phẩm
         CompletableFuture<Book> bookCompletableFuture = CompletableFuture.supplyAsync(() -> {
             //Truy vấn tác phẩm
@@ -298,8 +330,17 @@ public class PageController extends BaseController {
 
         }, threadPoolExecutor);
 
-        model.addAttribute("book", bookCompletableFuture.get());
-        model.addAttribute("bookIndex", bookIndexCompletableFuture.get());
+        Book book = bookCompletableFuture.get();
+        requirePublicBookAccess(book, currentUserProfile(request));
+
+        BookIndex bookIndex = bookIndexCompletableFuture.get();
+        ResponseStatus chapterDenial = AgeRatingUtil.publicChapterDenialReason(bookIndex, bookId);
+        if (chapterDenial != null) {
+            throw new BusinessException(chapterDenial);
+        }
+
+        model.addAttribute("book", book);
+        model.addAttribute("bookIndex", bookIndex);
         model.addAttribute("preBookIndexId", preBookIndexIdCompletableFuture.get());
         model.addAttribute("nextBookIndexId", nextBookIndexIdCompletableFuture.get());
         model.addAttribute("bookContent", bookContentCompletableFuture.get());
@@ -312,11 +353,24 @@ public class PageController extends BaseController {
      * Trang bình luận
      */
     @RequestMapping("/book/comment-{bookId}.html")
-    public String commentList(@PathVariable("bookId") Long bookId, Model model) {
+    public String commentList(@PathVariable("bookId") Long bookId, Model model, HttpServletRequest request) {
         //Truy vấn tác phẩm
         Book book = bookService.queryBookDetail(bookId);
+        requirePublicBookAccess(book, currentUserProfile(request));
         model.addAttribute("book", book);
         return "book/book_comment";
+    }
+
+    private User currentUserProfile(HttpServletRequest request) {
+        UserDetails userDetails = getUserDetails(request);
+        return userDetails == null ? null : userService.userInfo(userDetails.getId());
+    }
+
+    private void requirePublicBookAccess(Book book, User user) {
+        ResponseStatus denialReason = AgeRatingUtil.publicBookDenialReason(book, user);
+        if (denialReason != null) {
+            throw new BusinessException(denialReason);
+        }
     }
 
     /**

@@ -177,6 +177,11 @@
 
 <input type="hidden" id="indexNumHidden" th:value="${bookIndex.indexNum}"/>
 
+<input type="hidden" id="offlineEligible" value="true"
+       th:if="${bookIndex.isVip == null || bookIndex.isVip != 1}"/>
+
+<input type="hidden" id="readerContentAvailable" value="true" th:if="${!needBuy}"/>
+
 <script>
     var token = localStorage.getItem("token");
 </script>
@@ -229,6 +234,7 @@
 </form>-->
 <div th:replace="common/js :: js">
 </div>
+<script src="/javascript/reader-tools.js?v=4"></script>
 <div id="chaptercontent" class="Readarea ReadAjax_content screen_container"
      style="color: rgb(0, 0, 0); font-size: 25px;" th:if="${!needBuy}">
     <p style="width:100%;text-alight:center; overflow: auto;-webkit-overflow-scrolling:touch;" >&nbsp;&nbsp;&nbsp;&nbsp;
@@ -299,7 +305,7 @@
 
 </script>
 
-<script src="/js/read.js"></script>
+<script src="/js/read.js?v=4"></script>
 <script language="javascript">getset()</script>
 <script language="javascript">getset1()</script>
 <script language="javascript">
@@ -310,7 +316,10 @@
         if (booksArr.length >= 50) {
             booksArr.splice(0, 1);
         }
-        booksArr.remove(item);
+        var existingIndex = booksArr.indexOf(item);
+        if (existingIndex >= 0) {
+            booksArr.splice(existingIndex, 1);
+        }
         booksArr[booksArr.length] = item;
     } else {
         var booksArr = [item];

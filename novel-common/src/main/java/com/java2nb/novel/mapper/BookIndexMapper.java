@@ -16,6 +16,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.ResultMap;
 import org.apache.ibatis.annotations.Results;
+import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.SelectProvider;
 import org.apache.ibatis.annotations.UpdateProvider;
 import org.apache.ibatis.type.JdbcType;
@@ -36,8 +37,18 @@ import org.mybatis.dynamic.sql.util.mybatis3.MyBatis3Utils;
 
 @Mapper
 public interface BookIndexMapper {
+    @Select("SELECT id, book_id, index_name, word_count, content_hash FROM book_index WHERE id = #{indexId} FOR UPDATE")
+    @Results({
+        @Result(column = "id", property = "id", id = true),
+        @Result(column = "book_id", property = "bookId"),
+        @Result(column = "index_name", property = "indexName"),
+        @Result(column = "word_count", property = "wordCount"),
+        @Result(column = "content_hash", property = "contentHash")
+    })
+    BookIndex lockById(Long indexId);
+
     @Generated("org.mybatis.generator.api.MyBatisGenerator")
-    BasicColumn[] selectList = BasicColumn.columnList(id, bookId, indexNum, indexName, wordCount, isVip, bookPrice, storageType, createTime, updateTime);
+    BasicColumn[] selectList = BasicColumn.columnList(id, bookId, indexNum, indexName, wordCount, isVip, bookPrice, storageType, createTime, updateTime, auditStatus, contentHash, simHash);
 
     @Generated("org.mybatis.generator.api.MyBatisGenerator")
     @SelectProvider(type=SqlProviderAdapter.class, method="select")
@@ -72,7 +83,10 @@ public interface BookIndexMapper {
         @Result(column="book_price", property="bookPrice", jdbcType=JdbcType.INTEGER),
         @Result(column="storage_type", property="storageType", jdbcType=JdbcType.VARCHAR),
         @Result(column="create_time", property="createTime", jdbcType=JdbcType.TIMESTAMP),
-        @Result(column="update_time", property="updateTime", jdbcType=JdbcType.TIMESTAMP)
+        @Result(column="update_time", property="updateTime", jdbcType=JdbcType.TIMESTAMP),
+        @Result(column="audit_status", property="auditStatus", jdbcType=JdbcType.TINYINT),
+        @Result(column="content_hash", property="contentHash", jdbcType=JdbcType.CHAR),
+        @Result(column="sim_hash", property="simHash", jdbcType=JdbcType.CHAR)
     })
     List<BookIndex> selectMany(SelectStatementProvider selectStatement);
 
@@ -142,6 +156,9 @@ public interface BookIndexMapper {
             .map(storageType).toPropertyWhenPresent("storageType", record::getStorageType)
             .map(createTime).toPropertyWhenPresent("createTime", record::getCreateTime)
             .map(updateTime).toPropertyWhenPresent("updateTime", record::getUpdateTime)
+            .map(auditStatus).toPropertyWhenPresent("auditStatus", record::getAuditStatus)
+            .map(contentHash).toPropertyWhenPresent("contentHash", record::getContentHash)
+            .map(simHash).toPropertyWhenPresent("simHash", record::getSimHash)
         );
     }
 
@@ -228,6 +245,9 @@ public interface BookIndexMapper {
             .set(storageType).equalToWhenPresent(record::getStorageType)
             .set(createTime).equalToWhenPresent(record::getCreateTime)
             .set(updateTime).equalToWhenPresent(record::getUpdateTime)
+            .set(auditStatus).equalToWhenPresent(record::getAuditStatus)
+            .set(contentHash).equalToWhenPresent(record::getContentHash)
+            .set(simHash).equalToWhenPresent(record::getSimHash)
             .where(id, isEqualTo(record::getId))
         );
     }

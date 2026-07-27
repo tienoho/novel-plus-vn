@@ -27,8 +27,8 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <java.version>21</java.version>
-        <maven.test.skip>true</maven.test.skip>
+        <java.version>17</java.version>
+        <maven.test.skip>false</maven.test.skip>
         <mysql.version>8.0.29</mysql.version>
         <mybatis.version>3.0.4</mybatis.version>
         <mybatis-generator.version>1.4.0</mybatis-generator.version>
@@ -50,6 +50,11 @@
             <dependency>
                 <groupId>com.java2nb</groupId>
                 <artifactId>novel-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.java2nb</groupId>
+                <artifactId>novel-front</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -79,12 +84,6 @@
         </dependency>
     </dependencies>
 
-    <!-- Nếu Maven không phân giải được dependency io.github.xxyopen, hãy kiểm tra cấu hình mirror. -->
-    <!-- Mirror chặn yêu cầu tới repository từ xa và thay đổi địa chỉ tải dependency. -->
-    <!-- Khi mirror trong settings.xml khớp repository đích, Maven chỉ tải từ mirror đó. -->
-    <!-- <mirrorOf></mirrorOf> chứa ID repository cần chặn; dấu * áp dụng cho mọi repository. -->
-    <!-- Mirror Aliyun thường dùng mirrorOf=*. Để giữ repository oss, hãy dùng *,!oss. -->
-    <!-- Nếu mirror không ổn định hoặc ngừng hoạt động, Maven sẽ không thể quay lại repository đã bị mirror. -->
     <repositories>
         <repository>
             <id>ali</id>
@@ -112,12 +111,11 @@
 
     <profiles>
         <profile>
-            <!-- Profile chuyển sang Maven Central. -->
             <id>central-repo</id>
             <repositories>
                 <repository>
-                    <id>central</id>
-                    <url>https://repo.maven.apache.org/maven2/</url>
+                    <id>ali</id>
+                    <url>https://repo.maven.apache.org/maven2</url>
                     <releases>
                         <enabled>true</enabled>
                     </releases>
@@ -128,8 +126,8 @@
             </repositories>
             <pluginRepositories>
                 <pluginRepository>
-                    <id>central-plugin</id>
-                    <url>https://repo.maven.apache.org/maven2/</url>
+                    <id>ali-plugin</id>
+                    <url>https://repo.maven.apache.org/maven2</url>
                     <releases>
                         <enabled>true</enabled>
                     </releases>
@@ -140,4 +138,27 @@
             </pluginRepositories>
         </profile>
     </profiles>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.2</version>
+                <configuration>
+                    <argLine>-Dfile.encoding=UTF-8</argLine>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
