@@ -1,37 +1,3 @@
-@charset "utf-8";
-body, div, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6, pre, form, fieldset, input, p, a, blockquote, th {
-    margin: 0;
-    padding: 0
-}
-
-h1, h2, h3, h4, h5, h6 {
-    font-size: 14px
-}
-
-ol, ul, li {
-    list-style: none outside none
-}
-
-table {
-    border-collapse: collapsse;
-    border-spacing: 0
-}
-
-fieldset, img {
-    border: 0 none
-}
-
-/*html { background: ##f5f5f5 }*/
-body {
-    background: #f5f5f5;
-    color: #333;
-    font: 12px/1.5 PingFangSC-Regular, HelveticaNeue-Light, 'Helvetica Neue Light', 'Microsoft YaHei', sans-serif, SimSun;
-    text-align: left
-}
-
-input::-moz-focus-inner {
-    border: none;
-    padding: 0
 }
 
 a img {
@@ -962,6 +928,12 @@ i.vip_b {
     font-size: 14px;
 }
 
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #eee;
+    font-size: 14px;
+}
+
 .userBox {
     margin: 0 auto
 }
@@ -974,4 +946,267 @@ i.vip_b {
     border-left: 5px solid #16b777;
     border-radius: 0 2px 2px 0;
     background-color: #fafafa;
+}
+
+/* ==========================================================================
+   Design Tokens & Modern Utility Framework (Novel-Plus 2026 UI Upgrade)
+   ========================================================================== */
+:root {
+    --np-primary: #159957;
+    --np-primary-hover: #117a45;
+    --np-primary-light: rgba(21, 153, 87, 0.12);
+    --np-primary-glow: rgba(21, 153, 87, 0.25);
+
+    --np-bg-body: #f8fafc;
+    --np-bg-surface: #ffffff;
+    --np-bg-glass: rgba(255, 255, 255, 0.88);
+    --np-border: #e2e8f0;
+    --np-border-light: #f1f5f9;
+
+    --np-text-main: #0f172a;
+    --np-text-sub: #475569;
+    --np-text-muted: #94a3b8;
+
+    /* Rank Badges Gradients */
+    --np-gold-grad: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    --np-silver-grad: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+    --np-bronze-grad: linear-gradient(135deg, #b45309 0%, #78350f 100%);
+
+    /* Responsive Container & Elevation */
+    --np-max-width: 1440px;
+    --np-radius-sm: 8px;
+    --np-radius-md: 12px;
+    --np-radius-lg: 16px;
+    --np-radius-full: 9999px;
+
+    --np-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+    --np-shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.06);
+    --np-shadow-hover: 0 12px 30px -4px rgba(15, 23, 42, 0.12);
+}
+
+/* Full Desktop Responsive Container */
+.np-container {
+    width: 100%;
+    max-width: var(--np-max-width);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+    .np-container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
+
+/* Re-define box_center to support wide container while keeping compatibility */
+.box_center {
+    width: 100% !important;
+    max-width: var(--np-max-width) !important;
+    margin: 0 auto !important;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+    .box_center {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
+
+/* Flex & Grid Utilities */
+.d-flex { display: flex !important; }
+.flex-column { flex-direction: column !important; }
+.align-items-center { align-items: center !important; }
+.justify-content-between { justify-content: space-between !important; }
+.justify-content-center { justify-content: center !important; }
+.flex-wrap { flex-wrap: wrap !important; }
+.flex-1 { flex: 1 1 0% !important; }
+.gap-1 { gap: 0.25rem !important; }
+.gap-2 { gap: 0.5rem !important; }
+.gap-3 { gap: 1rem !important; }
+.gap-4 { gap: 1.5rem !important; }
+
+/* Badge Chips */
+.np-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
+    border-radius: var(--np-radius-full);
+    background: var(--np-primary-light);
+    color: var(--np-primary);
+}
+
+.np-badge-gold {
+    background: var(--np-gold-grad);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.35);
+}
+
+.np-badge-silver {
+    background: var(--np-silver-grad);
+    color: #ffffff;
+}
+
+.np-badge-bronze {
+    background: var(--np-bronze-grad);
+    color: #ffffff;
+}
+
+/* Glassmorphism Surface */
+.np-glass {
+    background: var(--np-bg-glass);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+/* ==========================================================================
+   Group 5: Mobile Web & PWA Bottom Navigation Dock
+   ========================================================================== */
+.np-mobile-nav {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .np-mobile-nav {
+        display: flex !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        height: 60px !important;
+        z-index: 1000 !important;
+        background: rgba(255, 255, 255, 0.92) !important;
+        backdrop-filter: blur(16px) !important;
+        -webkit-backdrop-filter: blur(16px) !important;
+        border-top: 1px solid var(--np-border-light) !important;
+        box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.08) !important;
+        align-items: center;
+        justify-content: space-around;
+        padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+
+    .np-mobile-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.2rem;
+        color: var(--np-text-sub);
+        font-size: 0.6875rem;
+        font-weight: 600;
+        text-decoration: none !important;
+        transition: all 0.15s ease;
+        flex: 1;
+    }
+
+    .np-mobile-nav-item:active {
+        transform: scale(0.92);
+        color: var(--np-primary);
+    }
+
+    .np-mobile-nav-item.on {
+        color: var(--np-primary);
+    }
+
+    /* Padding bottom offset to prevent footer content overlap */
+    body {
+        padding-bottom: 64px !important;
+    }
+}
+
+/* ==========================================================================
+   Micro-Interactions Suite (Novel-Plus Premium UX Touch)
+   ========================================================================== */
+
+/* 1. Global Button & Card Active Press Dynamics */
+button:active, .btn_red:active, .btn_ora:active, .btn_ora_white:active,
+.btn_link:active, .np-badge:active, .so_tag a:active {
+    transform: scale(0.96) !important;
+    transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* 2. Form Input Focus Ring Glow */
+input[type="text"], input[type="password"], input[type="search"], textarea, .s_input {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+input[type="text"]:focus, input[type="password"]:focus, input[type="search"]:focus, textarea:focus, .s_input:focus {
+    border-color: var(--np-primary) !important;
+    box-shadow: 0 0 0 3px rgba(21, 153, 87, 0.18) !important;
+    outline: none !important;
+}
+
+/* 3. Smooth Skeleton Shimmer Animation */
+@keyframes np-shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.np-skeleton {
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 37%, #f1f5f9 63%);
+    background-size: 200% 100%;
+    animation: np-shimmer 1.4s ease infinite;
+    border-radius: var(--np-radius-md);
+}
+
+/* 4. Link & Menu Item Hover Micro-Transitions */
+a {
+    transition: color 0.15s ease, opacity 0.15s ease, transform 0.15s ease;
+}
+
+/* Smooth Image Hover Scale */
+.cover img, .book_cover img {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.cover:hover img, .book_cover:hover img {
+    transform: translateY(-4px) scale(1.02) !important;
+    box-shadow: 0 12px 24px -6px rgba(15, 23, 42, 0.16) !important;
+}
+
+/* 5. Smooth Global Scrolling & Custom Overlay Scrollbars */
+html {
+    scroll-behavior: smooth;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--np-bg-body);
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* 6. Interactive Table Row Micro-Highlighting */
+.updateTable tbody tr {
+    transition: background-color 0.15s ease !important;
+}
+
+.updateTable tbody tr:hover {
+    background-color: rgba(21, 153, 87, 0.04) !important;
 }

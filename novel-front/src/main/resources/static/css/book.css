@@ -809,5 +809,541 @@
 
 .footer {
     background: #fff;
-    padding: 16px 0 20px }
+    padding: 16px 0 20px
+}
 
+/* ==========================================================================
+   Group 1: Book Catalog & Ranking UI Modernization (Novel-Plus Upgrade)
+   ========================================================================== */
+
+/* 1. Catalog Filter Section (.so_tag) */
+.so_tag {
+    background: #ffffff !important;
+    border-radius: var(--np-radius-lg) !important;
+    padding: 1.5rem !important;
+    box-shadow: var(--np-shadow-card) !important;
+    border: 1px solid var(--np-border-light) !important;
+    margin-bottom: 1.75rem !important;
+    box-sizing: border-box;
+}
+
+.so_tag ul.list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.125rem;
+}
+
+.so_tag li {
+    display: flex !important;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.so_tag .tit {
+    font-weight: 700 !important;
+    color: var(--np-text-main) !important;
+    min-width: 150px;
+    flex-shrink: 0;
+}
+
+.so_tag a {
+    display: inline-flex !important;
+    align-items: center;
+    padding: 0.35rem 0.875rem !important;
+    border-radius: var(--np-radius-full) !important;
+    background: var(--np-bg-body) !important;
+    color: var(--np-text-sub) !important;
+    font-size: 0.8125rem !important;
+    font-weight: 500 !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border: 1px solid var(--np-border) !important;
+    text-decoration: none !important;
+    margin: 0 !important;
+}
+
+.so_tag a:hover {
+    background: rgba(21, 153, 87, 0.1) !important;
+    color: var(--np-primary) !important;
+    border-color: rgba(21, 153, 87, 0.3) !important;
+}
+
+.so_tag a.on {
+    background: var(--np-primary) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    border-color: var(--np-primary) !important;
+    box-shadow: 0 4px 12px var(--np-primary-glow) !important;
+}
+
+/* 2. Catalog Content & Table Containers */
+.channelClassContent, .pad20 {
+    background: #ffffff;
+    border-radius: var(--np-radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--np-shadow-card);
+    border: 1px solid var(--np-border-light);
+    box-sizing: border-box;
+}
+
+/* 3. Ranking Layout (.channelRankingContent) */
+.channelRankingContent {
+    display: grid !important;
+    grid-template-columns: 1fr 300px !important;
+    gap: 1.75rem !important;
+    background: transparent !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+@media (max-width: 1024px) {
+    .channelRankingContent {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+.channelRankingContent .wrap_left {
+    width: 100% !important;
+    float: none !important;
+    background: #ffffff;
+    border-radius: var(--np-radius-lg);
+    padding: 0 !important;
+    box-shadow: var(--np-shadow-card);
+    border: 1px solid var(--np-border-light);
+    box-sizing: border-box;
+}
+
+.channelRankingContent .wrap_right {
+    width: 100% !important;
+    float: none !important;
+    background: #ffffff;
+    border-radius: var(--np-radius-lg);
+    padding: 1.25rem !important;
+    box-shadow: var(--np-shadow-card);
+    border: 1px solid var(--np-border-light);
+    box-sizing: border-box;
+}
+
+.rightList2 ul {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.rightList2 a {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem !important;
+    border-radius: var(--np-radius-md) !important;
+    color: var(--np-text-main) !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+    transition: all 0.2s ease !important;
+    border: 1px solid transparent !important;
+    text-decoration: none !important;
+}
+
+.rightList2 a:hover {
+    background: var(--np-bg-body) !important;
+}
+
+.rightList2 a.on {
+    background: rgba(21, 153, 87, 0.08) !important;
+    color: var(--np-primary) !important;
+    border: 1px solid rgba(21, 153, 87, 0.25) !important;
+}
+
+/* Rank Number Badge Adjustments in Ranking Table */
+.rankTable td.rank i.num1 {
+    background: var(--np-gold-grad) !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
+}
+
+    width: 136px;
+    float: right
+}
+
+.tj_bar .book_intro .book_name {
+    display: block;
+    font-size: 14px;
+    line-height: 1;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden
+}
+
+.tj_bar .book_intro .txt {
+    height: 54px;
+    line-height: 1.5;
+    color: #808080;
+    overflow: hidden;
+    display: block;
+    margin-top: 10px;
+}
+
+.tj_bar li {
+    border-bottom: 1px solid #eee
+}
+
+.tj_bar li:last-child {
+    border: none
+}
+
+.tj_bar li:last-child .book_intro {
+    padding: 15px 0 2px
+}
+
+.friend_link {
+    display: none
+}
+
+.footer {
+    background: #fff;
+    padding: 16px 0 20px
+}
+
+/* ==========================================================================
+   Group 1: Book Catalog & Ranking UI Modernization (Novel-Plus Upgrade)
+   ========================================================================== */
+
+/* 1. Catalog Filter Section (.so_tag) */
+.so_tag {
+    background: #ffffff !important;
+    border-radius: var(--np-radius-lg) !important;
+    padding: 1.5rem !important;
+    box-shadow: var(--np-shadow-card) !important;
+    border: 1px solid var(--np-border-light) !important;
+    margin-bottom: 1.75rem !important;
+    box-sizing: border-box;
+}
+
+.so_tag ul.list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.125rem;
+}
+
+.so_tag li {
+    display: flex !important;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.so_tag .tit {
+    font-weight: 700 !important;
+    color: var(--np-text-main) !important;
+    min-width: 150px;
+    flex-shrink: 0;
+}
+
+.so_tag a {
+    display: inline-flex !important;
+    align-items: center;
+    padding: 0.35rem 0.875rem !important;
+    border-radius: var(--np-radius-full) !important;
+    background: var(--np-bg-body) !important;
+    color: var(--np-text-sub) !important;
+    font-size: 0.8125rem !important;
+    font-weight: 500 !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border: 1px solid var(--np-border) !important;
+    text-decoration: none !important;
+    margin: 0 !important;
+}
+
+.so_tag a:hover {
+    background: rgba(21, 153, 87, 0.1) !important;
+    color: var(--np-primary) !important;
+    border-color: rgba(21, 153, 87, 0.3) !important;
+}
+
+.so_tag a.on {
+    background: var(--np-primary) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    border-color: var(--np-primary) !important;
+    box-shadow: 0 4px 12px var(--np-primary-glow) !important;
+}
+
+/* 2. Catalog Content & Table Containers */
+.channelClassContent, .pad20 {
+    background: #ffffff;
+    border-radius: var(--np-radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--np-shadow-card);
+    border: 1px solid var(--np-border-light);
+    box-sizing: border-box;
+}
+
+/* 3. Ranking Layout (.channelRankingContent) */
+.channelRankingContent {
+    display: grid !important;
+    grid-template-columns: 1fr 300px !important;
+    gap: 1.75rem !important;
+    background: transparent !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+@media (max-width: 1024px) {
+    .channelRankingContent {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+.channelRankingContent .wrap_left {
+    width: 100% !important;
+    float: none !important;
+    background: #ffffff;
+    border-radius: var(--np-radius-lg);
+    padding: 0 !important;
+    box-shadow: var(--np-shadow-card);
+    border: 1px solid var(--np-border-light);
+    box-sizing: border-box;
+}
+
+.channelRankingContent .wrap_right {
+    width: 100% !important;
+    float: none !important;
+    background: #ffffff;
+    border-radius: var(--np-radius-lg);
+    padding: 1.25rem !important;
+    box-shadow: var(--np-shadow-card);
+    border: 1px solid var(--np-border-light);
+    box-sizing: border-box;
+}
+
+.rightList2 ul {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.rightList2 a {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem !important;
+    border-radius: var(--np-radius-md) !important;
+    color: var(--np-text-main) !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+    transition: all 0.2s ease !important;
+    border: 1px solid transparent !important;
+    text-decoration: none !important;
+}
+
+.rightList2 a:hover {
+    background: var(--np-bg-body) !important;
+}
+
+.rightList2 a.on {
+    background: rgba(21, 153, 87, 0.08) !important;
+    color: var(--np-primary) !important;
+    border: 1px solid rgba(21, 153, 87, 0.25) !important;
+}
+
+/* Rank Number Badge Adjustments in Ranking Table */
+.rankTable td.rank i.num1 {
+    background: var(--np-gold-grad) !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
+}
+
+.rankTable td.rank i.num2 {
+    background: var(--np-silver-grad) !important;
+    color: #ffffff !important;
+}
+
+.rankTable td.rank i.num3 {
+    background: var(--np-bronze-grad) !important;
+    color: #ffffff !important;
+}
+
+/* Mobile Responsive Adjustments for Catalog & Ranking */
+@media (max-width: 768px) {
+    .so_tag {
+        padding: 1rem !important;
+    }
+
+    .so_tag li {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.375rem !important;
+    }
+
+    .so_tag .tit {
+        min-width: auto !important;
+        font-size: 0.8125rem !important;
+    }
+
+    .so_tag a {
+        font-size: 0.75rem !important;
+        padding: 0.25rem 0.625rem !important;
+    }
+
+    .channelClassContent, .pad20 {
+        padding: 1rem !important;
+    }
+}
+
+/* ==========================================================================
+   Group 2: Book Detail Page UI Modernization
+   ========================================================================== */
+
+.channelBookInfo {
+    background: #ffffff !important;
+    border-radius: var(--np-radius-lg) !important;
+    padding: 2rem !important;
+    box-shadow: var(--np-shadow-card) !important;
+    border: 1px solid var(--np-border-light) !important;
+    margin-bottom: 2rem !important;
+    box-sizing: border-box;
+}
+
+.bookCover {
+    display: flex !important;
+    gap: 2rem !important;
+    align-items: flex-start !important;
+}
+
+@media (max-width: 768px) {
+    .bookCover {
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+    }
+}
+
+.bookCover .book_cover img {
+    width: 170px !important;
+    height: 230px !important;
+    border-radius: var(--np-radius-md) !important;
+    object-fit: cover !important;
+    box-shadow: var(--np-shadow-hover) !important;
+    border: 2px solid #ffffff !important;
+    flex-shrink: 0;
+}
+
+.book_info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.book_info .tit {
+    margin-bottom: 1rem;
+}
+
+.book_info .tit h1 {
+    font-size: 1.75rem !important;
+    font-weight: 700 !important;
+    color: var(--np-text-main) !important;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.book_info .tit .author {
+    font-size: 0.9375rem !important;
+    color: var(--np-primary) !important;
+    font-weight: 600 !important;
+    margin-left: 1rem !important;
+    vertical-align: middle;
+}
+
+.book_info .list li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.book_info .list .item {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.875rem;
+    background: var(--np-bg-body);
+    border-radius: var(--np-radius-full);
+    font-size: 0.8125rem;
+    color: var(--np-text-sub);
+    border: 1px solid var(--np-border-light);
+}
+
+.book_info .list .item em {
+    font-weight: 700;
+    color: var(--np-text-main);
+    margin-left: 0.25rem;
+}
+
+.book_info .intro_txt {
+    font-size: 0.875rem;
+    line-height: 1.7;
+    color: var(--np-text-sub);
+    background: var(--np-bg-body);
+    padding: 1rem 1.25rem;
+    border-radius: var(--np-radius-md);
+    border: 1px solid var(--np-border-light);
+    margin-bottom: 1.5rem;
+}
+
+.book_info .btns {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.book_info .btn_ora {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    padding: 0.625rem 1.75rem !important;
+    background: var(--np-primary) !important;
+    color: #ffffff !important;
+    font-size: 0.9375rem !important;
+    font-weight: 700 !important;
+    border-radius: var(--np-radius-full) !important;
+    box-shadow: 0 4px 14px var(--np-primary-glow) !important;
+    text-decoration: none !important;
+    transition: all 0.2s ease !important;
+    height: auto !important;
+    line-height: normal !important;
+}
+
+.book_info .btn_ora:hover {
+    background: var(--np-primary-hover) !important;
+    transform: translateY(-2px);
+}
+
+.book_info .btn_ora_white {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    padding: 0.625rem 1.5rem !important;
+    background: var(--np-bg-body) !important;
+    color: var(--np-text-main) !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    border-radius: var(--np-radius-full) !important;
+    border: 1px solid var(--np-border) !important;
+    text-decoration: none !important;
+    transition: all 0.2s ease !important;
+    height: auto !important;
+    line-height: normal !important;
+}
+
+.book_info .btn_ora_white:hover {
+    background: #ffffff !important;
+    border-color: var(--np-primary) !important;
+    color: var(--np-primary) !important;
+}

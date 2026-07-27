@@ -14,7 +14,7 @@ public class User {
     private Long id;
 
     @NotBlank(groups = {AddGroup.class}, message = "{validation.user.phone.required}")
-    @Pattern(groups = {AddGroup.class}, regexp = "^1[3|4|5|6|7|8|9][0-9]{9}$", message = "{validation.user.phone.invalid}")
+    @Pattern(groups = {AddGroup.class}, regexp = "^0(?:3|5|7|8|9)[0-9]{8}$", message = "{validation.user.phone.invalid}")
     @Null(groups = {UpdateGroup.class})
     @Generated("org.mybatis.generator.api.MyBatisGenerator")
     private String username;
