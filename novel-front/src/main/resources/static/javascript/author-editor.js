@@ -14,6 +14,23 @@
         return 'ED_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 18);
     }
 
+    function dateToIso(selector) {
+        if (!selector) return null;
+        var value = $(selector).val();
+        if (!value) return null;
+        var parsed = new Date(value);
+        return isNaN(parsed.getTime()) ? null : parsed.toISOString();
+    }
+
+    function toLocalDateTime(value) {
+        if (!value) return '';
+        var date = new Date(value);
+        if (isNaN(date.getTime())) return '';
+        function pad(number) { return String(number).padStart(2, '0'); }
+        return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate())
+            + 'T' + pad(date.getHours()) + ':' + pad(date.getMinutes());
+    }
+
     function parseStoredState(storageKey) {
         try {
             return JSON.parse(window.localStorage.getItem(storageKey) || 'null');
@@ -70,9 +87,37 @@
         $(this.config.saveSelector + ',' + this.config.scheduleSelector + ','
             + this.config.scheduleButtonSelector).prop('disabled', scheduled);
         $(this.config.cancelScheduleSelector).prop('disabled', !scheduled);
+        this.updateCommercialControls(scheduled);
+    };
+
+    Editor.prototype.commercialSelectors = function () {
+        return [this.config.customPriceSelector, this.config.unlockAtSelector,
+            this.config.freeFromSelector, this.config.freeUntilSelector].filter(Boolean).join(',');
+    };
+
+    Editor.prototype.updateCommercialControls = function (scheduled) {
+        var paid = Number($(this.config.vipSelector + ':checked').val() || 0) === 1;
+        if (this.config.commercialPanelSelector) {
+            $(this.config.commercialPanelSelector).toggle(paid);
+        }
+        var selectors = this.commercialSelectors();
+        if (selectors) {
+            $(selectors).prop('disabled', scheduled || !paid);
+            if (!paid && !scheduled) $(selectors).val('');
+        }
+    };
+
+    Editor.prototype.updatePricePreview = function (price) {
+        if (!this.config.pricePreviewSelector) return;
+        var text = price === null || typeof price === 'undefined'
+            ? this.message('automaticPrice', 'Tự động theo số chữ')
+            : String(price) + ' Xu';
+        $(this.config.pricePreviewSelector).text(text);
     };
 
     Editor.prototype.payload = function () {
+        var customPriceValue = this.config.customPriceSelector
+            ? $(this.config.customPriceSelector).val() : '';
         return {
             draftId: this.state.draftId,
             clientKey: this.state.clientKey,
@@ -81,6 +126,10 @@
             indexName: $(this.config.titleSelector).val() || '',
             content: $(this.config.contentSelector).val() || '',
             isVip: Number($(this.config.vipSelector + ':checked').val() || 0),
+            customPrice: customPriceValue === '' ? null : Number(customPriceValue),
+            unlockAt: dateToIso(this.config.unlockAtSelector),
+            freeFrom: dateToIso(this.config.freeFromSelector),
+            freeUntil: dateToIso(this.config.freeUntilSelector),
             expectedVersion: this.state.version
         };
     };
@@ -90,6 +139,10 @@
             payload.indexName,
             payload.content,
             payload.isVip,
+            payload.customPrice,
+            payload.unlockAt,
+            payload.freeFrom,
+            payload.freeUntil,
             payload.bookId,
             payload.indexId
         ]);
@@ -129,6 +182,7 @@
             self.persistState();
             self.updateControls();
             self.lastFingerprint = fingerprint;
+            self.updatePricePreview(response.data.bookPrice);
             self.setStatus(self.message('saved', 'Đã tự lưu'), false);
             if (!silent && window.layer) {
                 window.layer.msg(self.message('saved', 'Đã tự lưu'));
@@ -171,9 +225,14 @@
             $(self.config.titleSelector).val(draft.indexName || '');
             $(self.config.contentSelector).val(draft.content || '');
             $(self.config.vipSelector + '[value="' + Number(draft.isVip || 0) + '"]').prop('checked', true);
+            if (self.config.customPriceSelector) $(self.config.customPriceSelector).val(draft.customPrice || '');
+            if (self.config.unlockAtSelector) $(self.config.unlockAtSelector).val(toLocalDateTime(draft.unlockAt));
+            if (self.config.freeFromSelector) $(self.config.freeFromSelector).val(toLocalDateTime(draft.freeFrom));
+            if (self.config.freeUntilSelector) $(self.config.freeUntilSelector).val(toLocalDateTime(draft.freeUntil));
             self.lastFingerprint = self.fingerprint(self.payload());
             self.persistState();
             self.updateControls();
+            self.updatePricePreview(draft.bookPrice);
             self.setStatus(draft.status === 'SCHEDULED'
                 ? self.message('scheduled', 'Đã lên lịch xuất bản')
                 : self.message('restored', 'Đã khôi phục bản nháp'), false);
@@ -273,8 +332,12 @@
     Editor.prototype.bind = function () {
         var self = this;
         var debounce;
-        $(self.config.titleSelector + ',' + self.config.contentSelector + ',' + self.config.vipSelector)
+        var commercialSelectors = self.commercialSelectors();
+        var editorSelectors = self.config.titleSelector + ',' + self.config.contentSelector + ','
+            + self.config.vipSelector + (commercialSelectors ? ',' + commercialSelectors : '');
+        $(editorSelectors)
             .on('input change', function () {
+                if ($(this).is(self.config.vipSelector)) self.updateCommercialControls(false);
                 if (self.state.status !== 'DRAFT') return;
                 window.clearTimeout(debounce);
                 debounce = window.setTimeout(function () { self.save(true, false); }, 2000);
@@ -294,6 +357,7 @@
     };
 
     window.NovelAuthorEditor = {
+        formatLocalDateTime: toLocalDateTime,
         create: function (config) {
             return new Editor(config);
         }

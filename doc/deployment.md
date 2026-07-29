@@ -86,7 +86,7 @@ Kiểm tra file dump không rỗng và định kỳ diễn tập phục hồi tr
    docker compose logs --since=10m migrate front crawl admin
    ```
 
-Các migration từ `20260712_vi_localization.sql` đến `20260727_recommendation.sql` được Compose chạy theo thứ tự và phải chạy lặp lại an toàn. Migration VNPAY chủ động dừng nếu phát hiện `out_trade_no` trùng để tránh tự sửa lịch sử thanh toán. Migration sổ cái chỉ backfill số dư đầu kỳ một lần thông qua `platform_migration_history`; các migration KYC, refund, kiểm duyệt, báo cáo và editor tạo schema/audit cần thiết nhưng không tự sinh dữ liệu định danh. Migration SimHash đổi giá trị số cũ sang chuỗi bit 64 ký tự để đồng bộ với model Java và bảo toàn dữ liệu phát hiện trùng. Migration bìa giữ bìa legacy ở trạng thái đã duyệt và tạo queue riêng cho mọi bìa mới hoặc được thay lại. Migration analytics tạo event đọc ẩn danh append-only; cần chốt chính sách retention trước production. Migration notification chỉ thu sự kiện chương được duyệt sau thời điểm nâng cấp, không gửi lại chương cũ. Migration recommendation chỉ thêm index phục vụ pool đã duyệt và lịch sử mua, không sửa hành vi độc giả.
+Các migration từ `20260712_vi_localization.sql` đến `20260728_chapter_commercial_policy.sql` được Compose chạy theo thứ tự và phải chạy lặp lại an toàn. Migration VNPAY chủ động dừng nếu phát hiện `out_trade_no` trùng để tránh tự sửa lịch sử thanh toán. Migration sổ cái chỉ backfill số dư đầu kỳ một lần thông qua `platform_migration_history`; các migration KYC, refund, kiểm duyệt, báo cáo và editor tạo schema/audit cần thiết nhưng không tự sinh dữ liệu định danh. Migration SimHash đổi giá trị số cũ sang chuỗi bit 64 ký tự để đồng bộ với model Java và bảo toàn dữ liệu phát hiện trùng. Migration bìa giữ bìa legacy ở trạng thái đã duyệt và tạo queue riêng cho mọi bìa mới hoặc được thay lại. Migration analytics tạo event đọc ẩn danh append-only; cần chốt chính sách retention trước production. Migration notification chỉ thu sự kiện chương được duyệt sau thời điểm nâng cấp, không gửi lại chương cũ. Migration recommendation chỉ thêm index phục vụ pool đã duyệt và lịch sử mua, không sửa hành vi độc giả. Migration chính sách thương mại chỉ backfill giá preview bản nháp, không tự đổi `is_vip`, giá hoặc thời gian truy cập của chương đã xuất bản.
 
 ## 5. Reverse proxy và TLS
 
@@ -145,6 +145,18 @@ Nếu nhận KYC, phải cấu hình cùng một `PII_ENCRYPTION_KEY` AES-256 Ba
 VietQR mặc định tắt và chỉ được bật khi có tài khoản nhận tiền thật cùng webhook secret ngẫu nhiên tối thiểu 32 ký tự. Tích hợp hiện là QR chuyển khoản + webhook xác thực; không tự suy đoán giao dịch thành công. Adapter NAPAS chưa có hợp đồng/API ngân hàng thật sẽ trả `PROVIDER_NOT_CONFIGURED`, không sinh mã giao dịch giả. `MANUAL_BANK` cho payout cũng chỉ ghi nhận thao tác vận hành và mã tham chiếu.
 
 Phát hành chứng từ tài chính mặc định tắt. Chỉ đặt `FINANCIAL_VOUCHER_ISSUANCE_ENABLED=true` sau khi đã cấu hình `PLATFORM_LEGAL_NAME`, `PLATFORM_TAX_CODE` và được phê duyệt cách tính/ghi nhận thuế. Các file PDF/CSV/JSON trong module này là chứng từ vận hành kỹ thuật, không mặc nhiên là hóa đơn điện tử hợp pháp.
+
+### Kiểm tra đóng gói theme
+
+Khi kiểm tra artifact Maven ngoài Docker, luôn chạy lifecycle từ `generate-resources` trở lên để bước dọn output theme được thực thi:
+
+```powershell
+foreach ($theme in @('green', 'orange', 'dark', 'blue')) {
+    mvn -pl novel-front -am -DskipTests -Dtheme.name=$theme package
+}
+```
+
+Không dùng trực tiếp `mvn resources:resources` để chuyển theme. Docker build tạo bốn thư mục overlay độc lập trong `/workspace/packaged-themes`, còn Maven xóa riêng hai thư mục resource đã đóng gói trước mỗi lifecycle; cả hai đường đều giữ thứ tự `runtime base → theme overlay`.
 
 ## 7. Rollback
 

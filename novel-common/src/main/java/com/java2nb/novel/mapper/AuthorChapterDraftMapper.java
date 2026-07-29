@@ -31,6 +31,11 @@ public interface AuthorChapterDraftMapper {
                        @Param("indexName") String indexName,
                        @Param("content") String content,
                        @Param("isVip") byte isVip,
+                       @Param("bookPrice") int bookPrice,
+                       @Param("customPrice") Integer customPrice,
+                       @Param("unlockAt") Date unlockAt,
+                       @Param("freeFrom") Date freeFrom,
+                       @Param("freeUntil") Date freeUntil,
                        @Param("now") Date now);
 
     int schedule(@Param("id") long id,

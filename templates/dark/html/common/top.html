@@ -1,0 +1,38 @@
+<div th:fragment="top(navType)" class="header">
+    <div class="topMain">
+        <div class="box_center cf">
+            <a href="/" class="logo fl"><img src="/images/logo_white.png" alt="Logo" th:alt="${application.website.name}"/></a>
+            <div class="searchBar fl">
+                <div class="search cf">
+                    <input type="text" th:placeholder="#{site.search.placeholder}" class="s_int" name="searchKey" id="searchKey"/>
+                    <button type="button" class="search_btn" id="btnSearch" onclick="searchByK()" th:title="#{site.search}" th:aria-label="#{site.search}"><i class="icon" aria-hidden="true"></i></button>
+                </div>
+            </div>
+            <div class="bookShelf fr" id="headerUserInfo">
+                <a class="sj_link" href="/user/notifications.html"><span th:text="#{notification.title}">Thông báo</span><b data-notification-badge style="display:none;margin-left:3px;padding:1px 5px;border-radius:9px;background:#e64a19;color:#fff;font-size:11px">0</b></a>
+                <i class="line mr20">|</i>
+                <a class="sj_link" href="/user/favorites.html" th:text="#{user.bookshelf}">Tủ sách</a>
+                <span class="user_link"><i class="line mr20">|</i><a href="/user/login.html" class="mr15" th:text="#{site.login}">Đăng nhập</a><a
+                        href="/user/register.html" th:text="#{site.register}">Đăng ký</a></span>
+                <button type="button" id="themeToggleBtn" class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Chuyển chế độ giao diện" title="Chuyển chế độ giao diện">
+                    <span class="theme-toggle-icon">🌙</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="mainNav" id="mainNav" th:style="${navType} == 10?'display:none':''">
+        <div class="box_center cf">
+            <ul class="nav" id="navModule">
+
+                <li th:class="${navType}==0?'on':''"><a href="/" th:text="#{site.home}">Trang chủ</a></li>
+                <li th:class="${navType}==1?'on':''"><a href="/book/bookclass.html" th:text="#{site.allBooks}">Tất cả tác phẩm</a></li>
+                <li th:class="${navType}==2?'on':''"><a href="/book/book_ranking.html" th:text="#{site.ranking}">Bảng xếp hạng</a></li>
+                <li class=""><a href="/pay/index.html" th:text="#{site.recharge}">Nạp Xu</a></li>
+                <li><a href="/author/index.html" target="_blank" th:text="#{author.center}">Khu vực tác giả</a></li>
+
+            </ul>
+        </div>
+    </div>
+    <script src="/javascript/theme-toggle.js"></script>
+    <script src="/javascript/notification-badge.js" defer></script>
+</div>

@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -27,16 +29,20 @@ class ReaderPwaPackagingTest {
         assertThat(Files.isRegularFile(staticRoot.resolve("javascript/offline-reader.js"))).isTrue();
 
         assertThat(worker).contains(
+            "CACHE_VERSION = 'v6'",
             "if (request.method !== 'GET')",
             "if (request.mode === 'navigate')",
             "fetch(request).catch",
             "if (!isPublicAsset(url.pathname))",
+            "fetch(request, {cache: 'no-cache'})",
             "cacheControl.indexOf('private')",
             "cacheControl.indexOf('no-store')",
             "!response.headers.get('Set-Cookie')"
-        );
+        ).doesNotContain("return cached || network;");
         assertThat(worker.indexOf("if (request.mode === 'navigate')"))
             .isLessThan(worker.indexOf("if (!isPublicAsset(url.pathname))"));
+        assertThat(worker.indexOf("fetch(request, {cache: 'no-cache'})"))
+            .isLessThan(worker.lastIndexOf("caches.match(request)"));
     }
 
     @Test
@@ -67,7 +73,12 @@ class ReaderPwaPackagingTest {
             "utterance.lang = 'vi-VN'",
             "speech.cancel()",
             "role', 'status'",
-            "aria-live"
+            "aria-live",
+            "FONT_FAMILY_KEY",
+            "BACKGROUND_KEY",
+            "aria-keyshortcuts",
+            "aria-controls",
+            "aria-expanded"
         ).doesNotContain("contentRoot.innerHTML");
 
         for (Path template : readerTemplates(module, repository)) {
@@ -76,12 +87,47 @@ class ReaderPwaPackagingTest {
                 .as("reader template %s", template)
                 .contains(
                     "id=\"offlineEligible\"",
-                    "bookIndex.isVip == null || bookIndex.isVip != 1",
+                    "th:if=\"${offlineEligible}\"",
                     "id=\"readerContentAvailable\"",
                     "th:if=\"${!needBuy}\"",
                     "/javascript/reader-tools.js"
                 )
                 .doesNotContain("speechRate:0.5", "function speakChapter");
+        }
+    }
+
+    @Test
+    void readerAppearanceAndMobileActionsAreKeyboardAccessible() throws Exception {
+        Path module = Path.of("").toAbsolutePath().normalize();
+        Path repository = module.getParent();
+        String readerTools = read(module.resolve("src/main/resources/static/javascript/reader-tools.js"));
+
+        assertThat(readerTools).contains(
+            "\"Segoe UI\"",
+            "\"Times New Roman\"",
+            "readerFontSystem",
+            "readerThemeSepia",
+            "readerAppearanceDefault",
+            "contentRoot.style.colorScheme"
+        );
+
+        for (Path template : new Path[]{
+            module.resolve("src/main/resources/templates/mobile/book/book_content.html"),
+            repository.resolve("templates/green/html/mobile/book/book_content.html"),
+            repository.resolve("templates/orange/html/mobile/book/book_content.html"),
+            repository.resolve("templates/dark/html/mobile/book/book_content.html"),
+            repository.resolve("templates/dark/html/book/book_content.html")
+        }) {
+            assertThat(read(template)).as("Accessible reader controls in %s", template)
+                .contains(
+                    "<button type=\"button\" id=\"lightdiv\"",
+                    "<button type=\"button\" id=\"fontbig\"",
+                    "th:aria-label=\"#{reader.back}\"",
+                    "th:aria-label=\"#{site.home}\"",
+                    "aria-hidden=\"true\"",
+                    "/javascript/reader-tools.js?v=6"
+                )
+                .doesNotContain("maximum-scale", "<a id=\"lightdiv\"", "<a id=\"fontbig\"");
         }
     }
 
@@ -129,6 +175,34 @@ class ReaderPwaPackagingTest {
         assertThat(read(repository.resolve("templates/dark/html/book/book_content.html")))
             .contains("booksArr.splice(existingIndex, 1)")
             .doesNotContain("booksArr.remove(");
+    }
+
+    @Test
+    void commonJavascriptReferencesAreVersionedForStaleWorkerUpgrade() throws Exception {
+        Path module = Path.of("").toAbsolutePath().normalize();
+        Path repository = module.getParent();
+        int versionedReferences = 0;
+
+        for (Path root : new Path[]{
+            module.resolve("src/main/resources/templates"),
+            repository.resolve("templates")
+        }) {
+            List<Path> htmlFiles;
+            try (Stream<Path> paths = Files.walk(root)) {
+                htmlFiles = paths.filter(path -> path.toString().endsWith(".html")).toList();
+            }
+            for (Path htmlFile : htmlFiles) {
+                String html = read(htmlFile);
+                assertThat(html)
+                    .as("Common JavaScript URL in %s", htmlFile)
+                    .doesNotContain("src=\"/javascript/common.js\"");
+                if (html.contains("src=\"/javascript/common.js?v=5\"")) {
+                    versionedReferences++;
+                }
+            }
+        }
+
+        assertThat(versionedReferences).isEqualTo(27);
     }
 
     private Path[] readerTemplates(Path module, Path repository) {

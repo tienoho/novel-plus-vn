@@ -2,8 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="utf-8">
-    <meta th:if="${catId == 9}" name="viewport" content="width=device-width, initial-scale=0.5, maximum-scale=1">
-    <meta th:if="${catId != 9}" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title th:text="${book.bookName}+' - '+${bookIndex.indexName}"></title>
     <meta name="keywords" th:content="${book.bookName}+','+${bookIndex.indexName}">
     <meta name="description" th:content="#{reader.seo.chapter.description(${book.bookName})}">
@@ -27,7 +26,10 @@
         .Readpage { font-size:14px;padding:2px;background:#fff;height:40px;line-height:40px;text-align:center; }
         * { margin:0;padding:0; }
         .huyanon { border:1px solid #64c878;box-shadow:0 1px 2px #b9ecc4 inset,0 -1px 0 #6c9f76 inset;background:linear-gradient(#90dfa2,#84d494); }
-        .Readpage a { font-size:16px;padding:2px;line-height:35px; }
+        .Readpage a,.Readpage button { font-size:16px;padding:2px;line-height:35px; }
+        .Readpage button { font-family:inherit;color:#4c6978;background:transparent;border:0;cursor:pointer; }
+        .Readpage button.button { color:#fff; }
+        .Readpage button:focus-visible,.header a:focus-visible { outline:3px solid #ffbf47;outline-offset:2px; }
         .lightoff,.huyanoff,.sizebgon { border:1px solid #333;box-shadow:0 1px 2px #8b8b8b inset,0 -1px 0 #3d3d3d inset;background:linear-gradient(#656565,#4c4c4c); }
         .button { line-height:38px;text-align:center;font-weight:bold;color:#fff;text-shadow:1px 1px 1px #333;border-radius:5px;margin-top:3px;position:relative;overflow:hidden; }
         .lighton { border:1px solid #d2a000;box-shadow:0 1px 2px #fedd71 inset,0 -1px 0 #a38b39 inset;background:linear-gradient(#fece34,#d8a605); }
@@ -41,22 +43,22 @@
     <input type="hidden" id="indexNameHidden" th:value="${bookIndex.indexName}"/>
     <input type="hidden" id="indexNumHidden" th:value="${bookIndex.indexNum}"/>
     <input type="hidden" id="offlineEligible" value="true"
-           th:if="${bookIndex.isVip == null || bookIndex.isVip != 1}"/>
+           th:if="${offlineEligible}"/>
     <input type="hidden" id="readerContentAvailable" value="true" th:if="${!needBuy}"/>
 
     <div style="height:50px;line-height:50px;text-align:center" class="layui-header header header-doc layui-bg-cyan">
-        <div style="width:10%;float:left;margin-left:10px"><a href="javascript:history.go(-1)"><i style="font-size:20px;color:#fff" class="layui-icon">&#xe65c;</i></a></div>
+        <div style="width:10%;float:left;margin-left:10px"><button type="button" onclick="history.back()" th:aria-label="#{reader.back}" style="border:0;background:transparent;cursor:pointer"><i aria-hidden="true" style="font-size:20px;color:#fff" class="layui-icon">&#xe65c;</i></button></div>
         <a style="color:#fff" th:href="'/book/'+${book.id}+'.html'"><b style="padding-left:5%;float:left;width:69%" class="line-limit-length" th:text="${bookIndex.indexName}+' '+${book.bookName}"></b></a>
-        <div style="width:10%;float:right;margin-right:10px"><a href="/"><i style="font-size:20px;color:#fff" class="layui-icon">&#xe68e;</i></a></div>
+        <div style="width:10%;float:right;margin-right:10px"><a href="/" th:aria-label="#{site.home}"><i aria-hidden="true" style="font-size:20px;color:#fff" class="layui-icon">&#xe68e;</i></a></div>
     </div>
 
     <p class="Readpage">
-        <a id="lightdiv" class="button lightoff" onclick="nr_setbg('light')" th:text="#{reader.lightOff}">Tắt đèn</a>
-        <a id="huyandiv" class="button huyanon" onclick="nr_setbg('huyan')" th:text="#{reader.eyeCare}">Bảo vệ mắt</a>&nbsp;&nbsp;
+        <button type="button" id="lightdiv" class="button lightoff" onclick="nr_setbg('light')" th:text="#{reader.lightOff}">Tắt đèn</button>
+        <button type="button" id="huyandiv" class="button huyanon" onclick="nr_setbg('huyan')" th:text="#{reader.eyeCare}">Bảo vệ mắt</button>&nbsp;&nbsp;
         <span th:text="#{reader.fontSize}+': '">Cỡ chữ: </span>
-        <a id="fontbig" class="sizebg" onclick="nr_setbg('big')" th:text="#{reader.font.large}">Lớn</a>
-        <a id="fontmiddle" class="button sizebgon" onclick="nr_setbg('middle')" th:text="#{reader.font.medium}">Vừa</a>
-        <a id="fontsmall" class="sizebg" onclick="nr_setbg('small')" th:text="#{reader.font.small}">Nhỏ</a>
+        <button type="button" id="fontbig" class="sizebg" onclick="nr_setbg('big')" th:text="#{reader.font.large}">Lớn</button>
+        <button type="button" id="fontmiddle" class="button sizebgon" onclick="nr_setbg('middle')" th:text="#{reader.font.medium}">Vừa</button>
+        <button type="button" id="fontsmall" class="sizebg" onclick="nr_setbg('small')" th:text="#{reader.font.small}">Nhỏ</button>
     </p>
 
     <div class="indexDiv" style="height:42px;line-height:42px;text-align:center;background:#f2f2f2">
@@ -66,7 +68,7 @@
     </div>
 
     <div th:replace="mobile/common/js :: js"></div>
-    <script src="/javascript/reader-tools.js?v=4"></script>
+<script src="/javascript/reader-tools.js?v=6"></script>
     <div id="chaptercontent" class="Readarea ReadAjax_content screen_container" style="color:#000;font-size:20px" th:if="${!needBuy}">
         <p style="width:100%;text-align:center;overflow:auto;-webkit-overflow-scrolling:touch"><span th:utext="${bookContent.content}"></span></p>
     </div>

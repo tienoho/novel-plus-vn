@@ -108,6 +108,21 @@
                 <version>1.8</version>
                 <executions>
                     <execution>
+                        <id>clear-theme-output</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <tasks>
+                                <!-- Tránh file của theme trước còn sót khi đổi -Dtheme.name mà không chạy clean. -->
+                                <delete dir="${project.build.outputDirectory}/templates" quiet="true"/>
+                                <delete dir="${project.build.outputDirectory}/static" quiet="true"/>
+                            </tasks>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>package-distribution</id>
                         <phase>package</phase>
                         <goals>
                             <goal>run</goal>

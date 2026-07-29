@@ -14,7 +14,7 @@ class AuthorStoryPackagingTest {
     void runtimePageUsesPrivateApiAndTextNodes() throws Exception {
         String page = read(Path.of("src/main/resources/templates/author/story_bible.html"));
         int headerScript = page.indexOf("<script src=\"/javascript/header.js\"></script>");
-        int commonScript = page.indexOf("<script src=\"/javascript/common.js\"></script>");
+        int commonScript = page.indexOf("<script src=\"/javascript/common.js?v=5\"></script>");
 
         assertThat(page)
             .contains("/author/story-items", "OUTLINE", "CHARACTER", "LOCATION", "TIMELINE")

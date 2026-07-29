@@ -22,18 +22,18 @@
 
 <div class="main box_center cf mb50">
     <div class="nav_sub">
-        <a href="/" th:text="${application.website.name}"></a>&gt;<a th:href="'/book/bookclass.html?c='+${book.catId}"
-                                                                     th:text="${book.catName}"></a>&gt;<a
+        <a href="/" th:text="${application.website.name}"></a> &rarr; <a th:href="'/book/bookclass.html?c='+${book.catId}"
+                                                                     th:text="${book.catName}"></a> &rarr; <a
             th:href="'/book/'+${book.id}+'.html'" th:utext="${book.bookName}"></a>
     </div>
-    <div class="channelWrap channelBookInfo cf">
+    <div class="channelWrap channelBookInfo glass-card cf" style="padding:24px;margin-bottom:24px">
         <div class="bookCover cf">
             <a th:href="${book.picUrl}" class="book_cover"><img class="cover" th:src="${book.picUrl}"
-                                                                th:attr="alt=${book.bookName}"/></a>
+                                                                th:attr="alt=${book.bookName}" width="200" height="267" fetchpriority="high"/></a>
             <div class="book_info">
                 <div class="tit">
-                    <h1 th:utext="${book.bookName}"></h1><!--<i class="vip_b">VIP</i>--><a class="author"
-                                                                                           th:text="#{book.authorBy(${book.authorName})}"></a>
+                    <h1 th:utext="${book.bookName}"></h1><!--<i class="vip_b">VIP</i>--><span class="author"
+                                                                                           th:text="#{book.authorBy(${book.authorName})}"></span>
                 </div>
                 <ul class="list">
                     <li><span class="item"><span th:text="#{book.category}+': '">Thể loại: </span><em th:text="${book.catName}"></em></span>
@@ -44,13 +44,13 @@
                 </ul>
                 <div class="intro_txt">
                     <p th:utext="${book.bookDesc}"></p>
-                    <a class="icon_hide" href="javascript:void(0)" onclick=""><i></i><span th:text="#{book.collapse}">Thu gọn</span></a>
-                    <a class="icon_show" href="javascript:void(0)" onclick=""><i></i><span th:text="#{book.expand}">Mở rộng</span></a>
+                    <button type="button" class="icon_hide" onclick=""><i aria-hidden="true"></i><span th:text="#{book.collapse}">Thu gọn</span></button>
+                    <button type="button" class="icon_show" onclick=""><i aria-hidden="true"></i><span th:text="#{book.expand}">Mở rộng</span></button>
                 </div>
                 <div class="btns" id="optBtn">
                     <a th:href="'/book/'+${book.id}+'/'+${firstBookIndexId}+'.html'" class="btn_ora" th:text="#{book.readNow}">Đọc ngay</a>
-                    <span id="cFavs"><a href="javascript:void(0);" class="btn_ora_white btn_addsj"
-                                        onclick="javascript:BookDetail.AddFavorites(37,0,0);" th:text="#{book.addShelf}">Thêm vào tủ sách</a>
+                    <span id="cFavs"><button type="button" class="btn_ora_white btn_addsj"
+                                        onclick="javascript:BookDetail.AddFavorites(37,0,0);" th:text="#{book.addShelf}">Thêm vào tủ sách</button>
                     </span>
                     <button th:if="${book.authorId != null}" type="button" class="btn_ora_white" style="background:#fff" data-author-follow
                             th:attr="data-author-id=${book.authorId},data-text-follow=#{notification.followAuthor},data-text-following=#{notification.followingAuthor},data-text-unfollow=#{notification.unfollowAuthor},data-network-error=#{auth.networkError}"

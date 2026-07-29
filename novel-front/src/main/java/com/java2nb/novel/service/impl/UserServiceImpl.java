@@ -11,6 +11,7 @@ import com.java2nb.novel.service.UserService;
 import com.java2nb.novel.service.wallet.InsufficientWalletBalanceException;
 import com.java2nb.novel.service.wallet.WalletLedgerService;
 import com.java2nb.novel.service.wallet.WalletPostResult;
+import com.java2nb.novel.service.chapter.ChapterCommercialPolicyService;
 import com.java2nb.novel.vo.BookReadHistoryVO;
 import com.java2nb.novel.vo.BookShelfVO;
 import com.java2nb.novel.vo.UserFeedbackVO;
@@ -66,6 +67,10 @@ public class UserServiceImpl implements UserService {
     private final WalletLedgerService walletLedgerService;
 
     private final AuthorIncomeProperties authorIncomeProperties;
+
+    private final BookIndexMapper bookIndexMapper;
+
+    private final ChapterCommercialPolicyService chapterCommercialPolicyService;
 
     private final IdWorker idWorker = IdWorker.INSTANCE;
 
@@ -288,9 +293,24 @@ public class UserServiceImpl implements UserService {
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void buyBookIndex(Long userId, Long authorId, UserBuyRecord buyRecord) {
+        if (buyRecord == null || buyRecord.getBookIndexId() == null) {
+            throw new IllegalArgumentException("Thiếu chương cần mua");
+        }
+        BookIndex lockedChapter = bookIndexMapper.lockById(buyRecord.getBookIndexId());
+        if (lockedChapter == null) {
+            throw new IllegalArgumentException("Không tìm thấy chương cần mua");
+        }
+        if (buyRecord.getBookId() == null || !buyRecord.getBookId().equals(lockedChapter.getBookId())) {
+            throw new IllegalArgumentException("Chương không thuộc tác phẩm cần mua");
+        }
         if (queryIsBuyBookIndex(userId, buyRecord.getBookIndexId())) {
             return;
         }
+        if (!chapterCommercialPolicyService.evaluate(lockedChapter, false, new Date()).purchaseRequired()) {
+            return;
+        }
+        buyRecord.setBookIndexName(lockedChapter.getIndexName());
+        buyRecord.setBuyAmount(lockedChapter.getBookPrice());
         if (buyRecord.getBuyAmount() == null || buyRecord.getBuyAmount() <= 0) {
             throw new IllegalArgumentException("Giá chương phải lớn hơn 0");
         }

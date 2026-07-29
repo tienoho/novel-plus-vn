@@ -12,6 +12,11 @@
         <result column="index_name" property="indexName" />
         <result column="content" property="content" />
         <result column="is_vip" property="isVip" />
+        <result column="book_price" property="bookPrice" />
+        <result column="custom_price" property="customPrice" />
+        <result column="unlock_at" property="unlockAt" />
+        <result column="free_from" property="freeFrom" />
+        <result column="free_until" property="freeUntil" />
         <result column="status" property="status" />
         <result column="version" property="version" />
         <result column="scheduled_at" property="scheduledAt" />
@@ -24,12 +29,14 @@
 
     <sql id="DraftColumns">
         id, draft_no, client_key, author_id, book_id, index_id, index_name, content, is_vip,
+        book_price, custom_price, unlock_at, free_from, free_until,
         status, version, scheduled_at, published_index_id, last_autosave_at, last_error,
         create_time, update_time
     </sql>
 
     <sql id="DraftColumnsD">
         d.id, d.draft_no, d.client_key, d.author_id, d.book_id, d.index_id, d.index_name, d.content, d.is_vip,
+        d.book_price, d.custom_price, d.unlock_at, d.free_from, d.free_until,
         d.status, d.version, d.scheduled_at, d.published_index_id, d.last_autosave_at, d.last_error,
         d.create_time, d.update_time
     </sql>
@@ -37,9 +44,11 @@
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO author_chapter_draft
             (draft_no, client_key, author_id, book_id, index_id, index_name, content, is_vip,
+             book_price, custom_price, unlock_at, free_from, free_until,
              status, version, scheduled_at, published_index_id, last_autosave_at, last_error)
         VALUES
             (#{draftNo}, #{clientKey}, #{authorId}, #{bookId}, #{indexId}, #{indexName}, #{content}, #{isVip},
+             #{bookPrice}, #{customPrice}, #{unlockAt}, #{freeFrom}, #{freeUntil},
              #{status}, #{version}, #{scheduledAt}, #{publishedIndexId}, #{lastAutosaveAt}, #{lastError})
     </insert>
 
@@ -98,6 +107,11 @@
         SET index_name = #{indexName},
             content = #{content},
             is_vip = #{isVip},
+            book_price = #{bookPrice},
+            custom_price = #{customPrice},
+            unlock_at = #{unlockAt},
+            free_from = #{freeFrom},
+            free_until = #{freeUntil},
             last_autosave_at = #{now},
             last_error = NULL,
             version = version + 1

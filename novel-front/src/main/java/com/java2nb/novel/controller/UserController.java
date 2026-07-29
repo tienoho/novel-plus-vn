@@ -293,6 +293,9 @@ public class UserController extends BaseController {
         if (userDetails == null) {
             return RestResult.fail(ResponseStatus.NO_LOGIN);
         }
+        if (buyRecord == null || buyRecord.getBookIndexId() == null) {
+            throw new IllegalArgumentException("Thiếu chương cần mua");
+        }
         BookIndex bookIndex = bookService.queryBookIndex(buyRecord.getBookIndexId());
         Book book = bookService.queryBookDetail(bookIndex.getBookId());
         UserBuyRecord authoritativeRecord = new UserBuyRecord();

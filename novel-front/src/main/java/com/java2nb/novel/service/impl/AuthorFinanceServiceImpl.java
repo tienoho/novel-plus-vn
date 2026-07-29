@@ -12,7 +12,7 @@ import com.java2nb.novel.service.finance.PiiEncryptionUnavailableException;
 import com.java2nb.novel.service.finance.WithdrawalRequestInput;
 import com.java2nb.novel.service.wallet.InsufficientWalletBalanceException;
 import com.java2nb.novel.service.wallet.WalletLedgerService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +27,6 @@ import java.util.Objects;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class AuthorFinanceServiceImpl implements AuthorFinanceService {
 
     static final String CURRENT_CONSENT_VERSION = "KYC-VN-2026-01";
@@ -37,7 +36,28 @@ public class AuthorFinanceServiceImpl implements AuthorFinanceService {
     private final WalletLedgerService walletLedgerService;
     private final PiiCryptoService piiCryptoService;
     private final AuthorPayoutProperties payoutProperties;
-    private final Clock clock = Clock.system(VIETNAM_ZONE);
+    private final Clock clock;
+
+    @Autowired
+    public AuthorFinanceServiceImpl(AuthorFinanceMapper authorFinanceMapper,
+                                    WalletLedgerService walletLedgerService,
+                                    PiiCryptoService piiCryptoService,
+                                    AuthorPayoutProperties payoutProperties) {
+        this(authorFinanceMapper, walletLedgerService, piiCryptoService, payoutProperties,
+            Clock.system(VIETNAM_ZONE));
+    }
+
+    AuthorFinanceServiceImpl(AuthorFinanceMapper authorFinanceMapper,
+                             WalletLedgerService walletLedgerService,
+                             PiiCryptoService piiCryptoService,
+                             AuthorPayoutProperties payoutProperties,
+                             Clock clock) {
+        this.authorFinanceMapper = authorFinanceMapper;
+        this.walletLedgerService = walletLedgerService;
+        this.piiCryptoService = piiCryptoService;
+        this.payoutProperties = payoutProperties;
+        this.clock = Objects.requireNonNull(clock, "clock");
+    }
 
     @Transactional(rollbackFor = Exception.class)
     @Override

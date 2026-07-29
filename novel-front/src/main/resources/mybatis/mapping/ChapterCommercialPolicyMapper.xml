@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.java2nb.novel.mapper.ChapterCommercialPolicyMapper">
+    <resultMap id="PolicyResult" type="com.java2nb.novel.service.chapter.ChapterCommercialPolicy">
+        <id column="book_index_id" property="bookIndexId"/>
+        <result column="book_id" property="bookId"/>
+        <result column="custom_price" property="customPrice"/>
+        <result column="unlock_at" property="unlockAt"/>
+        <result column="free_from" property="freeFrom"/>
+        <result column="free_until" property="freeUntil"/>
+        <result column="version" property="version"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="selectByBookIndexId" resultMap="PolicyResult">
+        SELECT book_index_id, book_id, custom_price, unlock_at, free_from, free_until,
+               version, create_time, update_time
+        FROM chapter_commercial_policy
+        WHERE book_index_id = #{bookIndexId}
+        LIMIT 1
+    </select>
+
+    <insert id="upsert">
+        INSERT INTO chapter_commercial_policy
+            (book_index_id, book_id, custom_price, unlock_at, free_from, free_until, version)
+        VALUES
+            (#{bookIndexId}, #{bookId}, #{customPrice}, #{unlockAt}, #{freeFrom}, #{freeUntil}, 0)
+        ON DUPLICATE KEY UPDATE
+            book_id = VALUES(book_id),
+            custom_price = VALUES(custom_price),
+            unlock_at = VALUES(unlock_at),
+            free_from = VALUES(free_from),
+            free_until = VALUES(free_until),
+            version = version + 1
+    </insert>
+
+    <delete id="deleteByBookIndexId">
+        DELETE FROM chapter_commercial_policy WHERE book_index_id = #{bookIndexId}
+    </delete>
+</mapper>

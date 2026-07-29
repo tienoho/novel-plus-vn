@@ -21,6 +21,9 @@
 19. `20260727_recommendation.sql` thêm index pool tác phẩm đã duyệt và index lịch sử mua theo tài khoản/tác phẩm. Migration chỉ tạo index còn thiếu, không sửa dữ liệu hành vi hoặc nội dung.
 20. `20260727_author_story_bible.sql` tạo kho tư liệu riêng tư theo tác phẩm cho dàn ý, nhân vật, địa điểm và dòng thời gian. Mọi thao tác runtime phải lọc đồng thời `author_id` và `book_id`; cột `version` chống ghi đè giữa nhiều tab.
 21. `20260727_author_collaboration.sql` tạo vai trò đồng tác giả/biên tập viên, sáu quyền theo tác phẩm, optimistic version và audit thay đổi quyền bất biến. Chủ sở hữu tác phẩm có toàn quyền ngầm định; migration không cấp quyền tài chính, KYC, bản quyền hoặc quản trị cộng tác viên.
+22. `20260727_reader_annotations.sql` tạo vị trí đọc đồng bộ theo tác phẩm và dấu trang/ghi chú riêng tư theo chương. Mọi thao tác annotation phải lọc `user_id`; optimistic version ngăn thiết bị cũ ghi đè ghi chú mới.
+23. `20260728_author_ai.sql` tạo provenance bất biến cho thao tác AI của tác giả. Bảng chỉ lưu hash SHA-256, độ dài, model và metadata quyền; không lưu bản thảo, story bible hoặc đầu ra AI dạng rõ.
+24. `20260728_chapter_commercial_policy.sql` tạo chính sách giá/mở khóa 1-1 theo chương và mở rộng bản nháp bằng các trường nullable. `book_index.book_price` vẫn là giá authoritative; migration chỉ backfill giá preview của bản nháp cũ và không tự thay đổi quyền đọc của chương đã xuất bản.
 
 ## Nâng cấp database đang hoạt động
 

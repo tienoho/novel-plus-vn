@@ -17,18 +17,19 @@
     <div class="userBox cf">
         <form method="post" action="./register.html" id="form2">
             <div class="user_l">
+                <h1 class="sr-only" th:text="#{site.register}">Đăng ký</h1>
                 <h3 th:text="#{site.register}+' '+${application.website.name}"></h3>
                 <ul class="log_list">
                     <li><span id="LabErr"></span></li>
                     <li><input name="txtUName" type="text" id="txtUName" class="s_input icon_name"
-                               th:placeholder="#{auth.phone}"/></li>
+                               th:placeholder="#{auth.phone}" th:aria-label="#{auth.phone}" autocomplete="username" spellcheck="false"/></li>
                     <li><input name="txtPassword" type="password" id="txtPassword" class="s_input icon_key"
-                               th:placeholder="#{auth.password.hint}"/></li>
+                               th:placeholder="#{auth.password.hint}" th:aria-label="#{auth.password.hint}" autocomplete="new-password"/></li>
                     <li class="log_code cf"><input name="TxtChkCode" type="text" maxlength="4" id="TxtChkCode"
-                                                   class="s_input icon_code" th:placeholder="#{auth.captcha}"/><img
+                                                   class="s_input icon_code" th:placeholder="#{auth.captcha}" th:aria-label="#{auth.captcha}" autocomplete="off"/><img
                             style="border: 1px solid #eee" class="code_pic" src="" id="chkd"
                             onclick="getVerify(this);"/></li>
-                    <li><input type="button" name="btnRegister" th:value="#{site.register}" id="btnRegister" class="btn_red"/></li>
+                    <li><button type="submit" name="btnRegister" id="btnRegister" class="btn_red" th:text="#{site.register}">Đăng ký</button></li>
                 </ul>
             </div>
         </form>

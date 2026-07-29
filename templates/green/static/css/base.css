@@ -16,22 +16,59 @@ table {
     border-collapse: collapsse;
     border-spacing: 0
 }
+@charset "utf-8";
+body, div, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6, pre, form, fieldset, input, p, a, blockquote, th {
+    margin: 0;
+    padding: 0
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-size: 14px
+}
+
+ol, ul, li {
+    list-style: none outside none
+}
+
+table {
+    border-collapse: collapsse;
+    border-spacing: 0
+}
 
 fieldset, img {
     border: 0 none
 }
 
 /*html { background: ##f5f5f5 }*/
-body {
-    background: #f5f5f5;
-    color: #333;
-    font: 12px/1.5 PingFangSC-Regular, HelveticaNeue-Light, 'Helvetica Neue Light', 'Microsoft YaHei', sans-serif, SimSun;
-    text-align: left
+:root {
+    --bg-body: #f8fafc;
+    --bg-surface: #ffffff;
+    --bg-glass: rgba(255, 255, 255, 0.75);
+    --border-glass: rgba(226, 232, 240, 0.8);
+    --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+    --text-main: #0f172a;
+    --text-sub: #64748b;
+    --accent-emerald: #3eaf7c;
+    --accent-glow: rgba(62, 175, 124, 0.25);
+    --card-radius: 16px;
 }
 
-input::-moz-focus-inner {
-    border: none;
-    padding: 0
+[data-theme="dark"] {
+    --bg-body: #0b0f19;
+    --bg-surface: #151c2c;
+    --bg-glass: rgba(21, 28, 44, 0.8);
+    --border-glass: rgba(255, 255, 255, 0.1);
+    --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    --text-main: #f1f5f9;
+    --text-sub: #94a3b8;
+    --accent-emerald: #10b981;
+    --accent-glow: rgba(16, 185, 129, 0.35);
+}
+
+body {
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    font: 12px/1.5 PingFangSC-Regular, HelveticaNeue-Light, 'Helvetica Neue Light', 'Microsoft YaHei', sans-serif, SimSun;
 }
 
 a img {
@@ -962,6 +999,12 @@ i.vip_b {
     font-size: 14px;
 }
 
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #eee;
+    font-size: 14px;
+}
+
 .userBox {
     margin: 0 auto
 }
@@ -974,4 +1017,572 @@ i.vip_b {
     border-left: 5px solid #16b777;
     border-radius: 0 2px 2px 0;
     background-color: #fafafa;
+}
+
+/* ==========================================================================
+   Homepage Expansion Styles (Genre Chips, Continue Reading, Bento Grid)
+   ========================================================================== */
+.quick-genre-chips {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 12px 4px;
+    margin-bottom: 16px;
+    scrollbar-width: none;
+}
+.quick-genre-chips::-webkit-scrollbar {
+    display: none;
+}
+.chip-item {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 16px;
+    border-radius: 20px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-glass);
+    color: var(--text-main);
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+.chip-item:hover, .chip-item.active {
+    background: var(--accent-emerald);
+    color: #ffffff !important;
+    border-color: var(--accent-emerald);
+    box-shadow: 0 4px 12px var(--accent-glow);
+}
+
+.continue-reading-bar {
+    padding: 14px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.cr-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.cr-badge {
+    padding: 3px 10px;
+    border-radius: 12px;
+    background: var(--accent-emerald);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+}
+.cr-title {
+    font-size: 15px;
+    color: var(--text-main);
+}
+.cr-chapter {
+    font-size: 13px;
+    color: var(--text-sub);
+}
+.cr-btn {
+    padding: 6px 18px;
+    border-radius: 16px;
+    font-size: 13px;
+}
+
+.author-spotlight-wrap {
+    margin: 24px 0;
+    padding: 20px;
+}
+.author-spotlight-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--text-main);
+}
+.author-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+}
+.author-card {
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-decoration: none;
+}
+.author-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--accent-emerald);
+}
+.author-name-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-main);
+}
+.author-works {
+    font-size: 12px;
+    color: var(--text-sub);
+}
+
+/* ==========================================================================
+   Total UI Overhaul Rules: 1400px Layout, Glass Sticky Header, 3D Gradient Buttons
+   ========================================================================== */
+
+/* 1. Full-Width Responsive Container (1400px) */
+.box_center {
+    width: 1400px !important;
+    max-width: 95vw !important;
+    margin: 0 auto !important;
+}
+
+/* 2. Sticky Floating Glass Header */
+.header, .topMain {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1000 !important;
+    background: var(--bg-glass) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border-bottom: 1px solid var(--border-glass) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* 3. Universal 3D Gradient Buttons & Micro-Animations */
+.btn_ora, .btn_ora_white, .search_btn, .cr-btn, .hero-slide-btn, .btn_addsj {
+    background: linear-gradient(135deg, var(--accent-emerald), var(--accent-glow)) !important;
+    color: #ffffff !important;
+    border-radius: 20px !important;
+    border: none !important;
+    font-weight: 600 !important;
+    box-shadow: 0 4px 15px var(--accent-glow) !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.btn_ora:hover, .btn_ora_white:hover, .search_btn:hover, .cr-btn:hover, .hero-slide-btn:hover, .btn_addsj:hover {
+    transform: translateY(-3px) scale(1.02) !important;
+    box-shadow: 0 8px 25px var(--accent-glow) !important;
+}
+
+/* 4. Glowing Rank Badges */
+.rank-badge-1, .num1, .hot_articles dt i {
+    background: linear-gradient(135deg, #ffe259, #ffa751) !important;
+    color: #7a4100 !important;
+    font-weight: 800 !important;
+    border-radius: 50% !important;
+    box-shadow: 0 4px 12px rgba(255, 167, 81, 0.4) !important;
+}
+
+.rank-badge-2, .num2 {
+    background: linear-gradient(135deg, #e0e0e0, #f5f5f5) !important;
+    color: #424242 !important;
+    font-weight: 800 !important;
+    border-radius: 50% !important;
+}
+
+.rank-badge-3, .num3 {
+    background: linear-gradient(135deg, #e55d87, #5fc3e4) !important;
+    color: #ffffff !important;
+    font-weight: 800 !important;
+    border-radius: 50% !important;
+}
+
+/* 5. Pill Search Inputs with Glowing Focus Rings */
+.s_int, #searchKey, #q {
+    border-radius: 20px !important;
+    border: 1px solid var(--border-glass) !important;
+    background: var(--bg-surface) !important;
+    color: var(--text-main) !important;
+    padding: 8px 16px !important;
+    transition: all 0.25s ease !important;
+}
+
+.s_int:focus, #searchKey:focus, #q:focus {
+    border-color: var(--accent-emerald) !important;
+    box-shadow: 0 0 0 4px var(--accent-glow) !important;
+    outline: none !important;
+}
+
+/* ==========================================================================
+   Extreme Visual Polish: Entrance Animations, Swiper Active Pills, Rank Border Glow
+   ========================================================================== */
+
+/* 1. Entrance Micro-Animations */
+@keyframes npFadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.channelBanner, #continueReadingWidget, .quick-genre-chips, .author-spotlight-wrap, .hot_articles, .updateTable {
+    animation: npFadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* 2. Enhanced 3D Card Hover Elevation */
+.glass-card {
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.35s ease !important;
+}
+
+.glass-card:hover {
+    transform: translateY(-6px) scale(1.015) !important;
+    box-shadow: 0 20px 40px var(--accent-glow) !important;
+    border-color: var(--accent-emerald) !important;
+}
+
+/* 3. Swiper Active Pill Pagination & Glass Arrows */
+.heroSwiper .swiper-pagination-bullet {
+    width: 8px !important;
+    height: 8px !important;
+    border-radius: 50% !important;
+    transition: all 0.3s ease !important;
+}
+
+.heroSwiper .swiper-pagination-bullet-active {
+    width: 28px !important;
+    border-radius: 10px !important;
+    background: var(--accent-emerald) !important;
+    box-shadow: 0 0 10px var(--accent-glow) !important;
+}
+
+.heroSwiper .swiper-button-next,
+.heroSwiper .swiper-button-prev {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 50% !important;
+    background: var(--bg-glass) !important;
+    backdrop-filter: blur(12px) !important;
+    border: 1px solid var(--border-glass) !important;
+    color: var(--text-main) !important;
+    box-shadow: var(--shadow-glass) !important;
+    transition: all 0.25s ease !important;
+}
+
+.heroSwiper .swiper-button-next:hover,
+.heroSwiper .swiper-button-prev:hover {
+    background: var(--accent-emerald) !important;
+    color: #ffffff !important;
+    transform: scale(1.1) !important;
+}
+
+/* 4. Left Border Glow for Rank Lists & Update Tables */
+.updateTable tbody tr, .rank_list li {
+    border-left: 4px solid transparent !important;
+    transition: border-left-color 0.25s ease, background 0.25s ease !important;
+}
+
+.updateTable tbody tr:hover, .rank_list li:hover {
+    border-left-color: var(--accent-emerald) !important;
+    background: linear-gradient(90deg, var(--accent-glow), transparent) !important;
+}
+
+/* 5. Glassmorphic Footer */
+.footer {
+    background: var(--bg-glass) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border-top: 1px solid var(--border-glass) !important;
+}
+
+/* ==========================================================================
+   Sub-Page & Reader Polish: Book Detail, Reader Bar, Auth Inputs, Bento Stats
+   ========================================================================== */
+
+/* 1. Book Detail Hero Card & 3D Cover Shadow */
+.channelBookInfo {
+    background: var(--bg-glass) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid var(--border-glass) !important;
+    border-radius: 16px !important;
+    padding: 24px !important;
+    box-shadow: var(--shadow-glass) !important;
+}
+
+.channelBookInfo .attr .user_photo img, .book_cover img {
+    border-radius: 12px !important;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.25) !important;
+    transition: transform 0.3s ease !important;
+}
+
+.channelBookInfo .attr .user_photo img:hover, .book_cover img:hover {
+    transform: translateY(-4px) scale(1.03) !important;
+}
+
+/* 2. Reader Navigation Bar & Buttons */
+.indexDiv {
+    background: var(--bg-glass) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border-top: 1px solid var(--border-glass) !important;
+    border-bottom: 1px solid var(--border-glass) !important;
+    padding: 12px 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 16px !important;
+}
+
+.indexDiv a {
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 8px 24px !important;
+    border-radius: 20px !important;
+    background: linear-gradient(135deg, var(--accent-emerald), var(--accent-glow)) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    box-shadow: 0 4px 15px var(--accent-glow) !important;
+    transition: all 0.25s ease !important;
+}
+
+.indexDiv a:hover {
+    transform: translateY(-2px) scale(1.03) !important;
+    box-shadow: 0 8px 25px var(--accent-glow) !important;
+}
+
+/* 3. Auth Form Inputs & Focus Rings */
+.layui-input, .layui-textarea {
+    border-radius: 12px !important;
+    border: 1px solid var(--border-glass) !important;
+    background: var(--bg-surface) !important;
+    color: var(--text-main) !important;
+    transition: all 0.25s ease !important;
+}
+
+.layui-input:focus, .layui-textarea:focus {
+    border-color: var(--accent-emerald) !important;
+    box-shadow: 0 0 0 4px var(--accent-glow) !important;
+}
+
+/* 4. VIP Chapter Purchase Card */
+.screen_container {
+    background: var(--bg-glass) !important;
+    backdrop-filter: blur(16px) !important;
+    border: 2px solid var(--accent-emerald) !important;
+    border-radius: 16px !important;
+    padding: 24px !important;
+    text-align: center !important;
+    box-shadow: 0 10px 30px var(--accent-glow) !important;
+}
+
+/* ==========================================================================
+   Super Next-Gen Interactivity: Ambient Mesh, Reader Dock, Back-to-Top
+   ========================================================================== */
+
+/* 1. Ambient Light Mesh Background Gradient */
+body {
+    background-image: radial-gradient(circle at 15% 15%, var(--accent-glow), transparent 40%),
+                      radial-gradient(circle at 85% 75%, var(--accent-glow), transparent 40%) !important;
+    background-attachment: fixed !important;
+}
+
+/* 2. Floating Reader Control Dock */
+#readerControlDock {
+    position: fixed !important;
+    bottom: 24px !important;
+    right: 24px !important;
+    z-index: 9999 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 8px 16px !important;
+    border-radius: 30px !important;
+    background: var(--bg-glass) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid var(--border-glass) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25) !important;
+    transition: all 0.3s ease !important;
+}
+
+.dock-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 50% !important;
+    background: var(--bg-surface) !important;
+    border: 1px solid var(--border-glass) !important;
+    color: var(--text-main) !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+.dock-btn:hover {
+    transform: scale(1.1) !important;
+    background: var(--accent-emerald) !important;
+    color: #ffffff !important;
+}
+
+/* 3. Floating Back to Top Button */
+#backToTopBtn {
+    position: fixed !important;
+    bottom: 80px !important;
+    right: 24px !important;
+    z-index: 9998 !important;
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 50% !important;
+    background: var(--bg-glass) !important;
+    backdrop-filter: blur(16px) !important;
+    border: 1px solid var(--border-glass) !important;
+    color: var(--text-main) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2) !important;
+}
+
+#backToTopBtn.visible {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+#backToTopBtn:hover {
+    transform: translateY(-4px) scale(1.1) !important;
+    background: var(--accent-emerald) !important;
+    color: #ffffff !important;
+}
+
+/* ==========================================================================
+   Mobile PWA App-Dock Navigation Bar
+   ========================================================================== */
+.mobile-app-dock {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 9990 !important;
+    height: 60px !important;
+    background: var(--bg-glass) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border-top: 1px solid var(--border-glass) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-around !important;
+}
+
+.mobile-dock-item {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 11px !important;
+    color: var(--text-sub) !important;
+    text-decoration: none !important;
+    gap: 3px !important;
+    transition: color 0.2s ease !important;
+}
+
+.mobile-dock-item.active, .mobile-dock-item:hover {
+    color: var(--accent-emerald) !important;
+}
+
+.mobile-dock-icon {
+    font-size: 18px !important;
+}
+
+/* ==========================================================================
+   Frontend-Design Polish: Shimmer Badges, Spotlight Cards, Progress Line
+   ========================================================================== */
+
+/* 1. Shimmer Sheen Animation for Rank Badges */
+@keyframes npShimmer {
+    0% { transform: translateX(-100%) rotate(25deg); }
+    100% { transform: translateX(200%) rotate(25deg); }
+}
+
+.rank-tag-gold, .rank-tag-silver, .rank-tag-bronze {
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.rank-tag-gold::after, .rank-tag-silver::after, .rank-tag-bronze::after {
+    content: '' !important;
+    position: absolute !important;
+    top: -50% !important;
+    left: -50% !important;
+    width: 200% !important;
+    height: 200% !important;
+    background: linear-gradient(
+        60deg,
+        transparent 30%,
+        rgba(255, 255, 255, 0.4) 50%,
+        transparent 70%
+    ) !important;
+    animation: npShimmer 3.5s infinite !important;
+}
+
+/* 2. Glass Card Spotlight Hover Effect */
+.glass-card {
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, border-color 0.35s ease !important;
+}
+
+.glass-card:hover {
+    border-color: var(--accent-emerald) !important;
+    box-shadow: 0 12px 35px var(--accent-glow), 0 0 15px rgba(255, 255, 255, 0.05) !important;
+}
+
+/* 3. Reading Progress Top Line */
+#chapterProgressLine {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    height: 3px !important;
+    background: linear-gradient(90deg, var(--accent-emerald), #ffffff) !important;
+    z-index: 10000 !important;
+    width: 0%;
+    transition: width 0.1s ease-out !important;
+    box-shadow: 0 0 8px var(--accent-emerald) !important;
+}
+
+/* 4. Micro Badge Pulse */
+.np-badge-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 2px 10px !important;
+    border-radius: 12px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    background: var(--accent-glow) !important;
+    color: var(--accent-emerald) !important;
+    border: 1px solid var(--accent-emerald) !important;
+    box-shadow: 0 0 8px var(--accent-glow) !important;
+}
+
+@media (max-width: 768px) {
+    .continue-reading-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .cr-action {
+        width: 100%;
+        text-align: right;
+    }
+    .author-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    .author-grid {
+        grid-template-columns: 1fr;
+    }
 }

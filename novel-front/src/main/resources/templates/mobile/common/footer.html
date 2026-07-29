@@ -13,4 +13,24 @@
         </div>
         <script src="/javascript/notification-badge.js" defer></script>
     </div>
+
+    <!-- PWA Mobile Bottom Navigation Dock -->
+    <nav class="mobile-app-dock" aria-label="Điều hướng PWA Mobile">
+        <a href="/" class="mobile-dock-item active">
+            <span class="mobile-dock-icon">🏠</span>
+            <span th:text="#{site.home}">Trang chủ</span>
+        </a>
+        <a href="/book/bookclass.html" class="mobile-dock-item">
+            <span class="mobile-dock-icon">📚</span>
+            <span th:text="#{site.allBooks}">Tác phẩm</span>
+        </a>
+        <a href="/book/book_ranking.html" class="mobile-dock-item">
+            <span class="mobile-dock-icon">🏆</span>
+            <span th:text="#{site.ranking}">Xếp hạng</span>
+        </a>
+        <a href="/user/favorites.html" class="mobile-dock-item">
+            <span class="mobile-dock-icon">🔖</span>
+            <span th:text="#{user.bookshelf}">Tủ sách</span>
+        </a>
+    </nav>
 </div>

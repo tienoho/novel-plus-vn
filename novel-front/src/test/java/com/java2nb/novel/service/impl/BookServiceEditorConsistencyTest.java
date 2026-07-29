@@ -1,7 +1,6 @@
 package com.java2nb.novel.service.impl;
 
 import com.java2nb.novel.core.cache.CacheService;
-import com.java2nb.novel.core.config.BookPriceProperties;
 import com.java2nb.novel.core.i18n.Messages;
 import com.java2nb.novel.entity.Book;
 import com.java2nb.novel.entity.BookContent;
@@ -14,6 +13,7 @@ import com.java2nb.novel.service.LikeService;
 import com.java2nb.novel.service.collaboration.AuthorBookAccess;
 import com.java2nb.novel.service.collaboration.AuthorBookCollaborationService;
 import com.java2nb.novel.service.collaboration.BookPermission;
+import com.java2nb.novel.service.chapter.ChapterCommercialPolicyService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -22,7 +22,6 @@ import org.mybatis.dynamic.sql.select.render.SelectStatementProvider;
 import org.mybatis.dynamic.sql.update.render.UpdateStatementProvider;
 import org.springframework.ai.openai.OpenAiImageModel;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -53,16 +52,16 @@ class BookServiceEditorConsistencyTest {
         access.setOwner(true);
         when(collaborationService.requirePermission(anyLong(), anyLong(), any())).thenReturn(access);
 
-        BookPriceProperties price = new BookPriceProperties();
-        price.setWordCount(BigDecimal.valueOf(1000));
-        price.setValue(BigDecimal.valueOf(5));
+        ChapterCommercialPolicyService commercial = mock(ChapterCommercialPolicyService.class);
+        when(commercial.calculateAutomaticPrice(anyInt())).thenReturn(5);
+        when(commercial.resolveEffectivePrice(anyByte(), nullable(Integer.class), anyInt())).thenReturn(5);
         service = new BookServiceImpl(
             mock(Messages.class), mock(FrontBookSettingMapper.class), bookMapper,
             mock(BookCategoryMapper.class), bookIndexMapper, bookContentMapper,
             mock(FrontBookCommentMapper.class), mock(FrontBookCommentReplyMapper.class), historyMapper,
             mock(BookAuthorMapper.class), mock(CacheService.class), mock(AuthorService.class),
             collaborationService,
-            mock(FileService.class), mock(LikeService.class), price, mock(OpenAiImageModel.class),
+            mock(FileService.class), mock(LikeService.class), commercial, mock(OpenAiImageModel.class),
             mock(ThreadPoolExecutor.class));
     }
 

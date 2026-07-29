@@ -26,9 +26,9 @@
                                                                      th:text="${book.catName}"></a>&gt;<a
             th:href="'/book/'+${book.id}+'.html'" th:utext="${book.bookName}"></a>
     </div>
-    <div class="channelWrap channelBookInfo cf">
+    <div class="channelWrap channelBookInfo glass-card cf">
         <div class="bookCover cf">
-            <a th:href="${book.picUrl}" class="book_cover"><img class="cover" th:src="${book.picUrl}"
+            <a th:href="${book.picUrl}" class="book_cover"><img class="cover" th:src="${book.picUrl}" width="200" height="267" fetchpriority="high"
                                                                 th:attr="alt=${book.bookName}"/></a>
             <div class="book_info">
                 <div class="tit">
@@ -44,8 +44,8 @@
                 </ul>
                 <div class="intro_txt">
                     <p th:utext="${book.bookDesc}"></p>
-                    <a class="icon_hide" href="javascript:void(0)" onclick=""><i></i><span th:text="#{book.collapse}">Thu gọn</span></a>
-                    <a class="icon_show" href="javascript:void(0)" onclick=""><i></i><span th:text="#{book.expand}">Mở rộng</span></a>
+                    <button type="button" class="icon_hide" onclick=""><i aria-hidden="true"></i><span th:text="#{book.collapse}">Thu gọn</span></button>
+                    <button type="button" class="icon_show" onclick=""><i aria-hidden="true"></i><span th:text="#{book.expand}">Mở rộng</span></button>
                 </div>
                 <div class="btns" id="optBtn">
                     <a th:href="'/book/'+${book.id}+'/'+${firstBookIndexId}+'.html'" class="btn_ora" th:text="#{book.readNow}">Đọc ngay</a>

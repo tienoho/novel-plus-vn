@@ -64,7 +64,7 @@ services:
       - /bin/sh
       - -ec
       - |
-        for migration in /migrations/20260712_vi_localization.sql /migrations/20260716_vnpay_hardening.sql /migrations/20260717_wallet_ledger.sql /migrations/20260718_author_payout.sql /migrations/20260720_refund_reconciliation_vietqr.sql /migrations/20260725_moderation_copyright.sql /migrations/20260725_reports_security.sql /migrations/20260726_author_editor.sql /migrations/20260726_simhash_storage.sql /migrations/20260726_cover_moderation.sql /migrations/20260726_author_analytics.sql /migrations/20260726_vietnamese_search.sql /migrations/20260726_chapter_notifications.sql /migrations/20260727_recommendation.sql /migrations/20260727_author_story_bible.sql /migrations/20260727_author_collaboration.sql; do
+        for migration in /migrations/20260712_vi_localization.sql /migrations/20260716_vnpay_hardening.sql /migrations/20260717_wallet_ledger.sql /migrations/20260718_author_payout.sql /migrations/20260720_refund_reconciliation_vietqr.sql /migrations/20260725_moderation_copyright.sql /migrations/20260725_reports_security.sql /migrations/20260726_author_editor.sql /migrations/20260726_simhash_storage.sql /migrations/20260726_cover_moderation.sql /migrations/20260726_author_analytics.sql /migrations/20260726_vietnamese_search.sql /migrations/20260726_chapter_notifications.sql /migrations/20260727_recommendation.sql /migrations/20260727_author_story_bible.sql /migrations/20260727_author_collaboration.sql /migrations/20260727_reader_annotations.sql /migrations/20260728_author_ai.sql /migrations/20260728_chapter_commercial_policy.sql; do
           mysql --default-character-set=utf8mb4 --protocol=TCP --host=mysql --port=3306 --user="$$MYSQL_USER" "$$MYSQL_DATABASE" < "$$migration"
         done
     volumes:
@@ -84,6 +84,9 @@ services:
       - ./doc/sql/20260727_recommendation.sql:/migrations/20260727_recommendation.sql:ro
       - ./doc/sql/20260727_author_story_bible.sql:/migrations/20260727_author_story_bible.sql:ro
       - ./doc/sql/20260727_author_collaboration.sql:/migrations/20260727_author_collaboration.sql:ro
+      - ./doc/sql/20260727_reader_annotations.sql:/migrations/20260727_reader_annotations.sql:ro
+      - ./doc/sql/20260728_author_ai.sql:/migrations/20260728_author_ai.sql:ro
+      - ./doc/sql/20260728_chapter_commercial_policy.sql:/migrations/20260728_chapter_commercial_policy.sql:ro
     depends_on:
       mysql:
         condition: service_healthy

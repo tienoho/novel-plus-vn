@@ -250,13 +250,13 @@
         $("#setup_font_ks").removeClass("current");
         if (fontNum == 1) {
             $("#setup_font_simsun").addClass("current");
-            $(".readBox").css("font-family", "Simsun");
+            $(".readBox").css("font-family", "Georgia, 'Times New Roman', serif");
         } else if (fontNum == 2) {
             $("#setup_font_ks").addClass("current");
-            $(".readBox").css("font-family", "kaiti");
+            $(".readBox").css("font-family", "Verdana, 'Segoe UI', sans-serif");
         } else {
             $("#setup_font_yahei").addClass("current");
-            $(".readBox").css("font-family", "microsoft yahei");
+            $(".readBox").css("font-family", "'Segoe UI', Arial, sans-serif");
         }
     },
     GetReadSet: function (bid, cid, preId, nextId, crank) {

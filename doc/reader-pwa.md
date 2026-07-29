@@ -17,9 +17,10 @@ Trên trang đọc chương, thanh **Công cụ đọc** cung cấp:
 
 - đọc, tạm dừng, tiếp tục và dừng TTS;
 - chọn tốc độ và giọng `vi-VN` nếu hệ điều hành cung cấp;
-- điều chỉnh giãn dòng và ghi nhớ trên thiết bị;
+- chọn họ font phù hợp tiếng Việt, giãn dòng và nền đọc; các lựa chọn được ghi nhớ trên thiết bị;
 - lưu chương miễn phí và mở **Thư viện offline**;
 - bật/tắt chế độ tiết kiệm dữ liệu.
+- đồng bộ vị trí đọc, đánh dấu đoạn và quản lý ghi chú riêng tư khi đã đăng nhập.
 
 Phím tắt không áp dụng khi con trỏ nằm trong ô nhập liệu:
 
@@ -27,6 +28,11 @@ Phím tắt không áp dụng khi con trỏ nằm trong ô nhập liệu:
 - `Alt+S`: dừng đọc;
 - `Alt+O`: lưu chương miễn phí;
 - `Alt+D`: bật hoặc tắt tiết kiệm dữ liệu.
+- `Alt+P`: lưu vị trí đọc;
+- `Alt+B`: đánh dấu đoạn đang đọc;
+- `Alt+N`: tạo ghi chú từ vùng văn bản đã chọn.
+
+Các thao tác cũ trên mobile dùng phần tử `button`, nút biểu tượng có tên truy cập và trang đọc không khóa khả năng phóng to của trình duyệt. Bộ chọn dùng chung có focus hiển thị, trạng thái động `aria-live`, khai báo phím tắt và quan hệ mở/đóng với bảng ghi chú.
 
 Chế độ tiết kiệm dữ liệu tự bật khi `navigator.connection.saveData` được bật. Khi hoạt động, ảnh không thiết yếu được lazy-load, analytics đọc chương và script analytics ngoài hệ thống không được gửi.
 

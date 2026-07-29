@@ -9,6 +9,8 @@ import com.java2nb.novel.service.AuthorChapterDraftService;
 import com.java2nb.novel.service.BookService;
 import com.java2nb.novel.service.collaboration.AuthorBookCollaborationService;
 import com.java2nb.novel.service.collaboration.BookPermission;
+import com.java2nb.novel.service.chapter.ChapterCommercialPolicyService;
+import com.java2nb.novel.core.utils.StringUtil;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.dao.DuplicateKeyException;
@@ -35,6 +37,7 @@ public class AuthorChapterDraftServiceImpl implements AuthorChapterDraftService 
     private final BookIndexMapper bookIndexMapper;
     private final BookService bookService;
     private final AuthorBookCollaborationService collaborationService;
+    private final ChapterCommercialPolicyService commercialPolicyService;
 
     @Transactional(rollbackFor = Exception.class)
     @Override
@@ -46,12 +49,17 @@ public class AuthorChapterDraftServiceImpl implements AuthorChapterDraftService 
         String indexName = normalizeTitle(request.getIndexName());
         String content = normalizeContent(request.getContent());
         byte isVip = normalizeVip(request.getIsVip());
+        commercialPolicyService.validate(isVip, request.getCustomPrice(), request.getUnlockAt(),
+            request.getFreeFrom(), request.getFreeUntil());
+        int bookPrice = previewPrice(content, isVip, request.getCustomPrice());
         validateOwnership(authorId, request.getBookId(), request.getIndexId());
 
         if (request.getDraftId() == null) {
             AuthorChapterDraft existing = draftMapper.selectByClientKey(authorId, clientKey);
             if (existing != null) {
-                if (samePayload(existing, request.getBookId(), request.getIndexId(), indexName, content, isVip)) {
+                if (samePayload(existing, request.getBookId(), request.getIndexId(), indexName, content, isVip,
+                    bookPrice, request.getCustomPrice(), request.getUnlockAt(), request.getFreeFrom(),
+                    request.getFreeUntil())) {
                     return existing;
                 }
                 throw new IllegalStateException("Bản nháp đã tồn tại; hãy tải lại phiên bản mới nhất trước khi lưu");
@@ -66,6 +74,11 @@ public class AuthorChapterDraftServiceImpl implements AuthorChapterDraftService 
             draft.setIndexName(indexName);
             draft.setContent(content);
             draft.setIsVip(isVip);
+            draft.setBookPrice(bookPrice);
+            draft.setCustomPrice(request.getCustomPrice());
+            draft.setUnlockAt(request.getUnlockAt());
+            draft.setFreeFrom(request.getFreeFrom());
+            draft.setFreeUntil(request.getFreeUntil());
             draft.setStatus("DRAFT");
             draft.setVersion(0L);
             draft.setLastAutosaveAt(now);
@@ -76,7 +89,8 @@ public class AuthorChapterDraftServiceImpl implements AuthorChapterDraftService 
             } catch (DuplicateKeyException exception) {
                 AuthorChapterDraft concurrent = draftMapper.selectByClientKey(authorId, clientKey);
                 if (concurrent != null && samePayload(concurrent, request.getBookId(), request.getIndexId(),
-                    indexName, content, isVip)) {
+                    indexName, content, isVip, bookPrice, request.getCustomPrice(), request.getUnlockAt(),
+                    request.getFreeFrom(), request.getFreeUntil())) {
                     return concurrent;
                 }
                 throw exception;
@@ -95,7 +109,8 @@ public class AuthorChapterDraftServiceImpl implements AuthorChapterDraftService 
         }
         long expectedVersion = requireVersion(request.getExpectedVersion());
         if (draftMapper.updateAutosave(current.getId(), authorId, expectedVersion, indexName, content, isVip,
-            new Date()) != 1) {
+            bookPrice, request.getCustomPrice(), request.getUnlockAt(), request.getFreeFrom(),
+            request.getFreeUntil(), new Date()) != 1) {
             throw concurrentChange();
         }
         return requireOwned(authorId, current.getId());
@@ -206,6 +221,11 @@ public class AuthorChapterDraftServiceImpl implements AuthorChapterDraftService 
                 draft.getAuthorId());
             publishedIndexId = draft.getIndexId();
         }
+        int automaticPrice = commercialPolicyService.calculateAutomaticPrice(
+            StringUtil.getStrValidWordCount(storedContent));
+        commercialPolicyService.applyPublishedPolicy(draft.getAuthorId(), publishedIndexId,
+            draft.getIsVip() == null ? 0 : draft.getIsVip(), draft.getCustomPrice(), draft.getUnlockAt(),
+            draft.getFreeFrom(), draft.getFreeUntil(), automaticPrice);
         if (draftMapper.markPublished(draft.getId(), draft.getAuthorId(), expectedVersion + 1,
             publishedIndexId) != 1) {
             throw concurrentChange();
@@ -297,12 +317,24 @@ public class AuthorChapterDraftServiceImpl implements AuthorChapterDraftService 
     }
 
     private boolean samePayload(AuthorChapterDraft draft, Long bookId, Long indexId, String indexName,
-                                String content, byte isVip) {
+                                String content, byte isVip, int bookPrice, Integer customPrice,
+                                Date unlockAt, Date freeFrom, Date freeUntil) {
         return Objects.equals(draft.getBookId(), bookId)
             && Objects.equals(draft.getIndexId(), indexId)
             && Objects.equals(draft.getIndexName(), indexName)
             && Objects.equals(draft.getContent(), content)
-            && Objects.equals(draft.getIsVip(), isVip);
+            && Objects.equals(draft.getIsVip(), isVip)
+            && Objects.equals(draft.getBookPrice(), bookPrice)
+            && Objects.equals(draft.getCustomPrice(), customPrice)
+            && Objects.equals(draft.getUnlockAt(), unlockAt)
+            && Objects.equals(draft.getFreeFrom(), freeFrom)
+            && Objects.equals(draft.getFreeUntil(), freeUntil);
+    }
+
+    private int previewPrice(String content, byte isVip, Integer customPrice) {
+        int automaticPrice = commercialPolicyService.calculateAutomaticPrice(
+            StringUtil.getStrValidWordCount(toPublishedContent(content)));
+        return commercialPolicyService.resolveEffectivePrice(isVip, customPrice, automaticPrice);
     }
 
     private String toPublishedContent(String content) {

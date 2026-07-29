@@ -140,11 +140,13 @@
 <script src="/javascript/header.js" type="text/javascript"></script>
 <script src="/javascript/user.js" type="text/javascript"></script>
 <script src="/javascript/date.js" type="text/javascript"></script>
-<script src="/javascript/common.js" type="text/javascript"></script>
+<script src="/javascript/common.js?v=5" type="text/javascript"></script>
 
 <script language="javascript" type="text/javascript" th:inline="javascript">
     const coverChangeText = /*[[#{author.cover.change}]]*/ 'Nhấn để đổi ảnh bìa';
     const updatedText = /*[[#{reader.updated}]]*/ 'Cập nhật';
+    const previousPageText = /*[[#{notification.previousPage}]]*/ 'Trang trước';
+    const nextPageText = /*[[#{notification.nextPage}]]*/ 'Trang sau';
     const chapterManagementText = /*[[#{author.chapterManagement}]]*/ 'Quản lý chương';
     const incomeQueryText = /*[[#{author.incomeQuery}]]*/ 'Xem thu nhập';
     const analyticsQueryText = /*[[#{author.analytics.query}]]*/ 'Xem phân tích';
@@ -248,6 +250,8 @@
                             // Khởi tạo phân trang Layui.
                             laypage.render({
                                 elem: 'shellPage' // ID phần tử, không thêm dấu #.
+                                , prev: previousPageText
+                                , next: nextPageText
                                 , count: data.data.total // Tổng số bản ghi từ máy chủ.
                                 , curr: data.data.pageNum
                                 , limit: data.data.pageSize

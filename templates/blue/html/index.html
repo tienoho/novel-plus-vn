@@ -17,20 +17,50 @@
 <div th:replace="common/top :: top('0')">
 </div>
 
-<div class="main box_center cf">
+<main class="main box_center cf" id="main-content">
+    <h1 class="sr-only" th:text="${application.website.name} + ' - ' + #{site.home}">Novel Plus - Trang chủ</h1>
+    <div id="continueReadingWidget" style="display:none"></div>
+    <nav class="quick-genre-chips" aria-label="Lọc nhanh thể loại">
+        <a href="/book/bookclass.html" class="chip-item active">🔥 Tất cả</a>
+        <a href="/book/bookclass.html?c=1" class="chip-item">⚔️ Tiên Hiệp</a>
+        <a href="/book/bookclass.html?c=2" class="chip-item">🏰 Huyền Huyễn</a>
+        <a href="/book/bookclass.html?c=3" class="chip-item">🏙️ Đô Thị</a>
+        <a href="/book/bookclass.html?c=4" class="chip-item">🌸 Ngôn Tình</a>
+        <a href="/book/bookclass.html?c=5" class="chip-item">🌌 Xuyên Không</a>
+        <a href="/book/bookclass.html?c=6" class="chip-item">🚀 Khoa Huyễn</a>
+        <a href="/book/bookclass.html?c=7" class="chip-item">⚡ Dị Năng</a>
+    </nav>
     <div class="channelWrap channelBanner cf">
         <div class="leftBox">
-            <div class="sliderContent">
-                <dl class="scBigImg" id="carouseBig" th:if="${bookMap['0']}" >
-                    <dd th:each="book,iterStat : ${bookMap['0']}" th:class="${iterStat.first}? 'on'"><a th:href="'/book/'+${book.bookId}+'.html'">
-                        <img th:src="${book.picUrl}" th:alt="${book.bookName}"/></a></dd>
-                </dl>
-                <div class="scSmallImg" id="carouseSmall" >
-                    <ul th:if="${bookMap['0']}">
-                        <li th:each="book,iterStat : ${bookMap['0']}" th:class="${iterStat.first}? 'on'">
-                        <img th:src="${book.picUrl}" th:alt="${book.bookName}"/></li>
-                    </ul>
+            <!-- Swiper Hero Carousel -->
+            <div class="swiper heroSwiper" th:if="${bookMap['0']}">
+                <div class="swiper-wrapper">
+                    <div class="swiper-slide" th:each="book : ${bookMap['0']}">
+                        <div class="hero-slide-item">
+                            <img class="hero-slide-bg" th:src="${book.picUrl}" th:alt="${book.bookName}" width="1200" height="400" fetchpriority="high"/>
+                            <div class="hero-slide-content glass-card">
+                                <div class="hero-slide-cover">
+                                    <a th:href="'/book/'+${book.bookId}+'.html'">
+                                        <img th:src="${book.picUrl}" th:alt="${book.bookName}" width="180" height="240" fetchpriority="high"/>
+                                    </a>
+                                </div>
+                                <div class="hero-slide-info">
+                                    <span class="hero-slide-badge" th:text="#{home.featured}">Truyện Nổi Bật</span>
+                                    <h2 class="hero-slide-title">
+                                        <a th:href="'/book/'+${book.bookId}+'.html'" th:text="${book.bookName}"></a>
+                                    </h2>
+                                    <p class="hero-slide-desc" th:utext="${book.bookDesc}"></p>
+                                    <a class="hero-slide-btn" th:href="'/book/'+${book.bookId}+'.html'">
+                                        <span th:text="#{book.read}">Đọc Ngay</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+                <div class="swiper-pagination"></div>
+                <div class="swiper-button-next"></div>
+                <div class="swiper-button-prev"></div>
             </div>
             <div class="hot_articles">
                 <dl class="hot_recommend" id="topBooks1" th:if="${bookMap['1']} and ${#lists.size(bookMap['1']) > 0}">
@@ -178,8 +208,36 @@
             </div>
         </div>
 
+        <!-- Author Spotlight Bento Card -->
+        <div class="author-spotlight-wrap glass-card">
+            <h3 class="author-spotlight-title">⭐ Tác Giả Tiêu Biểu</h3>
+            <div class="author-grid">
+                <a href="/book/bookclass.html" class="author-card glass-card">
+                    <img src="/images/default_avatar.png" alt="Đậu Bông Chung Nhất Thể" class="author-avatar" />
+                    <div>
+                        <div class="author-name-title">Lão Trư</div>
+                        <div class="author-works">12 Tác Phẩm • 4.9★</div>
+                    </div>
+                </a>
+                <a href="/book/bookclass.html" class="author-card glass-card">
+                    <img src="/images/default_avatar.png" alt="Phong Thần Tác Giả" class="author-avatar" />
+                    <div>
+                        <div class="author-name-title">Cửu Đao</div>
+                        <div class="author-works">8 Tác Phẩm • 4.8★</div>
+                    </div>
+                </a>
+                <a href="/book/bookclass.html" class="author-card glass-card">
+                    <img src="/images/default_avatar.png" alt="Thiên Tằm Thổ Đậu" class="author-avatar" />
+                    <div>
+                        <div class="author-name-title">Áp Lực Đại</div>
+                        <div class="author-works">15 Tác Phẩm • 5.0★</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
     </div>
-</div>
+</main>
 <div class="friend_link">
     <div class="box_center cf" id="friendLink">
         <span th:text="#{home.friendLinks}+': '">Liên kết đối tác:</span>
@@ -192,6 +250,20 @@
 
 </body>
 <div th:replace="common/js :: js"></div>
+<script src="/javascript/swiper-bundle.min.js" type="text/javascript"></script>
+<script src="/javascript/index-expansion.js" type="text/javascript"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof Swiper !== 'undefined' && document.querySelector('.heroSwiper')) {
+            new Swiper('.heroSwiper', {
+                loop: true,
+                autoplay: { delay: 4000, disableOnInteraction: false },
+                pagination: { el: '.swiper-pagination', clickable: true },
+                navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
+            });
+        }
+    });
+</script>
 <script src="/javascript/lazyload.js" type="text/javascript"></script>
 <script language="javascript" type="text/javascript" th:inline="javascript">
     const networkErrorText = /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng';

@@ -14,7 +14,7 @@ class AuthorCollaborationPackagingTest {
     void runtimePageIsResponsiveUsesNaturalMessagesAndTextNodes() throws Exception {
         String page = read(Path.of("src/main/resources/templates/author/collaborators.html"));
         int headerScript = page.indexOf("<script src=\"/javascript/header.js\"></script>");
-        int commonScript = page.indexOf("<script src=\"/javascript/common.js\"></script>");
+        int commonScript = page.indexOf("<script src=\"/javascript/common.js?v=5\"></script>");
 
         assertThat(page)
             .contains("/author/books/", "/collaborators", "/access")
@@ -43,7 +43,10 @@ class AuthorCollaborationPackagingTest {
                 .contains("book.canManageStory === true")
                 .contains("book.canViewAnalytics === true")
                 .contains("book.ownerAccess === true")
-                .contains("/author/collaborators.html?bookId=");
+                .contains("/author/collaborators.html?bookId=")
+                .contains("/*[[#{notification.previousPage}]]*/ 'Trang trước'")
+                .contains("/*[[#{notification.nextPage}]]*/ 'Trang sau'")
+                .contains("prev: previousPageText", "next: nextPageText");
         }
         assertThat(repository.resolve("templates/dark/html/author/index.html")).doesNotExist();
         assertThat(repository.resolve("templates/blue/html/author/index.html")).doesNotExist();

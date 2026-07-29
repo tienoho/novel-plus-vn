@@ -1,7 +1,7 @@
 'use strict';
 
 var CACHE_PREFIX = 'novel-plus-shell-';
-var CACHE_VERSION = 'v4';
+var CACHE_VERSION = 'v6';
 var SHELL_CACHE = CACHE_PREFIX + CACHE_VERSION;
 var OFFLINE_PAGE = '/offline-reader.htm';
 var PRECACHE_URLS = [
@@ -91,17 +91,16 @@ self.addEventListener('fetch', function (event) {
         return;
     }
 
+    // Asset không có tên file theo content hash, vì vậy phải ưu tiên mạng và
+    // revalidate cache HTTP để người dùng không chạy JavaScript cũ sau deploy.
     event.respondWith(
-        caches.match(request).then(function (cached) {
-            var network = fetch(request).then(function (response) {
-                if (isCacheableResponse(response)) {
-                    caches.open(SHELL_CACHE).then(function (cache) {
-                        cache.put(request, response.clone());
-                    });
-                }
-                return response;
-            });
-            return cached || network;
+        fetch(request, {cache: 'no-cache'}).then(function (response) {
+            if (isCacheableResponse(response)) {
+                caches.open(SHELL_CACHE).then(function (cache) {
+                    cache.put(request, response.clone());
+                });
+            }
+            return response;
         }).catch(function () {
             return caches.match(request);
         })

@@ -979,7 +979,11 @@
     position: absolute;
     right: 0;
     bottom: 0;
-    background: #fff
+    background: #fff;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    font-family: inherit;
 }
 
 .icon_show i, .icon_hide i {

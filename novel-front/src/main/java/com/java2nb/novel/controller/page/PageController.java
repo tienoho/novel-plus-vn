@@ -10,6 +10,8 @@ import com.java2nb.novel.core.utils.ThreadLocalUtil;
 import com.java2nb.novel.entity.*;
 import com.java2nb.novel.service.*;
 import com.java2nb.novel.service.recommendation.RecommendationService;
+import com.java2nb.novel.service.chapter.ChapterAccessDecision;
+import com.java2nb.novel.service.chapter.ChapterCommercialPolicyService;
 import com.java2nb.novel.vo.BookCommentVO;
 import com.java2nb.novel.vo.BookSettingVO;
 import io.github.xxyopen.model.page.PageBean;
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -47,6 +50,8 @@ public class PageController extends BaseController {
     private final UserService userService;
 
     private final RecommendationService recommendationService;
+
+    private final ChapterCommercialPolicyService chapterCommercialPolicyService;
 
     private final ThreadPoolExecutor threadPoolExecutor;
 
@@ -308,27 +313,15 @@ public class PageController extends BaseController {
             }, threadPoolExecutor);
 
         //Luồng kiểm tra yêu cầu mua chương chạy sau khi tải xong thông tin chương
-        CompletableFuture<Boolean> needBuyCompletableFuture = bookIndexCompletableFuture.thenApplyAsync((bookIndex) -> {
-            //Kiểm tra mục lục có thu phí hay không
-            if (bookIndex.getIsVip() != null && bookIndex.getIsVip() == 1) {
-                //Có thu phí
+        CompletableFuture<ChapterAccessDecision> accessCompletableFuture = bookIndexCompletableFuture
+            .thenApplyAsync(bookIndex -> {
                 UserDetails user = getUserDetails(request);
-                if (user == null) {
-                    //Chưa đăng nhập và cần mua chương
-                    return true;
-                }
-                //Kiểm tra người dùng đã mua mục lục hay chưa
-                boolean isBuy = userService.queryIsBuyBookIndex(user.getId(), bookIndexId);
-                if (!isBuy) {
-                    //Chưa mua nên cần thanh toán
-                    return true;
-                }
-            }
-
-            log.debug("Đã kiểm tra xong yêu cầu mua chương của người dùng");
-            return false;
-
-        }, threadPoolExecutor);
+                boolean purchased = user != null && userService.queryIsBuyBookIndex(user.getId(), bookIndexId);
+                ChapterAccessDecision decision = chapterCommercialPolicyService.evaluate(bookIndex, purchased,
+                    new Date());
+                log.debug("Đã kiểm tra xong quyền đọc chương của người dùng");
+                return decision;
+            }, threadPoolExecutor);
 
         Book book = bookCompletableFuture.get();
         requirePublicBookAccess(book, currentUserProfile(request));
@@ -344,7 +337,10 @@ public class PageController extends BaseController {
         model.addAttribute("preBookIndexId", preBookIndexIdCompletableFuture.get());
         model.addAttribute("nextBookIndexId", nextBookIndexIdCompletableFuture.get());
         model.addAttribute("bookContent", bookContentCompletableFuture.get());
-        model.addAttribute("needBuy", needBuyCompletableFuture.get());
+        ChapterAccessDecision access = accessCompletableFuture.get();
+        model.addAttribute("needBuy", access.purchaseRequired());
+        model.addAttribute("offlineEligible", access.offlineEligible());
+        model.addAttribute("temporaryFree", access.temporaryFree());
 
         return ThreadLocalUtil.getTemplateDir() + "book/book_content";
     }

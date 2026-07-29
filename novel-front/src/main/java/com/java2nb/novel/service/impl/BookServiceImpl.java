@@ -3,7 +3,6 @@ package com.java2nb.novel.service.impl;
 import com.github.pagehelper.PageHelper;
 import com.java2nb.novel.core.cache.CacheKey;
 import com.java2nb.novel.core.cache.CacheService;
-import com.java2nb.novel.core.config.BookPriceProperties;
 import com.java2nb.novel.core.enums.ResponseStatus;
 import com.java2nb.novel.core.i18n.Messages;
 import com.java2nb.novel.core.utils.Constants;
@@ -21,6 +20,7 @@ import com.java2nb.novel.service.FileService;
 import com.java2nb.novel.service.LikeService;
 import com.java2nb.novel.service.collaboration.AuthorBookCollaborationService;
 import com.java2nb.novel.service.collaboration.BookPermission;
+import com.java2nb.novel.service.chapter.ChapterCommercialPolicyService;
 import com.java2nb.novel.service.search.VietnameseSearchMatcher;
 import com.java2nb.novel.vo.*;
 import io.github.xxyopen.model.page.PageBean;
@@ -47,8 +47,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
@@ -109,7 +107,7 @@ public class BookServiceImpl implements BookService {
 
     private final LikeService likeService;
 
-    private final BookPriceProperties bookPriceConfig;
+    private final ChapterCommercialPolicyService chapterCommercialPolicyService;
 
     private final OpenAiImageModel openAiImageModel;
 
@@ -645,9 +643,9 @@ public class BookServiceImpl implements BookService {
             .build()
             .render(RenderingStrategies.MYBATIS3));
 
-        //Tính giá
-        int bookPrice = new BigDecimal(wordCount).multiply(bookPriceConfig.getValue())
-            .divide(bookPriceConfig.getWordCount(), 0, RoundingMode.DOWN).intValue();
+        byte normalizedVip = isVip == null ? 0 : isVip;
+        int automaticPrice = chapterCommercialPolicyService.calculateAutomaticPrice(wordCount);
+        int bookPrice = chapterCommercialPolicyService.resolveEffectivePrice(normalizedVip, null, automaticPrice);
         String contentHash = ContentHashUtil.sha256Hex(content);
         String simHash = SimHashUtil.getSimHash(content);
         byte auditStatus = 1;
@@ -684,7 +682,7 @@ public class BookServiceImpl implements BookService {
         lastBookIndex.setIndexName(indexName);
         lastBookIndex.setIndexNum(indexNum);
         lastBookIndex.setBookId(bookId);
-        lastBookIndex.setIsVip(isVip);
+        lastBookIndex.setIsVip(normalizedVip);
         lastBookIndex.setBookPrice(bookPrice);
         lastBookIndex.setContentHash(contentHash);
         lastBookIndex.setSimHash(simHash);
@@ -870,8 +868,10 @@ public class BookServiceImpl implements BookService {
         }
         int nextVersion = historyCount == 0 ? 2 : Math.toIntExact(historyCount + 1);
         int newWordCount = StringUtil.getStrValidWordCount(content);
-        int bookPrice = new BigDecimal(newWordCount).multiply(bookPriceConfig.getValue())
-            .divide(bookPriceConfig.getWordCount(), 0, RoundingMode.DOWN).intValue();
+        byte currentVip = lockedIndex.getIsVip() == null ? 0 : lockedIndex.getIsVip();
+        int automaticPrice = chapterCommercialPolicyService.calculateAutomaticPrice(newWordCount);
+        int bookPrice = chapterCommercialPolicyService.resolveEffectivePrice(currentVip,
+            chapterCommercialPolicyService.findCustomPrice(indexId), automaticPrice);
 
         String contentHash = ContentHashUtil.sha256Hex(content);
         String simHash = SimHashUtil.getSimHash(content);

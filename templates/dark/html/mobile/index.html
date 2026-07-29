@@ -116,6 +116,17 @@
 
 <!-- Nội dung trang chủ mobile. -->
 <a name="top"></a>
+<div id="continueReadingWidget" style="display:none;padding:10px 10px 0 10px;"></div>
+<nav class="quick-genre-chips" aria-label="Lọc nhanh thể loại" style="padding:10px;">
+    <a href="/book/bookclass.html" class="chip-item active">🔥 Tất cả</a>
+    <a href="/book/bookclass.html?c=1" class="chip-item">⚔️ Tiên Hiệp</a>
+    <a href="/book/bookclass.html?c=2" class="chip-item">🏰 Huyền Huyễn</a>
+    <a href="/book/bookclass.html?c=3" class="chip-item">🏙️ Đô Thị</a>
+    <a href="/book/bookclass.html?c=4" class="chip-item">🌸 Ngôn Tình</a>
+    <a href="/book/bookclass.html?c=5" class="chip-item">🌌 Xuyên Không</a>
+    <a href="/book/bookclass.html?c=6" class="chip-item">🚀 Khoa Huyễn</a>
+    <a href="/book/bookclass.html?c=7" class="chip-item">⚡ Dị Năng</a>
+</nav>
 <div style="height: 40px;">
     <div style="line-height: 50px;width: 120px;float:left;padding-left: 10px"><img style="width: 150px;"
                                                                                    th:src="${application.website.logo}">
@@ -319,6 +330,7 @@
 
 </script>
 
-
+<script src="/javascript/theme-toggle.js"></script>
+<script src="/javascript/index-expansion.js"></script>
 </body>
 </html>

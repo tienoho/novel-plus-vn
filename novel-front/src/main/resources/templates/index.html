@@ -17,7 +17,19 @@
 <div th:replace="common/top :: top('0')">
 </div>
 
-<div class="main box_center cf">
+<main class="main box_center cf" id="main-content">
+    <h1 class="sr-only" th:text="${application.website.name} + ' - ' + #{site.home}">Novel Plus - Trang chủ</h1>
+    <div id="continueReadingWidget" style="display:none"></div>
+    <nav class="quick-genre-chips" aria-label="Lọc nhanh thể loại">
+        <a href="/book/bookclass.html" class="chip-item active">🔥 Tất cả</a>
+        <a href="/book/bookclass.html?c=1" class="chip-item">⚔️ Tiên Hiệp</a>
+        <a href="/book/bookclass.html?c=2" class="chip-item">🏰 Huyền Huyễn</a>
+        <a href="/book/bookclass.html?c=3" class="chip-item">🏙️ Đô Thị</a>
+        <a href="/book/bookclass.html?c=4" class="chip-item">🌸 Ngôn Tình</a>
+        <a href="/book/bookclass.html?c=5" class="chip-item">🌌 Xuyên Không</a>
+        <a href="/book/bookclass.html?c=6" class="chip-item">🚀 Khoa Huyễn</a>
+        <a href="/book/bookclass.html?c=7" class="chip-item">⚡ Dị Năng</a>
+    </nav>
     <div class="channelWrap channelBanner cf">
         <div class="leftBox">
             <!-- Swiper Hero Carousel -->
@@ -25,11 +37,11 @@
                 <div class="swiper-wrapper">
                     <div class="swiper-slide" th:each="book : ${bookMap['0']}">
                         <div class="hero-slide-item">
-                            <img class="hero-slide-bg" th:src="${book.picUrl}" th:alt="${book.bookName}"/>
-                            <div class="hero-slide-content">
+                            <img class="hero-slide-bg" th:src="${book.picUrl}" th:alt="${book.bookName}" width="1200" height="400" fetchpriority="high"/>
+                            <div class="hero-slide-content glass-card">
                                 <div class="hero-slide-cover">
                                     <a th:href="'/book/'+${book.bookId}+'.html'">
-                                        <img th:src="${book.picUrl}" th:alt="${book.bookName}"/>
+                                        <img th:src="${book.picUrl}" th:alt="${book.bookName}" width="180" height="240" fetchpriority="high"/>
                                     </a>
                                 </div>
                                 <div class="hero-slide-info">
@@ -80,7 +92,7 @@
                     <li th:each="book,iterStat : ${bookMap['2']}" th:class="${iterStat.first}? 'on num1': (${iterStat.index < 3}? 'num'+${iterStat.index+1})">
                         <div class="book_name"><i th:text="${iterStat.index+1}"></i><a class="name" th:href="'/book/'+${book.bookId}+'.html'" th:text="${book.bookName}"></a></div>
                         <div class="book_intro">
-                            <div class="cover"><a th:href="'/book/'+${book.bookId}+'.html'"><img th:src="${book.picUrl}" th:alt="${book.bookName}"></a>
+                            <div class="cover"><a th:href="'/book/'+${book.bookId}+'.html'"><img th:src="${book.picUrl}" th:alt="${book.bookName}" width="100" height="130"></a>
                             </div>
                             <a class="txt" th:href="'/book/'+${book.bookId}+'.html'" th:utext="${book.bookDesc}"></a>
                         </div>
@@ -98,11 +110,11 @@
             <div class="picRecommend cf" id="hotRecBooks" th:if="${bookMap['3']}">
                 <div class="itemsList" th:each="book : ${bookMap['3']}">
                     <a class="items_img" th:href="'/book/'+${book.bookId}+'.html'">
-                        <img class="lazyload" src="/images/default.gif" th:data-src="${book.picUrl}" th:alt="${book.bookName}">
+                        <img class="lazyload" src="/images/default.gif" th:data-src="${book.picUrl}" th:alt="${book.bookName}" width="120" height="160">
                     </a>
                     <div class="items_txt">
                         <h4><a th:href="'/book/'+${book.bookId}+'.html'" th:text="${book.bookName}"></a></h4>
-                        <p class="author"><a href="javascript:void(0)" th:text="#{book.authorBy(${book.authorName})}"></a></p>
+                        <p class="author"><span class="author-name" th:text="#{book.authorBy(${book.authorName})}"></span></p>
                         <p class="intro"><a th:href="'/book/'+${book.bookId}+'.html'" th:utext="${book.bookDesc}"></a>
                         </p>
                     </div>
@@ -117,7 +129,7 @@
                 <div class="rightList">
                     <ul id="clickRankBooks">
                     </ul>
-                    <div class="more"><a href="/book/book_ranking.html"><span th:text="#{common.more}">Xem thêm</span>&gt;</a></div>
+                    <div class="more"><a href="/book/book_ranking.html"><span th:text="#{common.more}">Xem thêm</span> &rarr;</a></div>
                 </div>
             </div>
         </div>
@@ -131,11 +143,11 @@
             <div class="picRecommend cf" id="classicBooks" th:if="${bookMap['4']}">
                 <div class="itemsList" th:each="book : ${bookMap['4']}">
                     <a class="items_img" th:href="'/book/'+${book.bookId}+'.html'">
-                        <img class="lazyload" src="/images/default.gif" th:data-src="${book.picUrl}" th:alt="${book.bookName}">
+                        <img class="lazyload" src="/images/default.gif" th:data-src="${book.picUrl}" th:alt="${book.bookName}" width="120" height="160">
                     </a>
                     <div class="items_txt">
                         <h4><a th:href="'/book/'+${book.bookId}+'.html'" th:text="${book.bookName}"></a></h4>
-                        <p class="author"><a href="javascript:void(0)" th:text="#{book.authorBy(${book.authorName})}"></a></p>
+                        <p class="author"><span class="author-name" th:text="#{book.authorBy(${book.authorName})}"></span></p>
                         <p class="intro"><a th:href="'/book/'+${book.bookId}+'.html'" th:utext="${book.bookDesc}"></a>
                         </p>
                     </div>
@@ -150,9 +162,43 @@
                 <div class="rightList">
                     <ul id="newRankBooks">
                     </ul>
-                    <div class="more"><a href="/book/book_ranking.html?type=1"><span th:text="#{common.more}">Xem thêm</span>&gt;</a></div>
+                    <div class="more"><a href="/book/book_ranking.html?type=1"><span th:text="#{common.more}">Xem thêm</span> &rarr;</a></div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="author-spotlight-wrap glass-card cf">
+        <h2 class="author-spotlight-title">✨ Tác Giả Tiêu Biểu & Siêu Phẩm</h2>
+        <div class="author-grid">
+            <a href="/book/bookclass.html" class="author-card glass-card">
+                <img src="/images/default.gif" class="author-avatar" alt="Thiên Tằm Thổ Đậu" />
+                <div>
+                    <div class="author-name-title">Thiên Tằm Thổ Đậu</div>
+                    <div class="author-works">4 Tác Phẩm • 12.5M Xem</div>
+                </div>
+            </a>
+            <a href="/book/bookclass.html" class="author-card glass-card">
+                <img src="/images/default.gif" class="author-avatar" alt="Đường Gia Tam Thiếu" />
+                <div>
+                    <div class="author-name-title">Đường Gia Tam Thiếu</div>
+                    <div class="author-works">6 Tác Phẩm • 18.2M Xem</div>
+                </div>
+            </a>
+            <a href="/book/bookclass.html" class="author-card glass-card">
+                <img src="/images/default.gif" class="author-avatar" alt="Ngã Cật Tây Hồng Thị" />
+                <div>
+                    <div class="author-name-title">Ngã Cật Tây Hồng Thị</div>
+                    <div class="author-works">5 Tác Phẩm • 15.1M Xem</div>
+                </div>
+            </a>
+            <a href="/book/bookclass.html" class="author-card glass-card">
+                <img src="/images/default.gif" class="author-avatar" alt="Phong Lăng Thiên Hạ" />
+                <div>
+                    <div class="author-name-title">Phong Lăng Thiên Hạ</div>
+                    <div class="author-works">3 Tác Phẩm • 9.8M Xem</div>
+                </div>
+            </a>
         </div>
     </div>
 
@@ -185,12 +231,12 @@
                 <div class="rightList">
                     <ul id="updateRankBooks">
                     </ul>
-                    <div class="more"><a href="/book/book_ranking.html?type=2"><span th:text="#{common.more}">Xem thêm</span>&gt;</a></div>
+                    <div class="more"><a href="/book/book_ranking.html?type=2"><span th:text="#{common.more}">Xem thêm</span> &rarr;</a></div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</main>
 
 <div class="friend_link">
     <div class="box_center cf" id="friendLink">
@@ -205,6 +251,7 @@
 <div th:replace="common/js :: js"></div>
 <script src="/javascript/swiper-bundle.min.js" type="text/javascript"></script>
 <script src="/javascript/lazyload.js" type="text/javascript"></script>
+<script src="/javascript/index-expansion.js" type="text/javascript"></script>
 <script language="javascript" type="text/javascript" th:inline="javascript">
     const networkErrorText = /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng';
 
@@ -247,7 +294,7 @@
                         var imageHtml = "";
                         if (i == 0) {
                             classHtml = "on";
-                            imageHtml = "<img src=\"" + clickRankBook.picUrl + "\" alt=\"" + clickRankBook.bookName + "\"/>";
+                            imageHtml = "<img src=\"" + clickRankBook.picUrl + "\" alt=\"" + clickRankBook.bookName + "\" width=\"84\" height=\"112\"/>";
                         }
                         if (i < 3) {
                             classHtml += (" num" + (i + 1));
@@ -291,7 +338,7 @@
                         var imageHtml = "";
                         if (i == 0) {
                             classHtml = "on";
-                            imageHtml = "<img src=\"" + newRankBook.picUrl + "\" alt=\"" + newRankBook.bookName + "\"/>";
+                            imageHtml = "<img src=\"" + newRankBook.picUrl + "\" alt=\"" + newRankBook.bookName + "\" width=\"84\" height=\"112\"/>";
                         }
                         if (i < 3) {
                             classHtml += (" num" + (i + 1));
@@ -336,7 +383,7 @@
                         var imageHtml = "";
                         if (i == 0) {
                             classHtml = "on";
-                            imageHtml = "<img src=\"" + updateRankBook.picUrl + "\" alt=\"" + updateRankBook.bookName + "\"/>";
+                            imageHtml = "<img src=\"" + updateRankBook.picUrl + "\" alt=\"" + updateRankBook.bookName + "\" width=\"84\" height=\"112\"/>";
                         }
                         if (i < 3) {
                             classHtml += (" num" + (i + 1));
@@ -361,7 +408,7 @@
                             "                        <td class=\"chapter\"><a href=\"/book/" + updateRankBook.id + ".html\">" + updateRankBook.lastIndexName + "</a>\n" +
                             "                            <i class=\"\"></i>\n" +
                             "                        </td>\n" +
-                            "                        <td class=\"author\"><a href=\"javascript:void(0)\">" + updateRankBook.authorName + "</a></td>\n" +
+                            "                        <td class=\"author\"><span>" + updateRankBook.authorName + "</span></td>\n" +
                             "                        <td class=\"time\">" + updateRankBook.lastIndexUpdateTime + "</td>\n" +
                             "                    </tr>");
                     }

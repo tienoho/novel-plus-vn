@@ -16,6 +16,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.time.LocalDate;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Base64;
 import java.util.Date;
 
@@ -49,7 +52,8 @@ class AuthorFinanceServiceImplTest {
         payoutProperties.setRequestOpenDay(1);
         payoutProperties.setRequestCloseDay(28);
         service = new AuthorFinanceServiceImpl(mapper, walletLedgerService,
-            new PiiCryptoService(piiProperties), payoutProperties);
+            new PiiCryptoService(piiProperties), payoutProperties,
+            Clock.fixed(Instant.parse("2026-07-15T00:00:00Z"), ZoneId.of("Asia/Ho_Chi_Minh")));
     }
 
     @Test

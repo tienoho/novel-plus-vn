@@ -38,8 +38,8 @@ public enum ResponseStatus implements IResultCode {
     INVITE_CODE_INVALID(4001, "author.invite.invalid"),
     AUTHOR_STATUS_FORBIDDEN(4002, "author.status.forbidden")
     , BOOKNAME_EXISTS(4003,"author.book.nameExists"),
-    CHAPTER_DUPLICATE_EXISTS(4004, "Chương truyện này đã tồn tại (nội dung trùng lặp)"),
-    CONTENT_AUDIT_PENDING(4005, "Nội dung đang chờ kiểm duyệt"),
+    CHAPTER_DUPLICATE_EXISTS(4004, "author.chapter.duplicate"),
+    CONTENT_AUDIT_PENDING(4005, "moderation.content.pending"),
     AUTHOR_STORY_ITEM_NOT_FOUND(4006, "author.story.item.notFound"),
     AUTHOR_STORY_VERSION_CONFLICT(4007, "author.story.versionConflict"),
     AUTHOR_STORY_INVALID_TYPE(4008, "author.story.invalidType"),
@@ -47,14 +47,24 @@ public enum ResponseStatus implements IResultCode {
     AUTHOR_COLLABORATOR_NOT_FOUND(4010, "author.collaboration.notFound"),
     AUTHOR_COLLABORATOR_INVALID(4011, "author.collaboration.invalid"),
     AUTHOR_COLLABORATION_VERSION_CONFLICT(4012, "author.collaboration.versionConflict"),
+    AUTHOR_AI_INVALID_REQUEST(4013, "author.ai.invalidRequest"),
+    AUTHOR_AI_UNAVAILABLE(4014, "author.ai.unavailable"),
 
     /**
      * Lỗi liên quan đến tác phẩm
      */
     BOOK_EXISTS(5001,"book.exists"),
-    AGE_RESTRICTED(5002, "Giới hạn độ tuổi: Bạn chưa đủ tuổi để truy cập tác phẩm này"),
-    COPYRIGHT_TAKEDOWN(5003, "Tác phẩm/chương truyện đã bị gỡ do vi phạm bản quyền"),
+    AGE_RESTRICTED(5002, "book.ageRestricted"),
+    COPYRIGHT_TAKEDOWN(5003, "book.copyrightTakedown"),
     BOOK_NOT_AVAILABLE(5004, "book.notAvailable"),
+
+    /**
+     * Lỗi liên quan đến trạng thái đọc riêng tư
+     */
+    READER_CHAPTER_INVALID(6001, "error.reader.chapterInvalid"),
+    READER_ANNOTATION_NOT_FOUND(6002, "error.reader.annotationNotFound"),
+    READER_ANNOTATION_VERSION_CONFLICT(6003, "error.reader.annotationConflict"),
+    READER_ANNOTATION_INVALID(6004, "error.reader.annotationInvalid"),
 
     /**
      * Lỗi liên quan đến công cụ tìm kiếm

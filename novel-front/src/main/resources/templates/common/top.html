@@ -1,4 +1,5 @@
 <div th:fragment="top(navType)" class="header">
+    <a href="#main-content" class="sr-only sr-only-focusable" th:text="#{common.skipToContent}">Bỏ qua đến nội dung chính</a>
     <div class="topBar" style="display: none">
         <div class="box_center cf">
             <div class="top_l">
@@ -25,8 +26,8 @@
                                                  th:alt="${application.website.name}"/></a>
             <div class="searchBar fl">
                 <div class="search cf">
-                    <input type="text" th:placeholder="#{site.search.placeholder}" class="s_int" name="searchKey" id="searchKey"/>
-                    <label class="search_btn" id="btnSearch" onclick="searchByK()" th:title="#{site.search}"><i class="icon"></i></label>
+                    <input type="text" th:placeholder="#{site.search.placeholder}" class="s_int" name="searchKey" id="searchKey" th:aria-label="#{site.search}" autocomplete="off"/>
+                    <button type="button" class="search_btn" id="btnSearch" onclick="searchByK()" th:title="#{site.search}" th:aria-label="#{site.search}"><i class="icon" aria-hidden="true"></i></button>
                 </div>
             </div>
             <div class="bookShelf fr" id="headerUserInfo">
@@ -35,6 +36,9 @@
                 <a class="sj_link" href="/user/favorites.html" th:text="#{user.bookshelf}">Tủ sách</a>
                 <span class="user_link"><i class="line mr20">|</i><a href="/user/login.html" class="mr15" th:text="#{site.login}">Đăng nhập</a><a
                         href="/user/register.html" th:text="#{site.register}">Đăng ký</a></span>
+                <button type="button" id="themeToggleBtn" class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Chuyển chế độ giao diện" title="Chuyển chế độ giao diện">
+                    <span class="theme-toggle-icon">🌙</span>
+                </button>
             </div>
         </div>
     </div>
@@ -51,5 +55,6 @@
             </ul>
         </div>
     </div>
+    <script src="/javascript/theme-toggle.js"></script>
     <script src="/javascript/notification-badge.js" defer></script>
 </div>

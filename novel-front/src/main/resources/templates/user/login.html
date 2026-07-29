@@ -10,6 +10,10 @@
 </head>
 <body class="">
 
+    <link rel="stylesheet" href="/css/user.css" />
+</head>
+<body class="">
+
 <div th:replace="common/top :: top('')">
 </div>
 
@@ -17,20 +21,20 @@
     <div class="userBox cf">
         <div class="user_l">
             <form method="post" action="./login.html" id="form1">
+                <h1 class="sr-only" th:text="#{site.login}">Đăng nhập</h1>
                 <h3 th:text="#{site.login}+' '+${application.website.name}"></h3>
                 <ul class="log_list">
                     <li><span id="LabErr"></span></li>
-                    <li><input name="txtUName" type="text" id="txtUName" th:placeholder="#{auth.phone}" class="s_input icon_name" /></li>
-                    <li><input name="txtPassword" type="password" id="txtPassword" th:placeholder="#{auth.password}" class="s_input icon_key" /></li>
+                    <li><input name="txtUName" type="text" id="txtUName" th:placeholder="#{auth.phone}" th:aria-label="#{auth.phone}" autocomplete="username" spellcheck="false" class="s_input icon_name" /></li>
+                    <li><input name="txtPassword" type="password" id="txtPassword" th:placeholder="#{auth.password}" th:aria-label="#{auth.password}" autocomplete="current-password" class="s_input icon_key" /></li>
                     <li class="autologin cf"><label class="fl"><input id="autoLogin" type="checkbox"/><em th:text="#{auth.autoLogin}">Tự động đăng nhập lần sau</em></label></li>
-                    <li><input type="button" name="btnLogin" th:value="#{site.login}" id="btnLogin" class="btn_red" /></li>
+                    <li><button type="submit" name="btnLogin" id="btnLogin" class="btn_red" th:text="#{site.login}">Đăng nhập</button></li>
                 </ul>
             </form>
         </div>
         <div class="user_r">
             <p class="tit" th:text="#{auth.noAccount}">Bạn chưa có tài khoản?</p>
             <a href="/user/register.html" class="btn_ora_white" th:text="#{auth.registerNow}">Đăng ký ngay</a>
-            <div class="fast_login" style="display:none;">
                 <div class="fast_tit">
                     <p class="lines"></p>
                     <span class="title">Phương thức đăng nhập khác</span>
