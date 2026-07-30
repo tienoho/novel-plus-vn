@@ -13,8 +13,9 @@ Hoàn thành toàn bộ công cụ tác giả và trải nghiệm độc giả P
 - [x] Bảo vệ AI: chuyển nội dung khỏi query string, lấy ngữ cảnh tác phẩm có giới hạn và ghi provenance không chứa bản thảo thô → kiểm tra authorization, hash audit và request body.
 - [x] Cho tác giả cấu hình giá chương, thời điểm tự mở khóa và sự kiện miễn phí → dịch vụ truy cập trung tâm, giá authoritative khi khóa hàng, offline chỉ cho miễn phí vĩnh viễn; unit/MySQL integration, bốn theme và Docker smoke đều đạt.
 - [x] Import/export TXT, DOCX và EPUB an toàn → quyền theo tác phẩm, import draft idempotent/transactional, export chương đã duyệt; kiểm tra zip bomb/path traversal/XXE, encoding, ngân sách tổng, thứ tự chương, DOCX styles, EPUB 3, round-trip và rollback MySQL.
-- [ ] Gói thuê bao, vé đọc và mã quà tặng → kiểm tra entitlement, idempotency, hết hạn và mọi biến động Xu qua sổ cái kép.
-- [ ] Chạy migration trên MySQL thật, full Maven reactor, i18n/JS verifier, bốn theme, Docker smoke và cập nhật biên bản P1.
+- [ ] Gói thuê bao, vé đọc và mã quà tặng → checkout VNPAY/VietQR, hàng đợi `PAID_REVIEW`, handoff hoàn tiền, rotation HMAC, backend/admin và UI Vé đọc đã có; concurrency mã quà đạt cả giới hạn campaign, code, idempotency và `max_per_user`; còn browser luồng đã đăng nhập và provider production.
+- [x] Chạy migration lặp trên MySQL thật, full Maven reactor, i18n/JS verifier, bốn theme, Docker smoke và cập nhật biên bản P1. Reactor đạt 583 test, không failure/error; 33 integration test có cờ riêng không thuộc reactor mặc định, các cổng MySQL P1 trọng yếu đã được chạy riêng.
+- [x] Browser smoke bề mặt công khai của green, orange, dark và blue trên desktop/mobile → `lang="vi"`, không chữ Hán/raw message key, không tràn ngang và không lỗi console; trang đăng nhập admin cũng đạt. Kiểm thử này không thay thế regression sau đăng nhập.
 
 ## Hoàn tất khi
 

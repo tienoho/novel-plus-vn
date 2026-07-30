@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.java2nb.novel.mapper.AuthorRewardMapper">
+
+    <sql id="seasonRewardColumns">
+        id,
+        period_code AS periodCode,
+        status,
+        policy_version AS policyVersion,
+        snapshot_id AS snapshotId,
+        finalized_by AS finalizedBy,
+        version
+    </sql>
+
+    <select id="selectSeasonForReward"
+            resultType="com.java2nb.novel.service.gamification.MonthlySeasonRow">
+        SELECT <include refid="seasonRewardColumns"/>
+        FROM monthly_ticket_season
+        WHERE id = #{seasonId}
+        LIMIT 1
+    </select>
+
+    <select id="selectSeasonByPeriodForReward"
+            resultType="com.java2nb.novel.service.gamification.MonthlySeasonRow">
+        SELECT <include refid="seasonRewardColumns"/>
+        FROM monthly_ticket_season
+        WHERE period_code = #{periodCode}
+        LIMIT 1
+    </select>
+
+    <select id="selectSnapshotRewardRows"
+            resultType="com.java2nb.novel.service.gamification.MonthlyRankRow">
+        SELECT rank_no AS rankNo,
+               book_id AS bookId,
+               author_id AS authorId,
+               total_tickets AS totalTickets,
+               distinct_voter_count AS distinctVoterCount,
+               last_vote_at AS lastVoteAt
+        FROM monthly_rank_entry
+        WHERE snapshot_id = #{snapshotId}
+        ORDER BY rank_no ASC
+        LIMIT #{limit}
+    </select>
+
+    <insert id="insertCampaign">
+        INSERT INTO reward_fund_campaign
+            (period_code, status, enabled, budget_xu, structure_json, policy_version)
+        VALUES (#{periodCode}, 'DRAFT', 0, #{budgetXu}, #{structureJson}, #{policyVersion})
+    </insert>
+
+    <sql id="campaignColumns">
+        id,
+        period_code AS periodCode,
+        status,
+        enabled,
+        budget_xu AS budgetXu,
+        structure_json AS structureJson,
+        policy_version AS policyVersion,
+        approved_by AS approvedBy,
+        approved_at AS approvedAt,
+        version
+    </sql>
+
+    <select id="selectCampaignByPeriod"
+            resultType="com.java2nb.novel.service.gamification.RewardCampaignRow">
+        SELECT <include refid="campaignColumns"/>
+        FROM reward_fund_campaign
+        WHERE period_code = #{periodCode}
+        LIMIT 1
+    </select>
+
+    <select id="lockCampaignById"
+            resultType="com.java2nb.novel.service.gamification.RewardCampaignRow">
+        SELECT <include refid="campaignColumns"/>
+        FROM reward_fund_campaign
+        WHERE id = #{campaignId}
+        FOR UPDATE
+    </select>
+
+    <insert id="insertAllocation">
+        INSERT INTO author_reward_allocation
+            (allocation_no, campaign_id, season_id, snapshot_id, book_id, author_id,
+             rank_no, amount_xu, rounding_adjustment_xu, status, reason, policy_version)
+        VALUES (#{allocationNo}, #{campaignId}, #{seasonId}, #{snapshotId}, #{bookId},
+                #{authorId}, #{rankNo}, #{amountXu}, #{roundingAdjustmentXu}, #{status},
+                #{reason}, #{policyVersion})
+    </insert>
+
+    <update id="approveCampaign">
+        UPDATE reward_fund_campaign
+        SET status = 'APPROVED',
+            enabled = 1,
+            approved_by = #{approvedBy},
+            approved_at = #{approvedAt},
+            version = version + 1
+        WHERE id = #{campaignId}
+          AND status = 'DRAFT'
+          AND enabled = 0
+          AND version = #{expectedVersion}
+          AND budget_xu &gt; 0
+          AND structure_json IS NOT NULL
+    </update>
+
+    <update id="approveAllocations">
+        UPDATE author_reward_allocation
+        SET status = 'APPROVED',
+            version = version + 1
+        WHERE campaign_id = #{campaignId}
+          AND status = 'CALCULATED'
+          AND amount_xu &gt; 0
+    </update>
+
+    <update id="attachCampaignToSeason">
+        UPDATE monthly_ticket_season
+        SET reward_campaign_id = #{campaignId},
+            version = version + 1
+        WHERE id = #{seasonId}
+          AND status = 'FINALIZED'
+          AND reward_campaign_id IS NULL
+    </update>
+
+    <select id="selectApprovedAllocationIds" resultType="long">
+        SELECT id
+        FROM author_reward_allocation
+        WHERE campaign_id = #{campaignId}
+          AND status = 'APPROVED'
+          AND amount_xu &gt; 0
+        ORDER BY rank_no ASC, id ASC
+        LIMIT #{limit}
+    </select>
+
+    <sql id="allocationColumns">
+        id,
+        allocation_no AS allocationNo,
+        campaign_id AS campaignId,
+        season_id AS seasonId,
+        snapshot_id AS snapshotId,
+        book_id AS bookId,
+        author_id AS authorId,
+        rank_no AS rankNo,
+        amount_xu AS amountXu,
+        rounding_adjustment_xu AS roundingAdjustmentXu,
+        status,
+        posted_at AS postedAt,
+        released_at AS releasedAt,
+        clawed_back_at AS clawedBackAt,
+        reason,
+        policy_version AS policyVersion,
+        version
+    </sql>
+
+    <select id="lockAllocationById"
+            resultType="com.java2nb.novel.service.gamification.AuthorRewardAllocationRow">
+        SELECT <include refid="allocationColumns"/>
+        FROM author_reward_allocation
+        WHERE id = #{allocationId}
+        FOR UPDATE
+    </select>
+
+    <select id="selectAllocationById"
+            resultType="com.java2nb.novel.service.gamification.AuthorRewardAllocationRow">
+        SELECT <include refid="allocationColumns"/>
+        FROM author_reward_allocation
+        WHERE id = #{allocationId}
+        LIMIT 1
+    </select>
+
+    <update id="markPostedPending">
+        UPDATE author_reward_allocation
+        SET status = 'POSTED_PENDING',
+            posted_at = #{postedAt},
+            version = version + 1
+        WHERE id = #{allocationId}
+          AND status = 'APPROVED'
+          AND version = #{expectedVersion}
+          AND amount_xu &gt; 0
+    </update>
+
+    <select id="selectMaturedAllocationIds" resultType="long">
+        SELECT id
+        FROM author_reward_allocation
+        WHERE status = 'POSTED_PENDING'
+          AND posted_at &lt;= #{postedBefore}
+        ORDER BY posted_at ASC, id ASC
+        LIMIT #{limit}
+    </select>
+
+    <update id="markReleased">
+        UPDATE author_reward_allocation
+        SET status = 'RELEASED',
+            released_at = #{releasedAt},
+            version = version + 1
+        WHERE id = #{allocationId}
+          AND status = 'POSTED_PENDING'
+          AND version = #{expectedVersion}
+    </update>
+
+    <update id="markClawedBack">
+        UPDATE author_reward_allocation
+        SET status = 'CLAWED_BACK',
+            clawed_back_at = #{clawedBackAt},
+            reason = #{reason},
+            version = version + 1
+        WHERE id = #{allocationId}
+          AND status = 'POSTED_PENDING'
+          AND version = #{expectedVersion}
+    </update>
+
+    <select id="selectAuthorRewards"
+            resultType="com.java2nb.novel.service.gamification.AuthorRewardAllocationRow">
+        SELECT allocation.id,
+               allocation.allocation_no AS allocationNo,
+               allocation.campaign_id AS campaignId,
+               allocation.season_id AS seasonId,
+               season.period_code AS periodCode,
+               allocation.snapshot_id AS snapshotId,
+               allocation.book_id AS bookId,
+               book.book_name AS bookName,
+               allocation.author_id AS authorId,
+               allocation.rank_no AS rankNo,
+               allocation.amount_xu AS amountXu,
+               allocation.rounding_adjustment_xu AS roundingAdjustmentXu,
+               allocation.status,
+               allocation.posted_at AS postedAt,
+               allocation.released_at AS releasedAt,
+               allocation.clawed_back_at AS clawedBackAt,
+               allocation.reason,
+               allocation.policy_version AS policyVersion,
+               allocation.version
+        FROM author_reward_allocation allocation
+                 JOIN monthly_ticket_season season ON season.id = allocation.season_id
+                 LEFT JOIN book ON book.id = allocation.book_id
+        WHERE allocation.author_id = #{authorId}
+        ORDER BY allocation.id DESC
+        LIMIT #{limit}
+    </select>
+
+</mapper>

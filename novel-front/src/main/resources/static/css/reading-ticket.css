@@ -1,0 +1,201 @@
+.reading-ticket-shell {
+    color: #243447;
+}
+
+.reading-ticket-heading,
+.reading-ticket-card,
+.reading-ticket-section {
+    box-sizing: border-box;
+    margin-bottom: 18px;
+    border: 1px solid #dce5e1;
+    border-radius: 12px;
+    background: #fff;
+    padding: 22px;
+}
+
+.reading-ticket-heading h1,
+.reading-ticket-section h2 {
+    margin: 0 0 10px;
+}
+
+.reading-ticket-heading p,
+.reading-ticket-section p {
+    margin: 6px 0;
+}
+
+.reading-ticket-balance-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: linear-gradient(135deg, #f0fff6, #fff8e7);
+}
+
+.reading-ticket-balance {
+    color: #b45309;
+    font-size: 34px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.reading-ticket-current,
+.reading-ticket-plans,
+.reading-ticket-grants {
+    display: grid;
+    gap: 12px;
+}
+
+.reading-ticket-current span,
+.reading-ticket-grant span {
+    display: block;
+    margin-top: 5px;
+    color: #52606d;
+}
+
+.reading-ticket-plans {
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+.reading-ticket-plan,
+.reading-ticket-grant {
+    border: 1px solid #e4ebe7;
+    border-radius: 9px;
+    padding: 14px;
+    background: #fbfdfc;
+}
+
+.reading-ticket-plan h3 {
+    margin: 0 0 8px;
+}
+
+.reading-ticket-plan small,
+.reading-ticket-empty {
+    color: #667085;
+}
+
+.reading-ticket-plan-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.reading-ticket-plan-actions button {
+    min-height: 38px;
+    border: 0;
+    border-radius: 6px;
+    background: #176b45;
+    color: #fff;
+    cursor: pointer;
+    font: inherit;
+    padding: 8px 12px;
+}
+
+.reading-ticket-plan-actions button:disabled {
+    cursor: wait;
+    opacity: .65;
+}
+
+.reading-ticket-checkout-qr img {
+    display: block;
+    width: min(280px, 100%);
+    height: auto;
+    margin: 12px 0;
+}
+
+.reading-ticket-checkout-qr code {
+    display: block;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.reading-ticket-status {
+    margin: 10px 0 0;
+    color: #176b45;
+}
+
+.reading-ticket-status.is-error {
+    color: #b42318;
+}
+
+.reading-ticket-unlock {
+    box-sizing: border-box;
+    margin-top: 14px;
+    border-top: 1px solid #e4e7ec;
+    padding-top: 14px;
+    font-size: 15px;
+}
+
+.reading-ticket-unlock button {
+    min-height: 40px;
+    margin-top: 8px;
+    border: 0;
+    border-radius: 6px;
+    background: #b45309;
+    color: #fff;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    padding: 9px 16px;
+}
+
+.reading-ticket-unlock button:disabled {
+    cursor: not-allowed;
+    opacity: .65;
+}
+
+.reading-ticket-unlock button:focus-visible,
+.reading-ticket-mobile-header a:focus-visible {
+    outline: 3px solid #ffbf47;
+    outline-offset: 3px;
+}
+
+.reading-ticket-mobile-body {
+    margin: 0;
+    background: #f5f7f6;
+}
+
+.reading-ticket-mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 50px;
+    background: #159957;
+    color: #fff;
+    padding: 0 14px;
+}
+
+.reading-ticket-mobile-header a {
+    color: #fff;
+    font-size: 24px;
+    text-decoration: none;
+}
+
+.reading-ticket-shell-mobile {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 14px;
+}
+
+@media (max-width: 640px) {
+    .reading-ticket-heading,
+    .reading-ticket-card,
+    .reading-ticket-section {
+        padding: 16px;
+    }
+
+    .reading-ticket-balance-card {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .reading-ticket-balance {
+        font-size: 30px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .reading-ticket-unlock button {
+        scroll-behavior: auto;
+    }
+}

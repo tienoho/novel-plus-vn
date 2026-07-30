@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.java2nb.novel.mapper.ReadingHeartbeatMapper">
+
+    <resultMap id="session" type="com.java2nb.novel.service.gamification.ReadingSessionRow">
+        <id column="session_id" property="sessionId"/>
+        <result column="user_id" property="userId"/>
+        <result column="book_id" property="bookId"/>
+        <result column="book_index_id" property="bookIndexId"/>
+        <result column="last_sequence" property="lastSequence"/>
+        <result column="last_heartbeat_at" property="lastHeartbeatAt"/>
+        <result column="total_accepted_seconds" property="totalAcceptedSeconds"/>
+        <result column="status" property="status"/>
+        <result column="version" property="version"/>
+    </resultMap>
+
+    <resultMap id="dailyCounter" type="com.java2nb.novel.service.gamification.ReadingDailyCounterRow">
+        <id column="user_id" property="userId"/>
+        <id column="local_date" property="localDate"/>
+        <result column="verified_seconds" property="verifiedSeconds"/>
+        <result column="version" property="version"/>
+    </resultMap>
+
+    <resultMap id="receipt" type="com.java2nb.novel.service.gamification.ReadingHeartbeatReceiptRow">
+        <id column="id" property="id"/>
+        <result column="session_id" property="sessionId"/>
+        <result column="user_id" property="userId"/>
+        <result column="book_id" property="bookId"/>
+        <result column="book_index_id" property="bookIndexId"/>
+        <result column="sequence_no" property="sequenceNo"/>
+        <result column="active_seconds" property="activeSeconds"/>
+        <result column="accepted_seconds" property="acceptedSeconds"/>
+        <result column="daily_seconds_after" property="dailySecondsAfter"/>
+        <result column="first_minute_bucket" property="firstMinuteBucket"/>
+        <result column="event_count" property="eventCount"/>
+        <result column="local_date" property="localDate"/>
+        <result column="request_hash" property="requestHash"/>
+        <result column="heartbeat_at" property="heartbeatAt"/>
+        <result column="policy_version" property="policyVersion"/>
+    </resultMap>
+
+    <select id="selectReceipt" resultMap="receipt">
+        SELECT id, session_id, user_id, book_id, book_index_id, sequence_no,
+               active_seconds, accepted_seconds, daily_seconds_after, first_minute_bucket,
+               event_count, local_date, request_hash, heartbeat_at, policy_version
+        FROM reading_heartbeat_receipt
+        WHERE session_id = #{sessionId} AND sequence_no = #{sequenceNo}
+        LIMIT 1
+    </select>
+
+    <insert id="insertSessionIgnore">
+        INSERT IGNORE INTO reading_session
+            (session_id, user_id, book_id, book_index_id, last_sequence,
+             last_heartbeat_at, total_accepted_seconds, status, version)
+        VALUES
+            (#{session.sessionId}, #{session.userId}, #{session.bookId}, #{session.bookIndexId},
+             #{session.lastSequence}, #{session.lastHeartbeatAt},
+             #{session.totalAcceptedSeconds}, #{session.status}, #{session.version})
+    </insert>
+
+    <select id="lockSession" resultMap="session">
+        SELECT session_id, user_id, book_id, book_index_id, last_sequence,
+               last_heartbeat_at, total_accepted_seconds, status, version
+        FROM reading_session
+        WHERE session_id = #{sessionId}
+        LIMIT 1
+        FOR UPDATE
+    </select>
+
+    <insert id="insertDailyCounterIgnore">
+        INSERT IGNORE INTO reading_daily_counter (user_id, local_date)
+        VALUES (#{userId}, #{localDate})
+    </insert>
+
+    <select id="lockDailyCounter" resultMap="dailyCounter">
+        SELECT user_id, local_date, verified_seconds, version
+        FROM reading_daily_counter
+        WHERE user_id = #{userId} AND local_date = #{localDate}
+        LIMIT 1
+        FOR UPDATE
+    </select>
+
+    <update id="updateDailyCounter">
+        UPDATE reading_daily_counter
+        SET verified_seconds = #{verifiedSeconds},
+            version = version + 1
+        WHERE user_id = #{userId}
+          AND local_date = #{localDate}
+          AND version = #{expectedVersion}
+          AND verified_seconds &lt;= #{verifiedSeconds}
+    </update>
+
+    <update id="updateSession">
+        UPDATE reading_session
+        SET last_sequence = #{lastSequence},
+            last_heartbeat_at = #{lastHeartbeatAt},
+            total_accepted_seconds = #{totalAcceptedSeconds},
+            version = version + 1
+        WHERE session_id = #{sessionId}
+          AND version = #{expectedVersion}
+          AND status = 'ACTIVE'
+    </update>
+
+    <insert id="insertReceipt" useGeneratedKeys="true" keyProperty="receipt.id">
+        INSERT INTO reading_heartbeat_receipt
+            (session_id, user_id, book_id, book_index_id, sequence_no,
+             active_seconds, accepted_seconds, daily_seconds_after, first_minute_bucket,
+             event_count, local_date, request_hash, heartbeat_at, policy_version)
+        VALUES
+            (#{receipt.sessionId}, #{receipt.userId}, #{receipt.bookId}, #{receipt.bookIndexId},
+             #{receipt.sequenceNo}, #{receipt.activeSeconds}, #{receipt.acceptedSeconds},
+             #{receipt.dailySecondsAfter}, #{receipt.firstMinuteBucket}, #{receipt.eventCount},
+             #{receipt.localDate}, #{receipt.requestHash}, #{receipt.heartbeatAt},
+             #{receipt.policyVersion})
+    </insert>
+
+</mapper>

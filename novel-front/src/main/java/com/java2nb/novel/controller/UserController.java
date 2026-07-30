@@ -76,6 +76,7 @@ public class UserController extends BaseController {
 
     /**
      * Đăng ký
+     */
     @PostMapping("register")
     public RestResult<?> register(@Validated({AddGroup.class}) User user,
         @RequestParam(value = "velCode", defaultValue = "") String velCode, HttpServletRequest request) {

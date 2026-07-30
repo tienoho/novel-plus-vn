@@ -83,6 +83,23 @@
             <artifactId>commons-lang3</artifactId>
             <version>${commons-lang3.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>${pdfbox.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.helger.font</groupId>
+            <artifactId>ph-fonts-open-sans</artifactId>
+            <version>${open-sans-font.version}</version>
+            <scope>runtime</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.helger.font</groupId>
+                    <artifactId>ph-fonts-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
         <!--httpclient-->
         <dependency>
             <groupId>org.apache.httpcomponents.client5</groupId>

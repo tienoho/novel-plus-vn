@@ -16,9 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Controller for author finance receipts and payout vouchers in novel-front.
@@ -35,26 +33,23 @@ public class AuthorFinanceReceiptsController extends BaseController {
     @GetMapping
     public RestResult<List<FinancialVoucherDO>> listReceipts(HttpServletRequest request) {
         Author author = checkAuthor(request);
-        Map<String, Object> params = new HashMap<>();
-        params.put("payeeName", author.getPenName());
-        List<FinancialVoucherDO> list = voucherService.listVouchers(params);
-        return RestResult.ok(list);
+        return RestResult.ok(voucherService.listAuthorVouchers(author.getId()));
     }
 
     @GetMapping("/{voucherNo}")
     public RestResult<FinancialVoucherDO> getReceipt(@PathVariable("voucherNo") String voucherNo, HttpServletRequest request) {
-        checkAuthor(request);
-        FinancialVoucherDO voucher = voucherService.getByVoucherNo(voucherNo);
+        Author author = checkAuthor(request);
+        FinancialVoucherDO voucher = voucherService.getAuthorVoucher(voucherNo, author.getId());
         if (voucher == null) {
-            throw new BusinessException("Khong tim thay chung tu: " + voucherNo);
+            throw new BusinessException(ResponseStatus.AUTHOR_VOUCHER_NOT_FOUND);
         }
         return RestResult.ok(voucher);
     }
 
     @GetMapping("/{voucherNo}/pdf")
     public ResponseEntity<byte[]> downloadPdf(@PathVariable("voucherNo") String voucherNo, HttpServletRequest request) {
-        checkAuthor(request);
-        byte[] pdfBytes = voucherService.exportVoucherPdf(voucherNo);
+        Author author = checkAuthor(request);
+        byte[] pdfBytes = voucherService.exportAuthorVoucherPdf(voucherNo, author.getId());
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + voucherNo + ".pdf\"")
                 .contentType(MediaType.APPLICATION_PDF)
@@ -63,8 +58,8 @@ public class AuthorFinanceReceiptsController extends BaseController {
 
     @GetMapping("/{voucherNo}/json")
     public ResponseEntity<byte[]> getVoucherJson(@PathVariable("voucherNo") String voucherNo, HttpServletRequest request) {
-        checkAuthor(request);
-        FinancialVoucherDO voucher = voucherService.getByVoucherNo(voucherNo);
+        Author author = checkAuthor(request);
+        FinancialVoucherDO voucher = voucherService.getAuthorVoucher(voucherNo, author.getId());
         if (voucher == null) {
             return ResponseEntity.notFound().build();
         }
@@ -77,9 +72,7 @@ public class AuthorFinanceReceiptsController extends BaseController {
     @GetMapping("/export/csv")
     public ResponseEntity<byte[]> exportCsv(HttpServletRequest request) {
         Author author = checkAuthor(request);
-        Map<String, Object> params = new HashMap<>();
-        params.put("payeeName", author.getPenName());
-        List<FinancialVoucherDO> list = voucherService.listVouchers(params);
+        List<FinancialVoucherDO> list = voucherService.listAuthorVouchers(author.getId());
         byte[] csvBytes = voucherService.exportVouchersCsv(list);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"author_receipts.csv\"")

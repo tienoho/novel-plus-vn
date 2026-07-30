@@ -16,6 +16,11 @@ public interface FinancialVoucherDao {
 
     FinancialVoucherDO selectByVoucherNo(@Param("voucherNo") String voucherNo);
 
+    FinancialVoucherDO selectAuthorVoucherByNo(@Param("voucherNo") String voucherNo,
+                                               @Param("authorId") long authorId);
+
+    List<FinancialVoucherDO> selectAuthorVouchers(@Param("authorId") long authorId);
+
     FinancialVoucherDO selectByReference(@Param("referenceType") String referenceType, @Param("referenceId") String referenceId);
 
     List<FinancialVoucherDO> selectList(Map<String, Object> params);

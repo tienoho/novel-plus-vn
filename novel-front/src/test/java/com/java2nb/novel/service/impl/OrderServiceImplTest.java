@@ -2,12 +2,22 @@ package com.java2nb.novel.service.impl;
 
 import com.java2nb.novel.entity.OrderPay;
 import com.java2nb.novel.mapper.OrderPayMapper;
+import com.java2nb.novel.mapper.ReadingSubscriptionMapper;
+import com.java2nb.novel.mapper.ReadingSubscriptionPurchaseMapper;
+import com.java2nb.novel.core.config.ReaderEntitlementProperties;
 import com.java2nb.novel.service.PayOrderCreation;
 import com.java2nb.novel.service.PayOrderSnapshot;
 import com.java2nb.novel.service.PayOrderState;
 import com.java2nb.novel.service.PayOrderUpdateResult;
+import com.java2nb.novel.service.ReadingSubscriptionCheckoutCreation;
 import com.java2nb.novel.service.wallet.WalletLedgerService;
 import com.java2nb.novel.service.wallet.WalletPostResult;
+import com.java2nb.novel.service.gamification.GamificationEventService;
+import com.java2nb.novel.service.subscription.ReadingSubscriptionService;
+import com.java2nb.novel.service.subscription.ReadingSubscriptionPlanRow;
+import com.java2nb.novel.service.subscription.ReadingSubscriptionPurchaseActivationCommand;
+import com.java2nb.novel.service.subscription.ReadingSubscriptionPurchaseRow;
+import com.java2nb.novel.service.subscription.ReadingSubscriptionRow;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -23,23 +33,38 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class OrderServiceImplTest {
 
     private OrderPayMapper orderPayMapper;
     private WalletLedgerService walletLedgerService;
+    private GamificationEventService gamificationEventService;
+    private ReadingSubscriptionMapper readingSubscriptionMapper;
+    private ReadingSubscriptionPurchaseMapper purchaseMapper;
+    private ReadingSubscriptionService readingSubscriptionService;
+    private ReaderEntitlementProperties entitlementProperties;
     private OrderServiceImpl service;
 
     @BeforeEach
     void setUp() {
         orderPayMapper = mock(OrderPayMapper.class);
         walletLedgerService = mock(WalletLedgerService.class);
-        service = new OrderServiceImpl(orderPayMapper, walletLedgerService);
+        gamificationEventService = mock(GamificationEventService.class);
+        readingSubscriptionMapper = mock(ReadingSubscriptionMapper.class);
+        purchaseMapper = mock(ReadingSubscriptionPurchaseMapper.class);
+        readingSubscriptionService = mock(ReadingSubscriptionService.class);
+        entitlementProperties = new ReaderEntitlementProperties();
+        service = new OrderServiceImpl(orderPayMapper, walletLedgerService, gamificationEventService,
+            readingSubscriptionMapper, purchaseMapper, readingSubscriptionService,
+            entitlementProperties);
         when(orderPayMapper.insertSelective(any(OrderPay.class))).thenReturn(1);
         when(walletLedgerService.creditReaderTopUp(anyLong(), anyLong(), any(), any()))
             .thenReturn(WalletPostResult.POSTED);
@@ -87,6 +112,8 @@ class OrderServiceImplTest {
         assertThat(first).isEqualTo(PayOrderUpdateResult.SUCCESS);
         assertThat(retry).isEqualTo(PayOrderUpdateResult.ALREADY_PROCESSED);
         verify(walletLedgerService).creditReaderTopUp(11L, 1_000L, "123", "VNPAY_TOP_UP:123");
+        verify(gamificationEventService).ingest(eq("TOP_UP_SETTLED"), eq("TOPUP:123"), eq(11L),
+            isNull(), any(Date.class), isNull());
     }
 
     @Test
@@ -98,6 +125,7 @@ class OrderServiceImplTest {
         assertThat(result).isEqualTo(PayOrderUpdateResult.INVALID_AMOUNT);
         verify(orderPayMapper, never()).update(any(UpdateStatementProvider.class));
         verify(walletLedgerService, never()).creditReaderTopUp(anyLong(), anyLong(), any(), any());
+        verifyNoInteractions(gamificationEventService);
     }
 
     @Test
@@ -140,6 +168,81 @@ class OrderServiceImplTest {
         assertThat(service.claimPendingPayOrder(1L, new Date(2_000), new Date(3_000))).isTrue();
     }
 
+    @Test
+    void createsSubscriptionCheckoutFromServerPlanWithoutPromisingXu() {
+        ReadingSubscriptionPlanRow plan = subscriptionPlan();
+        when(readingSubscriptionMapper.selectActivePlanByCode("BASIC_MONTHLY")).thenReturn(plan);
+        when(purchaseMapper.insertPurchase(anyLong(), eq(11L), eq(plan), eq((byte) 4),
+            eq("checkout_0001"), any(), eq("v1"), eq("Asia/Ho_Chi_Minh"), any()))
+            .thenReturn(1);
+
+        ReadingSubscriptionCheckoutCreation result = service.createSubscriptionCheckout(
+            (byte) 4, 11L, "basic_monthly", "checkout_0001");
+
+        assertThat(result.amountVnd()).isEqualTo(49_000);
+        ArgumentCaptor<OrderPay> order = ArgumentCaptor.forClass(OrderPay.class);
+        verify(orderPayMapper).insertSelective(order.capture());
+        assertThat(order.getValue().getTotalAmount()).isEqualTo(49_000);
+        assertThat(order.getValue().getAccountAmount()).isZero();
+        verify(walletLedgerService, never()).creditReaderTopUp(anyLong(), anyLong(), any(), any());
+    }
+
+    @Test
+    void successfulSubscriptionSettlementActivatesSnapshotWithoutCreditingXu() {
+        OrderPay order = pendingSubscriptionOrder();
+        ReadingSubscriptionPurchaseRow purchase = subscriptionPurchase();
+        ReadingSubscriptionRow subscription = new ReadingSubscriptionRow();
+        subscription.setId(901L);
+        when(orderPayMapper.selectOne(any(SelectStatementProvider.class))).thenReturn(Optional.of(order));
+        when(purchaseMapper.selectByOutTradeNoForUpdate(123L)).thenReturn(purchase);
+        when(orderPayMapper.update(any(UpdateStatementProvider.class))).thenReturn(1);
+        when(readingSubscriptionService.activatePurchase(any())).thenReturn(subscription);
+        when(purchaseMapper.markActivated(eq(801L), eq(0L), eq(901L), any())).thenReturn(1);
+
+        PayOrderUpdateResult result = service.processPayOrder(
+            123L, "BANK-456", (byte) 4, 49_000, true);
+
+        assertThat(result).isEqualTo(PayOrderUpdateResult.SUCCESS);
+        ArgumentCaptor<ReadingSubscriptionPurchaseActivationCommand> activation =
+            ArgumentCaptor.forClass(ReadingSubscriptionPurchaseActivationCommand.class);
+        verify(readingSubscriptionService).activatePurchase(activation.capture());
+        assertThat(activation.getValue().planCode()).isEqualTo("BASIC_MONTHLY");
+        assertThat(activation.getValue().sourceRef()).isEqualTo("123");
+        verify(walletLedgerService, never()).creditReaderTopUp(anyLong(), anyLong(), any(), any());
+        verifyNoInteractions(gamificationEventService);
+    }
+
+    @Test
+    void paidSubscriptionConflictMovesToReviewAndStillAcknowledgesProvider() {
+        when(orderPayMapper.selectOne(any(SelectStatementProvider.class)))
+            .thenReturn(Optional.of(pendingSubscriptionOrder()));
+        when(purchaseMapper.selectByOutTradeNoForUpdate(123L))
+            .thenReturn(subscriptionPurchase());
+        when(orderPayMapper.update(any(UpdateStatementProvider.class))).thenReturn(1);
+        when(readingSubscriptionService.activatePurchase(any())).thenReturn(null);
+        when(purchaseMapper.markPaidReview(eq(801L), eq(0L), any())).thenReturn(1);
+
+        assertThat(service.processPayOrder(123L, "BANK-456", (byte) 4, 49_000, true))
+            .isEqualTo(PayOrderUpdateResult.SUCCESS);
+        verify(purchaseMapper).markPaidReview(eq(801L), eq(0L), any());
+        verify(walletLedgerService, never()).creditReaderTopUp(anyLong(), anyLong(), any(), any());
+    }
+
+    @Test
+    void failedSubscriptionPaymentClosesPurchaseWithoutActivation() {
+        when(orderPayMapper.selectOne(any(SelectStatementProvider.class)))
+            .thenReturn(Optional.of(pendingSubscriptionOrder()));
+        when(purchaseMapper.selectByOutTradeNoForUpdate(123L))
+            .thenReturn(subscriptionPurchase());
+        when(orderPayMapper.update(any(UpdateStatementProvider.class))).thenReturn(1);
+        when(purchaseMapper.markFailed(eq(801L), eq(0L), any())).thenReturn(1);
+
+        assertThat(service.processPayOrder(123L, "BANK-456", (byte) 4, 49_000, false))
+            .isEqualTo(PayOrderUpdateResult.SUCCESS);
+        verify(purchaseMapper).markFailed(eq(801L), eq(0L), any());
+        verify(readingSubscriptionService, never()).activatePurchase(any());
+    }
+
     private OrderPay pendingOrder() {
         OrderPay order = new OrderPay();
         order.setId(1L);
@@ -150,5 +253,48 @@ class OrderServiceImplTest {
         order.setUserId(11L);
         order.setPayStatus((byte) 2);
         return order;
+    }
+
+    private OrderPay pendingSubscriptionOrder() {
+        OrderPay order = pendingOrder();
+        order.setTotalAmount(49_000);
+        order.setAccountAmount(0);
+        return order;
+    }
+
+    private ReadingSubscriptionPlanRow subscriptionPlan() {
+        ReadingSubscriptionPlanRow plan = new ReadingSubscriptionPlanRow();
+        plan.setId(7L);
+        plan.setPlanCode("BASIC_MONTHLY");
+        plan.setPlanName("Gói cơ bản");
+        plan.setPriceVnd(49_000L);
+        plan.setTicketsPerPeriod(10L);
+        plan.setPeriodMonths(1);
+        plan.setTicketValidityDays(45);
+        plan.setStatus("ACTIVE");
+        return plan;
+    }
+
+    private ReadingSubscriptionPurchaseRow subscriptionPurchase() {
+        ReadingSubscriptionPurchaseRow purchase = new ReadingSubscriptionPurchaseRow();
+        purchase.setId(801L);
+        purchase.setOutTradeNo(123L);
+        purchase.setUserId(11L);
+        purchase.setPlanId(7L);
+        purchase.setPlanCodeSnapshot("BASIC_MONTHLY");
+        purchase.setPlanNameSnapshot("Gói cơ bản");
+        purchase.setPriceVndSnapshot(49_000L);
+        purchase.setTicketsPerPeriodSnapshot(10L);
+        purchase.setPeriodMonthsSnapshot(1);
+        purchase.setTicketValidityDaysSnapshot(45);
+        purchase.setPayChannel((byte) 4);
+        purchase.setClientRequestId("checkout_0001");
+        purchase.setRequestHash("a".repeat(64));
+        purchase.setPolicyVersion("v1");
+        purchase.setZoneId("UTC");
+        purchase.setStatus("PENDING");
+        purchase.setVersion(0L);
+        purchase.setCreateTime(new Date());
+        return purchase;
     }
 }

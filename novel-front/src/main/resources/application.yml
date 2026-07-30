@@ -2,6 +2,23 @@ server:
   port: 8083
 
 novel:
+  gift-code:
+    enabled: ${GIFT_CODE_ENABLED:false}
+    hmac-key-id: ${GIFT_CODE_HMAC_KEY_ID:legacy-v1}
+    hmac-secret: ${GIFT_CODE_HMAC_SECRET:disabled}
+    hmac-verification-keys: ${GIFT_CODE_HMAC_VERIFICATION_KEYS:}
+    policy-version: ${GIFT_CODE_POLICY_VERSION:v1}
+  reader-entitlement:
+    # Chỉ bật sau khi migration 20260730 đã chạy và API/UI đã qua staging.
+    enabled: ${READING_TICKET_ENABLED:false}
+    policy-version: ${READING_TICKET_POLICY_VERSION:v1}
+    max-lots-per-spend: ${READING_TICKET_MAX_LOTS_PER_SPEND:20}
+    expiry-cron: ${READING_TICKET_EXPIRY_CRON:0 30 3 * * ?}
+    expiry-batch-size: ${READING_TICKET_EXPIRY_BATCH_SIZE:500}
+    expiry-max-lots-per-user: ${READING_TICKET_EXPIRY_MAX_LOTS_PER_USER:1000}
+    subscription-grant-cron: ${READING_SUBSCRIPTION_GRANT_CRON:0 10 0 * * ?}
+    subscription-zone-id: ${READING_SUBSCRIPTION_ZONE_ID:Asia/Ho_Chi_Minh}
+    subscription-grant-batch-size: ${READING_SUBSCRIPTION_GRANT_BATCH_SIZE:200}
   payment:
     vietqr:
       enabled: ${VIETQR_ENABLED:false}
@@ -9,6 +26,58 @@ novel:
       account-no: ${VIETQR_ACCOUNT_NO:disabled}
       account-name: ${VIETQR_ACCOUNT_NAME:disabled}
       secret-token: ${VIETQR_WEBHOOK_SECRET:disabled}
+  # Gamification: Ngọn Đuốc, nhiệm vụ, cảnh giới, kỳ xếp hạng và quỹ thưởng.
+  # Mọi cờ enabled mặc định tắt; bật theo thứ tự rollout trong doc/gamification.md.
+  # Ý nghĩa từng ngưỡng và lý do chọn giá trị: doc/gamification-policy-v1.md.
+  gamification:
+    policy-version: ${GAMIFICATION_POLICY_VERSION:v1}
+    zone-id: ${GAMIFICATION_ZONE_ID:Asia/Ho_Chi_Minh}
+    event:
+      enabled: ${GAMIFICATION_EVENT_ENABLED:false}
+      drain-batch-size: ${GAMIFICATION_EVENT_DRAIN_BATCH:200}
+      drain-delay-ms: ${GAMIFICATION_EVENT_DRAIN_DELAY_MS:15000}
+      max-attempt: ${GAMIFICATION_EVENT_MAX_ATTEMPT:10}
+    ticket:
+      enabled: ${GAMIFICATION_TICKET_ENABLED:false}
+      lot-validity-days: ${GAMIFICATION_TICKET_LOT_DAYS:60}
+      grant-on-top-up-enabled: ${GAMIFICATION_TICKET_GRANT_ON_TOPUP:false}
+      expiry-cron: ${GAMIFICATION_TICKET_EXPIRY_CRON:0 20 3 * * ?}
+      expiry-batch-size: ${GAMIFICATION_TICKET_EXPIRY_BATCH:500}
+      max-grant-per-batch: ${GAMIFICATION_TICKET_MAX_GRANT_BATCH:1000}
+    vote:
+      enabled: ${GAMIFICATION_VOTE_ENABLED:false}
+      allow-crawled-books: ${GAMIFICATION_VOTE_ALLOW_CRAWLED:false}
+      # Muối riêng để hash IP phục vụ fraud review; bắt buộc tối thiểu 32 ký tự khi bật vote.
+      ip-hash-salt: ${GAMIFICATION_VOTE_IP_HASH_SALT:disabled}
+      max-tickets-per-request: ${GAMIFICATION_VOTE_MAX_PER_REQUEST:10}
+      max-votes-per-day: ${GAMIFICATION_VOTE_MAX_VOTES_DAY:20}
+      max-tickets-per-day: ${GAMIFICATION_VOTE_MAX_TICKETS_DAY:50}
+      max-tickets-per-book-per-season: ${GAMIFICATION_VOTE_MAX_PER_BOOK:100}
+      max-lots-per-spend: ${GAMIFICATION_VOTE_MAX_LOTS:50}
+    quest:
+      enabled: ${GAMIFICATION_QUEST_ENABLED:false}
+      reply-quest-enabled: ${GAMIFICATION_QUEST_REPLY_ENABLED:false}
+      reading-minutes-target: ${GAMIFICATION_QUEST_READ_MINUTES:30}
+      heartbeat-interval-seconds: ${GAMIFICATION_HEARTBEAT_INTERVAL:60}
+      heartbeat-max-minutes-per-day: ${GAMIFICATION_HEARTBEAT_MAX_MIN:180}
+    realm:
+      enabled: ${GAMIFICATION_REALM_ENABLED:false}
+      affects-benefits: ${GAMIFICATION_REALM_AFFECTS_BENEFITS:false}
+      change-cooldown-hours: ${GAMIFICATION_REALM_COOLDOWN_HOURS:24}
+    season:
+      enabled: ${GAMIFICATION_SEASON_ENABLED:false}
+      close-cron: ${GAMIFICATION_SEASON_CLOSE_CRON:0 5 0 1 * ?}
+      close-drain-seconds: ${GAMIFICATION_SEASON_DRAIN_SECONDS:60}
+      resume-delay-ms: ${GAMIFICATION_SEASON_RESUME_DELAY_MS:30000}
+      auto-finalize: ${GAMIFICATION_SEASON_AUTO_FINALIZE:false}
+      review-window-hours: ${GAMIFICATION_SEASON_REVIEW_HOURS:72}
+    reward:
+      enabled: ${GAMIFICATION_REWARD_ENABLED:false}
+      claim-window-days: ${GAMIFICATION_REWARD_CLAIM_WINDOW_DAYS:7}
+      release-cron: ${GAMIFICATION_REWARD_RELEASE_CRON:0 40 3 * * ?}
+    job:
+      lease-seconds: ${GAMIFICATION_JOB_LEASE_SECONDS:300}
+      batch-size: ${GAMIFICATION_JOB_BATCH_SIZE:500}
 
 spring:
   profiles:
@@ -89,5 +158,3 @@ spring:
       chat:
         options:
           model: ${OPENAI_CHAT_MODEL:gpt-4.1-mini}
-
-

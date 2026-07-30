@@ -2,7 +2,7 @@
 
 Ngày nghiệm thu kỹ thuật: **27/07/2026**.
 
-Lần tái xác minh trên mã nguồn hiện tại: **29/07/2026**.
+Lần tái xác minh trên mã nguồn hiện tại: **30/07/2026**.
 
 P0 đã hoàn tất ở phạm vi mã nguồn, schema, migration, kiểm thử và đóng gói. Trạng thái này không đồng nghĩa hệ thống đã được phép bật thanh toán hoặc phát hành chứng từ trong production; các cổng thật, quy trình KYC và nghĩa vụ pháp lý vẫn phải được đơn vị vận hành phê duyệt.
 
@@ -22,6 +22,39 @@ P0 đã hoàn tất ở phạm vi mã nguồn, schema, migration, kiểm thử v
 Ảnh bìa tồn tại trước `20260726_cover_moderation.sql` được giữ ở trạng thái đã duyệt. Ảnh bìa mới, ảnh AI mới hoặc ảnh do tác giả thay lại được đưa về trạng thái chờ duyệt; thao tác approve/reject của admin chuyển trạng thái thật và reject lưu lý do.
 
 ## Bằng chứng nghiệm thu
+
+### Tái xác minh PDF chứng từ tiếng Việt ngày 30/07/2026
+
+- `FinancialVoucherServiceTest` tạo rồi mở lại PDF bằng PDFBox, trích xuất đúng các nhãn tiếng Việt,
+  tên có dấu và xác nhận mọi font trên trang đều được nhúng; test mục tiêu đạt trên Java 17.
+- Dependency tree xác nhận `pdfbox:3.0.8` và `ph-fonts-open-sans:6.1.0`. Fat JAR của front chứa
+  PDFBox, FontBox và font JAR; font JAR chứa đủ Open Sans Regular/Bold cùng giấy phép OFL.
+- Gói `novel-front.zip` chứa cả `novel-front.jar` và `Dockerfile`. Generator dùng định dạng số
+  `vi-VN`, múi giờ `Asia/Ho_Chi_Minh`, ngắt dòng/phân trang A4 và fail-closed nếu thiếu font hoặc
+  không thể tạo PDF hợp lệ.
+- Maven reactor trên runtime Java 17 hiện có đạt **489 test**, không có failure/error và có 20 test
+  tích hợp điều kiện được skip đúng cấu hình mặc định. Lượt này không thay thế bằng chứng JDK 21 đã
+  ghi bên dưới vì máy kiểm tra hiện tại không cài JDK 21.
+
+### Tái xác minh ownership chứng từ ngày 30/07/2026
+
+- Đã loại bỏ truy vấn chứng từ tác giả theo `payeeName` và các lookup toàn cục từ API tác giả. Tất cả
+  đường list, chi tiết, PDF, JSON và CSV hiện truyền `author_id` tới service/mapper.
+- `FinancialVoucherOwnershipMySqlIntegrationTest` chạy trên MySQL 8.4 cô lập sau khi toàn bộ migration
+  chạy thành công hai lần: tác giả chỉ thấy/xuất được chứng từ của chính mình, lookup chứng từ tác giả
+  khác trả rỗng và PDF trái quyền bị chặn.
+- Test chạy trong transaction rollback; sau test, số fixture `VOUCHER-OWNERSHIP-%` và
+  `WD-OWNERSHIP-%` đều bằng `0`. Compose project và volume thử nghiệm đã được xóa.
+
+### Tái xác minh artifact phân phối ngày 30/07/2026
+
+- Maven tạo lại `novel-front.jar` và `novel-front.zip`; suite front đạt **303 test**, không có
+  failure/error và có 20 integration test được skip theo cờ mặc định.
+- Bốn theme trong ZIP đều được merge theo thứ tự `runtime base → theme overlay`; các file fallback
+  `common/monthly_ticket.html`, `service-worker.js` và `reader-tools.js` tồn tại ở cả bốn theme.
+- Chạy JAR với working directory đúng cấu trúc ZIP cho kết quả health, trang chủ, service worker và
+  chương dài đều HTTP 200. Browser smoke xác minh lưu/khôi phục character offset, font và giãn dòng;
+  mobile render nạp cùng reader tools. Lượt này dùng Java 17 hiện có, không thay thế vòng JDK 21.
 
 ### Tái xác minh ngày 29/07/2026
 

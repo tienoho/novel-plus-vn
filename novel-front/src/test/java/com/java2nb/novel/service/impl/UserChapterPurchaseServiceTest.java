@@ -6,6 +6,8 @@ import com.java2nb.novel.entity.UserBuyRecord;
 import com.java2nb.novel.mapper.*;
 import com.java2nb.novel.service.chapter.ChapterAccessDecision;
 import com.java2nb.novel.service.chapter.ChapterCommercialPolicyService;
+import com.java2nb.novel.service.entitlement.ReadingTicketService;
+import com.java2nb.novel.service.gamification.GamificationEventService;
 import com.java2nb.novel.service.wallet.WalletLedgerService;
 import com.java2nb.novel.service.wallet.WalletPostResult;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,6 +25,8 @@ class UserChapterPurchaseServiceTest {
     private WalletLedgerService ledgerService;
     private BookIndexMapper bookIndexMapper;
     private ChapterCommercialPolicyService commercialPolicyService;
+    private ReadingTicketService readingTicketService;
+    private GamificationEventService gamificationEventService;
     private UserServiceImpl service;
 
     @BeforeEach
@@ -31,11 +35,14 @@ class UserChapterPurchaseServiceTest {
         ledgerService = mock(WalletLedgerService.class);
         bookIndexMapper = mock(BookIndexMapper.class);
         commercialPolicyService = mock(ChapterCommercialPolicyService.class);
+        readingTicketService = mock(ReadingTicketService.class);
+        gamificationEventService = mock(GamificationEventService.class);
         AuthorIncomeProperties income = new AuthorIncomeProperties();
         income.setShareProportion(new BigDecimal("0.70"));
         service = new UserServiceImpl(mock(FrontUserMapper.class), mock(FrontUserBookshelfMapper.class),
             mock(FrontUserReadHistoryMapper.class), mock(UserFeedbackMapper.class), buyRecordMapper,
-            ledgerService, income, bookIndexMapper, commercialPolicyService);
+            ledgerService, income, bookIndexMapper, commercialPolicyService, readingTicketService,
+            gamificationEventService);
         when(bookIndexMapper.lockById(20L)).thenReturn(chapter());
         when(buyRecordMapper.count(any(CountDSLCompleter.class))).thenReturn(0L);
     }
@@ -54,6 +61,8 @@ class UserChapterPurchaseServiceTest {
         assertThat(input.getBuyAmount()).isEqualTo(37);
         assertThat(input.getBookIndexName()).isEqualTo("Chương khóa");
         verify(buyRecordMapper).insertSelective(input);
+        verify(gamificationEventService).ingest("CHAPTER_PURCHASED",
+            "GAMIFY:CHAPTER_PURCHASE:7:20", 7L, 10L, input.getCreateTime(), null);
     }
 
     @Test
@@ -64,7 +73,33 @@ class UserChapterPurchaseServiceTest {
         service.buyBookIndex(7L, 9L, input());
 
         verifyNoInteractions(ledgerService);
+        verifyNoInteractions(gamificationEventService);
         verify(buyRecordMapper, never()).insertSelective(any());
+    }
+
+    @Test
+    void entitledChapterNeverPostsXuLedgerOrPurchaseRecord() {
+        when(readingTicketService.hasActiveChapterEntitlement(eq(7L), eq(20L), any()))
+            .thenReturn(true);
+
+        service.buyBookIndex(7L, 9L, input());
+
+        verifyNoInteractions(ledgerService);
+        verifyNoInteractions(commercialPolicyService);
+        verifyNoInteractions(gamificationEventService);
+        verify(buyRecordMapper, never()).insertSelective(any());
+    }
+
+    @Test
+    void alreadyPostedLedgerDoesNotEmitPurchaseEvent() {
+        when(commercialPolicyService.evaluate(any(), eq(false), any()))
+            .thenReturn(new ChapterAccessDecision(true, false, false, false));
+        when(ledgerService.purchaseChapter(anyLong(), anyLong(), anyLong(), anyLong(), any(), any()))
+            .thenReturn(WalletPostResult.ALREADY_POSTED);
+
+        service.buyBookIndex(7L, 9L, input());
+
+        verifyNoInteractions(gamificationEventService);
     }
 
     @Test

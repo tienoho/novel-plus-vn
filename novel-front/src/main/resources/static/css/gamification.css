@@ -1,0 +1,779 @@
+.gamification-shell {
+    --gamification-accent: var(--accent-emerald, #159957);
+    --gamification-surface: var(--bg-surface, #fff);
+    --gamification-text: var(--text-main, #20252b);
+    --gamification-muted: var(--text-sub, #68717d);
+    --gamification-border: var(--border-glass, #e3e7eb);
+    color: var(--gamification-text);
+}
+
+.gamification-heading {
+    margin: 0 0 20px;
+    padding: 4px 0 18px;
+    border-bottom: 1px solid var(--gamification-border);
+}
+
+.gamification-heading h1,
+.gamification-section-title h2,
+.gamification-quest h3 {
+    margin: 0;
+    color: inherit;
+}
+
+.gamification-heading h1 {
+    font-size: 28px;
+    line-height: 1.25;
+}
+
+.gamification-heading p {
+    margin: 8px 0 0;
+    color: var(--gamification-muted);
+    line-height: 1.65;
+}
+
+.gamification-heading .gamification-kicker {
+    margin: 0 0 6px;
+    color: var(--gamification-accent);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.gamification-status,
+.gamification-empty {
+    padding: 18px;
+    border: 1px solid var(--gamification-border);
+    background: var(--gamification-surface);
+    text-align: center;
+    color: var(--gamification-muted);
+}
+
+.gamification-status.is-error {
+    border-color: #b42318;
+    color: #b42318;
+}
+
+.gamification-check-in {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 18px;
+    padding: 18px;
+    border: 1px solid var(--gamification-border);
+    border-left: 4px solid var(--gamification-accent);
+    border-radius: var(--card-radius, 10px);
+    background: var(--gamification-surface);
+}
+
+.gamification-check-in h2 {
+    margin: 0;
+    color: inherit;
+    font-size: 18px;
+}
+
+.gamification-check-in p {
+    margin: 6px 0 0;
+    color: var(--gamification-muted);
+    line-height: 1.5;
+}
+
+.gamification-check-in .gamification-check-in-message {
+    color: var(--gamification-text);
+    font-weight: 600;
+}
+
+.gamification-profile {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 26px;
+}
+
+.gamification-profile[hidden] {
+    display: none;
+}
+
+.gamification-stat {
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid var(--gamification-border);
+    border-radius: var(--card-radius, 10px);
+    background: var(--gamification-surface);
+}
+
+.gamification-stat span {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--gamification-muted);
+    font-size: 13px;
+}
+
+.gamification-stat strong {
+    display: block;
+    overflow-wrap: anywhere;
+    font-size: 21px;
+    line-height: 1.25;
+}
+
+.gamification-section-title {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.gamification-section-title span {
+    color: var(--gamification-muted);
+    font-size: 13px;
+}
+
+.gamification-quest-list {
+    display: grid;
+    gap: 12px;
+}
+
+.gamification-quest {
+    padding: 17px 18px;
+    border: 1px solid var(--gamification-border);
+    border-radius: var(--card-radius, 10px);
+    background: var(--gamification-surface);
+}
+
+.gamification-quest-heading,
+.gamification-quest-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.gamification-quest h3 {
+    font-size: 16px;
+    line-height: 1.45;
+}
+
+.gamification-reward {
+    flex: 0 0 auto;
+    color: var(--gamification-accent);
+    font-weight: 700;
+}
+
+.gamification-quest progress {
+    width: 100%;
+    height: 8px;
+    margin: 16px 0 12px;
+    border: 0;
+    border-radius: 8px;
+    accent-color: var(--gamification-accent);
+}
+
+.gamification-progress-label {
+    color: var(--gamification-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.gamification-claim-button,
+.gamification-check-in-button {
+    min-width: 118px;
+    min-height: 40px;
+    padding: 8px 16px;
+    border: 1px solid var(--gamification-accent);
+    border-radius: 7px;
+    background: var(--gamification-accent);
+    color: #fff;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.gamification-claim-button:focus-visible,
+.gamification-check-in-button:focus-visible {
+    outline: 3px solid #ffbf47;
+    outline-offset: 2px;
+}
+
+.gamification-claim-button:disabled,
+.gamification-check-in-button:disabled {
+    border-color: var(--gamification-border);
+    background: transparent;
+    color: var(--gamification-muted);
+    cursor: not-allowed;
+}
+
+.gamification-mobile-body {
+    margin: 0;
+    background: var(--bg-body, #f5f6f7);
+}
+
+.gamification-mobile-header {
+    display: grid;
+    grid-template-columns: 44px 1fr 44px;
+    align-items: center;
+    min-height: 50px;
+    background: var(--accent-emerald, #159957);
+    color: #fff;
+    text-align: center;
+}
+
+.gamification-mobile-header a {
+    display: grid;
+    min-height: 44px;
+    place-items: center;
+    color: #fff;
+    font-size: 22px;
+    text-decoration: none;
+}
+
+.gamification-shell-mobile {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 20px 14px 80px;
+}
+
+.monthly-ticket-widget,
+.monthly-ticket-ranking,
+.monthly-ticket-home {
+    box-sizing: border-box;
+    width: calc(100% - 24px);
+    max-width: 1200px;
+    margin: 24px auto;
+    padding: 20px;
+    border: 1px solid var(--gamification-border);
+    border-radius: 12px;
+    background: var(--gamification-surface);
+    box-shadow: 0 8px 24px rgb(15 23 42 / 7%);
+}
+
+.monthly-ticket-heading {
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+
+.monthly-ticket-heading h2 {
+    margin: 0;
+    color: var(--gamification-text);
+    font-size: 22px;
+    line-height: 1.3;
+}
+
+.monthly-ticket-heading p {
+    margin: 6px 0 0;
+    color: var(--gamification-muted);
+    line-height: 1.6;
+}
+
+.monthly-ticket-ranking-link {
+    flex: 0 0 auto;
+    color: var(--gamification-accent);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.monthly-ticket-ranking-link:hover {
+    text-decoration: underline;
+}
+
+.monthly-ticket-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin: 0 0 18px;
+}
+
+.monthly-ticket-metrics > div {
+    min-width: 0;
+    padding: 14px;
+    border: 1px solid var(--gamification-border);
+    border-radius: 9px;
+    background: color-mix(in srgb, var(--gamification-surface) 94%, var(--gamification-accent));
+}
+
+.monthly-ticket-metrics dt {
+    color: var(--gamification-muted);
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.monthly-ticket-metrics dd {
+    margin: 6px 0 0;
+    color: var(--gamification-text);
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.monthly-ticket-vote-controls,
+.monthly-ticket-ranking-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.monthly-ticket-vote-controls label,
+.monthly-ticket-ranking-toolbar label {
+    color: var(--gamification-text);
+    font-weight: 700;
+}
+
+.monthly-ticket-vote-controls input,
+.monthly-ticket-ranking-toolbar input {
+    box-sizing: border-box;
+    min-height: 42px;
+    padding: 8px 10px;
+    border: 1px solid var(--gamification-border);
+    border-radius: 7px;
+    background: var(--gamification-surface);
+    color: var(--gamification-text);
+    font: inherit;
+}
+
+.monthly-ticket-vote-controls input {
+    width: 92px;
+}
+
+.monthly-ticket-primary,
+.monthly-ticket-ranking-pagination button {
+    min-height: 42px;
+    padding: 8px 16px;
+    border: 1px solid var(--gamification-accent);
+    border-radius: 7px;
+    background: var(--gamification-accent);
+    color: #fff;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+}
+
+.monthly-ticket-primary:disabled,
+.monthly-ticket-ranking-pagination button:disabled {
+    border-color: var(--gamification-border);
+    background: transparent;
+    color: var(--gamification-muted);
+    cursor: not-allowed;
+}
+
+.monthly-ticket-primary:focus-visible,
+.monthly-ticket-ranking-pagination button:focus-visible,
+.monthly-ticket-vote-controls input:focus-visible,
+.monthly-ticket-ranking-toolbar input:focus-visible,
+.monthly-ticket-ranking-link:focus-visible,
+.monthly-ticket-ranking-item a:focus-visible {
+    outline: 3px solid #ffbf47;
+    outline-offset: 2px;
+}
+
+.monthly-ticket-login {
+    padding: 14px 0 4px;
+}
+
+.monthly-ticket-login p {
+    margin: 0 0 12px;
+    color: var(--gamification-muted);
+}
+
+.monthly-ticket-status {
+    margin: 14px 0 0;
+    color: var(--gamification-muted);
+    line-height: 1.5;
+}
+
+.monthly-ticket-status.is-error {
+    color: #b42318;
+}
+
+.monthly-ticket-ranking-meta {
+    margin: 14px 0;
+    color: var(--gamification-muted);
+    font-size: 13px;
+}
+
+.monthly-ticket-ranking-list {
+    margin: 18px 0;
+    padding: 0;
+    list-style: none;
+}
+
+.monthly-ticket-ranking-item {
+    display: grid;
+    grid-template-columns: 40px 48px minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+    min-height: 76px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--gamification-border);
+}
+
+.monthly-ticket-ranking-item:last-child {
+    border-bottom: 0;
+}
+
+.monthly-ticket-rank-number {
+    color: var(--gamification-accent);
+    font-size: 18px;
+    font-weight: 800;
+    text-align: center;
+}
+
+.monthly-ticket-ranking-cover {
+    display: block;
+    width: 48px;
+    height: 64px;
+    border-radius: 4px;
+    object-fit: cover;
+}
+
+.monthly-ticket-ranking-identity,
+.monthly-ticket-ranking-metrics {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.monthly-ticket-ranking-book {
+    overflow: hidden;
+    color: var(--gamification-text);
+    font-weight: 800;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.monthly-ticket-ranking-author,
+.monthly-ticket-ranking-metrics span {
+    color: var(--gamification-muted);
+    font-size: 13px;
+}
+
+.monthly-ticket-ranking-metrics {
+    align-items: flex-end;
+    text-align: right;
+}
+
+.monthly-ticket-ranking-metrics strong {
+    color: var(--gamification-text);
+}
+
+.monthly-ticket-ranking-empty {
+    padding: 24px 0;
+    color: var(--gamification-muted);
+    text-align: center;
+}
+
+.monthly-ticket-ranking-pagination {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.monthly-ticket-home-timing {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.monthly-ticket-home-timing .monthly-ticket-ranking-meta,
+.monthly-ticket-home-countdown {
+    margin: 0;
+}
+
+.monthly-ticket-home-countdown {
+    color: var(--gamification-text);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.monthly-ticket-home-list {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.monthly-ticket-home .monthly-ticket-ranking-item {
+    position: relative;
+    display: flex;
+    min-height: 0;
+    flex-direction: column;
+    gap: 9px;
+    align-items: stretch;
+    padding: 14px;
+    border: 1px solid var(--gamification-border);
+    border-radius: 9px;
+}
+
+.monthly-ticket-home .monthly-ticket-rank-number {
+    position: absolute;
+    z-index: 1;
+    top: 9px;
+    left: 9px;
+    display: grid;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--gamification-accent);
+    color: #fff;
+    font-size: 14px;
+    place-items: center;
+}
+
+.monthly-ticket-home .monthly-ticket-ranking-cover {
+    width: 60px;
+    height: 80px;
+    margin: 0 auto;
+}
+
+.monthly-ticket-home .monthly-ticket-ranking-identity,
+.monthly-ticket-home .monthly-ticket-ranking-metrics {
+    align-items: flex-start;
+    text-align: left;
+}
+
+@media (max-width: 900px) {
+    .monthly-ticket-home-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@supports not (background: color-mix(in srgb, white, black)) {
+    .monthly-ticket-metrics > div {
+        background: var(--gamification-surface);
+    }
+}
+
+@media (max-width: 640px) {
+    .monthly-ticket-widget,
+    .monthly-ticket-ranking,
+    .monthly-ticket-home {
+        margin: 14px 0;
+        width: 100%;
+        padding: 15px;
+        border-radius: 9px;
+    }
+
+    .monthly-ticket-heading,
+    .monthly-ticket-vote-controls,
+    .monthly-ticket-ranking-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .monthly-ticket-metrics {
+        grid-template-columns: 1fr;
+    }
+
+    .monthly-ticket-vote-controls input,
+    .monthly-ticket-ranking-toolbar input,
+    .monthly-ticket-primary {
+        width: 100%;
+    }
+
+    .monthly-ticket-ranking-item {
+        grid-template-columns: 32px 40px minmax(0, 1fr);
+        gap: 9px;
+    }
+
+    .monthly-ticket-ranking-cover {
+        width: 40px;
+        height: 54px;
+    }
+
+    .monthly-ticket-ranking-metrics {
+        grid-column: 3;
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .monthly-ticket-ranking-pagination button {
+        flex: 1 1 0;
+    }
+
+    .monthly-ticket-home-list {
+        grid-template-columns: 1fr;
+    }
+
+    .monthly-ticket-home .monthly-ticket-ranking-item {
+        display: grid;
+        grid-template-columns: 32px 40px minmax(0, 1fr);
+        gap: 9px;
+        align-items: center;
+        padding: 10px 0;
+        border-width: 0 0 1px;
+        border-radius: 0;
+    }
+
+    .monthly-ticket-home .monthly-ticket-rank-number {
+        position: static;
+        width: auto;
+        height: auto;
+        background: transparent;
+        color: var(--gamification-accent);
+        font-size: 18px;
+    }
+
+    .monthly-ticket-home .monthly-ticket-ranking-cover {
+        width: 40px;
+        height: 54px;
+        margin: 0;
+    }
+
+    .monthly-ticket-home .monthly-ticket-ranking-metrics {
+        grid-column: 3;
+    }
+}
+
+@media (max-width: 760px) {
+    .gamification-profile {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .gamification-heading h1 {
+        font-size: 24px;
+    }
+
+    .gamification-quest-heading,
+    .gamification-quest-footer,
+    .gamification-section-title,
+    .gamification-check-in {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .gamification-claim-button,
+    .gamification-check-in-button {
+        width: 100%;
+    }
+}
+
+.gamification-ticker-preference {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 16px 0;
+    padding: 16px;
+    border: 1px solid var(--gamification-border);
+    border-radius: 12px;
+    background: var(--gamification-surface);
+}
+
+.gamification-ticker-preference p {
+    margin: 4px 0 0;
+    color: var(--gamification-muted);
+    font-size: 13px;
+}
+
+.gamification-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.gamification-toggle input {
+    accent-color: var(--gamification-accent);
+    width: 18px;
+    height: 18px;
+}
+
+.gamification-ticker {
+    margin: 16px 0;
+    padding: 16px;
+    border: 1px solid var(--gamification-border);
+    border-radius: 12px;
+    background: var(--gamification-surface);
+}
+
+.gamification-ticker-heading p {
+    margin: 4px 0 0;
+    color: var(--gamification-muted);
+    font-size: 13px;
+}
+
+.gamification-ticker-list {
+    list-style: none;
+    margin: 12px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.gamification-ticker-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--gamification-border);
+    font-size: 13px;
+}
+
+.gamification-ticker-item:last-child {
+    border-bottom: none;
+}
+
+.gamification-ticker-nickname {
+    font-weight: 600;
+    color: var(--gamification-text);
+}
+
+.gamification-ticker-action,
+.gamification-ticker-book {
+    color: var(--gamification-muted);
+}
+
+.gamification-ticker-count {
+    margin-left: auto;
+    color: var(--gamification-accent);
+    font-weight: 600;
+}
+
+.gamification-ticker-empty {
+    color: var(--gamification-muted);
+    font-size: 13px;
+}
+
+/*
+ * Animation phản hồi khi điểm danh hoặc nhận thưởng nhiệm vụ thành công. Chỉ được gắn bằng JS
+ * sau khi server xác nhận (nhánh .then của lời gọi API), không bao giờ chạy lạc quan trước phản
+ * hồi. Quy tắc prefers-reduced-motion phía dưới rút ngắn animation-duration về gần 0 nên vẫn an
+ * toàn khi người dùng bật giảm chuyển động.
+ */
+@keyframes gamification-flash {
+    0% {
+        box-shadow: 0 0 0 0 rgba(21, 153, 87, 0.45);
+    }
+    100% {
+        box-shadow: 0 0 0 14px rgba(21, 153, 87, 0);
+    }
+}
+
+.gamification-flash {
+    animation: gamification-flash 900ms ease-out;
+    border-radius: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .gamification-shell *,
+    .gamification-shell *::before,
+    .gamification-shell *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}

@@ -57,7 +57,24 @@ class ReaderStatePackagingTest {
             .contains("absoluteTextOffset", "textPointAtOffset", "selectedAnchor")
             .contains("expectedVersion: item.version")
             .contains("readerState.authenticated")
+            .contains("var bookId = valueOf(['bookId', 'bookIdHidden'])")
+            .contains("var chapterId = valueOf(['preContentId', 'contentIdHidden'])")
+            .contains("var readingHeartbeatEnabled = valueOf(['readingHeartbeatEnabled']) === 'true'")
+            .contains("if (!readingHeartbeatEnabled || readingHeartbeat.started")
+            .contains("/user/gamification/reading-heartbeat")
+            .contains("document.visibilityState", "document.hasFocus", "activeSeconds")
+            .doesNotContain("Number(valueOf(['bookId'", "Number(valueOf(['preContentId'")
             .doesNotContain("innerHTML");
+
+        for (Path themedTools : new Path[]{
+            repository.resolve("templates/green/static/javascript/reader-tools.js"),
+            repository.resolve("templates/orange/static/javascript/reader-tools.js"),
+            repository.resolve("templates/dark/static/javascript/reader-tools.js"),
+            repository.resolve("templates/blue/static/javascript/reader-tools.js")
+        }) {
+            assertThat(read(themedTools)).as("Reader tools synced in %s", themedTools)
+                .isEqualTo(tools);
+        }
 
         for (Path reader : new Path[]{
             module.resolve("src/main/resources/templates/book/book_content.html"),
@@ -70,7 +87,8 @@ class ReaderStatePackagingTest {
             repository.resolve("templates/dark/html/mobile/book/book_content.html")
         }) {
             assertThat(read(reader)).as("Reader tool integration in %s", reader)
-                .contains("/javascript/reader-tools.js?v=6")
+                .contains("/javascript/reader-tools.js?v=7")
+                .contains("id=\"readingHeartbeatEnabled\"")
                 .doesNotContain("onselectstart=\"return false\"");
         }
 

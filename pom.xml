@@ -43,6 +43,8 @@
         <aliyun-sdk-oss.version>3.16.3</aliyun-sdk-oss.version>
         <commons-fileupload.version>1.5</commons-fileupload.version>
         <xxyopen.version>1.0.0</xxyopen.version>
+        <pdfbox.version>3.0.8</pdfbox.version>
+        <open-sans-font.version>6.1.0</open-sans-font.version>
     </properties>
 
     <dependencyManagement>

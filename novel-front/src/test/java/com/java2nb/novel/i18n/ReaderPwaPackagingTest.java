@@ -125,7 +125,7 @@ class ReaderPwaPackagingTest {
                     "th:aria-label=\"#{reader.back}\"",
                     "th:aria-label=\"#{site.home}\"",
                     "aria-hidden=\"true\"",
-                    "/javascript/reader-tools.js?v=6"
+                    "/javascript/reader-tools.js?v=7"
                 )
                 .doesNotContain("maximum-scale", "<a id=\"lightdiv\"", "<a id=\"fontbig\"");
         }

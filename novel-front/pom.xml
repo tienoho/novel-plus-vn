@@ -139,15 +139,37 @@
                                         <include name="application-website.yml"/>
                                     </fileset>
                                 </copy>
-                                <copy todir="${project.build.directory}/build/templates" overwrite="true">
-                                    <fileset dir="${basedir}/../templates">
-                                        <include name="**/*.*"/>
-                                    </fileset>
-                                </copy>
+                                <!-- Bản phân phối chạy application-prod từ file system, nên mỗi
+                                     theme phải là runtime base đã được phủ overlay tương ứng. -->
+                                <delete dir="${project.build.directory}/build/templates" quiet="true"/>
+                                <macrodef name="merge-theme">
+                                    <attribute name="name"/>
+                                    <sequential>
+                                        <copy todir="${project.build.directory}/build/templates/@{name}/html"
+                                              overwrite="true">
+                                            <fileset dir="${basedir}/src/main/resources/templates"/>
+                                        </copy>
+                                        <copy todir="${project.build.directory}/build/templates/@{name}/static"
+                                              overwrite="true">
+                                            <fileset dir="${basedir}/src/main/resources/static"/>
+                                        </copy>
+                                        <copy todir="${project.build.directory}/build/templates/@{name}/html"
+                                              overwrite="true">
+                                            <fileset dir="${basedir}/../templates/@{name}/html"/>
+                                        </copy>
+                                        <copy todir="${project.build.directory}/build/templates/@{name}/static"
+                                              overwrite="true">
+                                            <fileset dir="${basedir}/../templates/@{name}/static"/>
+                                        </copy>
+                                    </sequential>
+                                </macrodef>
+                                <merge-theme name="green"/>
+                                <merge-theme name="orange"/>
+                                <merge-theme name="dark"/>
+                                <merge-theme name="blue"/>
                                 <copy file="${project.build.directory}/${project.artifactId}-${project.version}.jar"
                                       tofile="${project.build.directory}/build/${project.artifactId}.jar"/>
 
-                                <fixcrlf srcdir="${basedir}/src/main/build/scripts" eol="unix"/>
                                 <copy todir="${project.build.directory}/build/bin">
                                     <fileset dir="${basedir}/src/main/build/scripts">
                                         <include name="*.sh"/>
@@ -155,13 +177,13 @@
                                         <include name="*.bat"/>
                                     </fileset>
                                 </copy>
+                                <fixcrlf srcdir="${project.build.directory}/build/bin" eol="unix"/>
+                                <copy file="${basedir}/src/main/build/docker/Dockerfile"
+                                      tofile="${project.build.directory}/build/Dockerfile"/>
                                 <zip destfile='${project.build.directory}/build/${project.artifactId}.zip'>
                                     <zipfileset filemode="755" dir='${project.build.directory}/build/'
                                                 excludes="${project.artifactId}.zip"/>
                                 </zip>
-
-                                <copy file="${basedir}/src/main/build/docker/Dockerfile"
-                                      tofile="${project.build.directory}/build/Dockerfile"/>
                             </tasks>
                         </configuration>
                     </execution>

@@ -156,7 +156,47 @@ foreach ($theme in @('green', 'orange', 'dark', 'blue')) {
 }
 ```
 
+Pha đóng gói sao chép script từ `novel-front/src/main/build/scripts` sang
+`novel-front/target/build/bin` rồi mới chuẩn hóa line ending Unix. Sau build, source phải giữ nguyên;
+riêng file rỗng `novel-front.sh` có SHA-256
+`E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855`. Entry script trong ZIP được
+đóng gói với mode `100755`.
+
+`novel-front/target/build/novel-front.zip` phải chứa `Dockerfile`, `novel-front.jar`, thư mục `bin`,
+`config` và `templates`. Cấu hình AI trong distribution chỉ tham chiếu `OPENAI_API_KEY`; không ghi
+khóa API literal vào source hoặc artifact. Nếu một khóa từng được commit, phải thu hồi khóa đó tại
+nhà cung cấp vì thay file hiện tại không xóa bí mật khỏi lịch sử Git.
+
 Không dùng trực tiếp `mvn resources:resources` để chuyển theme. Docker build tạo bốn thư mục overlay độc lập trong `/workspace/packaged-themes`, còn Maven xóa riêng hai thư mục resource đã đóng gói trước mỗi lifecycle; cả hai đường đều giữ thứ tự `runtime base → theme overlay`.
+
+Mỗi thư mục `templates/<theme>` trong ZIP là kết quả merge hoàn chỉnh, không phải overlay thô. Sau
+đóng gói, tối thiểu phải xác minh cả `green`, `orange`, `dark`, `blue` đều có các file nền sau, kể cả
+khi theme nguồn không định nghĩa chúng:
+
+```powershell
+$themes = 'green', 'orange', 'dark', 'blue'
+foreach ($theme in $themes) {
+    Test-Path "novel-front/target/build/templates/$theme/html/common/monthly_ticket.html"
+    Test-Path "novel-front/target/build/templates/$theme/static/service-worker.js"
+    Test-Path "novel-front/target/build/templates/$theme/static/javascript/reader-tools.js"
+}
+```
+
+Smoke test distribution phải chạy JAR với working directory là `novel-front/target/build`, không
+chạy JAR đã tách khỏi `config` và `templates`. Trên database thử nghiệm, kiểm tra `actuator/health`,
+trang chủ, `/service-worker.js`, một chương dài và luồng lưu–mở lại–tiếp tục vị trí đọc. Nếu bypass
+ShardingSphere để kết nối MySQL cô lập, phải override đồng thời URL và driver:
+
+```powershell
+$env:SPRING_DATASOURCE_URL = 'jdbc:mysql://127.0.0.1:3307/novel_plus'
+$env:SPRING_DATASOURCE_DRIVER_CLASS_NAME = 'com.mysql.cj.jdbc.Driver'
+```
+
+Ngày 30/07/2026, artifact `green` đã đạt health và ba URL đại diện trả `200`; front chạy 303 test
+không có failure/error, 20 integration test được skip theo cờ mặc định. Browser smoke xác minh
+service worker, toolbar đọc, font/giãn dòng bền qua navigation và khôi phục character offset; User-Agent
+iPhone render template mobile và nạp reader tools. Kết quả này chưa thay cho vòng JDK 21 và thiết bị
+vật lý trước phát hành production.
 
 ## 7. Rollback
 

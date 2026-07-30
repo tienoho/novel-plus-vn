@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.java2nb.novel.mapper.ReadingTicketMapper">
+    <insert id="insertAccountIgnore">
+        INSERT IGNORE INTO reading_ticket_account (user_id) VALUES (#{userId})
+    </insert>
+    <select id="selectAccount" resultType="com.java2nb.novel.service.entitlement.ReadingTicketAccountRow">
+        SELECT id, user_id AS userId, available_balance AS availableBalance,
+               lifetime_granted AS lifetimeGranted, lifetime_spent AS lifetimeSpent,
+               lifetime_expired AS lifetimeExpired, version, status
+        FROM reading_ticket_account WHERE user_id=#{userId} LIMIT 1
+    </select>
+    <select id="lockAccountByUserId" resultType="com.java2nb.novel.service.entitlement.ReadingTicketAccountRow">
+        SELECT id, user_id AS userId, available_balance AS availableBalance,
+               lifetime_granted AS lifetimeGranted, lifetime_spent AS lifetimeSpent,
+               lifetime_expired AS lifetimeExpired, version, status
+        FROM reading_ticket_account WHERE user_id=#{userId} LIMIT 1 FOR UPDATE
+    </select>
+    <insert id="insertLedger">
+        INSERT INTO reading_ticket_ledger
+            (entry_no, user_id, entry_type, amount, balance_after, business_type, business_id,
+             idempotency_key, request_hash, operator_type, operator_id, reason, policy_version)
+        VALUES (#{entry.entryNo}, #{entry.userId}, #{entry.entryType}, #{entry.amount},
+                #{entry.balanceAfter}, #{entry.businessType}, #{entry.businessId},
+                #{entry.idempotencyKey}, #{entry.requestHash}, #{entry.operatorType},
+                #{entry.operatorId}, #{entry.reason}, #{entry.policyVersion})
+    </insert>
+    <select id="selectLedgerByIdempotencyKey"
+            resultType="com.java2nb.novel.service.entitlement.ReadingTicketLedgerRow">
+        SELECT id, entry_no AS entryNo, user_id AS userId, entry_type AS entryType, amount,
+               balance_after AS balanceAfter, business_type AS businessType,
+               business_id AS businessId, idempotency_key AS idempotencyKey,
+               request_hash AS requestHash, policy_version AS policyVersion
+        FROM reading_ticket_ledger WHERE idempotency_key=#{idempotencyKey} LIMIT 1
+    </select>
+    <insert id="insertLot">
+        INSERT INTO reading_ticket_lot
+            (user_id, source_type, source_ref, granted_amount, remaining_amount,
+             grant_ledger_id, effective_at, expire_at, status, policy_version)
+        VALUES (#{userId}, #{sourceType}, #{sourceRef}, #{grantedAmount}, #{grantedAmount},
+                #{grantLedgerId}, #{effectiveAt}, #{expireAt}, 'ACTIVE', #{policyVersion})
+    </insert>
+    <update id="creditAccount">
+        UPDATE reading_ticket_account
+        SET available_balance=available_balance+#{amount}, lifetime_granted=lifetime_granted+#{amount},
+            version=version+1
+        WHERE id=#{accountId} AND version=#{expectedVersion} AND status='ACTIVE'
+    </update>
+    <select id="lockSpendableLots" resultType="com.java2nb.novel.service.entitlement.ReadingTicketLotRow">
+        SELECT id, user_id AS userId, remaining_amount AS remainingAmount,
+               effective_at AS effectiveAt, expire_at AS expireAt, status, version
+        FROM reading_ticket_lot
+        WHERE user_id=#{userId} AND status='ACTIVE' AND remaining_amount&gt;0
+          AND effective_at&lt;=#{at} AND expire_at&gt;#{at}
+        ORDER BY expire_at ASC, id ASC LIMIT #{limit} FOR UPDATE
+    </select>
+    <select id="lockExpiredLotsByUser"
+            resultType="com.java2nb.novel.service.entitlement.ReadingTicketLotRow">
+        SELECT id, user_id AS userId, remaining_amount AS remainingAmount,
+               effective_at AS effectiveAt, expire_at AS expireAt, status, version
+        FROM reading_ticket_lot
+        WHERE user_id=#{userId} AND status='ACTIVE' AND remaining_amount&gt;0
+          AND expire_at&lt;=#{cutoff}
+        ORDER BY expire_at ASC, id ASC LIMIT #{limit} FOR UPDATE
+    </select>
+    <update id="consumeLot">
+        UPDATE reading_ticket_lot
+        SET status=CASE WHEN remaining_amount=#{amount} THEN 'EXHAUSTED' ELSE 'ACTIVE' END,
+            closed_at=CASE WHEN remaining_amount=#{amount} THEN #{at} ELSE NULL END,
+            remaining_amount=remaining_amount-#{amount},
+            version=version+1
+        WHERE id=#{lotId} AND version=#{expectedVersion} AND status='ACTIVE'
+          AND effective_at&lt;=#{at} AND expire_at&gt;#{at} AND remaining_amount&gt;=#{amount}
+    </update>
+    <insert id="insertLotAllocation">
+        INSERT INTO reading_ticket_lot_allocation
+            (ledger_id, lot_id, amount, lot_remaining_after)
+        VALUES (#{ledgerId}, #{lotId}, #{amount}, #{remainingAfter})
+    </insert>
+    <update id="debitAccount">
+        UPDATE reading_ticket_account
+        SET available_balance=available_balance-#{amount}, lifetime_spent=lifetime_spent+#{amount},
+            version=version+1
+        WHERE id=#{accountId} AND version=#{expectedVersion} AND status='ACTIVE'
+          AND available_balance&gt;=#{amount}
+    </update>
+    <update id="expireLot">
+        UPDATE reading_ticket_lot
+        SET status='EXPIRED', closed_at=#{closedAt}, remaining_amount=0, version=version+1
+        WHERE id=#{lotId} AND version=#{expectedVersion} AND status='ACTIVE'
+          AND remaining_amount=#{expectedRemaining} AND expire_at&lt;=#{closedAt}
+    </update>
+    <update id="expireFromAccount">
+        UPDATE reading_ticket_account
+        SET available_balance=available_balance-#{amount},
+            lifetime_expired=lifetime_expired+#{amount}, version=version+1
+        WHERE id=#{accountId} AND version=#{expectedVersion} AND status='ACTIVE'
+          AND available_balance&gt;=#{amount}
+    </update>
+    <select id="selectExpiredLotUserIds" resultType="java.lang.Long">
+        SELECT user_id
+        FROM reading_ticket_lot
+        WHERE status='ACTIVE' AND remaining_amount&gt;0 AND expire_at&lt;=#{cutoff}
+        GROUP BY user_id ORDER BY user_id ASC LIMIT #{limit}
+    </select>
+    <select id="selectActiveEntitlement"
+            resultType="com.java2nb.novel.service.entitlement.ChapterEntitlementRow">
+        SELECT id, user_id AS userId, book_id AS bookId, book_index_id AS bookIndexId,
+               source_type AS sourceType, source_id AS sourceId, valid_from AS validFrom,
+               valid_until AS validUntil, status, idempotency_key AS idempotencyKey,
+               policy_version AS policyVersion
+        FROM chapter_entitlement
+        WHERE user_id=#{userId} AND book_index_id=#{bookIndexId} AND status='ACTIVE'
+          AND valid_from&lt;=#{at} AND (valid_until IS NULL OR valid_until&gt;#{at})
+        LIMIT 1
+    </select>
+    <select id="selectActiveEntitlementForUpdate"
+            resultType="com.java2nb.novel.service.entitlement.ChapterEntitlementRow">
+        SELECT id, user_id AS userId, book_id AS bookId, book_index_id AS bookIndexId,
+               source_type AS sourceType, source_id AS sourceId, valid_from AS validFrom,
+               valid_until AS validUntil, status, idempotency_key AS idempotencyKey,
+               policy_version AS policyVersion
+        FROM chapter_entitlement
+        WHERE user_id=#{userId} AND book_index_id=#{bookIndexId} AND status='ACTIVE'
+          AND valid_from&lt;=#{at} AND (valid_until IS NULL OR valid_until&gt;#{at})
+        LIMIT 1 FOR UPDATE
+    </select>
+    <insert id="insertChapterEntitlement">
+        INSERT INTO chapter_entitlement
+            (user_id, book_id, book_index_id, source_type, source_id, valid_from, valid_until,
+             status, idempotency_key, policy_version)
+        VALUES (#{userId}, #{bookId}, #{bookIndexId}, #{sourceType}, #{sourceId}, #{validFrom},
+                #{validUntil}, 'ACTIVE', #{idempotencyKey}, #{policyVersion})
+    </insert>
+    <select id="countLedgerByUser" resultType="long">
+        SELECT COUNT(*) FROM reading_ticket_ledger WHERE user_id=#{userId}
+    </select>
+    <select id="selectLedgerByUser" resultType="com.java2nb.novel.service.entitlement.ReadingTicketLedgerRow">
+        SELECT id, entry_no AS entryNo, user_id AS userId, entry_type AS entryType, amount,
+               balance_after AS balanceAfter, business_type AS businessType,
+               business_id AS businessId, idempotency_key AS idempotencyKey,
+               request_hash AS requestHash, policy_version AS policyVersion
+        FROM reading_ticket_ledger
+        WHERE user_id=#{userId}
+        ORDER BY id DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+    <select id="countLotsByUser" resultType="long">
+        SELECT COUNT(*) FROM reading_ticket_lot WHERE user_id=#{userId}
+    </select>
+    <select id="selectLotsByUser" resultType="com.java2nb.novel.service.entitlement.ReadingTicketLotHistoryRow">
+        SELECT l.id, l.user_id AS userId, l.source_type AS sourceType, l.source_ref AS sourceRef,
+               g.entry_no AS grantEntryNo,
+               l.granted_amount AS grantedAmount, l.remaining_amount AS remainingAmount,
+               l.effective_at AS effectiveAt, l.expire_at AS expireAt, l.status
+        FROM reading_ticket_lot l
+        JOIN reading_ticket_ledger g ON g.id = l.grant_ledger_id
+        WHERE l.user_id=#{userId}
+        ORDER BY l.id DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+</mapper>

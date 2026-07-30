@@ -2,7 +2,7 @@
 
 ## Mục tiêu
 
-Xây dựng hệ sinh thái gamification an toàn cho Novel Plus, kết nối hoạt động đọc truyện, nhiệm vụ, EXP, cảnh giới, Nguyệt Phiếu, bảng xếp hạng tháng và quỹ thưởng tác giả mà không làm sai lệch sổ cái Xu, không trả thưởng trùng và có thể vận hành, kiểm toán, rollback trên production.
+Xây dựng hệ sinh thái gamification an toàn cho Novel Plus, kết nối hoạt động đọc truyện, nhiệm vụ, EXP, cảnh giới, Ngọn Đuốc, bảng xếp hạng tháng và quỹ thưởng tác giả mà không làm sai lệch sổ cái Xu, không trả thưởng trùng và có thể vận hành, kiểm toán, rollback trên production.
 
 ## Phạm vi
 
@@ -10,7 +10,7 @@ Bao gồm:
 
 - Hồ sơ gamification, EXP, cấp độ, cảnh giới và khung ảnh đại diện.
 - Điểm danh chuỗi, nhiệm vụ hằng ngày và nhận thưởng.
-- Cấp, tiêu, hết hạn, thu hồi và đối soát Nguyệt Phiếu.
+- Cấp, tiêu, hết hạn, thu hồi và đối soát Ngọn Đuốc.
 - Bỏ phiếu cho truyện, bảng xếp hạng tháng và quỹ thưởng tác giả.
 - API độc giả/tác giả, công cụ quản trị, chống gian lận và giám sát vận hành.
 - Giao diện desktop/mobile trên `green`, `orange`, `dark`, `blue`.
@@ -19,24 +19,82 @@ Bao gồm:
 Không bao gồm trong đợt đầu:
 
 - Vé đọc mở chương, thuê bao và mã quà tặng; đây là các quyền lợi độc lập.
-- Thị trường trao đổi hoặc chuyển nhượng Nguyệt Phiếu.
+- Thị trường trao đổi hoặc chuyển nhượng Ngọn Đuốc.
 - Quyền lợi kinh tế khác nhau giữa các hệ cảnh giới.
 - Tự động chuyển tiền VND cho tác giả nếu quy trình KYC/payout chưa được bật.
+
+## Trạng thái triển khai xác minh ngày 2026-07-30
+
+- Đã hoàn tất và qua unit/MySQL concurrency: ledger Ngọn Đuốc, lot FIFO, vote, expiry, ranking tháng,
+  snapshot/state machine, quỹ thưởng tác giả qua clearing, admin grant/reward và lịch sử thưởng tác giả.
+- Đã nối ba nguồn event `CHAPTER_PURCHASED`, `TOP_UP_SETTLED`, `COMMENT_APPROVED` với source key
+  idempotent; event mua chương chỉ phát sau bút toán `POSTED`, bình luận chỉ phát khi thật sự chuyển
+  sang đã duyệt.
+- Đã có profile lazy-create, ngưỡng level kế tiếp, đổi cảnh giới theo optimistic version, cooldown,
+  level tối thiểu và audit.
+- Đã có worker event theo `REQUIRES_NEW`, claim bằng version, retry/`FAILED`, trạng thái
+  `PROCESSED`/`SKIPPED`, và projection quest cho `DAILY`/ISO `WEEKLY`/`ONE_TIME`. Acceptance MySQL
+  chứng minh cùng event không tăng tiến độ lần hai.
+- Đã có API danh sách/claim quest, sổ EXP bất biến, cập nhật profile/level, cấp Đuốc từ reward quest
+  qua lot/ledger hiện hữu và event `LEVEL_REACHED`. Claim retry trả dữ liệu cũ, không phát thưởng lặp.
+- Đã có trang profile/quest/claim desktop và mobile bằng asset dùng chung; bốn build `green`,
+  `orange`, `dark`, `blue` đều đóng gói đủ file và liên kết tài khoản không bị overlay làm mất.
+- Đã có `POST /user/gamification/check-in`, streak theo `Asia/Ho_Chi_Minh`, khóa server
+  `CHECKIN:<userId>:<localDate>`, xử lý event và auto-claim `DAILY_CHECK_IN`. Unit test bao phủ ngày
+  đầu/nối chuỗi/đứt chuỗi/replay/ngày lùi; acceptance MySQL chứng minh retry không nhân event,
+  progress, claim hoặc EXP. UI điểm danh dùng chung đã có trên desktop/mobile.
+- Đã có `POST /user/gamification/reading-heartbeat` xác thực riêng, session/sequence idempotent, receipt
+  bất biến, bộ đếm trần 180 phút/ngày và event `READING_MINUTE_VERIFIED`. Client chỉ lấy mẫu khi tab
+  hiển thị/có focus, giữ nguyên payload khi retry và chạy trên runtime cùng bốn theme; backend lấy
+  elapsed time server làm trần thay vì tin tuyệt đối `activeSeconds` từ client.
+- Đã có widget Thắp Đuốc trên chi tiết truyện và Bảng Đuốc tháng trên trang ranking, dùng chung cho
+  desktop/mobile và bốn theme. UI hiển thị tổng Đuốc, số dư, lot sắp tắt, trần mỗi request từ server,
+  xác nhận khi thắp nhiều Đuốc và giữ nguyên request ID khi chưa xác định kết quả do mất mạng.
+- Đã có Top Đuốc trang chủ trên desktop/mobile và bốn theme: Top 5 kỳ hiện tại, trạng thái
+  realtime/snapshot, mốc khóa sổ, đồng hồ còn lại và liên kết sang bảng đầy đủ. Widget giữ ẩn khi
+  feature flag tắt.
+- Đã có chọn campaign quest `ACTIVE` theo cửa sổ `[start_at, end_at)` bằng thời điểm server. Reward
+  campaign ghi đè theo từng loại và fallback về `DEFAULT`; campaign chồng lấn làm request fail-closed,
+  không phát thưởng mơ hồ. Unit test và MySQL IT bao phủ biên thời gian, fallback và policy snapshot.
+- Đã có CRUD admin cho campaign/reward nhiệm vụ với quyền `novel:gamification:config`: tạo DRAFT,
+  thay reward EXP/Đuốc, kích hoạt, đóng và tra cứu. Kích hoạt dùng transaction `SERIALIZABLE`;
+  concurrency IT chứng minh hai campaign giao nhau chỉ có đúng một campaign trở thành `ACTIVE`.
+- Chưa hoàn tất: consumer cấp Đuốc theo level, nội dung quy tắc/kết quả thưởng trên trang chủ và
+  browser regression trên thiết bị thật. Đây là phần M6/M7 tiếp theo; các feature flag liên quan vẫn
+  mặc định tắt.
+- `/book/analytics/read-event` tiếp tục chỉ phục vụ analytics và không làm nguồn thưởng: API này ẩn
+  danh, nhận `visitorId`/`durationSeconds` do client tự khai và không có receipt bất biến.
 
 ## Thuật ngữ bắt buộc
 
 | Thuật ngữ | Ý nghĩa |
 |---|---|
 | Xu | Tiền nội bộ dùng mua chương và ghi trong sổ cái tài chính hiện có |
-| Nguyệt Phiếu | Quyền bỏ phiếu cho tác phẩm, không chuyển nhượng và không đổi ngược thành Xu/tiền |
-| Vé đọc | Quyền mở nội dung; không dùng chung wallet hoặc ledger với Nguyệt Phiếu |
+| Ngọn Đuốc | Quyền bỏ phiếu cho tác phẩm, không chuyển nhượng và không đổi ngược thành Xu/tiền |
+| Vé đọc | Quyền mở nội dung; không dùng chung wallet hoặc ledger với Ngọn Đuốc |
 | EXP | Điểm tiến trình gamification, không phải tài sản tài chính |
 | Cảnh giới | Danh xưng/skin hiển thị theo cấp độ; mặc định không ảnh hưởng quyền lợi |
 | Kỳ xếp hạng | Khoảng thời gian `[đầu tháng, đầu tháng kế tiếp)` theo `Asia/Ho_Chi_Minh` |
 
+### Quy ước đặt tên Ngọn Đuốc
+
+"Ngọn Đuốc" là **tên hiển thị**. Định danh kỹ thuật giữ nguyên tiếng Anh `monthly_ticket` theo quy ước sẵn có của repository, nên việc đổi tên hiển thị về sau chỉ là sửa file `.properties`, không phải migration.
+
+| Ngữ cảnh | Giá trị bắt buộc |
+|---|---|
+| Danh từ đầy đủ | Ngọn Đuốc |
+| Danh từ ngắn, dùng cho tiêu đề cột và tab | Đuốc |
+| Động từ bỏ phiếu trên UI | thắp đuốc — "Thắp đuốc cho truyện" |
+| Động từ hết hạn trên UI | tắt — "2 ngọn đuốc sẽ tắt ngày 31/07" |
+| Động từ nhận thưởng trên UI | nhận — "Bạn nhận được 5 ngọn đuốc" |
+| Bảng, cột, class, enum, khóa i18n | `monthly_ticket_*`, `MonthlyTicket*`, `monthlyTicket.*` |
+| Business type trong sổ cái Xu | `MONTHLY_AUTHOR_REWARD` (không đổi) |
+
+Trong tài liệu kỹ thuật này, "bỏ phiếu" và "vote" vẫn được dùng làm thuật ngữ trung tính mô tả cơ chế; "thắp đuốc" chỉ dùng cho chuỗi hiển thị tới người dùng. Không hard-code cả hai dạng trong code — mọi chuỗi đi qua i18n.
+
 ## Chính sách khuyến nghị cho phiên bản đầu
 
-- Nguyệt Phiếu được cấp từ nhiệm vụ, điểm danh, thăng cấp, khuyến mại đã cấu hình hoặc thao tác cấp thủ công của quản trị viên có audit; không bán trực tiếp trước khi có chính sách kinh tế được phê duyệt.
+- Ngọn Đuốc được cấp từ nhiệm vụ, điểm danh, thăng cấp, khuyến mại đã cấu hình hoặc thao tác cấp thủ công của quản trị viên có audit; không bán trực tiếp trước khi có chính sách kinh tế được phê duyệt.
 - Không cho tác giả hoặc cộng tác viên bỏ phiếu cho tác phẩm họ quản lý.
 - Chỉ truyện đã duyệt, đang xuất bản và đạt điều kiện chiến dịch mới nhận phiếu; truyện nhập từ `novel-crawl` mặc định không đủ điều kiện.
 - Một tác giả chỉ nhận giải cao nhất nếu có nhiều truyện trong nhóm được thưởng; thứ hạng tác phẩm vẫn được giữ nguyên.
@@ -54,7 +112,7 @@ Giữ kiến trúc modular monolith hiện tại, không tách microservice ho�
 | `novel-common` | Domain dùng chung, mapper MyBatis, transaction cấp/tiêu phiếu, quest/EXP, ranking, reward và ledger Xu | Không chứa controller hoặc giao diện |
 | `novel-front` | API độc giả/tác giả, thu nhận event, heartbeat đọc, page route và scheduler chốt kỳ | Không cập nhật trực tiếp bảng ledger/ranking |
 | `novel-admin` | Cấu hình campaign, fraud review, finalize, approve reward và reconciliation | Không sao chép luật nghiệp vụ từ `novel-common` |
-| `novel-crawl` | Không thay đổi trong phạm vi này | Không phát Nguyệt Phiếu từ dữ liệu crawl; truyện crawl cũng không được nhận phiếu hoặc nhận thưởng khi chưa có quyết định chính sách ngược lại |
+| `novel-crawl` | Không thay đổi trong phạm vi này | Không phát Ngọn Đuốc từ dữ liệu crawl; truyện crawl cũng không được nhận phiếu hoặc nhận thưởng khi chưa có quyết định chính sách ngược lại |
 
 Sự kiện nghiệp vụ được ghi vào `gamification_event` trong cùng MySQL transaction với nghiệp vụ nguồn và được xử lý đồng bộ/idempotent. Chỉ cân nhắc queue sau khi đo được nhu cầu scale; không đưa Kafka/RabbitMQ vào P0.
 
@@ -71,6 +129,7 @@ Migration mới phải tạo tối thiểu các nhóm bảng:
 
 - Ticket: `monthly_ticket_account`, `monthly_ticket_lot`, `monthly_ticket_ledger`, `monthly_ticket_lot_allocation`, `monthly_ticket_vote`.
 - Quest/EXP: `gamification_event`, `gamification_profile`, `user_exp_ledger`, `level_rule`, `realm_catalog`, `quest_definition`, `quest_campaign`, `quest_reward`, `user_quest_progress`, `quest_claim`.
+- Heartbeat đọc: `reading_session`, `reading_daily_counter`, `reading_heartbeat_receipt`.
 - Season/ranking/reward: `monthly_ticket_season`, `monthly_rank_snapshot`, `monthly_rank_entry`, `scheduled_job_run`, `reward_fund_campaign`, `author_reward_allocation`.
 
 Ngoài bảng mới, migration còn phải seed một dòng `wallet_account` cho tài khoản hệ thống `REWARD_CLEARING` bằng `INSERT IGNORE`, theo đúng cách `20260717_wallet_ledger.sql` seed `SYSTEM_ISSUANCE`, `PLATFORM_REVENUE` và `PAYOUT_CLEARING`.
@@ -84,7 +143,7 @@ Các quy ước bắt buộc kế thừa từ migration hiện có, phải tái 
 
 ### Backend dùng chung — `novel-common`
 
-Các file/lớp cần thêm:
+Các file/lớp đã thêm và đang là điểm mở rộng:
 
 ```text
 novel-common/src/main/java/com/java2nb/novel/service/gamification/
@@ -114,6 +173,8 @@ novel-common/src/main/resources/mybatis/mapping/
     MonthlyRankingMapper.xml
 ```
 
+XML mapper phải nằm **trực tiếp** trong `mybatis/mapping/`, không đặt trong thư mục con: `MyBatisMapperPackagingTest` chặn mọi `*Mapper.xml` nằm lạc ra ngoài thư mục đó. Test này **không** assert cứng danh sách file hiện có, nên thêm mapper mới không làm đỏ build; vẫn nên chủ động thêm assertion cho ba XML mới để giữ nguyên tác dụng bảo vệ.
+
 Các file cần sửa:
 
 | File | Thay đổi bắt buộc | Lý do |
@@ -135,12 +196,14 @@ novel-front/src/main/java/com/java2nb/novel/controller/
     GamificationController.java
     MonthlyTicketController.java
     AuthorGamificationController.java
+    ReadingHeartbeatController.java
 
 novel-front/src/main/java/com/java2nb/novel/dto/gamification/
     RealmUpdateRequest.java
     QuestClaimRequest.java
     MonthlyTicketVoteRequest.java
     ReadingHeartbeatRequest.java
+    ReadingHeartbeatResponse.java
     GamificationProfileResponse.java
     MonthlyTicketBalanceResponse.java
     MonthlyTicketRankingResponse.java
@@ -148,8 +211,20 @@ novel-front/src/main/java/com/java2nb/novel/dto/gamification/
 novel-front/src/main/java/com/java2nb/novel/service/gamification/
     GamificationEventService.java
     GamificationEventServiceImpl.java
-    ReadingSessionService.java
-    ReadingSessionServiceImpl.java
+    GamificationReadingHeartbeatService.java
+    ReadingHeartbeatWriter.java
+    ReadingHeartbeatCommand.java
+    ReadingHeartbeatInput.java
+    ReadingHeartbeatResult.java
+    ReadingSessionRow.java
+    ReadingDailyCounterRow.java
+    ReadingHeartbeatReceiptRow.java
+
+novel-front/src/main/java/com/java2nb/novel/mapper/
+    ReadingHeartbeatMapper.java
+
+novel-front/src/main/resources/mybatis/mapping/
+    ReadingHeartbeatMapper.xml
 
 novel-front/src/main/java/com/java2nb/novel/core/config/
     GamificationProperties.java
@@ -224,7 +299,7 @@ novel:gamification:reward
 novel:gamification:adjust
 ```
 
-`novel:gamification:grant` cấp Nguyệt Phiếu thủ công hoặc theo khuyến mại. Đây là **hạng mục P0**, vì mọi nguồn cấp còn lại đều thuộc P1 và nếu thiếu nó thì hệ thống bỏ phiếu ra mắt mà không ai có phiếu. Thao tác cấp bắt buộc có lý do, audit và khóa idempotency dạng `GRANT:<batchId>:<userId>`; quyền cấp tách khỏi quyền duyệt thưởng để giữ nguyên tắc bốn mắt.
+`novel:gamification:grant` cấp Ngọn Đuốc thủ công hoặc theo khuyến mại. Đây là **hạng mục P0**, vì mọi nguồn cấp còn lại đều thuộc P1 và nếu thiếu nó thì hệ thống bỏ phiếu ra mắt mà không ai có phiếu. Thao tác cấp bắt buộc có lý do, audit và khóa idempotency dạng `GRANT:<batchId>:<userId>`; quyền cấp tách khỏi quyền duyệt thưởng để giữ nguyên tắc bốn mắt.
 
 `CommentModerationController` hiện dùng permission `novel:bookComment:edit` và update `auditStatus` vô điều kiện cho cả lô. Khi tách sang service, giữ nguyên permission cũ cho thao tác kiểm duyệt và chỉ thêm permission gamification cho các màn hình mới; không mở rộng phạm vi quyền của kiểm duyệt viên.
 
@@ -248,15 +323,15 @@ Các file cần sửa:
 | File | Thành phần UI | Theme phải sửa song song |
 |---|---|---|
 | `templates/common/header.html` | Badge level/realm và liên kết Trung tâm nhiệm vụ | `green`, `orange`, `dark`, `blue` |
-| `templates/index.html` | Top Nguyệt Phiếu hiện tại, trạng thái kỳ và thời gian còn lại | `green`, `orange`, `dark`, `blue` |
+| `templates/index.html` | Bảng Đuốc của kỳ hiện tại, trạng thái kỳ và thời gian còn lại | `green`, `orange`, `dark`, `blue` |
 | `templates/mobile/index.html` | Khối ranking tối giản cho mobile | `green`, `orange`, `dark` |
-| `templates/book/book_detail.html` | Widget số dư, tổng phiếu, hạn dùng và modal bỏ phiếu | `green`, `orange`, `dark` |
-| `templates/mobile/book/book_detail.html` | Widget/modal touch-friendly tương ứng | `green`, `orange`, `dark` |
-| `templates/book/book_ranking.html` | Thêm tab Nguyệt Phiếu và kỳ lịch sử | `green`, `orange`, `dark` |
+| `templates/book/book_detail.html` | Widget số dư, tổng Đuốc, hạn dùng và hộp xác nhận khi thắp nhiều Đuốc | `green`, `orange`, `dark` |
+| `templates/mobile/book/book_detail.html` | Widget/hộp xác nhận touch-friendly tương ứng | `green`, `orange`, `dark` |
+| `templates/book/book_ranking.html` | Thêm tab Đuốc và kỳ lịch sử | `green`, `orange`, `dark` |
 | `templates/mobile/book/book_ranking.html` | Ranking responsive tương ứng | `green`, `orange`, `dark` |
 | `templates/author/author_income.html` | Liên kết thưởng tháng; không gộp reward dự kiến vào số dư rút được | `green`, `orange` |
 
-Không nhồi logic mới vào `user.js` hoặc `bookdetail.js`. Ngoài lý do tách bạch trách nhiệm, đây còn là ràng buộc đóng gói: `bookdetail.js` và `base.css` bị `green`, `orange` và `dark` ghi đè, nên mọi thay đổi trong hai file đó phải nhân bản sang ba theme, còn file mới thì không. `gamification.js` phụ trách profile/quest/check-in; `monthly-ticket.js` phụ trách balance/vote/ranking. File JS tĩnh đọc message từ `data-*` hoặc catalog `window` do Thymeleaf phát ra; Thymeleaf natural template chỉ dùng trong script inline được render, không giả định file tĩnh được Thymeleaf xử lý.
+Không nhồi logic mới vào `user.js` hoặc `bookdetail.js`. Ngoài lý do tách bạch trách nhiệm, đây còn là ràng buộc đóng gói: `bookdetail.js` bị `green` và `orange` ghi đè, `base.css` bị cả bốn theme ghi đè, nên mọi thay đổi trong hai file đó phải nhân bản sang từng theme, còn file mới thì không. `gamification.js` phụ trách profile/quest/check-in; `monthly-ticket.js` phụ trách balance/vote/ranking. File JS tĩnh đọc message từ `data-*` hoặc catalog `window` do Thymeleaf phát ra; Thymeleaf natural template chỉ dùng trong script inline được render, không giả định file tĩnh được Thymeleaf xử lý.
 
 ### Frontend theme overlay
 
@@ -278,7 +353,7 @@ Phạm vi ghi đè thực tế của từng theme:
 | `dark` | `index`, `common/header`, `book/book_detail`, `book/book_ranking` và bản `mobile/` tương ứng; không ghi đè `author/` | Sửa các trang bị ghi đè; trang tác giả dùng base |
 | `blue` | Chỉ `index`, `common/header`, `common/top`, `common/js`, `common/footer`, `404` | Chỉ sửa `index` và `common/header`; book detail/ranking/mobile dùng base |
 
-`templates/green|orange|dark/static/javascript/bookdetail.js` và `static/css/base.css` cũng ghi đè bản base. Đây là lý do kỹ thuật bắt buộc để đặt logic mới vào **file JS/CSS mới** (`gamification.js`, `monthly-ticket.js`, `gamification.css`): file mới không bị theme nào ghi đè nên chỉ cần thêm một lần ở base. Ngược lại, mọi sửa đổi trong `bookdetail.js` hoặc `base.css` phải nhân bản sang ba theme.
+Static asset cũng bị ghi đè theo cùng cơ chế: `static/css/base.css` bị **cả bốn** theme ghi đè, `static/javascript/bookdetail.js` bị `green` và `orange` ghi đè. Đây là lý do kỹ thuật bắt buộc để đặt logic mới vào **file JS/CSS mới** (`gamification.js`, `monthly-ticket.js`, `gamification.css`): file mới không bị theme nào ghi đè nên chỉ cần thêm một lần ở base. Ngược lại, một dòng CSS thêm vào `base.css` phải nhân bản sang bốn theme mới có tác dụng.
 
 CSS gamification dùng design token hiện hữu. Chỉ thêm override theo theme khi contrast hoặc stacking thực sự khác; không sao chép toàn bộ CSS sang bốn theme.
 
@@ -289,6 +364,7 @@ CSS gamification dùng design token hiện hữu. Chỉ thêm override theo them
 | `GET /user/gamification/profile` | JWT/cookie hiện hữu | level, EXP, realm, frame, next threshold | Không |
 | `PATCH /user/gamification/realm` | `realmType`, `expectedVersion` | profile và cooldown mới | Có, khóa server sinh |
 | `POST /user/gamification/check-in` | Không nhận `userId` | streak, EXP/ticket reward, next check-in | Có, khóa theo `userId` và ngày địa phương |
+| `POST /user/gamification/reading-heartbeat` | `sessionId`, `bookId`, `bookIndexId`, `sequence`, `activeSeconds` | số giây nhận, phút xác minh trong ngày, sequence kế tiếp và trạng thái đạt trần | Có, receipt theo `(sessionId, sequence)` và request hash |
 | `GET /user/gamification/quests` | `date` tùy chọn | quest, progress, claim status, reward preview | Không |
 | `POST /user/gamification/quests/{questCode}/claim` | Không nhận owner ID | reward và balance mới | Có, khóa server sinh |
 | `GET /user/monthly-tickets` | JWT/cookie hiện hữu | available balance và các expiry lot gần nhất | Không |
@@ -312,10 +388,10 @@ Chỉ cân nhắc header `Idempotency-Key` dùng chung khi có API công khai ch
 | Event | Điểm phát sinh đúng | Source/idempotency key | Phần chưa xác minh |
 |---|---|---|---|
 | `CHECK_IN_COMPLETED` | `GamificationProgressService.checkIn()` | `CHECKIN:<userId>:<localDate>` | Chính sách bù ngày |
-| `READING_MINUTE_VERIFIED` | `ReadingSessionService` sau heartbeat hợp lệ | `READ:<userId>:<sessionId>:<minuteBucket>` | Endpoint analytics hiện tại có đủ foreground signal hay không |
+| `READING_MINUTE_VERIFIED` | `ReadingHeartbeatWriter` sau heartbeat hợp lệ | `READ:<userId>:<sessionId>:<localDate>:<minuteBucket>` | Browser regression với timer bị throttle |
 | `COMMENT_APPROVED` | Admin service khi `auditStatus` chuyển sang duyệt | `GAMIFY:COMMENT_APPROVED:<commentId>` | Bình luận bị gỡ sau khi claim có revoke EXP hay không |
 | `CHAPTER_PURCHASED` | `UserServiceImpl.buyBookIndex()` sau ledger Xu | `GAMIFY:CHAPTER_PURCHASE:<userId>:<bookIndexId>` | Giới hạn quest/ngày |
-| `TOP_UP_SETTLED` | `OrderServiceImpl.processPayOrder()` sau ledger Xu | `TOPUP:<outTradeNo>` | Nạp Xu có cấp Nguyệt Phiếu hay không |
+| `TOP_UP_SETTLED` | `OrderServiceImpl.processPayOrder()` sau ledger Xu | `TOPUP:<outTradeNo>` | Nạp Xu có cấp Ngọn Đuốc hay không |
 | `LEVEL_REACHED` | `GamificationProgressService` sau EXP post | `LEVEL:<userId>:<level>:<ruleVersion>` | Level nào được cấp phiếu |
 
 Không phát event trước commit thành công và không dựa vào callback UI. Nếu transaction nguồn rollback thì event/reward tương ứng cũng phải rollback.
@@ -351,9 +427,9 @@ Khuôn mẫu test tích hợp hiện có (`ReaderStateMySqlIntegrationTest`, `Re
 
 ### 1. Khóa chính sách sản phẩm và mô hình đe dọa
 
-- [ ] Chốt nguồn cấp Nguyệt Phiếu, giới hạn ngày/tháng, thời hạn, tự bỏ phiếu, điều kiện truyện và xử lý chargeback.
+- [ ] Chốt nguồn cấp Ngọn Đuốc, giới hạn ngày/tháng, thời hạn, tự bỏ phiếu, điều kiện truyện và xử lý chargeback.
 - [ ] Chốt ngân sách, cơ cấu Top, đơn vị thưởng, quy tắc tác giả có nhiều truyện và quy trình khiếu nại/clawback.
-- [ ] Chốt điều kiện eligibility bằng **tên cột thật**, không mô tả chung chung: `book.book_status`, `book.audit_status`, trạng thái trong `ModerationStatusEnum`, phân loại độ tuổi qua `AgeRatingUtil` và cờ khóa truyện.
+- [ ] Chốt điều kiện eligibility bằng **tên cột thật**, không mô tả chung chung: `book.audit_status = 1` (đã duyệt) và `book.status = 1` (đã lên kệ), `book.crawl_source_id`/`crawl_book_id` để loại nội dung crawl, phân loại độ tuổi qua `AgeRatingUtil` ở tầng service và cờ khóa truyện. Lưu ý `book.book_status` là trạng thái sáng tác (0 đang ra, 1 hoàn thành) và **không** dùng cho eligibility.
 - [ ] Chốt việc truyện do `novel-crawl` nhập về có được nhận phiếu và nhận thưởng hay không. Trả tiền cho nội dung crawl là rủi ro pháp lý; mặc định phải là **không đủ điều kiện** cho tới khi có quyết định ngược lại.
 - [ ] Chốt xử lý thuế cho tiền thưởng: `author.income.tax-rate`, `share-proportion`, `exchange-proportion` và `author.payout.vnd-per-xu` hiện áp cho doanh thu bản quyền; phải nêu rõ tiền thưởng có đi qua cùng công thức hay không.
 - [ ] Xác định các hành vi gian lận: request lặp, nhiều tài khoản, giả lập đọc, spam bình luận, tự vote và thông đồng.
@@ -361,7 +437,7 @@ Khuôn mẫu test tích hợp hiện có (`ReaderStateMySqlIntegrationTest`, `Re
 
 **Xác minh:** không còn quyết định kinh tế hoặc điều kiện eligibility được hard-code ngầm trong service.
 
-### 2. Xây nền dữ liệu bất biến cho Nguyệt Phiếu
+### 2. Xây nền dữ liệu bất biến cho Ngọn Đuốc
 
 - [ ] Tạo migration mới cho `monthly_ticket_account`, `monthly_ticket_lot`, `monthly_ticket_ledger`, `monthly_ticket_lot_allocation`, `monthly_ticket_vote` và `gamification_event`.
 - [ ] Thêm unique `idempotency_key`, source event, FK, index, check constraint, audit time và optimistic `version`.
@@ -376,12 +452,12 @@ Khuôn mẫu test tích hợp hiện có (`ReaderStateMySqlIntegrationTest`, `Re
 - [ ] Tạo `quest_definition`, `quest_campaign`, `quest_reward`, `user_quest_progress`, `quest_claim`, `user_exp_ledger`, `gamification_profile`, `level_rule` và `realm_catalog`.
 - [ ] Chuẩn hóa event từ đăng nhập, đọc, bình luận đã duyệt, mua chương và thanh toán thành source event có idempotency.
 - [ ] Tính ngày và streak theo `Asia/Ho_Chi_Minh`; dùng Clock có thể thay thế trong test.
-- [ ] Đọc 30 phút phải dựa trên heartbeat phía server, foreground signal, giới hạn tích lũy và kiểm tra bất thường.
+- [x] Đọc 30 phút dựa trên endpoint xác thực riêng, foreground/focus signal phía client, elapsed time và trần tích lũy phía server, receipt bất biến cùng kiểm tra request quá nhanh/quá trễ.
 - [ ] Tính level từ EXP ledger theo rule version; đổi realm có audit và cooldown.
 
 **Xác minh:** xử lý lại cùng source event không tăng tiến độ hoặc phát thưởng lần hai; thay đổi rule không âm thầm sửa lịch sử đã chốt.
 
-### 4. Triển khai giao dịch bỏ Nguyệt Phiếu
+### 4. Triển khai giao dịch bỏ phiếu bằng Ngọn Đuốc
 
 - [ ] Trong cùng transaction: xác thực user, kiểm tra kỳ/eligibility/limit, lock account và lot, tiêu FIFO, ghi ledger, ghi vote và cập nhật projection.
 - [ ] Bắt buộc idempotency key và request hash; cùng key/cùng payload trả kết quả cũ, cùng key/khác payload bị từ chối.
@@ -390,7 +466,7 @@ Khuôn mẫu test tích hợp hiện có (`ReaderStateMySqlIntegrationTest`, `Re
 - [ ] Đặt giới hạn cứng ở tầng database (unique key hoặc counter row trong cùng transaction) làm nguồn sự thật, vì `RateLimitAspect` tụt về bộ đếm in-memory theo từng instance khi Redis lỗi. Redis chỉ là bộ lọc nhanh, không phải hàng rào cuối.
 - [ ] Xử lý refund/chargeback bằng reversal; thu hồi lot chưa dùng hoặc ghi trạng thái debt theo chính sách đã chốt.
 
-**Xác minh:** hai request đồng thời không thể tiêu vượt số dư; số phiếu hợp lệ luôn bằng lượng Nguyệt Phiếu đã tiêu tương ứng; tắt Redis không làm vỡ giới hạn ngày.
+**Xác minh:** hai request đồng thời không thể tiêu vượt số dư; số phiếu hợp lệ luôn bằng lượng Ngọn Đuốc đã tiêu tương ứng; tắt Redis không làm vỡ giới hạn ngày.
 
 ### 5. Xây state machine kỳ xếp hạng và chốt tháng
 
@@ -407,7 +483,7 @@ Khuôn mẫu test tích hợp hiện có (`ReaderStateMySqlIntegrationTest`, `Re
 Ràng buộc đã xác minh: `wallet_account` có `chk_wallet_available_balance` cấm số dư âm với mọi ví không phải `SYSTEM`, và `WalletLedgerServiceImpl.post()` chỉ cho phép trạng thái nợ với ví `READER_XU` qua cờ `allowReaderDebt`. Nếu ghi thẳng tiền thưởng vào `AUTHOR_REVENUE_XU` thì tác giả rút được ngay, và khi cần thu hồi, bút toán đảo sẽ ném `InsufficientWalletBalanceException` — **clawback trở thành bất khả thi**. Vì vậy tiền thưởng phải đi qua tài khoản clearing.
 
 - [ ] Tạo `reward_fund_campaign` và `author_reward_allocation` để snapshot ngân sách, cơ cấu giải, tỷ giá/chính sách và trạng thái duyệt.
-- [ ] Seed tài khoản hệ thống `REWARD_CLEARING` trong migration mới, theo đúng mẫu `PAYOUT_CLEARING` và `REFUND_CLEARING` của `20260717_wallet_ledger.sql`.
+- [ ] Seed tài khoản hệ thống `REWARD_CLEARING` trong migration mới, theo đúng mẫu `PAYOUT_CLEARING` của `20260717_wallet_ledger.sql`. Đây là biện pháp phòng vệ để truy vấn đối soát join được ngay sau khi deploy, không phải điều kiện tiên quyết: `ensureWallets()` vốn tự tạo ví hệ thống bằng `INSERT IGNORE` ở lần dùng đầu, và `REFUND_CLEARING` hiện chưa từng được seed bằng SQL.
 - [ ] Chỉ tính thưởng từ ranking `FINALIZED`; dùng khóa `MONTHLY_AUTHOR_REWARD:<period>:<bookId>:<rank>`.
 - [ ] Mở rộng `WalletLedgerService` bằng `creditAuthorRewardPending(...)`: ghi `MONTHLY_AUTHOR_REWARD` từ `SYSTEM_ISSUANCE` sang `REWARD_CLEARING`. Ở bước này tiền thưởng **chưa** nằm trong số dư rút được của tác giả.
 - [ ] Mở rộng `WalletLedgerService` bằng `releaseAuthorReward(...)`: sau cửa sổ khiếu nại đã cấu hình, `AuthorRewardReleaseSchedule` chuyển từ `REWARD_CLEARING` sang `AUTHOR_REVENUE_XU` với khóa `MONTHLY_AUTHOR_REWARD_RELEASE:<period>:<bookId>:<rank>`.
@@ -432,10 +508,13 @@ Ràng buộc đã xác minh: `wallet_account` có `chk_wallet_available_balance`
 
 ### 8. Triển khai UI desktop/mobile và bốn theme
 
-- [ ] User center hiển thị EXP, level, realm, điểm danh, quest, lịch sử và hạn dùng Nguyệt Phiếu.
-- [ ] Book detail hiển thị tổng phiếu, số dư, hạn dùng và hộp xác nhận bỏ nhiều phiếu.
-- [ ] Trang chủ/ranking hiển thị kỳ, thời gian còn lại, quy tắc, trạng thái chốt và kết quả thưởng.
+- [ ] User center hiển thị EXP, level, realm, điểm danh, quest, lịch sử và hạn dùng Ngọn Đuốc.
+- [x] Book detail hiển thị tổng Đuốc của truyện, số dư của người đọc, lot sắp tắt và hộp xác nhận khi thắp nhiều Đuốc một lần.
+- [x] Trang ranking hiển thị kỳ hiện tại/lịch sử, trạng thái chốt, dữ liệu realtime/snapshot, số Đuốc và số độc giả.
+- [x] Trang chủ hiển thị Top 5 Đuốc, kỳ, trạng thái realtime/snapshot, mốc khóa sổ và thời gian còn lại.
+- [ ] Trang chủ hiển thị quy tắc và kết quả thưởng sau khi nội dung chính sách được chốt.
 - [ ] Tác giả xem thứ hạng, thưởng dự kiến/đã chốt; admin xem fraud và reconciliation.
+- [ ] Toàn bộ chuỗi hiển thị tuân thủ bảng quy ước đặt tên: danh từ "Ngọn Đuốc", dạng ngắn "Đuốc" cho tiêu đề cột và tab, động từ "thắp" cho hành động và "tắt" cho hết hạn.
 - [ ] Sửa template base trong `novel-front/src/main/resources`, rồi sửa song song các file mà từng theme ở `templates/<theme>/html` ghi đè; nghiệm thu bằng bốn bản build `-Dtheme.name` riêng, cả desktop và mobile.
 - [ ] Dùng i18n, design token, contrast đạt yêu cầu, `prefers-reduced-motion`; animation chỉ chạy sau commit thành công.
 - [ ] Ticker P2 chỉ dùng nickname đã kiểm duyệt, cho phép ẩn danh/opt-out và không phát PII.
@@ -474,17 +553,17 @@ Ràng buộc đã xác minh: `wallet_account` có `chk_wallet_available_balance`
 | P1 – Giá trị sản phẩm | Quest, check-in, EXP, realm, UI, ranking, quỹ thưởng và admin | Shadow ranking khớp nguồn; reward staging không trùng và ledger cân bằng |
 | P2 – Trải nghiệm nâng cao | Ticker, animation, badge/frame, social sharing và season đặc biệt | Accessibility, privacy và hiệu năng đạt trên bốn theme/mobile |
 
-Chính sách quy định Nguyệt Phiếu chỉ được cấp từ nhiệm vụ, điểm danh, thăng cấp hoặc khuyến mại — mà nhiệm vụ, điểm danh và thăng cấp đều thuộc P1. Nếu P0 không có đường cấp phiếu nào thì hệ thống bỏ phiếu ra mắt trong trạng thái không ai có phiếu, và các bất biến về tiêu FIFO, hết hạn cùng thu hồi không thể kiểm chứng bằng dữ liệu thật. Vì vậy **đường cấp thủ công/khuyến mại từ admin, có audit và idempotency, là hạng mục bắt buộc của P0**, không phải tùy chọn.
+Chính sách quy định Ngọn Đuốc chỉ được cấp từ nhiệm vụ, điểm danh, thăng cấp hoặc khuyến mại — mà nhiệm vụ, điểm danh và thăng cấp đều thuộc P1. Nếu P0 không có đường cấp phiếu nào thì hệ thống bỏ phiếu ra mắt trong trạng thái không ai có phiếu, và các bất biến về tiêu FIFO, hết hạn cùng thu hồi không thể kiểm chứng bằng dữ liệu thật. Vì vậy **đường cấp thủ công/khuyến mại từ admin, có audit và idempotency, là hạng mục bắt buộc của P0**, không phải tùy chọn.
 
 ## Hoàn tất khi
 
 - [ ] Không thể cấp, nhận, tiêu, hết hạn, bỏ phiếu hoặc trả thưởng trùng khi retry.
-- [ ] Mỗi vote truy ngược được tới ledger và các lot Nguyệt Phiếu đã tiêu.
+- [ ] Mỗi vote truy ngược được tới ledger và các lot Ngọn Đuốc đã tiêu.
 - [ ] Không có số dư âm ngoài trạng thái debt được chính sách cho phép và có đường xử lý rõ ràng.
 - [ ] Kết quả tháng xác định, tái tạo được và không đổi sau `FINALIZED` nếu không có reversal được audit.
 - [ ] Reward tác giả đi qua sổ cái Xu, KYC/payout hiện có và không cập nhật số dư trực tiếp.
 - [ ] Thưởng đã chốt nằm ở `REWARD_CLEARING` cho tới hết cửa sổ khiếu nại, và clawback trong cửa sổ đó không đẩy ví tác giả xuống âm.
-- [ ] Lot Nguyệt Phiếu quá hạn được đóng bằng job có audit; tổng hết hạn khớp với đối soát.
+- [ ] Lot Ngọn Đuốc quá hạn được đóng bằng job có audit; tổng hết hạn khớp với đối soát.
 - [ ] Event giả lập, tự vote, spam và rate abuse cơ bản bị chặn hoặc đưa vào REVIEW, kể cả khi Redis không khả dụng.
 - [ ] Desktop/mobile hoạt động trên cả bốn bản build theme, i18n đầy đủ, accessibility/reduced-motion đạt yêu cầu.
 - [ ] Migration, Maven test, MySQL integration, test đồng thời non-transactional, Docker smoke, JS parse và `git diff --check` đều đạt.
@@ -492,7 +571,7 @@ Chính sách quy định Nguyệt Phiếu chỉ được cấp từ nhiệm vụ
 
 ## Quyết định còn mở trước khi triển khai
 
-1. Nguyệt Phiếu chỉ nhận từ hoạt động hay được mua/cấp theo nạp Xu; chargeback có tạo debt khi phiếu đã được tiêu không?
+1. Ngọn Đuốc chỉ nhận từ hoạt động hay được mua/cấp theo nạp Xu; chargeback có tạo debt khi phiếu đã được tiêu không?
 2. Quỹ thưởng là ngân sách Xu cố định, VND cố định hay phần trăm doanh thu; một tác giả có được nhận nhiều giải trong một kỳ không?
 3. Cảnh giới chỉ là danh xưng hay ảnh hưởng phần thưởng/quyền lợi; cooldown đổi cảnh giới cụ thể là bao lâu?
 4. Tiền thưởng có chịu cùng công thức thuế và tỷ giá với doanh thu bản quyền (`author.income.tax-rate`, `share-proportion`, `exchange-proportion`, `author.payout.vnd-per-xu`) hay tách riêng? Cửa sổ khiếu nại trước khi release là bao nhiêu ngày?

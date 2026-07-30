@@ -12,6 +12,7 @@ import com.java2nb.novel.mapper.ReaderStateMapper;
 import com.java2nb.novel.service.BookService;
 import com.java2nb.novel.service.UserService;
 import com.java2nb.novel.service.chapter.ChapterCommercialPolicyService;
+import com.java2nb.novel.service.entitlement.ReadingTicketService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,7 @@ public class ReaderStateServiceImpl implements ReaderStateService {
     private final UserService userService;
     private final BookService bookService;
     private final ChapterCommercialPolicyService chapterCommercialPolicyService;
+    private final ReadingTicketService readingTicketService;
 
     @Override
     @Transactional(readOnly = true)
@@ -94,7 +96,8 @@ public class ReaderStateServiceImpl implements ReaderStateService {
         }
     }
 
-    private void requireReadableChapter(long userId, long bookId, long bookIndexId) {
+    @Override
+    public void requireReadableChapter(long userId, long bookId, long bookIndexId) {
         Book book = bookService.queryBookDetail(bookId);
         ResponseStatus denial = AgeRatingUtil.publicBookDenialReason(book, userService.userInfo(userId));
         if (denial != null) {
@@ -107,8 +110,11 @@ public class ReaderStateServiceImpl implements ReaderStateService {
             throw new BusinessException(denial);
         }
 
+        Date now = new Date();
         boolean purchased = userService.queryIsBuyBookIndex(userId, bookIndexId);
-        if (chapterCommercialPolicyService.evaluate(chapter, purchased, new Date()).purchaseRequired()) {
+        boolean entitled = !purchased
+            && readingTicketService.hasActiveChapterEntitlement(userId, bookIndexId, now);
+        if (chapterCommercialPolicyService.evaluate(chapter, purchased || entitled, now).purchaseRequired()) {
             throw new BusinessException(ResponseStatus.BOOK_NOT_AVAILABLE);
         }
     }

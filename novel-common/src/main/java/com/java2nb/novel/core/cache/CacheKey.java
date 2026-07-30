@@ -23,7 +23,7 @@ public interface CacheKey {
     /**
      * Liên kết bạn bè trang chủ
      * */
-    String INDEX_LINK_KEY = "indexLinkKey";
+    String INDEX_LINK_KEY = "indexLinkKey:vi-v2";
 
     /**
      * Bảng tác phẩm mới trang chủ

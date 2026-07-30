@@ -83,7 +83,9 @@ class UserAgeVerificationServiceTest {
             mock(WalletLedgerService.class),
             mock(AuthorIncomeProperties.class),
             mock(BookIndexMapper.class),
-            mock(ChapterCommercialPolicyService.class)
+            mock(ChapterCommercialPolicyService.class),
+            mock(com.java2nb.novel.service.entitlement.ReadingTicketService.class),
+            mock(com.java2nb.novel.service.gamification.GamificationEventService.class)
         );
     }
 }

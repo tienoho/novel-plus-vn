@@ -13,6 +13,8 @@
 
 
     <div th:include="common/css :: css"></div>
+    <link href="/css/reading-ticket.css" rel="stylesheet"/>
+    <script src="/javascript/reading-ticket.js?v=2" defer></script>
 
 
     <script type="text/javascript">
@@ -197,6 +199,7 @@
        th:if="${offlineEligible}"/>
 
 <input type="hidden" id="readerContentAvailable" value="true" th:if="${!needBuy}"/>
+<input type="hidden" id="readingHeartbeatEnabled" th:value="${readingHeartbeatEnabled}"/>
 
 <script>
     var token = localStorage.getItem("token");
@@ -250,7 +253,7 @@
 </form>-->
 <div th:replace="common/js :: js">
 </div>
-<script src="/javascript/reader-tools.js?v=6"></script>
+<script src="/javascript/reader-tools.js?v=7"></script>
 <div id="chaptercontent" class="Readarea ReadAjax_content screen_container"
      style="color: rgb(0, 0, 0); font-size: 25px;" th:if="${!needBuy}">
     <p style="width:100%;text-alight:center; overflow: auto;-webkit-overflow-scrolling:touch;" >&nbsp;&nbsp;&nbsp;&nbsp;
@@ -262,6 +265,7 @@
     <h5 th:text="#{reader.vip.required}">Đây là chương VIP. Bạn cần mua chương để tiếp tục đọc.</h5>
     <span th:text="#{book.price}+'：'">Giá:</span><span style="color: red" th:text="${bookIndex.bookPrice}+' '+#{payment.currency}+' ('+#{reader.vip.rate}+')'"></span><br/>
     <a href="javascript:buyBookIndex()" type="button" class="layui-btn layui-btn-sm layui-btn-radius" th:text="#{book.buy}">Mua chương</a>
+    <div th:replace="common/reading_ticket_unlock :: unlock"></div>
 
 </div>
 <div class="indexDiv" style="height: 42px;line-height: 42px;text-align:center;background: #f2f2f2">

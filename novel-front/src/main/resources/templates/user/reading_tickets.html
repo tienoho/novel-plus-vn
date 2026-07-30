@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head th:replace="common/header :: common_head(~{::title},~{},~{::link},~{})">
+    <title th:text="#{reader.ticket.page.title}+'_'+${application.website.name}">Vé đọc và thuê bao</title>
+    <link rel="stylesheet" href="/css/user.css"/>
+    <link rel="stylesheet" href="/css/reading-ticket.css"/>
+</head>
+<body>
+<div th:replace="common/top :: top('')"></div>
+<div class="main box_center cf">
+    <div class="userBox cf">
+        <nav class="my_l" th:aria-label="#{user.center}">
+            <ul class="log_list">
+                <li><a class="link_1" href="/user/userinfo.html" th:text="#{user.center}">Tài khoản của tôi</a></li>
+                <li><a class="link_4" href="/user/quests.html" th:text="#{gamification.page.nav}">Hành trình đọc</a></li>
+                <li><a class="link_4 on" href="/user/reading_tickets.html" th:text="#{reader.ticket.page.nav}">Vé đọc</a></li>
+                <li><a class="link_4" href="/user/gift_codes.html" th:text="#{gift.page.nav}">Mã quà</a></li>
+                <li><a class="link_4" href="/user/favorites.html" th:text="#{user.bookshelf}">Tủ sách</a></li>
+                <li><a class="link_6" href="/user/comment.html" th:text="#{user.comments}">Bình luận của tôi</a></li>
+                <li><a class="link_7" href="/user/feedback_list.html" th:text="#{user.feedback}">Phản hồi của tôi</a></li>
+                <li><a class="link_8" href="/user/setup.html" th:text="#{user.settings}">Cài đặt tài khoản</a></li>
+            </ul>
+        </nav>
+        <main id="readingTicketAccountApp" class="my_r reading-ticket-shell"
+              data-account-endpoint="/user/reading-tickets"
+              data-ledger-endpoint="/user/reading-tickets/ledger"
+              data-lots-endpoint="/user/reading-tickets/lots"
+              data-plans-endpoint="/user/reading-subscriptions/plans"
+              data-current-endpoint="/user/reading-subscriptions/current"
+              data-checkout-endpoint="/user/reading-subscriptions/checkouts"
+              data-channels-endpoint="/pay/channels"
+              data-grants-endpoint="/user/reading-subscriptions/{id}/period-grants"
+              data-login-url="/user/login.html"
+              th:data-loading="#{reader.ticket.loading}"
+              th:data-load-failed="#{reader.ticket.loadFailed}"
+              th:data-unit="#{reader.ticket.unit}"
+              th:data-month-unit="#{reader.ticket.monthUnit}"
+              th:data-day-unit="#{reader.ticket.dayUnit}"
+              th:data-validity="#{reader.ticket.validity}"
+              th:data-checkout-unavailable="#{reader.ticket.checkoutUnavailable}"
+              th:data-price-unavailable="#{reader.ticket.priceUnavailable}"
+              th:data-pay-vnpay="#{reader.ticket.checkout.vnpay}"
+              th:data-pay-vietqr="#{reader.ticket.checkout.vietqr}"
+              th:data-checkout-creating="#{reader.ticket.checkout.creating}"
+              th:data-checkout-failed="#{reader.ticket.checkout.failed}"
+              th:data-checkout-uncertain="#{reader.ticket.checkout.uncertain}"
+              th:data-checkout-qr-ready="#{reader.ticket.checkout.qrReady}"
+              th:data-checkout-qr-alt="#{reader.ticket.checkout.qrAlt}"
+              th:data-plans-empty="#{reader.ticket.plans.empty}"
+              th:data-current-none="#{reader.ticket.current.none}"
+              th:data-current-status="#{reader.ticket.current.status}"
+              th:data-next-grant="#{reader.ticket.current.nextGrant}"
+              th:data-end-at="#{reader.ticket.current.endAt}"
+              th:data-status-active="#{reader.ticket.status.active}"
+              th:data-status-paused="#{reader.ticket.status.paused}"
+              th:data-status-cancelled="#{reader.ticket.status.cancelled}"
+              th:data-status-expired="#{reader.ticket.status.expired}"
+              th:data-grants-empty="#{reader.ticket.grants.empty}"
+              th:data-period="#{reader.ticket.grants.period}"
+              th:data-expires-at="#{reader.ticket.grants.expiresAt}"
+              th:data-ledger-empty="#{reader.ticket.ledger.empty}"
+              th:data-lots-empty="#{reader.ticket.lots.empty}">
+            <section class="reading-ticket-heading">
+                <h1 th:text="#{reader.ticket.page.title}">Vé đọc và thuê bao</h1>
+                <p th:text="#{reader.ticket.page.description}">Theo dõi số dư và quyền lợi đọc của bạn.</p>
+            </section>
+            <section class="reading-ticket-card reading-ticket-balance-card" aria-labelledby="readingTicketBalanceHeading">
+                <div>
+                    <h2 id="readingTicketBalanceHeading" th:text="#{reader.ticket.balance}">Số dư Vé đọc</h2>
+                    <p th:text="#{reader.ticket.balance.help}">Mỗi Vé đọc mở vĩnh viễn một chương.</p>
+                </div>
+                <div class="reading-ticket-balance"><span id="readingTicketBalance">–</span> <span th:text="#{reader.ticket.unit}">Vé đọc</span></div>
+            </section>
+            <p id="readingTicketAccountStatus" class="reading-ticket-status" role="status" aria-live="polite"></p>
+            <section class="reading-ticket-section" aria-labelledby="readingTicketCurrentHeading">
+                <h2 id="readingTicketCurrentHeading" th:text="#{reader.ticket.current.title}">Thuê bao hiện tại</h2>
+                <div id="readingTicketCurrent" class="reading-ticket-current"></div>
+            </section>
+            <section class="reading-ticket-section" aria-labelledby="readingTicketPlansHeading">
+                <h2 id="readingTicketPlansHeading" th:text="#{reader.ticket.plans.title}">Các gói quyền lợi</h2>
+                <div id="readingTicketPlans" class="reading-ticket-plans"></div>
+                <p id="readingTicketCheckoutStatus" class="reading-ticket-status" role="status" aria-live="polite" hidden></p>
+                <div id="readingTicketCheckoutQr" class="reading-ticket-checkout-qr"></div>
+            </section>
+            <section class="reading-ticket-section" aria-labelledby="readingTicketGrantsHeading">
+                <h2 id="readingTicketGrantsHeading" th:text="#{reader.ticket.grants.title}">Lịch sử cấp Vé theo kỳ</h2>
+                <div id="readingTicketGrants" class="reading-ticket-grants"></div>
+            </section>
+            <section class="reading-ticket-section" aria-labelledby="readingTicketLedgerHeading">
+                <h2 id="readingTicketLedgerHeading" th:text="#{reader.ticket.ledger.title}">Lịch sử giao dịch Vé đọc</h2>
+                <div id="readingTicketLedgerHistory" class="reading-ticket-ledger"></div>
+            </section>
+            <section class="reading-ticket-section" aria-labelledby="readingTicketLotsHeading">
+                <h2 id="readingTicketLotsHeading" th:text="#{reader.ticket.lots.title}">Lịch sử lô Vé đọc</h2>
+                <div id="readingTicketLotHistory" class="reading-ticket-lots"></div>
+            </section>
+        </main>
+    </div>
+</div>
+<div th:replace="common/footer :: footer"></div>
+<div th:replace="common/js :: js"></div>
+<script src="/javascript/reading-ticket.js?v=2" type="text/javascript"></script>
+</body>
+</html>

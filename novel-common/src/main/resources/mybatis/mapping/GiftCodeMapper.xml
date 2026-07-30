@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.java2nb.novel.mapper.GiftCodeMapper">
+    <select id="selectCampaigns"
+            resultType="com.java2nb.novel.service.gift.GiftCampaignRow">
+        SELECT id, campaign_code AS campaignCode, campaign_name AS campaignName,
+               reward_type AS rewardType, reward_amount AS rewardAmount,
+               ticket_validity_days AS ticketValidityDays, start_at AS startAt,
+               end_at AS endAt, max_redemptions AS maxRedemptions,
+               redeemed_count AS redeemedCount, max_per_user AS maxPerUser,
+               status, policy_version AS policyVersion, version
+        FROM gift_campaign ORDER BY id DESC
+    </select>
+    <select id="selectCampaignById"
+            resultType="com.java2nb.novel.service.gift.GiftCampaignRow">
+        SELECT id, campaign_code AS campaignCode, campaign_name AS campaignName,
+               reward_type AS rewardType, reward_amount AS rewardAmount,
+               ticket_validity_days AS ticketValidityDays, start_at AS startAt,
+               end_at AS endAt, max_redemptions AS maxRedemptions,
+               redeemed_count AS redeemedCount, max_per_user AS maxPerUser,
+               status, policy_version AS policyVersion, version
+        FROM gift_campaign WHERE id=#{campaignId} LIMIT 1
+    </select>
+    <select id="selectCampaignByCode"
+            resultType="com.java2nb.novel.service.gift.GiftCampaignRow">
+        SELECT id, campaign_code AS campaignCode, campaign_name AS campaignName,
+               reward_type AS rewardType, reward_amount AS rewardAmount,
+               ticket_validity_days AS ticketValidityDays, start_at AS startAt,
+               end_at AS endAt, max_redemptions AS maxRedemptions,
+               redeemed_count AS redeemedCount, max_per_user AS maxPerUser,
+               status, policy_version AS policyVersion, version
+        FROM gift_campaign WHERE campaign_code=#{campaignCode} LIMIT 1
+    </select>
+    <insert id="insertCampaign">
+        INSERT INTO gift_campaign
+            (campaign_code, campaign_name, reward_type, reward_amount,
+             ticket_validity_days, start_at, end_at, max_redemptions,
+             max_per_user, status, policy_version)
+        VALUES (#{command.campaignCode}, #{command.campaignName}, #{command.rewardType},
+                #{command.rewardAmount}, #{command.ticketValidityDays}, #{command.startAt},
+                #{command.endAt}, #{command.maxRedemptions}, #{command.maxPerUser},
+                'DRAFT', #{policyVersion})
+    </insert>
+    <update id="updateCampaignStatus">
+        UPDATE gift_campaign SET status=#{status}, version=version+1
+        WHERE id=#{campaignId} AND version=#{expectedVersion} AND status&lt;&gt;'CLOSED'
+    </update>
+    <insert id="insertCode">
+        INSERT INTO gift_code
+            (campaign_id, hmac_key_id, code_hash, code_hint, max_redemptions)
+        VALUES (#{campaignId}, #{hmacKeyId}, #{codeHash}, #{codeHint}, #{maxRedemptions})
+    </insert>
+    <select id="lockClaimByHashes"
+            resultType="com.java2nb.novel.service.gift.GiftCodeClaimRow">
+        SELECT code.id AS codeId, code.campaign_id AS campaignId, code.status AS codeStatus,
+               campaign.status AS campaignStatus, campaign.reward_type AS rewardType,
+               campaign.reward_amount AS rewardAmount,
+               campaign.ticket_validity_days AS ticketValidityDays,
+               campaign.start_at AS startAt, campaign.end_at AS endAt,
+               code.max_redemptions AS codeMaxRedemptions,
+               code.redeemed_count AS codeRedeemedCount,
+               campaign.max_redemptions AS campaignMaxRedemptions,
+               campaign.redeemed_count AS campaignRedeemedCount,
+               campaign.max_per_user AS maxPerUser
+        FROM gift_code code
+        INNER JOIN gift_campaign campaign ON campaign.id=code.campaign_id
+        WHERE
+        <foreach collection="candidates" item="candidate" open="(" close=")" separator=" OR ">
+            (code.hmac_key_id=#{candidate.keyId} AND code.code_hash=#{candidate.codeHash})
+        </foreach>
+        LIMIT 1 FOR UPDATE
+    </select>
+    <select id="countCodesByHashes" resultType="int">
+        SELECT COUNT(*) FROM gift_code code WHERE
+        <foreach collection="candidates" item="candidate" open="(" close=")" separator=" OR ">
+            (code.hmac_key_id=#{candidate.keyId} AND code.code_hash=#{candidate.codeHash})
+        </foreach>
+    </select>
+    <select id="selectRedemptionByCodeUser"
+            resultType="com.java2nb.novel.service.gift.GiftRedemptionRow">
+        SELECT id, campaign_id AS campaignId, code_id AS codeId, user_id AS userId,
+               reward_type AS rewardType, reward_amount AS rewardAmount,
+               client_request_id AS clientRequestId, redeemed_at AS redeemedAt
+        FROM gift_redemption WHERE code_id=#{codeId} AND user_id=#{userId} LIMIT 1
+    </select>
+    <select id="selectRedemptionByCodeUserCurrent" flushCache="true" useCache="false"
+            resultType="com.java2nb.novel.service.gift.GiftRedemptionRow">
+        SELECT id, campaign_id AS campaignId, code_id AS codeId, user_id AS userId,
+               reward_type AS rewardType, reward_amount AS rewardAmount,
+               client_request_id AS clientRequestId, redeemed_at AS redeemedAt
+        FROM gift_redemption WHERE code_id=#{codeId} AND user_id=#{userId} LIMIT 1 FOR UPDATE
+    </select>
+    <select id="selectRedemptionByUserRequestCurrent" flushCache="true" useCache="false"
+            resultType="com.java2nb.novel.service.gift.GiftRedemptionRow">
+        SELECT id, campaign_id AS campaignId, code_id AS codeId, user_id AS userId,
+               reward_type AS rewardType, reward_amount AS rewardAmount,
+               client_request_id AS clientRequestId, redeemed_at AS redeemedAt
+        FROM gift_redemption
+        WHERE user_id=#{userId} AND client_request_id=#{clientRequestId}
+        LIMIT 1 FOR UPDATE
+    </select>
+    <select id="countCampaignUserRedemptions" resultType="int">
+        SELECT COUNT(*) FROM gift_redemption
+        WHERE campaign_id=#{campaignId} AND user_id=#{userId}
+    </select>
+    <insert id="insertWalletRedemption">
+        INSERT INTO gift_redemption
+            (campaign_id, code_id, user_id, reward_type, reward_amount,
+             reward_ledger_type, reward_ledger_id, idempotency_key,
+             client_request_id, redeemed_at, policy_version)
+        SELECT #{row.campaignId}, #{row.codeId}, #{row.userId}, #{row.rewardType},
+               #{row.rewardAmount}, 'WALLET_XU', id, #{idempotencyKey},
+               #{row.clientRequestId}, #{row.redeemedAt}, #{row.policyVersion}
+        FROM ledger_transaction WHERE idempotency_key=#{idempotencyKey} LIMIT 1
+    </insert>
+    <insert id="insertTicketRedemption">
+        INSERT INTO gift_redemption
+            (campaign_id, code_id, user_id, reward_type, reward_amount,
+             reward_ledger_type, reward_ledger_id, idempotency_key,
+             client_request_id, redeemed_at, policy_version)
+        SELECT #{row.campaignId}, #{row.codeId}, #{row.userId}, #{row.rewardType},
+               #{row.rewardAmount}, 'READING_TICKET', id, #{idempotencyKey},
+               #{row.clientRequestId}, #{row.redeemedAt}, #{row.policyVersion}
+        FROM reading_ticket_ledger WHERE idempotency_key=#{idempotencyKey} LIMIT 1
+    </insert>
+    <update id="incrementCodeRedemption">
+        UPDATE gift_code
+        SET redeemed_count=redeemed_count+1,
+            status=CASE WHEN redeemed_count+1&gt;=#{maxRedemptions}
+                        THEN 'EXHAUSTED' ELSE status END,
+            version=version+1
+        WHERE id=#{codeId} AND status='ACTIVE' AND redeemed_count&lt;#{maxRedemptions}
+    </update>
+    <update id="incrementCampaignRedemption">
+        UPDATE gift_campaign
+        SET redeemed_count=redeemed_count+1, version=version+1
+        WHERE id=#{campaignId} AND status='ACTIVE'
+          AND redeemed_count&lt;#{maxRedemptions}
+    </update>
+    <select id="countCodesByCampaign" resultType="long">
+        SELECT COUNT(*) FROM gift_code WHERE campaign_id=#{campaignId}
+    </select>
+    <select id="selectCodesByCampaign"
+            resultType="com.java2nb.novel.service.gift.GiftCodeRow">
+        SELECT id, campaign_id AS campaignId, code_hint AS codeHint,
+               max_redemptions AS maxRedemptions, redeemed_count AS redeemedCount,
+               status, version, create_time AS createTime
+        FROM gift_code
+        WHERE campaign_id=#{campaignId}
+        ORDER BY id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+    <select id="selectCodeById" flushCache="true" useCache="false"
+            resultType="com.java2nb.novel.service.gift.GiftCodeRow">
+        SELECT id, campaign_id AS campaignId, code_hint AS codeHint,
+               max_redemptions AS maxRedemptions, redeemed_count AS redeemedCount,
+               status, version, create_time AS createTime
+        FROM gift_code WHERE id=#{codeId} LIMIT 1
+    </select>
+    <update id="revokeUnusedCode">
+        UPDATE gift_code
+        SET status='REVOKED', version=version+1
+        WHERE id=#{codeId} AND version=#{expectedVersion}
+          AND status='ACTIVE' AND redeemed_count=0
+    </update>
+    <sql id="redemptionHistoryColumns">
+        redemption.id,
+        redemption.campaign_id AS campaignId,
+        campaign.campaign_code AS campaignCode,
+        campaign.campaign_name AS campaignName,
+        redemption.code_id AS codeId,
+        code.code_hint AS codeHint,
+        redemption.user_id AS userId,
+        redemption.reward_type AS rewardType,
+        redemption.reward_amount AS rewardAmount,
+        redemption.redeemed_at AS redeemedAt
+    </sql>
+    <select id="countRedemptionsByUser" resultType="long">
+        SELECT COUNT(*) FROM gift_redemption WHERE user_id=#{userId}
+    </select>
+    <select id="selectRedemptionsByUser"
+            resultType="com.java2nb.novel.service.gift.GiftRedemptionHistoryRow">
+        SELECT <include refid="redemptionHistoryColumns"/>
+        FROM gift_redemption redemption
+        INNER JOIN gift_campaign campaign ON campaign.id=redemption.campaign_id
+        INNER JOIN gift_code code ON code.id=redemption.code_id
+        WHERE redemption.user_id=#{userId}
+        ORDER BY redemption.id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+    <select id="countRedemptionsByCampaign" resultType="long">
+        SELECT COUNT(*) FROM gift_redemption WHERE campaign_id=#{campaignId}
+    </select>
+    <select id="selectRedemptionsByCampaign"
+            resultType="com.java2nb.novel.service.gift.GiftRedemptionHistoryRow">
+        SELECT <include refid="redemptionHistoryColumns"/>
+        FROM gift_redemption redemption
+        INNER JOIN gift_campaign campaign ON campaign.id=redemption.campaign_id
+        INNER JOIN gift_code code ON code.id=redemption.code_id
+        WHERE redemption.campaign_id=#{campaignId}
+        ORDER BY redemption.id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+</mapper>

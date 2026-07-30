@@ -9,20 +9,36 @@ on:
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
+    env:
+      MYSQL_DATABASE: novel_plus
+      MYSQL_USER: novel
+      MYSQL_HOST_PORT: '3307'
+      MYSQL_ROOT_PASSWORD: release-ci-root-password
+      MYSQL_APP_PASSWORD: release-ci-app-password
+      REDIS_PASSWORD: release-ci-redis-password
+      JWT_SECRET: release-ci-jwt-secret-at-least-32-characters
+      CACHE_MANAGER_PASSWORD: release-ci-cache-password
+      CRAWLER_ADMIN_PASSWORD: release-ci-crawler-password
+      MAVEN_CMD: mvn
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '21'
           # Có thể chọn bản phân phối khác; mặc định dùng Temurin.
           distribution: 'temurin'
+          cache: maven
+
+      - name: Verify gamification MySQL invariants
+        shell: pwsh
+        run: ./scripts/verify-gamification.ps1 -StopAfter
 
       - name: Build project with Maven
-        run: mvn clean install -DskipTests=true -Pcentral-repo
+        run: mvn clean install -Pcentral-repo
 
       - name: Create Release
         id: create_release

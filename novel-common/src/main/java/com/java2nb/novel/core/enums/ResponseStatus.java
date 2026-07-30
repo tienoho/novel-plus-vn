@@ -49,6 +49,7 @@ public enum ResponseStatus implements IResultCode {
     AUTHOR_COLLABORATION_VERSION_CONFLICT(4012, "author.collaboration.versionConflict"),
     AUTHOR_AI_INVALID_REQUEST(4013, "author.ai.invalidRequest"),
     AUTHOR_AI_UNAVAILABLE(4014, "author.ai.unavailable"),
+    AUTHOR_VOUCHER_NOT_FOUND(4015, "author.finance.voucherNotFound"),
 
     /**
      * Lỗi liên quan đến tác phẩm
@@ -65,6 +66,36 @@ public enum ResponseStatus implements IResultCode {
     READER_ANNOTATION_NOT_FOUND(6002, "error.reader.annotationNotFound"),
     READER_ANNOTATION_VERSION_CONFLICT(6003, "error.reader.annotationConflict"),
     READER_ANNOTATION_INVALID(6004, "error.reader.annotationInvalid"),
+
+    /**
+     * Lỗi gamification và Ngọn Đuốc.
+     */
+    GAMIFICATION_DISABLED(7001, "gamification.disabled"),
+    GAMIFICATION_SEASON_UNAVAILABLE(7002, "gamification.season.unavailable"),
+    GAMIFICATION_TICKET_INSUFFICIENT(7003, "gamification.ticket.insufficient"),
+    GAMIFICATION_VOTE_DAILY_LIMIT(7004, "gamification.vote.dailyLimit"),
+    GAMIFICATION_VOTE_BOOK_LIMIT(7005, "gamification.vote.bookLimit"),
+    GAMIFICATION_BOOK_INELIGIBLE(7006, "gamification.book.ineligible"),
+    GAMIFICATION_IDEMPOTENCY_CONFLICT(7007, "gamification.idempotency.conflict"),
+    GAMIFICATION_ACCOUNT_UNAVAILABLE(7008, "gamification.account.unavailable"),
+    GAMIFICATION_PROFILE_VERSION_CONFLICT(7009, "gamification.profile.versionConflict"),
+    GAMIFICATION_REALM_INVALID(7010, "gamification.realm.invalid"),
+    GAMIFICATION_REALM_LEVEL_REQUIRED(7011, "gamification.realm.levelRequired"),
+    GAMIFICATION_REALM_COOLDOWN(7012, "gamification.realm.cooldown"),
+    GAMIFICATION_QUEST_NOT_FOUND(7013, "gamification.quest.notFound"),
+    GAMIFICATION_QUEST_NOT_COMPLETED(7014, "gamification.quest.notCompleted"),
+    GAMIFICATION_QUEST_REWARD_UNAVAILABLE(7015, "gamification.quest.rewardUnavailable"),
+    GAMIFICATION_READING_HEARTBEAT_INVALID(7016, "gamification.reading.heartbeatInvalid"),
+
+    /** Lỗi Vé đọc và quyền đọc chương. */
+    READING_TICKET_DISABLED(7101, "reader.ticket.disabled"),
+    READING_TICKET_INSUFFICIENT(7102, "reader.ticket.insufficient"),
+    READING_SUBSCRIPTION_CHECKOUT_UNAVAILABLE(7110, "reader.subscription.checkout.unavailable"),
+    READING_SUBSCRIPTION_PURCHASE_CONFLICT(7111, "reader.subscription.checkout.conflict"),
+
+    /** Lỗi mã quà. */
+    GIFT_CODE_DISABLED(7201, "gift.code.disabled"),
+    GIFT_CODE_REJECTED(7202, "gift.code.rejected"),
 
     /**
      * Lỗi liên quan đến công cụ tìm kiếm

@@ -17,6 +17,9 @@ import com.java2nb.novel.common.tax.VatTaxResult;
 import com.java2nb.novel.core.exception.BusinessException;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.Signature;
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -143,7 +146,7 @@ public class Milestone56EmpiricalChallengeTest {
 
     @Test
     @DisplayName("Voucher Task 3: Checksum integrity and PDF export Sha256 format")
-    public void testVoucherChecksumIntegrity() {
+    public void testVoucherChecksumIntegrity() throws Exception {
         FinancialVoucherDO voucher = FinancialVoucherDO.builder()
                 .voucherNo("INV-20260725-55555")
                 .voucherType("RECHARGE_RECEIPT")
@@ -160,12 +163,15 @@ public class Milestone56EmpiricalChallengeTest {
         when(voucherDao.selectByVoucherNo("INV-20260725-55555")).thenReturn(voucher);
 
         byte[] pdfBytes = voucherService.exportVoucherPdf("INV-20260725-55555");
-        String pdfStr = new String(pdfBytes, StandardCharsets.ISO_8859_1);
 
         String expectedPayload = "INV-20260725-55555|110000|100000";
         String expectedHash = computeSha256(expectedPayload);
 
-        assertTrue(pdfStr.contains("Checksum: " + expectedHash), "PDF output must include exact Sha256 checksum");
+        try (PDDocument document = Loader.loadPDF(pdfBytes)) {
+            String extractedText = new PDFTextStripper().getText(document);
+            assertTrue(extractedText.contains("Mã kiểm tra: " + expectedHash),
+                    "PDF output must include exact Sha256 checksum");
+        }
     }
 
     @Test
@@ -213,26 +219,34 @@ public class Milestone56EmpiricalChallengeTest {
     @DisplayName("TOTP Task 5: Code verification skew window (+/- 1 step window)")
     public void testTotpSkewWindowVerification() throws Exception {
         String secret = totpService.generateSecretKey();
-        long currentWindow = System.currentTimeMillis() / 1000L / 30L;
 
         Method generateMethod = TotpServiceImpl.class.getDeclaredMethod("generateTotpCode", String.class, long.class);
         generateMethod.setAccessible(true);
 
-        String currentCode = (String) generateMethod.invoke(totpService, secret, currentWindow);
-        String prevCode = (String) generateMethod.invoke(totpService, secret, currentWindow - 1);
-        String nextCode = (String) generateMethod.invoke(totpService, secret, currentWindow + 1);
+        assertTotpOffset(generateMethod, secret, 0, true, "Current window code must be valid");
+        assertTotpOffset(generateMethod, secret, -1, true,
+            "Window T-1 code must be valid (30s skew)");
+        assertTotpOffset(generateMethod, secret, 1, true,
+            "Window T+1 code must be valid (30s skew)");
+        assertTotpOffset(generateMethod, secret, -2, false,
+            "Window T-2 code must be rejected (>30s skew)");
+        assertTotpOffset(generateMethod, secret, 2, false,
+            "Window T+2 code must be rejected (>30s skew)");
+    }
 
-        String tooOldCode = (String) generateMethod.invoke(totpService, secret, currentWindow - 2);
-        String tooNewCode = (String) generateMethod.invoke(totpService, secret, currentWindow + 2);
-
-        // Skew window -1, 0, +1 must be accepted
-        assertTrue(totpService.verifyTotp(secret, currentCode), "Current window code must be valid");
-        assertTrue(totpService.verifyTotp(secret, prevCode), "Window T-1 code must be valid (30s skew)");
-        assertTrue(totpService.verifyTotp(secret, nextCode), "Window T+1 code must be valid (30s skew)");
-
-        // Skew window -2, +2 must be rejected
-        assertFalse(totpService.verifyTotp(secret, tooOldCode), "Window T-2 code must be rejected (>30s skew)");
-        assertFalse(totpService.verifyTotp(secret, tooNewCode), "Window T+2 code must be rejected (>30s skew)");
+    private void assertTotpOffset(Method generateMethod, String secret, int offset,
+                                  boolean expected, String message) throws Exception {
+        for (int attempt = 0; attempt < 3; attempt++) {
+            long windowBefore = System.currentTimeMillis() / 1000L / 30L;
+            String code = (String) generateMethod.invoke(totpService, secret, windowBefore + offset);
+            boolean actual = totpService.verifyTotp(secret, code);
+            long windowAfter = System.currentTimeMillis() / 1000L / 30L;
+            if (windowBefore == windowAfter) {
+                assertEquals(expected, actual, message);
+                return;
+            }
+        }
+        fail("Không thể kiểm tra TOTP trong cùng một cửa sổ thời gian ổn định");
     }
 
     // ==========================================

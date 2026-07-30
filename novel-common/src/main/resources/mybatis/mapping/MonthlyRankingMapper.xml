@@ -1,0 +1,546 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.java2nb.novel.mapper.MonthlyRankingMapper">
+
+    <select id="selectSeasonById" resultType="com.java2nb.novel.service.gamification.MonthlySeasonRow">
+        SELECT id,
+               period_code    AS periodCode,
+               season_type    AS seasonType,
+               zone_id        AS zoneId,
+               start_at       AS startAt,
+               end_at         AS endAt,
+               vote_cutoff_at AS voteCutoffAt,
+               status,
+               policy_version AS policyVersion,
+               snapshot_id    AS snapshotId,
+               closing_at     AS closingAt,
+               review_at      AS reviewAt,
+               finalized_at   AS finalizedAt,
+               finalized_by   AS finalizedBy,
+               version
+        FROM monthly_ticket_season
+        WHERE id = #{seasonId}
+    </select>
+
+    <insert id="insertRegularSeasonIgnore">
+        INSERT IGNORE INTO monthly_ticket_season
+            (period_code, season_type, zone_id, start_at, end_at, vote_cutoff_at,
+             status, policy_version)
+        VALUES (#{periodCode}, 'REGULAR', #{zoneId}, #{startAt}, #{endAt}, #{voteCutoffAt},
+                'OPEN', #{policyVersion})
+    </insert>
+
+    <select id="selectSeasonByPeriod"
+            resultType="com.java2nb.novel.service.gamification.MonthlySeasonRow">
+        SELECT id,
+               period_code    AS periodCode,
+               season_type    AS seasonType,
+               zone_id        AS zoneId,
+               start_at       AS startAt,
+               end_at         AS endAt,
+               vote_cutoff_at AS voteCutoffAt,
+               status,
+               policy_version AS policyVersion,
+               snapshot_id    AS snapshotId,
+               closing_at     AS closingAt,
+               review_at      AS reviewAt,
+               finalized_at   AS finalizedAt,
+               finalized_by   AS finalizedBy,
+               version
+        FROM monthly_ticket_season
+        WHERE period_code = #{periodCode}
+        LIMIT 1
+    </select>
+
+    <select id="selectSeasonAt"
+            resultType="com.java2nb.novel.service.gamification.MonthlySeasonRow">
+        SELECT id,
+               period_code    AS periodCode,
+               season_type    AS seasonType,
+               zone_id        AS zoneId,
+               start_at       AS startAt,
+               end_at         AS endAt,
+               vote_cutoff_at AS voteCutoffAt,
+               status,
+               policy_version AS policyVersion,
+               snapshot_id    AS snapshotId,
+               closing_at     AS closingAt,
+               review_at      AS reviewAt,
+               finalized_at   AS finalizedAt,
+               finalized_by   AS finalizedBy,
+               version
+        FROM monthly_ticket_season
+        WHERE season_type = 'REGULAR'
+          AND start_at &lt;= #{at}
+          AND end_at &gt; #{at}
+        ORDER BY start_at DESC
+        LIMIT 1
+    </select>
+
+    <select id="selectLatestSeason"
+            resultType="com.java2nb.novel.service.gamification.MonthlySeasonRow">
+        SELECT id,
+               period_code    AS periodCode,
+               season_type    AS seasonType,
+               zone_id        AS zoneId,
+               start_at       AS startAt,
+               end_at         AS endAt,
+               vote_cutoff_at AS voteCutoffAt,
+               status,
+               policy_version AS policyVersion,
+               snapshot_id    AS snapshotId,
+               closing_at     AS closingAt,
+               review_at      AS reviewAt,
+               finalized_at   AS finalizedAt,
+               finalized_by   AS finalizedBy,
+               version
+        FROM monthly_ticket_season
+        WHERE season_type = 'REGULAR'
+        ORDER BY start_at DESC
+        LIMIT 1
+    </select>
+
+    <select id="selectSeasonsReadyToClose"
+            resultType="com.java2nb.novel.service.gamification.MonthlySeasonRow">
+        SELECT id,
+               period_code    AS periodCode,
+               season_type    AS seasonType,
+               zone_id        AS zoneId,
+               start_at       AS startAt,
+               end_at         AS endAt,
+               vote_cutoff_at AS voteCutoffAt,
+               status,
+               policy_version AS policyVersion,
+               snapshot_id    AS snapshotId,
+               closing_at     AS closingAt,
+               review_at      AS reviewAt,
+               finalized_at   AS finalizedAt,
+               finalized_by   AS finalizedBy,
+               version
+        FROM monthly_ticket_season
+        WHERE status = 'OPEN'
+          AND vote_cutoff_at &lt;= #{at}
+        ORDER BY vote_cutoff_at ASC, id ASC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectClosingSeasons"
+            resultType="com.java2nb.novel.service.gamification.MonthlySeasonRow">
+        SELECT id,
+               period_code    AS periodCode,
+               season_type    AS seasonType,
+               zone_id        AS zoneId,
+               start_at       AS startAt,
+               end_at         AS endAt,
+               vote_cutoff_at AS voteCutoffAt,
+               status,
+               policy_version AS policyVersion,
+               snapshot_id    AS snapshotId,
+               closing_at     AS closingAt,
+               review_at      AS reviewAt,
+               finalized_at   AS finalizedAt,
+               finalized_by   AS finalizedBy,
+               version
+        FROM monthly_ticket_season
+        WHERE status = 'CLOSING'
+        ORDER BY closing_at ASC, id ASC
+        LIMIT #{limit}
+    </select>
+
+    <update id="claimSeasonClosing">
+        UPDATE monthly_ticket_season
+        SET status = 'CLOSING',
+            closing_at = #{closingAt},
+            version = version + 1
+        WHERE id = #{seasonId}
+          AND status = 'OPEN'
+          AND version = #{expectedVersion}
+          AND vote_cutoff_at &lt;= #{closingAt}
+    </update>
+
+    <insert id="insertInitialSnapshot">
+        INSERT IGNORE INTO monthly_rank_snapshot
+            (season_id, sequence_no, status, cutoff_at)
+        SELECT id, 1, 'BUILDING', #{cutoffAt}
+        FROM monthly_ticket_season
+        WHERE id = #{seasonId}
+          AND status = 'CLOSING'
+    </insert>
+
+    <sql id="snapshotColumns">
+        id,
+        season_id    AS seasonId,
+        sequence_no  AS sequenceNo,
+        status,
+        cutoff_at    AS cutoffAt,
+        entry_count  AS entryCount,
+        total_tickets AS totalTickets,
+        content_hash AS contentHash,
+        sealed_at    AS sealedAt
+    </sql>
+
+    <select id="selectInitialSnapshot"
+            resultType="com.java2nb.novel.service.gamification.MonthlyRankSnapshotRow">
+        SELECT <include refid="snapshotColumns"/>
+        FROM monthly_rank_snapshot
+        WHERE season_id = #{seasonId}
+          AND sequence_no = 1
+        LIMIT 1
+    </select>
+
+    <select id="selectInitialSnapshotById"
+            resultType="com.java2nb.novel.service.gamification.MonthlyRankSnapshotRow">
+        SELECT <include refid="snapshotColumns"/>
+        FROM monthly_rank_snapshot
+        WHERE id = #{snapshotId}
+          AND sequence_no = 1
+        LIMIT 1
+    </select>
+
+    <!-- Nguồn sự thật là vote, không dùng monthly_rank_counter khi chốt kết quả. -->
+    <select id="selectSourceRankingPage"
+            resultType="com.java2nb.novel.service.gamification.MonthlyRankRow">
+        SELECT aggregate.book_id AS bookId,
+               (
+                   SELECT latest.author_id
+                   FROM monthly_ticket_vote latest
+                   WHERE latest.season_id = #{seasonId}
+                     AND latest.book_id = aggregate.book_id
+                     AND latest.status = 'VALID'
+                     AND latest.create_time &lt; #{cutoffAt}
+                   ORDER BY latest.create_time DESC, latest.id DESC
+                   LIMIT 1
+               ) AS authorId,
+               aggregate.total_tickets AS totalTickets,
+               aggregate.distinct_voter_count AS distinctVoterCount,
+               aggregate.last_vote_at AS lastVoteAt
+        FROM (
+            SELECT vote.book_id,
+                   SUM(vote.ticket_count) AS total_tickets,
+                   COUNT(DISTINCT vote.user_id) AS distinct_voter_count,
+                   MAX(vote.create_time) AS last_vote_at
+            FROM monthly_ticket_vote vote
+            WHERE vote.season_id = #{seasonId}
+              AND vote.status = 'VALID'
+              AND vote.create_time &lt; #{cutoffAt}
+            GROUP BY vote.book_id
+        ) aggregate
+        ORDER BY aggregate.total_tickets DESC,
+                 aggregate.distinct_voter_count DESC,
+                 aggregate.last_vote_at ASC,
+                 aggregate.book_id ASC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <insert id="insertRankEntries">
+        INSERT INTO monthly_rank_entry
+            (snapshot_id, rank_no, book_id, author_id, total_tickets,
+             distinct_voter_count, last_vote_at)
+        VALUES
+        <foreach collection="rows" item="row" separator=",">
+            (#{row.snapshotId}, #{row.rankNo}, #{row.bookId}, #{row.authorId},
+             #{row.totalTickets}, #{row.distinctVoterCount}, #{row.lastVoteAt})
+        </foreach>
+    </insert>
+
+    <select id="selectSnapshotEntryPage"
+            resultType="com.java2nb.novel.service.gamification.MonthlyRankRow">
+        SELECT snapshot_id           AS snapshotId,
+               rank_no              AS rankNo,
+               book_id              AS bookId,
+               author_id            AS authorId,
+               total_tickets        AS totalTickets,
+               distinct_voter_count AS distinctVoterCount,
+               last_vote_at         AS lastVoteAt
+        FROM monthly_rank_entry
+        WHERE snapshot_id = #{snapshotId}
+          AND rank_no &gt; #{afterRank}
+        ORDER BY rank_no ASC
+        LIMIT #{limit}
+    </select>
+
+    <update id="sealSnapshot">
+        UPDATE monthly_rank_snapshot
+        SET status = 'SEALED',
+            entry_count = #{entryCount},
+            total_tickets = #{totalTickets},
+            content_hash = #{contentHash},
+            sealed_at = #{sealedAt}
+        WHERE id = #{snapshotId}
+          AND status = 'BUILDING'
+    </update>
+
+    <update id="claimSeasonReview">
+        UPDATE monthly_ticket_season
+        SET status = 'REVIEW',
+            snapshot_id = #{snapshotId},
+            review_at = #{reviewAt},
+            version = version + 1
+        WHERE id = #{seasonId}
+          AND status = 'CLOSING'
+          AND version = #{expectedVersion}
+          AND EXISTS (
+              SELECT 1
+              FROM monthly_rank_snapshot snapshot
+              WHERE snapshot.id = #{snapshotId}
+                AND snapshot.season_id = #{seasonId}
+                AND snapshot.status = 'SEALED'
+          )
+    </update>
+
+    <insert id="insertJobRunIgnore">
+        INSERT IGNORE INTO scheduled_job_run
+            (job_type, scope_type, scope_key, status, owner_instance, heartbeat_at, started_at)
+        VALUES (#{jobType}, #{scopeType}, #{scopeKey}, 'RUNNING', #{ownerInstance},
+                #{startedAt}, #{startedAt})
+    </insert>
+
+    <update id="claimStaleJobRun">
+        UPDATE scheduled_job_run
+        SET status = 'RUNNING',
+            attempt = attempt + 1,
+            owner_instance = #{ownerInstance},
+            heartbeat_at = #{claimedAt},
+            started_at = #{claimedAt},
+            finished_at = NULL,
+            error_message = NULL,
+            version = version + 1
+        WHERE job_type = #{jobType}
+          AND scope_type = #{scopeType}
+          AND scope_key = #{scopeKey}
+          AND (status = 'FAILED'
+            OR (status = 'RUNNING' AND heartbeat_at &lt; #{staleBefore}))
+    </update>
+
+    <select id="selectJobCheckpoint" resultType="string">
+        SELECT checkpoint
+        FROM scheduled_job_run
+        WHERE job_type = #{jobType}
+          AND scope_type = #{scopeType}
+          AND scope_key = #{scopeKey}
+          AND status = 'RUNNING'
+          AND owner_instance = #{ownerInstance}
+        LIMIT 1
+    </select>
+
+    <update id="advanceJobCheckpoint">
+        UPDATE scheduled_job_run
+        SET checkpoint = #{checkpoint},
+            processed_count = processed_count + #{processedDelta},
+            heartbeat_at = #{heartbeatAt},
+            version = version + 1
+        WHERE job_type = #{jobType}
+          AND scope_type = #{scopeType}
+          AND scope_key = #{scopeKey}
+          AND status = 'RUNNING'
+          AND owner_instance = #{ownerInstance}
+    </update>
+
+    <update id="completeJobRun">
+        UPDATE scheduled_job_run
+        SET status = 'SUCCEEDED',
+            heartbeat_at = #{finishedAt},
+            finished_at = #{finishedAt},
+            error_message = NULL,
+            version = version + 1
+        WHERE job_type = #{jobType}
+          AND scope_type = #{scopeType}
+          AND scope_key = #{scopeKey}
+          AND status = 'RUNNING'
+          AND owner_instance = #{ownerInstance}
+    </update>
+
+    <update id="completeTerminalSnapshotJob">
+        UPDATE scheduled_job_run
+        SET status = 'SUCCEEDED',
+            heartbeat_at = #{finishedAt},
+            finished_at = #{finishedAt},
+            error_message = NULL,
+            version = version + 1
+        WHERE job_type = 'SEASON_SNAPSHOT'
+          AND scope_type = 'SEASON'
+          AND scope_key = #{scopeKey}
+          AND status IN ('RUNNING', 'FAILED')
+    </update>
+
+    <update id="failJobRun">
+        UPDATE scheduled_job_run
+        SET status = 'FAILED',
+            heartbeat_at = #{finishedAt},
+            finished_at = #{finishedAt},
+            error_message = #{errorMessage},
+            version = version + 1
+        WHERE job_type = #{jobType}
+          AND scope_type = #{scopeType}
+          AND scope_key = #{scopeKey}
+          AND status = 'RUNNING'
+          AND owner_instance = #{ownerInstance}
+    </update>
+
+    <select id="countLiveRanking" resultType="long">
+        SELECT COUNT(*)
+        FROM monthly_rank_counter
+        WHERE season_id = #{seasonId}
+    </select>
+
+    <select id="selectLiveRankingPage"
+            resultType="com.java2nb.novel.service.gamification.MonthlyRankRow">
+        SELECT counter.book_id              AS bookId,
+               book.author_id               AS authorId,
+               book.book_name               AS bookName,
+               COALESCE(author.pen_name, book.author_name) AS authorName,
+               book.pic_url                 AS picUrl,
+               counter.total_tickets        AS totalTickets,
+               counter.distinct_voter_count AS distinctVoterCount,
+               counter.last_vote_at         AS lastVoteAt
+        FROM monthly_rank_counter counter
+                 JOIN book ON book.id = counter.book_id
+                 LEFT JOIN author ON author.id = book.author_id
+        WHERE counter.season_id = #{seasonId}
+        ORDER BY counter.total_tickets DESC,
+                 counter.distinct_voter_count DESC,
+                 counter.last_vote_at ASC,
+                 counter.book_id ASC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countSnapshotRanking" resultType="long">
+        SELECT COUNT(*)
+        FROM monthly_rank_entry
+        WHERE snapshot_id = #{snapshotId}
+    </select>
+
+    <select id="selectPublicSnapshotPage"
+            resultType="com.java2nb.novel.service.gamification.MonthlyRankRow">
+        SELECT entry.snapshot_id           AS snapshotId,
+               entry.rank_no              AS rankNo,
+               entry.book_id              AS bookId,
+               entry.author_id            AS authorId,
+               book.book_name             AS bookName,
+               COALESCE(author.pen_name, book.author_name) AS authorName,
+               book.pic_url               AS picUrl,
+               entry.total_tickets        AS totalTickets,
+               entry.distinct_voter_count AS distinctVoterCount,
+               entry.last_vote_at         AS lastVoteAt
+        FROM monthly_rank_entry entry
+                 JOIN book ON book.id = entry.book_id
+                 LEFT JOIN author ON author.id = entry.author_id
+        WHERE entry.snapshot_id = #{snapshotId}
+        ORDER BY entry.rank_no ASC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <update id="pauseSnapshotJob">
+        UPDATE scheduled_job_run
+        SET status = 'PAUSED',
+            heartbeat_at = #{pausedAt},
+            finished_at = #{pausedAt},
+            error_message = #{reason},
+            version = version + 1
+        WHERE job_type = 'SEASON_SNAPSHOT'
+          AND scope_type = 'SEASON'
+          AND scope_key = #{scopeKey}
+          AND status IN ('RUNNING', 'FAILED')
+    </update>
+
+    <insert id="insertPausedSnapshotJobIgnore">
+        INSERT IGNORE INTO scheduled_job_run
+            (job_type, scope_type, scope_key, status, owner_instance, heartbeat_at,
+             started_at, finished_at, error_message)
+        VALUES ('SEASON_SNAPSHOT', 'SEASON', #{scopeKey}, 'PAUSED', 'admin-pause',
+                #{pausedAt}, #{pausedAt}, #{pausedAt}, #{reason})
+    </insert>
+
+    <update id="resumeSnapshotJob">
+        UPDATE scheduled_job_run
+        SET status = 'FAILED',
+            heartbeat_at = #{resumedAt},
+            finished_at = #{resumedAt},
+            error_message = 'RETRY_REQUESTED_BY_ADMIN',
+            version = version + 1
+        WHERE job_type = 'SEASON_SNAPSHOT'
+          AND scope_type = 'SEASON'
+          AND scope_key = #{scopeKey}
+          AND status = 'PAUSED'
+    </update>
+
+    <!--
+      Dùng subquery dạng bảng dẫn xuất (derived table) thay vì WITH ... AS (CTE). Bộ định tuyến
+      SQL của ShardingSphere không nhận ra tên CTE khi nó xuất hiện lại trong mệnh đề FROM, ném
+      "Table or view 'source_rank' does not exist" dù cùng câu lệnh chạy đúng trên MySQL thuần.
+    -->
+    <select id="checkRankCounterDrift"
+            resultType="com.java2nb.novel.service.gamification.MonthlyRankDriftRow">
+        SELECT source.season_id AS seasonId,
+               source.book_id AS bookId,
+               source.source_tickets AS sourceTickets,
+               COALESCE(counter.total_tickets, 0) AS projectedTickets,
+               source.source_voters AS sourceVoters,
+               COALESCE(counter.distinct_voter_count, 0) AS projectedVoters
+        FROM (
+            SELECT vote.season_id,
+                   vote.book_id,
+                   SUM(vote.ticket_count) AS source_tickets,
+                   COUNT(DISTINCT vote.user_id) AS source_voters
+            FROM monthly_ticket_vote vote
+            WHERE vote.status = 'VALID'
+            <if test="seasonId != null">
+                AND vote.season_id = #{seasonId}
+            </if>
+            GROUP BY vote.season_id, vote.book_id
+        ) source
+                 LEFT JOIN monthly_rank_counter counter
+                           ON counter.season_id = source.season_id
+                               AND counter.book_id = source.book_id
+        WHERE counter.book_id IS NULL
+           OR counter.total_tickets &lt;&gt; source.source_tickets
+           OR counter.distinct_voter_count &lt;&gt; source.source_voters
+        UNION ALL
+        SELECT counter.season_id AS seasonId,
+               counter.book_id AS bookId,
+               0 AS sourceTickets,
+               counter.total_tickets AS projectedTickets,
+               0 AS sourceVoters,
+               counter.distinct_voter_count AS projectedVoters
+        FROM monthly_rank_counter counter
+                 LEFT JOIN (
+            SELECT vote.season_id,
+                   vote.book_id,
+                   SUM(vote.ticket_count) AS source_tickets,
+                   COUNT(DISTINCT vote.user_id) AS source_voters
+            FROM monthly_ticket_vote vote
+            WHERE vote.status = 'VALID'
+            <if test="seasonId != null">
+                AND vote.season_id = #{seasonId}
+            </if>
+            GROUP BY vote.season_id, vote.book_id
+        ) source
+                           ON source.season_id = counter.season_id
+                               AND source.book_id = counter.book_id
+        WHERE source.book_id IS NULL
+        <if test="seasonId != null">
+            AND counter.season_id = #{seasonId}
+        </if>
+    </select>
+
+    <update id="claimSeasonFinalized">
+        UPDATE monthly_ticket_season
+        SET status = 'FINALIZED',
+            finalized_at = #{finalizedAt},
+            finalized_by = #{operatorId},
+            version = version + 1
+        WHERE id = #{seasonId}
+          AND status = 'REVIEW'
+          AND version = #{expectedVersion}
+          AND snapshot_id = #{snapshotId}
+          AND EXISTS (
+              SELECT 1
+              FROM monthly_rank_snapshot snapshot
+              WHERE snapshot.id = #{snapshotId}
+                AND snapshot.season_id = #{seasonId}
+                AND snapshot.status = 'SEALED'
+          )
+    </update>
+
+</mapper>

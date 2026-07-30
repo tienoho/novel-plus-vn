@@ -12,6 +12,8 @@ import com.java2nb.novel.service.wallet.InsufficientWalletBalanceException;
 import com.java2nb.novel.service.wallet.WalletLedgerService;
 import com.java2nb.novel.service.wallet.WalletPostResult;
 import com.java2nb.novel.service.chapter.ChapterCommercialPolicyService;
+import com.java2nb.novel.service.entitlement.ReadingTicketService;
+import com.java2nb.novel.service.gamification.GamificationEventService;
 import com.java2nb.novel.vo.BookReadHistoryVO;
 import com.java2nb.novel.vo.BookShelfVO;
 import com.java2nb.novel.vo.UserFeedbackVO;
@@ -71,6 +73,10 @@ public class UserServiceImpl implements UserService {
     private final BookIndexMapper bookIndexMapper;
 
     private final ChapterCommercialPolicyService chapterCommercialPolicyService;
+
+    private final ReadingTicketService readingTicketService;
+
+    private final GamificationEventService gamificationEventService;
 
     private final IdWorker idWorker = IdWorker.INSTANCE;
 
@@ -306,7 +312,11 @@ public class UserServiceImpl implements UserService {
         if (queryIsBuyBookIndex(userId, buyRecord.getBookIndexId())) {
             return;
         }
-        if (!chapterCommercialPolicyService.evaluate(lockedChapter, false, new Date()).purchaseRequired()) {
+        Date now = new Date();
+        if (readingTicketService.hasActiveChapterEntitlement(userId, buyRecord.getBookIndexId(), now)) {
+            return;
+        }
+        if (!chapterCommercialPolicyService.evaluate(lockedChapter, false, now).purchaseRequired()) {
             return;
         }
         buyRecord.setBookIndexName(lockedChapter.getIndexName());
@@ -338,6 +348,11 @@ public class UserServiceImpl implements UserService {
             if (postResult != WalletPostResult.ALREADY_POSTED) {
                 throw exception;
             }
+        }
+        if (postResult == WalletPostResult.POSTED) {
+            gamificationEventService.ingest("CHAPTER_PURCHASED",
+                "GAMIFY:CHAPTER_PURCHASE:" + userId + ":" + buyRecord.getBookIndexId(),
+                userId, buyRecord.getBookId(), buyRecord.getCreateTime(), null);
         }
     }
 

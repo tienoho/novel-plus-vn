@@ -55,6 +55,8 @@
     </div>
     <p style="line-height:23px;padding:10px;font-size:14px;color:#333" th:utext="${book.bookDesc}"></p>
 
+    <div th:replace="common/monthly_ticket :: book_widget(${book.id})"></div>
+
     <div class="layui-collapse"><div class="layui-colla-item">
         <h2 class="layui-colla-title"><span th:text="#{book.latest}">Chương mới nhất</span>
             <span style="margin-left:30px"><span th:text="#{reader.update}+': '"></span><i th:text="${#dates.format(book.lastIndexUpdateTime,'dd/MM/yy HH:mm:ss')}"></i></span>

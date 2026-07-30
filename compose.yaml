@@ -13,6 +13,60 @@ x-app-environment: &app-environment
   FINANCIAL_VOUCHER_ISSUANCE_ENABLED: ${FINANCIAL_VOUCHER_ISSUANCE_ENABLED:-false}
   PLATFORM_LEGAL_NAME: ${PLATFORM_LEGAL_NAME:-}
   PLATFORM_TAX_CODE: ${PLATFORM_TAX_CODE:-}
+  GAMIFICATION_POLICY_VERSION: ${GAMIFICATION_POLICY_VERSION:-v1}
+  GAMIFICATION_ZONE_ID: ${GAMIFICATION_ZONE_ID:-Asia/Ho_Chi_Minh}
+  GAMIFICATION_EVENT_ENABLED: ${GAMIFICATION_EVENT_ENABLED:-false}
+  GAMIFICATION_EVENT_DRAIN_BATCH: ${GAMIFICATION_EVENT_DRAIN_BATCH:-200}
+  GAMIFICATION_EVENT_DRAIN_DELAY_MS: ${GAMIFICATION_EVENT_DRAIN_DELAY_MS:-15000}
+  GAMIFICATION_EVENT_MAX_ATTEMPT: ${GAMIFICATION_EVENT_MAX_ATTEMPT:-10}
+  GAMIFICATION_TICKET_ENABLED: ${GAMIFICATION_TICKET_ENABLED:-false}
+  GAMIFICATION_TICKET_LOT_DAYS: ${GAMIFICATION_TICKET_LOT_DAYS:-60}
+  GAMIFICATION_TICKET_GRANT_ON_TOPUP: ${GAMIFICATION_TICKET_GRANT_ON_TOPUP:-false}
+  GAMIFICATION_TICKET_EXPIRY_CRON: ${GAMIFICATION_TICKET_EXPIRY_CRON:-0 20 3 * * ?}
+  GAMIFICATION_TICKET_EXPIRY_BATCH: ${GAMIFICATION_TICKET_EXPIRY_BATCH:-500}
+  GAMIFICATION_TICKET_MAX_GRANT_BATCH: ${GAMIFICATION_TICKET_MAX_GRANT_BATCH:-1000}
+  GAMIFICATION_VOTE_ENABLED: ${GAMIFICATION_VOTE_ENABLED:-false}
+  GAMIFICATION_VOTE_ALLOW_CRAWLED: ${GAMIFICATION_VOTE_ALLOW_CRAWLED:-false}
+  GAMIFICATION_VOTE_IP_HASH_SALT: ${GAMIFICATION_VOTE_IP_HASH_SALT:-disabled}
+  GAMIFICATION_VOTE_MAX_PER_REQUEST: ${GAMIFICATION_VOTE_MAX_PER_REQUEST:-10}
+  GAMIFICATION_VOTE_MAX_VOTES_DAY: ${GAMIFICATION_VOTE_MAX_VOTES_DAY:-20}
+  GAMIFICATION_VOTE_MAX_TICKETS_DAY: ${GAMIFICATION_VOTE_MAX_TICKETS_DAY:-50}
+  GAMIFICATION_VOTE_MAX_PER_BOOK: ${GAMIFICATION_VOTE_MAX_PER_BOOK:-100}
+  GAMIFICATION_VOTE_MAX_LOTS: ${GAMIFICATION_VOTE_MAX_LOTS:-50}
+  GAMIFICATION_QUEST_ENABLED: ${GAMIFICATION_QUEST_ENABLED:-false}
+  GAMIFICATION_QUEST_REPLY_ENABLED: ${GAMIFICATION_QUEST_REPLY_ENABLED:-false}
+  GAMIFICATION_QUEST_READ_MINUTES: ${GAMIFICATION_QUEST_READ_MINUTES:-30}
+  GAMIFICATION_HEARTBEAT_INTERVAL: ${GAMIFICATION_HEARTBEAT_INTERVAL:-60}
+  GAMIFICATION_HEARTBEAT_MAX_MIN: ${GAMIFICATION_HEARTBEAT_MAX_MIN:-180}
+  GAMIFICATION_REALM_ENABLED: ${GAMIFICATION_REALM_ENABLED:-false}
+  GAMIFICATION_REALM_AFFECTS_BENEFITS: ${GAMIFICATION_REALM_AFFECTS_BENEFITS:-false}
+  GAMIFICATION_REALM_COOLDOWN_HOURS: ${GAMIFICATION_REALM_COOLDOWN_HOURS:-24}
+  GAMIFICATION_SEASON_ENABLED: ${GAMIFICATION_SEASON_ENABLED:-false}
+  GAMIFICATION_SEASON_CLOSE_CRON: ${GAMIFICATION_SEASON_CLOSE_CRON:-0 5 0 1 * ?}
+  GAMIFICATION_SEASON_DRAIN_SECONDS: ${GAMIFICATION_SEASON_DRAIN_SECONDS:-60}
+  GAMIFICATION_SEASON_RESUME_DELAY_MS: ${GAMIFICATION_SEASON_RESUME_DELAY_MS:-30000}
+  GAMIFICATION_SEASON_AUTO_FINALIZE: ${GAMIFICATION_SEASON_AUTO_FINALIZE:-false}
+  GAMIFICATION_SEASON_REVIEW_HOURS: ${GAMIFICATION_SEASON_REVIEW_HOURS:-72}
+  GAMIFICATION_REWARD_ENABLED: ${GAMIFICATION_REWARD_ENABLED:-false}
+  GAMIFICATION_REWARD_CLAIM_WINDOW_DAYS: ${GAMIFICATION_REWARD_CLAIM_WINDOW_DAYS:-7}
+  GAMIFICATION_REWARD_RELEASE_CRON: ${GAMIFICATION_REWARD_RELEASE_CRON:-0 40 3 * * ?}
+  GAMIFICATION_JOB_LEASE_SECONDS: ${GAMIFICATION_JOB_LEASE_SECONDS:-300}
+  GAMIFICATION_JOB_BATCH_SIZE: ${GAMIFICATION_JOB_BATCH_SIZE:-500}
+  READING_TICKET_ENABLED: ${READING_TICKET_ENABLED:-false}
+  READING_TICKET_POLICY_VERSION: ${READING_TICKET_POLICY_VERSION:-v1}
+  READING_TICKET_MAX_LOTS_PER_SPEND: ${READING_TICKET_MAX_LOTS_PER_SPEND:-20}
+  READING_TICKET_EXPIRY_CRON: ${READING_TICKET_EXPIRY_CRON:-0 30 3 * * ?}
+  READING_TICKET_EXPIRY_BATCH_SIZE: ${READING_TICKET_EXPIRY_BATCH_SIZE:-500}
+  READING_TICKET_EXPIRY_MAX_LOTS_PER_USER: ${READING_TICKET_EXPIRY_MAX_LOTS_PER_USER:-1000}
+  READING_SUBSCRIPTION_GRANT_CRON: ${READING_SUBSCRIPTION_GRANT_CRON:-0 10 0 * * ?}
+  READING_SUBSCRIPTION_ZONE_ID: ${READING_SUBSCRIPTION_ZONE_ID:-Asia/Ho_Chi_Minh}
+  READING_SUBSCRIPTION_GRANT_BATCH_SIZE: ${READING_SUBSCRIPTION_GRANT_BATCH_SIZE:-200}
+  READING_SUBSCRIPTION_ADMIN_ACTIVATION_ENABLED: ${READING_SUBSCRIPTION_ADMIN_ACTIVATION_ENABLED:-false}
+  GIFT_CODE_ENABLED: ${GIFT_CODE_ENABLED:-false}
+  GIFT_CODE_HMAC_KEY_ID: ${GIFT_CODE_HMAC_KEY_ID:-legacy-v1}
+  GIFT_CODE_HMAC_SECRET: ${GIFT_CODE_HMAC_SECRET:-disabled}
+  GIFT_CODE_HMAC_VERIFICATION_KEYS: ${GIFT_CODE_HMAC_VERIFICATION_KEYS:-}
+  GIFT_CODE_POLICY_VERSION: ${GIFT_CODE_POLICY_VERSION:-v1}
 
 x-app-defaults: &app-defaults
   init: true
@@ -41,6 +95,9 @@ services:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
       - --default-time-zone=+07:00
+    ports:
+      # Chỉ bind loopback để Maven integration test trên host truy cập được mà không mở DB ra LAN.
+      - "127.0.0.1:${MYSQL_HOST_PORT:-3307}:3306"
     volumes:
       - mysql-data:/var/lib/mysql
     expose:
@@ -64,7 +121,7 @@ services:
       - /bin/sh
       - -ec
       - |
-        for migration in /migrations/20260712_vi_localization.sql /migrations/20260716_vnpay_hardening.sql /migrations/20260717_wallet_ledger.sql /migrations/20260718_author_payout.sql /migrations/20260720_refund_reconciliation_vietqr.sql /migrations/20260725_moderation_copyright.sql /migrations/20260725_reports_security.sql /migrations/20260726_author_editor.sql /migrations/20260726_simhash_storage.sql /migrations/20260726_cover_moderation.sql /migrations/20260726_author_analytics.sql /migrations/20260726_vietnamese_search.sql /migrations/20260726_chapter_notifications.sql /migrations/20260727_recommendation.sql /migrations/20260727_author_story_bible.sql /migrations/20260727_author_collaboration.sql /migrations/20260727_reader_annotations.sql /migrations/20260728_author_ai.sql /migrations/20260728_chapter_commercial_policy.sql; do
+        for migration in /migrations/20260712_vi_localization.sql /migrations/20260716_vnpay_hardening.sql /migrations/20260717_wallet_ledger.sql /migrations/20260718_author_payout.sql /migrations/20260720_refund_reconciliation_vietqr.sql /migrations/20260725_moderation_copyright.sql /migrations/20260725_reports_security.sql /migrations/20260726_author_editor.sql /migrations/20260726_simhash_storage.sql /migrations/20260726_cover_moderation.sql /migrations/20260726_author_analytics.sql /migrations/20260726_vietnamese_search.sql /migrations/20260726_chapter_notifications.sql /migrations/20260727_recommendation.sql /migrations/20260727_author_story_bible.sql /migrations/20260727_author_collaboration.sql /migrations/20260727_reader_annotations.sql /migrations/20260728_author_ai.sql /migrations/20260728_chapter_commercial_policy.sql /migrations/20260729_gamification_monthly_ticket.sql /migrations/20260730_reader_entitlements.sql /migrations/20260731_reader_subscriptions.sql /migrations/20260801_reader_subscription_admin.sql /migrations/20260802_gift_codes.sql /migrations/20260803_gift_code_revoke.sql /migrations/20260804_reader_subscription_checkout.sql /migrations/20260805_reader_subscription_paid_review.sql /migrations/20260806_gift_code_hmac_rotation.sql /migrations/20260807_vi_friend_link.sql; do
           mysql --default-character-set=utf8mb4 --protocol=TCP --host=mysql --port=3306 --user="$$MYSQL_USER" "$$MYSQL_DATABASE" < "$$migration"
         done
     volumes:
@@ -87,6 +144,16 @@ services:
       - ./doc/sql/20260727_reader_annotations.sql:/migrations/20260727_reader_annotations.sql:ro
       - ./doc/sql/20260728_author_ai.sql:/migrations/20260728_author_ai.sql:ro
       - ./doc/sql/20260728_chapter_commercial_policy.sql:/migrations/20260728_chapter_commercial_policy.sql:ro
+      - ./doc/sql/20260729_gamification_monthly_ticket.sql:/migrations/20260729_gamification_monthly_ticket.sql:ro
+      - ./doc/sql/20260730_reader_entitlements.sql:/migrations/20260730_reader_entitlements.sql:ro
+      - ./doc/sql/20260731_reader_subscriptions.sql:/migrations/20260731_reader_subscriptions.sql:ro
+      - ./doc/sql/20260801_reader_subscription_admin.sql:/migrations/20260801_reader_subscription_admin.sql:ro
+      - ./doc/sql/20260802_gift_codes.sql:/migrations/20260802_gift_codes.sql:ro
+      - ./doc/sql/20260803_gift_code_revoke.sql:/migrations/20260803_gift_code_revoke.sql:ro
+      - ./doc/sql/20260804_reader_subscription_checkout.sql:/migrations/20260804_reader_subscription_checkout.sql:ro
+      - ./doc/sql/20260805_reader_subscription_paid_review.sql:/migrations/20260805_reader_subscription_paid_review.sql:ro
+      - ./doc/sql/20260806_gift_code_hmac_rotation.sql:/migrations/20260806_gift_code_hmac_rotation.sql:ro
+      - ./doc/sql/20260807_vi_friend_link.sql:/migrations/20260807_vi_friend_link.sql:ro
     depends_on:
       mysql:
         condition: service_healthy

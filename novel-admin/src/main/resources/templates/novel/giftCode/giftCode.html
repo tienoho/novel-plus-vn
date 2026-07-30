@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head th:include="include :: header"></head>
+<body class="gray-bg">
+<div class="wrapper wrapper-content">
+    <div class="row"><div class="col-sm-12"><div class="ibox">
+        <div class="ibox-title"><h5 th:text="#{admin.gift.title}">Quản trị mã quà</h5></div>
+        <div class="ibox-content" shiro:hasPermission="novel:giftCode:config">
+            <form id="campaignForm" class="form-inline">
+                <input name="campaignCode" required pattern="[A-Za-z0-9_]{3,32}" maxlength="32"
+                       class="form-control" th:placeholder="#{admin.gift.campaignCode}">
+                <input name="campaignName" required minlength="3" maxlength="100"
+                       class="form-control" th:placeholder="#{admin.gift.campaignName}">
+                <select name="rewardType" class="form-control">
+                    <option value="READING_TICKET" th:text="#{admin.gift.readingTicket}">Vé đọc</option>
+                    <option value="XU">Xu</option>
+                </select>
+                <input name="rewardAmount" type="number" min="1" max="100000" required
+                       class="form-control" th:placeholder="#{admin.gift.rewardAmount}">
+                <input name="ticketValidityDays" type="number" min="1" max="366" value="45"
+                       class="form-control" th:placeholder="#{admin.gift.validityDays}">
+                <input name="startAt" type="datetime-local" required class="form-control">
+                <input name="endAt" type="datetime-local" required class="form-control">
+                <input name="maxRedemptions" type="number" min="1" required class="form-control"
+                       th:placeholder="#{admin.gift.maxRedemptions}">
+                <input name="maxPerUser" type="number" min="1" max="100" value="1" required
+                       class="form-control" th:placeholder="#{admin.gift.maxPerUser}">
+                <button type="submit" class="btn btn-primary" th:text="#{admin.gift.create}">Tạo chiến dịch</button>
+            </form>
+        </div>
+        <div class="ibox-content table-responsive">
+            <table id="campaignTable" class="table table-striped"><thead><tr>
+                <th th:text="#{admin.gift.campaignCode}">Mã</th>
+                <th th:text="#{admin.gift.campaignName}">Tên</th>
+                <th th:text="#{admin.gift.reward}">Phần thưởng</th>
+                <th th:text="#{admin.gift.usage}">Đã dùng</th>
+                <th th:text="#{admin.gift.status}">Trạng thái</th>
+                <th th:text="#{admin.gift.actions}">Thao tác</th>
+            </tr></thead><tbody></tbody></table>
+        </div>
+    </div></div></div>
+    <div class="row" shiro:hasPermission="novel:giftCode:issue"><div class="col-sm-12"><div class="ibox">
+        <div class="ibox-title"><h5 th:text="#{admin.gift.issueTitle}">Phát hành mã</h5></div>
+        <div class="ibox-content">
+            <form id="issueForm" class="form-inline">
+                <input name="campaignId" type="number" min="1" required class="form-control"
+                       th:placeholder="#{admin.gift.campaignId}">
+                <input name="quantity" type="number" min="1" max="1000" value="1" required
+                       class="form-control" th:placeholder="#{admin.gift.quantity}">
+                <input name="maxRedemptionsPerCode" type="number" min="1" value="1" required
+                       class="form-control" th:placeholder="#{admin.gift.maxPerCode}">
+                <button type="submit" class="btn btn-warning" th:text="#{admin.gift.issue}">Phát hành</button>
+            </form>
+            <p class="help-block" th:text="#{admin.gift.plaintextWarning}">
+                Mã plaintext chỉ hiển thị một lần. Hãy lưu ở nơi được kiểm soát.
+            </p>
+            <textarea id="issuedCodes" rows="8" readonly class="form-control"></textarea>
+        </div>
+    </div></div></div>
+    <div class="row"><div class="col-sm-12"><div class="ibox">
+        <div class="ibox-title"><h5 id="giftDetailTitle" th:text="#{admin.gift.detailsTitle}">Chi tiết chiến dịch</h5></div>
+        <div class="ibox-content table-responsive">
+            <h4 th:text="#{admin.gift.codesTitle}">Danh sách mã đã phát hành</h4>
+            <table id="giftCodeTable" class="table table-striped"><thead><tr>
+                <th>ID</th>
+                <th th:text="#{admin.gift.codeHint}">Bốn ký tự cuối</th>
+                <th th:text="#{admin.gift.usage}">Đã dùng / Giới hạn</th>
+                <th th:text="#{admin.gift.status}">Trạng thái</th>
+                <th th:text="#{admin.gift.actions}">Thao tác</th>
+            </tr></thead><tbody></tbody></table>
+            <div class="btn-group pull-right">
+                <button id="giftCodePrevious" type="button" class="btn btn-default btn-sm"
+                        th:text="#{admin.gift.previous}">Trang trước</button>
+                <button id="giftCodeNext" type="button" class="btn btn-default btn-sm"
+                        th:text="#{admin.gift.next}">Trang sau</button>
+            </div><div class="clearfix"></div>
+        </div>
+        <div class="ibox-content table-responsive">
+            <h4 th:text="#{admin.gift.redemptionsTitle}">Biên nhận đổi mã</h4>
+            <table id="giftRedemptionTable" class="table table-striped"><thead><tr>
+                <th th:text="#{admin.gift.receiptId}">Biên nhận</th>
+                <th th:text="#{admin.gift.userId}">Người dùng</th>
+                <th th:text="#{admin.gift.codeHint}">Bốn ký tự cuối</th>
+                <th th:text="#{admin.gift.reward}">Phần thưởng</th>
+                <th th:text="#{admin.gift.redeemedAt}">Thời điểm đổi</th>
+            </tr></thead><tbody></tbody></table>
+            <div class="btn-group pull-right">
+                <button id="giftRedemptionPrevious" type="button" class="btn btn-default btn-sm"
+                        th:text="#{admin.gift.previous}">Trang trước</button>
+                <button id="giftRedemptionNext" type="button" class="btn btn-default btn-sm"
+                        th:text="#{admin.gift.next}">Trang sau</button>
+            </div><div class="clearfix"></div>
+        </div>
+    </div></div></div>
+</div>
+<div th:include="include::footer"></div>
+<script th:inline="javascript">
+    window.GiftCodeI18n = {
+        activate: /*[[#{admin.gift.activate}]]*/ 'Kích hoạt',
+        close: /*[[#{admin.gift.close}]]*/ 'Đóng',
+        created: /*[[#{admin.gift.created}]]*/ 'Đã tạo',
+        issued: /*[[#{admin.gift.issued}]]*/ 'Đã phát hành',
+        details: /*[[#{admin.gift.details}]]*/ 'Chi tiết',
+        detailsTitle: /*[[#{admin.gift.detailsTitle}]]*/ 'Chi tiết chiến dịch',
+        revoke: /*[[#{admin.gift.revoke}]]*/ 'Thu hồi',
+        revokeConfirm: /*[[#{admin.gift.revokeConfirm}]]*/ 'Thu hồi mã chưa sử dụng này?',
+        revoked: /*[[#{admin.gift.revoked}]]*/ 'Đã thu hồi mã quà',
+        codeStatusActive: /*[[#{admin.gift.codeStatus.active}]]*/ 'Có hiệu lực',
+        codeStatusExhausted: /*[[#{admin.gift.codeStatus.exhausted}]]*/ 'Đã dùng hết',
+        codeStatusRevoked: /*[[#{admin.gift.codeStatus.revoked}]]*/ 'Đã thu hồi',
+        previous: /*[[#{admin.gift.previous}]]*/ 'Trang trước',
+        next: /*[[#{admin.gift.next}]]*/ 'Trang sau',
+        failed: /*[[#{common.failed}]]*/ 'Thao tác thất bại',
+        statusDraft: /*[[#{admin.gift.status.draft}]]*/ 'Bản nháp',
+        statusActive: /*[[#{admin.gift.status.active}]]*/ 'Hoạt động',
+        statusClosed: /*[[#{admin.gift.status.closed}]]*/ 'Đã đóng'
+    };
+    window.GiftCodePermissions = {config: false, revoke: false};
+</script>
+<script shiro:hasPermission="novel:giftCode:config">window.GiftCodePermissions.config = true;</script>
+<script shiro:hasPermission="novel:giftCode:revoke">window.GiftCodePermissions.revoke = true;</script>
+<script src="/js/appjs/novel/giftCode/giftCode.js"></script>
+</body>
+</html>

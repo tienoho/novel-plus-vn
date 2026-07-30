@@ -28,6 +28,10 @@ Các chức năng chính gồm đề xuất và tìm kiếm tiếng Việt có d
 - Theo dõi tác giả và thông báo chương mới: [doc/chapter-notifications.md](doc/chapter-notifications.md)
 - PWA, đọc offline, tiết kiệm dữ liệu và TTS tiếng Việt: [doc/reader-pwa.md](doc/reader-pwa.md)
 - Đề xuất theo hành vi, thể loại và lịch sử đọc: [doc/recommendation.md](doc/recommendation.md)
+- Vận hành gamification, Ngọn Đuốc và xếp hạng tháng: [doc/gamification.md](doc/gamification.md)
+- Chính sách gamification phiên bản v1: [doc/gamification-policy-v1.md](doc/gamification-policy-v1.md)
+- Vé đọc, thuê bao và quyền đọc chương: [doc/reader-entitlements.md](doc/reader-entitlements.md)
+- Mã quà cấp Xu/Vé đọc: [doc/gift-codes.md](doc/gift-codes.md)
 - Hướng dẫn migration SQL: [doc/sql/readme.md](doc/sql/readme.md)
 - Tài liệu gốc: [docs.xxyopen.com](https://docs.xxyopen.com/course/novelplus/1.html)
 - Trang giới thiệu: [novel.xxyopen.com](https://novel.xxyopen.com)
@@ -114,7 +118,7 @@ Các kiểm tra i18n xác minh:
 
 ## Deploy bằng Docker Compose
 
-Bộ Compose khởi động MySQL 8.4, Redis 7, migration Việt hóa, cổng đọc, crawler và trang quản trị. Docker image ứng dụng được build trực tiếp từ source bằng JDK 21; không cần build JAR trước trên máy host.
+Bộ Compose khởi động MySQL 8.4, Redis 7, migration Việt hóa, cổng đọc, crawler và trang quản trị. Docker image ứng dụng được build trực tiếp từ source bằng JDK 21; không cần build JAR trước trên máy host. MySQL chỉ publish trên loopback `127.0.0.1:${MYSQL_HOST_PORT:-3307}` để chạy integration test, không mở ra mạng LAN.
 
 1. Tạo tệp cấu hình riêng và thay toàn bộ giá trị `change-me`:
 
@@ -214,7 +218,7 @@ Thư mục `templates/<theme>` là nguồn theme. `novel-front` cung cấp lớp
 mvn -pl novel-front -am -Dtheme.name=green package
 ```
 
-Có thể thay `green` bằng `orange`, `dark` hoặc `blue`. Pha `generate-resources` chủ động xóa riêng `target/classes/templates` và `target/classes/static` trước khi chép runtime base rồi ghi đè theme, vì vậy đổi theme liên tiếp không để lại file từ lần đóng gói trước. Không gọi trực tiếp `resources:resources` để đổi theme vì goal rời này bỏ qua pha chuẩn bị nói trên.
+Có thể thay `green` bằng `orange`, `dark` hoặc `blue`. Pha `generate-resources` chủ động xóa riêng `target/classes/templates` và `target/classes/static` trước khi chép runtime base rồi ghi đè theme, vì vậy đổi theme liên tiếp không để lại file từ lần đóng gói trước. Không gọi trực tiếp `resources:resources` để đổi theme vì goal rời này bỏ qua pha chuẩn bị nói trên. Script phân phối được sao chép vào `target/build/bin` rồi mới chuẩn hóa line ending Unix; build không được phép sửa file trong `src/main/build/scripts`. Artifact `novel-front/target/build/novel-front.zip` chứa cả `Dockerfile`, JAR, cấu hình, script và bộ theme để có thể triển khai độc lập.
 
 Tiếng Việt là ngôn ngữ hiển thị mặc định. Catalog tiếng Trung chỉ được giữ làm fallback nội bộ; giao diện chưa cung cấp bộ chọn ngôn ngữ.
 

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<th:block th:fragment="book_widget(bookId)">
+    <link rel="stylesheet" href="/css/gamification.css?v=4"/>
+    <section id="monthlyTicketBookApp" class="monthly-ticket-widget gamification-shell" hidden
+             aria-labelledby="monthlyTicketBookTitle"
+             th:attr="data-book-id=${bookId},
+                      data-login-url=@{/user/login.html},
+                      data-loading=#{gamification.ticket.loading},
+                      data-load-error=#{gamification.ticket.loadError},
+                      data-login-required=#{gamification.ticket.loginRequired},
+                      data-period-unavailable=#{gamification.ticket.periodUnavailable},
+                      data-expiry-value=#{gamification.ticket.expiryValue},
+                      data-no-expiry=#{gamification.ticket.noExpiry},
+                      data-not-eligible=#{gamification.ticket.notEligible},
+                      data-empty-balance=#{gamification.ticket.emptyBalance},
+                      data-invalid-count=#{gamification.ticket.invalidCount},
+                      data-confirm-vote=#{gamification.ticket.confirmVote},
+                      data-vote-success=#{gamification.ticket.voteSuccess},
+                      data-vote-uncertain=#{gamification.ticket.voteUncertain},
+                      data-vote-action=#{gamification.ticket.vote},
+                      data-voting=#{gamification.ticket.voting}">
+        <header class="monthly-ticket-heading">
+            <div>
+                <h2 id="monthlyTicketBookTitle" th:text="#{gamification.ticket.widget.title}">Thắp Ngọn Đuốc</h2>
+                <p th:text="#{gamification.ticket.widget.description}"></p>
+            </div>
+            <a class="monthly-ticket-ranking-link" href="/book/book_ranking.html#monthly-ticket-ranking"
+               th:text="#{gamification.ticket.rankingLink}">Xem bảng Đuốc tháng</a>
+        </header>
+
+        <div id="monthlyTicketBookContent" hidden>
+            <dl class="monthly-ticket-metrics">
+                <div>
+                    <dt th:text="#{gamification.ticket.period}">Kỳ xếp hạng</dt>
+                    <dd id="monthlyTicketPeriod">—</dd>
+                </div>
+                <div>
+                    <dt th:text="#{gamification.ticket.total}">Tổng Đuốc của truyện</dt>
+                    <dd><span id="monthlyTicketBookTotal">0</span> <span th:text="#{gamification.reward.ticket}">Đuốc</span></dd>
+                </div>
+                <div>
+                    <dt th:text="#{gamification.ticket.balance}">Số dư Đuốc của bạn</dt>
+                    <dd><span id="monthlyTicketBalance">0</span> <span th:text="#{gamification.reward.ticket}">Đuốc</span></dd>
+                </div>
+                <div>
+                    <dt th:text="#{gamification.ticket.expiry}">Đuốc sắp tắt</dt>
+                    <dd id="monthlyTicketExpiry">—</dd>
+                </div>
+            </dl>
+            <div class="monthly-ticket-vote-controls">
+                <label for="monthlyTicketCount" th:text="#{gamification.ticket.count}">Số Đuốc muốn thắp</label>
+                <input id="monthlyTicketCount" type="number" min="1" step="1" inputmode="numeric" value="1"/>
+                <button id="monthlyTicketVoteButton" type="button" class="monthly-ticket-primary"
+                        th:text="#{gamification.ticket.vote}">Thắp Đuốc</button>
+            </div>
+        </div>
+
+        <div id="monthlyTicketBookLogin" class="monthly-ticket-login" hidden>
+            <p th:text="#{gamification.ticket.loginRequired}"></p>
+            <button id="monthlyTicketLoginButton" type="button" class="monthly-ticket-primary"
+                    th:text="#{gamification.ticket.loginAction}">Đăng nhập</button>
+        </div>
+        <p id="monthlyTicketBookStatus" class="monthly-ticket-status" role="status"
+           aria-live="polite" aria-atomic="true"></p>
+    </section>
+    <script src="/javascript/gamification-api.js?v=3" type="text/javascript"></script>
+    <script src="/javascript/monthly-ticket.js?v=3" type="text/javascript"></script>
+</th:block>
+
+<th:block th:fragment="ranking_widget">
+    <link rel="stylesheet" href="/css/gamification.css?v=4"/>
+    <section id="monthlyTicketRankingApp" class="monthly-ticket-ranking gamification-shell" hidden
+             aria-labelledby="monthlyTicketRankingTitle"
+             th:attr="data-loading=#{gamification.ticket.loading},
+                      data-load-error=#{gamification.ticket.loadError},
+                      data-load-action=#{gamification.ticket.ranking.load},
+                      data-empty=#{gamification.ticket.ranking.empty},
+                      data-ticket-unit=#{gamification.reward.ticket},
+                      data-voter-count=#{gamification.ticket.ranking.voterCount},
+                      data-live=#{gamification.ticket.ranking.live},
+                      data-snapshot=#{gamification.ticket.ranking.snapshot},
+                      data-season-open=#{gamification.ticket.season.open},
+                      data-season-closing=#{gamification.ticket.season.closing},
+                      data-season-review=#{gamification.ticket.season.review},
+                      data-season-finalized=#{gamification.ticket.season.finalized},
+                      data-season-closed=#{gamification.ticket.season.closed}">
+        <header class="monthly-ticket-heading" id="monthly-ticket-ranking">
+            <div>
+                <h2 id="monthlyTicketRankingTitle" th:text="#{gamification.ticket.ranking.title}">Bảng Đuốc tháng</h2>
+                <p th:text="#{gamification.ticket.ranking.description}"></p>
+            </div>
+        </header>
+        <div class="monthly-ticket-ranking-toolbar">
+            <label for="monthlyTicketRankingPeriod" th:text="#{gamification.ticket.ranking.period}">Tháng xếp hạng</label>
+            <input id="monthlyTicketRankingPeriod" type="month"/>
+            <button id="monthlyTicketRankingLoad" type="button" class="monthly-ticket-primary"
+                    th:text="#{gamification.ticket.ranking.load}">Xem kỳ</button>
+        </div>
+        <p id="monthlyTicketRankingMeta" class="monthly-ticket-ranking-meta"></p>
+        <p id="monthlyTicketRankingStatus" class="monthly-ticket-status" role="status"
+           aria-live="polite" aria-atomic="true"></p>
+        <ol id="monthlyTicketRankingList" class="monthly-ticket-ranking-list"></ol>
+        <nav class="monthly-ticket-ranking-pagination" aria-label="Phân trang bảng Đuốc"
+             th:aria-label="#{gamification.ticket.ranking.pagination}">
+            <button id="monthlyTicketRankingPrevious" type="button"
+                    th:text="#{gamification.ticket.ranking.previous}">Trang trước</button>
+            <button id="monthlyTicketRankingNext" type="button"
+                    th:text="#{gamification.ticket.ranking.next}">Trang sau</button>
+        </nav>
+    </section>
+    <script src="/javascript/gamification-api.js?v=3" type="text/javascript"></script>
+    <script src="/javascript/monthly-ticket.js?v=3" type="text/javascript"></script>
+</th:block>
+
+<th:block th:fragment="home_widget">
+    <link rel="stylesheet" href="/css/gamification.css?v=4"/>
+    <section id="monthlyTicketHomeApp" class="monthly-ticket-home gamification-shell" hidden
+             aria-labelledby="monthlyTicketHomeTitle"
+             th:attr="data-loading=#{gamification.ticket.loading},
+                      data-load-error=#{gamification.ticket.loadError},
+                      data-empty=#{gamification.ticket.ranking.empty},
+                      data-ticket-unit=#{gamification.reward.ticket},
+                      data-voter-count=#{gamification.ticket.ranking.voterCount},
+                      data-live=#{gamification.ticket.ranking.live},
+                      data-snapshot=#{gamification.ticket.ranking.snapshot},
+                      data-cutoff=#{gamification.ticket.home.cutoff},
+                      data-remaining=#{gamification.ticket.home.remaining},
+                      data-locked=#{gamification.ticket.home.locked},
+                      data-day=#{gamification.ticket.home.day},
+                      data-hour=#{gamification.ticket.home.hour},
+                      data-minute=#{gamification.ticket.home.minute},
+                      data-season-open=#{gamification.ticket.season.open},
+                      data-season-closing=#{gamification.ticket.season.closing},
+                      data-season-review=#{gamification.ticket.season.review},
+                      data-season-finalized=#{gamification.ticket.season.finalized},
+                      data-season-closed=#{gamification.ticket.season.closed}">
+        <header class="monthly-ticket-heading">
+            <div>
+                <h2 id="monthlyTicketHomeTitle" th:text="#{gamification.ticket.home.title}">Top Đuốc tháng</h2>
+                <p th:text="#{gamification.ticket.home.description}"></p>
+            </div>
+            <a class="monthly-ticket-ranking-link" href="/book/book_ranking.html#monthly-ticket-ranking"
+               th:text="#{gamification.ticket.home.viewAll}">Xem bảng đầy đủ</a>
+        </header>
+        <div class="monthly-ticket-home-timing">
+            <p id="monthlyTicketHomeMeta" class="monthly-ticket-ranking-meta"></p>
+            <p id="monthlyTicketHomeCountdown" class="monthly-ticket-home-countdown"></p>
+        </div>
+        <p id="monthlyTicketHomeStatus" class="monthly-ticket-status" role="status"
+           aria-live="polite" aria-atomic="true"></p>
+        <ol id="monthlyTicketHomeList" class="monthly-ticket-home-list"></ol>
+    </section>
+    <script src="/javascript/gamification-api.js?v=3" type="text/javascript"></script>
+    <script src="/javascript/monthly-ticket.js?v=3" type="text/javascript"></script>
+</th:block>
+
+<th:block th:fragment="ticker_widget">
+    <link rel="stylesheet" href="/css/gamification.css?v=4"/>
+    <section id="gamificationTickerApp" class="gamification-ticker gamification-shell" hidden
+             aria-labelledby="gamificationTickerTitle"
+             th:attr="data-action=#{gamification.ticker.action},
+                      data-empty=#{gamification.ticker.empty}">
+        <header class="gamification-ticker-heading">
+            <h2 id="gamificationTickerTitle" th:text="#{gamification.ticker.title}">Đang thắp đuốc</h2>
+            <p th:text="#{gamification.ticker.description}"></p>
+        </header>
+        <ul id="gamificationTickerList" class="gamification-ticker-list"></ul>
+    </section>
+    <script src="/javascript/gamification-api.js?v=3" type="text/javascript"></script>
+    <script src="/javascript/monthly-ticket.js?v=3" type="text/javascript"></script>
+</th:block>
+
+</body>
+</html>

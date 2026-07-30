@@ -43,8 +43,8 @@ public class WebLogAspect {
 
     @AfterReturning(returning = "ret", pointcut = "logPointCut()")// Giá trị returning trùng tên tham số của doAfterReturning
     public void doAfterReturning(Object ret) throws Throwable {
-        // Sau khi xử lý yêu cầu, trả nội dung; nếu giá trị quá phức tạp, log có thể hiển thị địa chỉ bộ nhớ
-        logger.debug("Giá trị trả về: " + ret);
+        // Không ghi payload phản hồi vì có thể chứa mã quà, token hoặc dữ liệu cá nhân.
+        logger.debug("Yêu cầu đã được xử lý thành công");
     }
 
     @Around("logPointCut()")

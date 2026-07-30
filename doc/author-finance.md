@@ -70,6 +70,27 @@ Khóa idempotency phải ổn định cho cùng một thao tác. Retry trả l�
 
 Giá trị mặc định không phải kết luận về thuế hay hợp đồng. Trước production phải phê duyệt tỷ giá, mức tối thiểu, lịch chốt và cách tính thuế bằng chính sách kinh doanh/pháp lý chính thức. Không dùng file “chứng từ” do hệ thống xuất như hóa đơn điện tử nếu chưa tích hợp nhà cung cấp hóa đơn và hoàn tất thủ tục pháp lý tương ứng.
 
+## Định dạng PDF chứng từ
+
+PDF chứng từ được tạo bằng PDFBox `3.0.8` và nhúng trực tiếp Open Sans `6.1.0` Regular/Bold để
+hiển thị tiếng Việt độc lập với font cài trên máy chạy. Số tiền dùng định dạng `vi-VN`; thời gian phát
+hành dùng múi giờ `Asia/Ho_Chi_Minh`. Nội dung dài được ngắt dòng và phân trang thay vì tràn khỏi
+khổ A4.
+
+Font Open Sans được phân phối theo Open Font License; bản giấy phép nằm trong dependency tại
+`fonts/ttf/OpenSans/OFL.txt` và được đóng gói cùng fat JAR. Nếu thiếu font hoặc PDFBox không thể tạo
+tài liệu hợp lệ, service ném lỗi và không trả một tệp giả có tiền tố `%PDF`; endpoint vì vậy thất bại
+đóng thay vì phát hành chứng từ hỏng. Test hồi quy mở lại PDF, trích xuất các nhãn tiếng Việt và xác
+nhận mọi font được sử dụng đều đã nhúng.
+
+## Phân quyền chứng từ tác giả
+
+Các API `/author/finance/receipts`, chi tiết, PDF, JSON và CSV luôn lọc theo `author_id` lấy từ phiên
+đăng nhập. Ownership được xác định qua
+`financial_voucher.reference_id → author_withdrawal_request.id → author_id`; không dùng bút danh vì
+bút danh có thể trùng hoặc thay đổi. Chứng từ không thuộc tác giả hiện tại được xử lý giống chứng từ
+không tồn tại, không để lộ metadata cho phép dò mã.
+
 ## Luồng yêu cầu rút
 
 1. Tác giả phải có KYC `VERIFIED`.

@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.java2nb.novel.mapper.ReadingSubscriptionMapper">
+    <select id="selectActivePlanByCode"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionPlanRow">
+        SELECT id, plan_code AS planCode, plan_name AS planName, price_vnd AS priceVnd,
+               tickets_per_period AS ticketsPerPeriod, period_months AS periodMonths,
+               ticket_validity_days AS ticketValidityDays, status, version
+        FROM reading_subscription_plan
+        WHERE plan_code=#{planCode} AND status='ACTIVE' LIMIT 1
+    </select>
+    <select id="selectSubscriptionBySource"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionRow">
+        SELECT id, user_id AS userId, plan_id AS planId, plan_code_snapshot AS planCodeSnapshot,
+               tickets_per_period_snapshot AS ticketsPerPeriodSnapshot,
+               period_months_snapshot AS periodMonthsSnapshot,
+               ticket_validity_days_snapshot AS ticketValidityDaysSnapshot,
+               start_at AS startAt, next_grant_at AS nextGrantAt, end_at AS endAt,
+               status, source_type AS sourceType, source_ref AS sourceRef,
+               policy_version AS policyVersion, version
+        FROM user_reading_subscription
+        WHERE source_type=#{sourceType} AND source_ref=#{sourceRef} LIMIT 1
+    </select>
+    <select id="selectSubscriptionBySourceForUpdate"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionRow">
+        SELECT id, user_id AS userId, plan_id AS planId, plan_code_snapshot AS planCodeSnapshot,
+               tickets_per_period_snapshot AS ticketsPerPeriodSnapshot,
+               period_months_snapshot AS periodMonthsSnapshot,
+               ticket_validity_days_snapshot AS ticketValidityDaysSnapshot,
+               start_at AS startAt, next_grant_at AS nextGrantAt, end_at AS endAt,
+               status, source_type AS sourceType, source_ref AS sourceRef,
+               policy_version AS policyVersion, version
+        FROM user_reading_subscription
+        WHERE source_type=#{sourceType} AND source_ref=#{sourceRef} LIMIT 1 FOR UPDATE
+    </select>
+    <select id="selectActivePlans"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionPlanRow">
+        SELECT id, plan_code AS planCode, plan_name AS planName, price_vnd AS priceVnd,
+               tickets_per_period AS ticketsPerPeriod, period_months AS periodMonths,
+               ticket_validity_days AS ticketValidityDays, status, version
+        FROM reading_subscription_plan
+        WHERE status='ACTIVE'
+        ORDER BY id ASC
+    </select>
+    <select id="selectAllPlans"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionPlanRow">
+        SELECT id, plan_code AS planCode, plan_name AS planName, price_vnd AS priceVnd,
+               tickets_per_period AS ticketsPerPeriod, period_months AS periodMonths,
+               ticket_validity_days AS ticketValidityDays, status, version
+        FROM reading_subscription_plan
+        ORDER BY id DESC
+    </select>
+    <select id="selectPlanById"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionPlanRow">
+        SELECT id, plan_code AS planCode, plan_name AS planName, price_vnd AS priceVnd,
+               tickets_per_period AS ticketsPerPeriod, period_months AS periodMonths,
+               ticket_validity_days AS ticketValidityDays, status, version
+        FROM reading_subscription_plan WHERE id=#{planId} LIMIT 1
+    </select>
+    <select id="selectPlanByCode"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionPlanRow">
+        SELECT id, plan_code AS planCode, plan_name AS planName, price_vnd AS priceVnd,
+               tickets_per_period AS ticketsPerPeriod, period_months AS periodMonths,
+               ticket_validity_days AS ticketValidityDays, status, version
+        FROM reading_subscription_plan WHERE plan_code=#{planCode} LIMIT 1
+    </select>
+    <insert id="insertPlan">
+        INSERT INTO reading_subscription_plan
+            (plan_code, plan_name, price_vnd, tickets_per_period, period_months,
+             ticket_validity_days, status)
+        VALUES (#{command.planCode}, #{command.planName}, #{command.priceVnd}, #{command.ticketsPerPeriod},
+                #{command.periodMonths}, #{command.ticketValidityDays}, 'DRAFT')
+    </insert>
+    <update id="updatePlan">
+        UPDATE reading_subscription_plan
+        SET plan_name=#{command.planName}, price_vnd=#{command.priceVnd},
+            tickets_per_period=#{command.ticketsPerPeriod},
+            period_months=#{command.periodMonths},
+            ticket_validity_days=#{command.ticketValidityDays}, version=version+1
+        WHERE id=#{planId} AND version=#{expectedVersion} AND status&lt;&gt;'RETIRED'
+          AND plan_code=#{command.planCode}
+    </update>
+    <update id="updatePlanStatus">
+        UPDATE reading_subscription_plan
+        SET status=#{status}, version=version+1
+        WHERE id=#{planId} AND version=#{expectedVersion}
+    </update>
+    <select id="selectCurrentSubscriptionByUserId"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionRow">
+        SELECT id, user_id AS userId, plan_id AS planId, plan_code_snapshot AS planCodeSnapshot,
+               tickets_per_period_snapshot AS ticketsPerPeriodSnapshot,
+               period_months_snapshot AS periodMonthsSnapshot,
+               ticket_validity_days_snapshot AS ticketValidityDaysSnapshot,
+               start_at AS startAt, next_grant_at AS nextGrantAt, end_at AS endAt,
+               status, source_type AS sourceType, source_ref AS sourceRef,
+               policy_version AS policyVersion, version
+        FROM user_reading_subscription
+        WHERE user_id=#{userId} AND status IN ('ACTIVE', 'PAUSED')
+        ORDER BY id DESC LIMIT 1
+    </select>
+    <select id="selectPeriodGrantsByUser"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionPeriodGrantRow">
+        SELECT grant_row.id, grant_row.subscription_id AS subscriptionId,
+               grant_row.user_id AS userId, grant_row.period_start AS periodStart,
+               grant_row.period_end AS periodEnd, grant_row.ticket_amount AS ticketAmount,
+               grant_row.ticket_expire_at AS ticketExpireAt,
+               grant_row.create_time AS createTime
+        FROM reading_subscription_period_grant grant_row
+        INNER JOIN user_reading_subscription subscription_row
+                ON subscription_row.id=grant_row.subscription_id
+               AND subscription_row.user_id=#{userId}
+        WHERE grant_row.subscription_id=#{subscriptionId}
+        ORDER BY grant_row.period_start DESC, grant_row.id DESC
+        LIMIT #{limit}
+    </select>
+    <insert id="insertSubscription">
+        INSERT INTO user_reading_subscription
+            (user_id, plan_id, plan_code_snapshot, tickets_per_period_snapshot,
+             period_months_snapshot, ticket_validity_days_snapshot, start_at, next_grant_at,
+             end_at, status, source_type, source_ref, policy_version)
+        VALUES (#{command.userId}, #{plan.id}, #{plan.planCode}, #{plan.ticketsPerPeriod},
+                #{plan.periodMonths}, #{plan.ticketValidityDays}, #{command.startAt},
+                #{command.startAt}, #{command.endAt}, 'ACTIVE', #{command.sourceType},
+                #{command.sourceRef}, #{command.policyVersion})
+    </insert>
+    <insert id="insertPurchasedSubscription">
+        INSERT INTO user_reading_subscription
+            (user_id, plan_id, plan_code_snapshot, tickets_per_period_snapshot,
+             period_months_snapshot, ticket_validity_days_snapshot, start_at, next_grant_at,
+             end_at, status, source_type, source_ref, policy_version)
+        SELECT #{command.userId}, #{command.planId}, #{command.planCode},
+               #{command.ticketsPerPeriod}, #{command.periodMonths},
+               #{command.ticketValidityDays}, #{command.startAt}, #{command.startAt},
+               #{command.endAt}, 'ACTIVE', 'PAYMENT', #{command.sourceRef},
+               #{command.policyVersion}
+        FROM DUAL
+        WHERE NOT EXISTS (
+            SELECT 1 FROM user_reading_subscription
+            WHERE user_id=#{command.userId} AND status IN ('ACTIVE', 'PAUSED')
+        )
+    </insert>
+    <select id="lockDueSubscription"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionRow">
+        SELECT id, user_id AS userId, plan_id AS planId, plan_code_snapshot AS planCodeSnapshot,
+               tickets_per_period_snapshot AS ticketsPerPeriodSnapshot,
+               period_months_snapshot AS periodMonthsSnapshot,
+               ticket_validity_days_snapshot AS ticketValidityDaysSnapshot,
+               start_at AS startAt, next_grant_at AS nextGrantAt, end_at AS endAt,
+               status, source_type AS sourceType, source_ref AS sourceRef,
+               policy_version AS policyVersion, version
+        FROM user_reading_subscription
+        WHERE id=#{subscriptionId} AND status='ACTIVE' AND next_grant_at&lt;=#{now}
+          AND (end_at IS NULL OR next_grant_at&lt;end_at)
+        LIMIT 1 FOR UPDATE
+    </select>
+    <insert id="insertPeriodGrantFromLedger">
+        INSERT INTO reading_subscription_period_grant
+            (subscription_id, user_id, period_start, period_end, ticket_amount,
+             ticket_expire_at, reading_ticket_ledger_id, idempotency_key, policy_version)
+        SELECT #{subscriptionId}, #{userId}, #{periodStart}, #{periodEnd}, #{ticketAmount},
+               #{ticketExpireAt}, id, #{idempotencyKey}, policy_version
+        FROM reading_ticket_ledger WHERE idempotency_key=#{idempotencyKey} LIMIT 1
+    </insert>
+    <update id="advanceSubscription">
+        UPDATE user_reading_subscription
+        SET next_grant_at=#{nextGrantAt}, status=#{nextStatus}, version=version+1
+        WHERE id=#{subscriptionId} AND version=#{expectedVersion} AND status='ACTIVE'
+    </update>
+    <select id="selectDueSubscriptionIds" resultType="java.lang.Long">
+        SELECT id FROM user_reading_subscription
+        WHERE status='ACTIVE' AND next_grant_at&lt;=#{now}
+          AND (end_at IS NULL OR next_grant_at&lt;end_at)
+        ORDER BY next_grant_at ASC, id ASC LIMIT #{limit}
+    </select>
+</mapper>

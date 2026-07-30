@@ -49,20 +49,38 @@ http:
     # Mật khẩu proxy
     password: bestproxy_p
 
+novel:
+  gift-code:
+    enabled: ${GIFT_CODE_ENABLED:false}
+    hmac-key-id: ${GIFT_CODE_HMAC_KEY_ID:legacy-v1}
+    hmac-secret: ${GIFT_CODE_HMAC_SECRET:disabled}
+    hmac-verification-keys: ${GIFT_CODE_HMAC_VERIFICATION_KEYS:}
+    policy-version: ${GIFT_CODE_POLICY_VERSION:v1}
+  reader-entitlement:
+    enabled: ${READING_TICKET_ENABLED:false}
+    policy-version: ${READING_TICKET_POLICY_VERSION:v1}
+    max-lots-per-spend: ${READING_TICKET_MAX_LOTS_PER_SPEND:20}
+    expiry-cron: ${READING_TICKET_EXPIRY_CRON:0 30 3 * * ?}
+    expiry-batch-size: ${READING_TICKET_EXPIRY_BATCH_SIZE:500}
+    expiry-max-lots-per-user: ${READING_TICKET_EXPIRY_MAX_LOTS_PER_USER:1000}
+    subscription-grant-cron: ${READING_SUBSCRIPTION_GRANT_CRON:0 10 0 * * ?}
+    subscription-zone-id: ${READING_SUBSCRIPTION_ZONE_ID:Asia/Ho_Chi_Minh}
+    subscription-grant-batch-size: ${READING_SUBSCRIPTION_GRANT_BATCH_SIZE:200}
+
 
 --- #--------------------- Cấu hình Spring AI ----------------------
 spring:
   ai:
     openai:
       image:
-        enabled: true
-        base-url: https://api.siliconflow.cn
-        api-key: sk-rrrupturhdofbiqzjutduuiceecpvfqlnvmgcyiaipbdikoi
+        enabled: ${AI_IMAGE_ENABLED:false}
+        base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+        api-key: ${OPENAI_API_KEY:disabled}
         options:
-          model: Kwai-Kolors/Kolors
+          model: ${OPENAI_IMAGE_MODEL:gpt-image-1}
           response_format: URL
-      api-key: sk-rrrupturhdofbiqzjutduuiceecpvfqlnvmgcyiaipbdikoi
-      base-url: https://api.siliconflow.cn
+      api-key: ${OPENAI_API_KEY:disabled}
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com}
       chat:
         options:
-          model: deepseek-ai/DeepSeek-R1-Distill-Llama-8B
+          model: ${OPENAI_CHAT_MODEL:gpt-4.1-mini}

@@ -6,16 +6,20 @@ import com.java2nb.novel.dto.reader.ReaderAnnotationUpdateRequest;
 import com.java2nb.novel.dto.reader.ReaderProgressUpdateRequest;
 import com.java2nb.novel.entity.Book;
 import com.java2nb.novel.entity.BookIndex;
+import com.java2nb.novel.entity.User;
 import com.java2nb.novel.mapper.ReaderStateMapper;
 import com.java2nb.novel.service.BookService;
 import com.java2nb.novel.service.UserService;
 import com.java2nb.novel.service.chapter.ChapterAccessDecision;
 import com.java2nb.novel.service.chapter.ChapterCommercialPolicyService;
+import com.java2nb.novel.service.entitlement.ReadingTicketService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,6 +32,7 @@ class ReaderStateServiceImplTest {
     private UserService userService;
     private BookService bookService;
     private ChapterCommercialPolicyService commercialPolicyService;
+    private ReadingTicketService readingTicketService;
     private ReaderStateServiceImpl service;
 
     @BeforeEach
@@ -36,7 +41,9 @@ class ReaderStateServiceImplTest {
         userService = mock(UserService.class);
         bookService = mock(BookService.class);
         commercialPolicyService = mock(ChapterCommercialPolicyService.class);
-        service = new ReaderStateServiceImpl(mapper, userService, bookService, commercialPolicyService);
+        readingTicketService = mock(ReadingTicketService.class);
+        service = new ReaderStateServiceImpl(mapper, userService, bookService, commercialPolicyService,
+            readingTicketService);
         when(commercialPolicyService.evaluate(any(), anyBoolean(), any()))
             .thenReturn(new ChapterAccessDecision(false, true, false, true));
         when(bookService.queryBookDetail(10L)).thenReturn(book((byte) 1, (byte) 1, (byte) 1, (byte) 0));
@@ -70,6 +77,37 @@ class ReaderStateServiceImplTest {
     }
 
     @Test
+    void purchasedVipChapterCanExposeReaderState() {
+        when(bookService.queryBookIndex(20L)).thenReturn(chapter((byte) 1, (byte) 1));
+        when(userService.queryIsBuyBookIndex(7L, 20L)).thenReturn(true);
+        when(commercialPolicyService.evaluate(any(), eq(true), any()))
+            .thenReturn(new ChapterAccessDecision(false, false, false, false));
+        when(mapper.listAnnotations(7L, 10L, 20L)).thenReturn(List.of());
+
+        ReaderStateView state = service.getState(7L, 10L, 20L);
+
+        assertThat(state.getAnnotations()).isEmpty();
+        verify(mapper).selectProgress(7L, 10L);
+        verify(mapper).listAnnotations(7L, 10L, 20L);
+    }
+
+    @Test
+    void readingTicketEntitlementCanExposeVipReaderState() {
+        when(bookService.queryBookIndex(20L)).thenReturn(chapter((byte) 1, (byte) 1));
+        when(userService.queryIsBuyBookIndex(7L, 20L)).thenReturn(false);
+        when(readingTicketService.hasActiveChapterEntitlement(eq(7L), eq(20L), any()))
+            .thenReturn(true);
+        when(commercialPolicyService.evaluate(any(), eq(true), any()))
+            .thenReturn(new ChapterAccessDecision(false, false, false, false));
+        when(mapper.listAnnotations(7L, 10L, 20L)).thenReturn(List.of());
+
+        ReaderStateView state = service.getState(7L, 10L, 20L);
+
+        assertThat(state.getAnnotations()).isEmpty();
+        verify(commercialPolicyService).evaluate(any(), eq(true), any());
+    }
+
+    @Test
     void hiddenBookCannotExposeReaderState() {
         when(bookService.queryBookDetail(10L)).thenReturn(book((byte) 0, (byte) 1, (byte) 1, (byte) 0));
 
@@ -88,11 +126,39 @@ class ReaderStateServiceImplTest {
     }
 
     @Test
+    void ageRestrictedBookAllowsVerifiedAdultReader() {
+        User adult = new User();
+        adult.setDateOfBirth(Date.from(Instant.parse("2000-01-01T00:00:00Z")));
+        adult.setIsAgeVerified((byte) 1);
+        when(userService.userInfo(7L)).thenReturn(adult);
+        when(bookService.queryBookDetail(10L)).thenReturn(book((byte) 1, (byte) 1, (byte) 1, (byte) 18));
+        when(mapper.listAnnotations(7L, 10L, 20L)).thenReturn(List.of());
+
+        ReaderStateView state = service.getState(7L, 10L, 20L);
+
+        assertThat(state.getAnnotations()).isEmpty();
+        verify(mapper).listAnnotations(7L, 10L, 20L);
+    }
+
+    @Test
     void unapprovedChapterCannotExposeReaderState() {
         when(bookService.queryBookIndex(20L)).thenReturn(chapter((byte) 0, (byte) 0));
 
         assertThatThrownBy(() -> service.getState(7L, 10L, 20L))
             .isInstanceOf(BusinessException.class);
+        verify(mapper, never()).listAnnotations(anyLong(), anyLong(), anyLong());
+    }
+
+    @Test
+    void chapterFromAnotherBookCannotExposeReaderState() {
+        BookIndex chapter = chapter((byte) 0, (byte) 1);
+        chapter.setBookId(11L);
+        when(bookService.queryBookIndex(20L)).thenReturn(chapter);
+
+        assertThatThrownBy(() -> service.getState(7L, 10L, 20L))
+            .isInstanceOf(BusinessException.class);
+
+        verify(userService, never()).queryIsBuyBookIndex(anyLong(), anyLong());
         verify(mapper, never()).listAnnotations(anyLong(), anyLong(), anyLong());
     }
 

@@ -26,6 +26,12 @@ public interface WalletLedgerService {
 
     WalletPostResult settleAuthorWithdrawal(long amount, String withdrawalNo, String idempotencyKey);
 
+    WalletPostResult creditAuthorRewardPending(long authorId, long amount, String allocationNo,
+                                               String idempotencyKey, String description);
+
+    WalletPostResult releaseAuthorReward(long authorId, long amount, String allocationNo,
+                                         String idempotencyKey, String description);
+
     long getAuthorAvailableBalance(long authorId);
 
     WalletHistoryPage listReaderHistory(long userId, int page, int pageSize);

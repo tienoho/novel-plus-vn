@@ -1,0 +1,576 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  Sổ cái Ngọn Đuốc.
+
+  Hai quy ước bắt buộc trong file này:
+    1. Không dùng NOW() hay CURDATE() cho giá trị nghiệp vụ. MySQL chạy múi giờ +07:00 còn JVM có
+       thể chạy UTC, nên biên ngày và biên kỳ phải tính ở Java rồi truyền xuống làm tham số. Chỉ
+       cột create_time và update_time được để cho database tự điền.
+    2. Mọi câu UPDATE trên bảng chiếu đều mang điều kiện version để khoá lạc quan, và mang thêm
+       điều kiện nghiệp vụ để trả về 0 dòng thay vì ghi ra trạng thái sai.
+-->
+<mapper namespace="com.java2nb.novel.mapper.MonthlyTicketMapper">
+
+    <insert id="insertAccountIgnore">
+        INSERT IGNORE INTO monthly_ticket_account (user_id) VALUES (#{userId})
+    </insert>
+
+    <sql id="accountColumns">
+        id,
+        user_id           AS userId,
+        available_balance AS availableBalance,
+        lifetime_granted  AS lifetimeGranted,
+        lifetime_spent    AS lifetimeSpent,
+        lifetime_expired  AS lifetimeExpired,
+        lifetime_revoked  AS lifetimeRevoked,
+        status,
+        version
+    </sql>
+
+    <select id="selectAccount" resultType="com.java2nb.novel.service.gamification.TicketAccountRow">
+        SELECT
+        <include refid="accountColumns"/>
+        FROM monthly_ticket_account
+        WHERE user_id = #{userId}
+        LIMIT 1
+    </select>
+
+    <select id="lockAccountByUserId" resultType="com.java2nb.novel.service.gamification.TicketAccountRow">
+        SELECT
+        <include refid="accountColumns"/>
+        FROM monthly_ticket_account
+        WHERE user_id = #{userId}
+        FOR UPDATE
+    </select>
+
+    <insert id="insertLedger">
+        INSERT INTO monthly_ticket_ledger
+            (entry_no, user_id, entry_type, amount, balance_after, business_type, business_id,
+             idempotency_key, request_hash, season_id, book_id, reversal_of_ledger_id,
+             operator_type, operator_id, reason, policy_version)
+        VALUES (#{entryNo}, #{userId}, #{entryType}, #{amount}, #{balanceAfter}, #{businessType},
+                #{businessId}, #{idempotencyKey}, #{requestHash}, #{seasonId}, #{bookId},
+                #{reversalOfLedgerId}, #{operatorType}, #{operatorId}, #{reason}, #{policyVersion})
+    </insert>
+
+    <sql id="ledgerColumns">
+        id,
+        entry_no        AS entryNo,
+        user_id         AS userId,
+        entry_type      AS entryType,
+        amount,
+        balance_after   AS balanceAfter,
+        business_type   AS businessType,
+        business_id     AS businessId,
+        idempotency_key AS idempotencyKey,
+        request_hash    AS requestHash,
+        season_id       AS seasonId,
+        book_id         AS bookId,
+        operator_type   AS operatorType,
+        operator_id     AS operatorId,
+        reason,
+        policy_version  AS policyVersion,
+        create_time     AS createTime
+    </sql>
+
+    <select id="selectLedgerByIdempotencyKey"
+            resultType="com.java2nb.novel.service.gamification.TicketLedgerRow">
+        SELECT
+        <include refid="ledgerColumns"/>
+        FROM monthly_ticket_ledger
+        WHERE idempotency_key = #{idempotencyKey}
+        LIMIT 1
+    </select>
+
+    <insert id="insertLot">
+        INSERT INTO monthly_ticket_lot
+            (user_id, source_type, source_ref, granted_amount, remaining_amount, grant_ledger_id,
+             effective_at, expire_at, status, policy_version)
+        VALUES (#{userId}, #{sourceType}, #{sourceRef}, #{grantedAmount}, #{grantedAmount},
+                #{grantLedgerId}, #{effectiveAt}, #{expireAt}, 'ACTIVE', #{policyVersion})
+    </insert>
+
+    <update id="creditAccount">
+        UPDATE monthly_ticket_account
+        SET available_balance = available_balance + #{amount},
+            lifetime_granted  = lifetime_granted + #{amount},
+            version           = version + 1
+        WHERE id = #{accountId}
+          AND version = #{expectedVersion}
+          AND status = 'ACTIVE'
+    </update>
+
+    <select id="selectActiveLots" resultType="com.java2nb.novel.service.gamification.TicketLotRow">
+        SELECT id,
+               user_id          AS userId,
+               source_type      AS sourceType,
+               source_ref       AS sourceRef,
+               granted_amount   AS grantedAmount,
+               remaining_amount AS remainingAmount,
+               grant_ledger_id  AS grantLedgerId,
+               effective_at     AS effectiveAt,
+               expire_at        AS expireAt,
+               status,
+               version
+        FROM monthly_ticket_lot
+        WHERE user_id = #{userId}
+          AND status = 'ACTIVE'
+          AND remaining_amount &gt; 0
+          AND effective_at &lt;= #{now}
+          AND expire_at &gt; #{now}
+        ORDER BY expire_at ASC, id ASC
+        LIMIT #{limit}
+    </select>
+
+    <select id="countLedgerByUser" resultType="long">
+        SELECT COUNT(*) FROM monthly_ticket_ledger WHERE user_id = #{userId}
+    </select>
+
+    <select id="selectLedgerByUser" resultType="com.java2nb.novel.service.gamification.TicketLedgerRow">
+        SELECT
+        <include refid="ledgerColumns"/>
+        FROM monthly_ticket_ledger
+        WHERE user_id = #{userId}
+        ORDER BY id DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="selectExpiredLotUserIds" resultType="long">
+        SELECT user_id
+        FROM monthly_ticket_lot
+        WHERE status = 'ACTIVE'
+          AND remaining_amount &gt; 0
+          AND expire_at &lt;= #{cutoff}
+          AND user_id &gt; #{afterUserId}
+        GROUP BY user_id
+        ORDER BY user_id ASC
+        LIMIT #{limit}
+    </select>
+
+    <select id="lockExpiredLotsByUser"
+            resultType="com.java2nb.novel.service.gamification.TicketLotRow">
+        SELECT id,
+               user_id          AS userId,
+               source_type      AS sourceType,
+               source_ref       AS sourceRef,
+               granted_amount   AS grantedAmount,
+               remaining_amount AS remainingAmount,
+               grant_ledger_id  AS grantLedgerId,
+               effective_at     AS effectiveAt,
+               expire_at        AS expireAt,
+               status,
+               version
+        FROM monthly_ticket_lot
+        WHERE user_id = #{userId}
+          AND status = 'ACTIVE'
+          AND remaining_amount &gt; 0
+          AND expire_at &lt;= #{cutoff}
+        ORDER BY expire_at ASC, id ASC
+        FOR UPDATE
+    </select>
+
+    <update id="expireLot">
+        UPDATE monthly_ticket_lot
+        SET remaining_amount = 0,
+            status           = 'EXPIRED',
+            closed_at        = #{closedAt},
+            version          = version + 1
+        WHERE id = #{lotId}
+          AND version = #{expectedVersion}
+          AND status = 'ACTIVE'
+          AND remaining_amount = #{expectedRemaining}
+          AND expire_at &lt;= #{closedAt}
+    </update>
+
+    <update id="expireFromAccount">
+        UPDATE monthly_ticket_account
+        SET available_balance = available_balance - #{amount},
+            lifetime_expired  = lifetime_expired + #{amount},
+            version           = version + 1
+        WHERE id = #{accountId}
+          AND version = #{expectedVersion}
+          AND available_balance &gt;= #{amount}
+    </update>
+
+    <select id="selectOpenSeason" resultType="com.java2nb.novel.service.gamification.TicketSeasonRow">
+        SELECT id,
+               period_code    AS periodCode,
+               status,
+               start_at       AS startAt,
+               end_at         AS endAt,
+               vote_cutoff_at AS voteCutoffAt,
+               policy_version AS policyVersion,
+               version
+        FROM monthly_ticket_season
+        WHERE status = 'OPEN'
+          AND start_at &lt;= #{at}
+          AND vote_cutoff_at &gt; #{at}
+        ORDER BY start_at DESC, id DESC
+        LIMIT 1
+    </select>
+
+    <select id="countSeasonStillOpen" resultType="int">
+        SELECT COUNT(*)
+        FROM monthly_ticket_season
+        WHERE id = #{seasonId}
+          AND status = 'OPEN'
+          AND start_at &lt;= #{at}
+          AND vote_cutoff_at &gt; #{at}
+    </select>
+
+    <select id="selectBookEligibility"
+            resultType="com.java2nb.novel.service.gamification.TicketBookEligibilityRow">
+        SELECT b.id              AS bookId,
+               b.author_id       AS authorId,
+               a.user_id         AS ownerUserId,
+               b.status,
+               b.audit_status    AS auditStatus,
+               b.crawl_source_id AS crawlSourceId,
+               b.crawl_book_id   AS crawlBookId,
+               EXISTS(SELECT 1 FROM gamification_book_block gb
+                       WHERE gb.book_id = b.id AND gb.active = 1) AS blocked,
+               (a.user_id IS NOT NULL AND a.user_id = #{userId}) AS selfOwned,
+               EXISTS(SELECT 1
+                      FROM author_book_collaborator c
+                      JOIN author ca ON ca.id = c.collaborator_author_id
+                      WHERE c.book_id = b.id
+                        AND ca.user_id IS NOT NULL
+                        AND ca.user_id = #{userId}) AS collaborator
+        FROM book b
+        LEFT JOIN author a ON a.id = b.author_id
+        WHERE b.id = #{bookId}
+        LIMIT 1
+    </select>
+
+    <sql id="voteColumns">
+        id,
+        season_id        AS seasonId,
+        book_id          AS bookId,
+        author_id        AS authorId,
+        user_id          AS userId,
+        ticket_count     AS ticketCount,
+        ledger_id        AS ledgerId,
+        idempotency_key  AS idempotencyKey,
+        request_hash     AS requestHash,
+        client_request_id AS clientRequestId,
+        status,
+        create_time      AS createTime
+    </sql>
+
+    <select id="selectVoteByUserClientRequest"
+            resultType="com.java2nb.novel.service.gamification.TicketVoteRow">
+        SELECT <include refid="voteColumns"/>
+        FROM monthly_ticket_vote
+        WHERE user_id = #{userId} AND client_request_id = #{clientRequestId}
+        LIMIT 1
+    </select>
+
+    <select id="selectVoteByIdempotencyKey"
+            resultType="com.java2nb.novel.service.gamification.TicketVoteRow">
+        SELECT <include refid="voteColumns"/>
+        FROM monthly_ticket_vote
+        WHERE idempotency_key = #{idempotencyKey}
+        LIMIT 1
+    </select>
+
+    <insert id="insertDailyCounterIgnore">
+        INSERT IGNORE INTO monthly_ticket_daily_counter (user_id, local_date)
+        VALUES (#{userId}, #{localDate})
+    </insert>
+
+    <update id="tryConsumeDailyQuota">
+        UPDATE monthly_ticket_daily_counter
+        SET vote_count   = vote_count + 1,
+            ticket_spent = ticket_spent + #{ticketCount},
+            version      = version + 1
+        WHERE user_id = #{userId}
+          AND local_date = #{localDate}
+          AND vote_count &lt; #{maxVotes}
+          AND ticket_spent &lt;= #{maxTickets} - #{ticketCount}
+    </update>
+
+    <insert id="insertBookQuotaIgnore">
+        INSERT IGNORE INTO monthly_ticket_user_book_quota (user_id, season_id, book_id)
+        VALUES (#{userId}, #{seasonId}, #{bookId})
+    </insert>
+
+    <update id="tryConsumeBookQuota">
+        UPDATE monthly_ticket_user_book_quota
+        SET ticket_spent = ticket_spent + #{ticketCount},
+            version      = version + 1
+        WHERE user_id = #{userId}
+          AND season_id = #{seasonId}
+          AND book_id = #{bookId}
+          AND ticket_spent &lt;= #{maxTickets} - #{ticketCount}
+    </update>
+
+    <select id="lockSpendableLots" resultType="com.java2nb.novel.service.gamification.TicketLotRow">
+        SELECT id,
+               user_id          AS userId,
+               source_type      AS sourceType,
+               source_ref       AS sourceRef,
+               granted_amount   AS grantedAmount,
+               remaining_amount AS remainingAmount,
+               grant_ledger_id  AS grantLedgerId,
+               effective_at     AS effectiveAt,
+               expire_at        AS expireAt,
+               status,
+               version
+        FROM monthly_ticket_lot
+        WHERE user_id = #{userId}
+          AND status = 'ACTIVE'
+          AND remaining_amount &gt; 0
+          AND effective_at &lt;= #{at}
+          AND expire_at &gt; #{at}
+        ORDER BY expire_at ASC, id ASC
+        LIMIT #{limit}
+        FOR UPDATE
+    </select>
+
+    <update id="consumeLot">
+        UPDATE monthly_ticket_lot
+        SET status = CASE WHEN remaining_amount = #{amount} THEN 'EXHAUSTED' ELSE 'ACTIVE' END,
+            closed_at = CASE WHEN remaining_amount = #{amount} THEN #{at} ELSE NULL END,
+            remaining_amount = remaining_amount - #{amount},
+            version = version + 1
+        WHERE id = #{lotId}
+          AND version = #{expectedVersion}
+          AND status = 'ACTIVE'
+          AND effective_at &lt;= #{at}
+          AND expire_at &gt; #{at}
+          AND remaining_amount &gt;= #{amount}
+    </update>
+
+    <insert id="insertLotAllocation">
+        INSERT INTO monthly_ticket_lot_allocation
+            (ledger_id, lot_id, amount, lot_remaining_after)
+        VALUES (#{ledgerId}, #{lotId}, #{amount}, #{remainingAfter})
+    </insert>
+
+    <update id="debitAccount">
+        UPDATE monthly_ticket_account
+        SET available_balance = available_balance - #{amount},
+            lifetime_spent    = lifetime_spent + #{amount},
+            version           = version + 1
+        WHERE id = #{accountId}
+          AND version = #{expectedVersion}
+          AND status = 'ACTIVE'
+          AND available_balance &gt;= #{amount}
+    </update>
+
+    <insert id="insertVote">
+        INSERT INTO monthly_ticket_vote
+            (season_id, book_id, author_id, user_id, ticket_count, ledger_id,
+             idempotency_key, request_hash, client_request_id, status,
+             source_ip_hash, policy_version)
+        VALUES (#{seasonId}, #{bookId}, #{authorId}, #{userId}, #{ticketCount}, #{ledgerId},
+                #{idempotencyKey}, #{requestHash}, #{clientRequestId}, 'VALID',
+                #{sourceIpHash}, #{policyVersion})
+    </insert>
+
+    <insert id="insertRankVoterIgnore">
+        INSERT IGNORE INTO monthly_rank_voter (season_id, book_id, user_id)
+        VALUES (#{seasonId}, #{bookId}, #{userId})
+    </insert>
+
+    <!--
+      Dùng VALUES(column) để tham chiếu lại giá trị vừa chèn thay vì lặp lại #{namedParameter}.
+      Lặp lại cùng một named parameter nhiều lần trong ON DUPLICATE KEY UPDATE khiến bộ viết lại
+      SQL của ShardingSphere đếm sai số lượng tham số cần bind và ném "No value specified for
+      parameter N", dù cùng câu lệnh chạy đúng trên MySQL thuần. Đây là quy ước đã dùng ở
+      ReaderStateMapper.xml, giữ nhất quán thay vì tự nghĩ cách khác.
+    -->
+    <insert id="upsertRankCounter">
+        INSERT INTO monthly_rank_counter
+            (season_id, book_id, total_tickets, vote_count, distinct_voter_count, last_vote_at)
+        VALUES (#{seasonId}, #{bookId}, #{ticketCount}, 1, #{newDistinctVoter}, #{voteAt})
+        ON DUPLICATE KEY UPDATE
+            total_tickets = total_tickets + VALUES(total_tickets),
+            vote_count = vote_count + 1,
+            distinct_voter_count = distinct_voter_count + VALUES(distinct_voter_count),
+            last_vote_at = CASE
+                WHEN last_vote_at IS NULL OR last_vote_at &lt; VALUES(last_vote_at) THEN VALUES(last_vote_at)
+                ELSE last_vote_at
+            END,
+            version = version + 1
+    </insert>
+
+    <select id="selectRankCounter" resultType="com.java2nb.novel.service.gamification.TicketRankCounterRow">
+        SELECT season_id            AS seasonId,
+               book_id              AS bookId,
+               total_tickets        AS totalTickets,
+               vote_count           AS voteCount,
+               distinct_voter_count AS distinctVoterCount,
+               version
+        FROM monthly_rank_counter
+        WHERE season_id = #{seasonId} AND book_id = #{bookId}
+    </select>
+
+    <insert id="insertJobRunIgnore">
+        INSERT IGNORE INTO scheduled_job_run
+            (job_type, scope_type, scope_key, status, owner_instance, heartbeat_at, started_at)
+        VALUES (#{jobType}, #{scopeType}, #{scopeKey}, 'RUNNING', #{ownerInstance},
+                #{startedAt}, #{startedAt})
+    </insert>
+
+    <update id="claimStaleJobRun">
+        UPDATE scheduled_job_run
+        SET status         = 'RUNNING',
+            attempt        = attempt + 1,
+            owner_instance = #{ownerInstance},
+            heartbeat_at   = #{claimedAt},
+            started_at     = #{claimedAt},
+            finished_at    = NULL,
+            error_message  = NULL,
+            version        = version + 1
+        WHERE job_type = #{jobType}
+          AND scope_type = #{scopeType}
+          AND scope_key = #{scopeKey}
+          AND (status = 'FAILED'
+            OR (status = 'RUNNING' AND heartbeat_at &lt; #{staleBefore}))
+    </update>
+
+    <select id="selectJobCheckpoint" resultType="string">
+        SELECT checkpoint
+        FROM scheduled_job_run
+        WHERE job_type = #{jobType}
+          AND scope_type = #{scopeType}
+          AND scope_key = #{scopeKey}
+          AND status = 'RUNNING'
+          AND owner_instance = #{ownerInstance}
+        LIMIT 1
+    </select>
+
+    <update id="advanceJobCheckpoint">
+        UPDATE scheduled_job_run
+        SET checkpoint      = #{checkpoint},
+            processed_count = processed_count + #{processedDelta},
+            heartbeat_at    = #{heartbeatAt},
+            version         = version + 1
+        WHERE job_type = #{jobType}
+          AND scope_type = #{scopeType}
+          AND scope_key = #{scopeKey}
+          AND status = 'RUNNING'
+          AND owner_instance = #{ownerInstance}
+    </update>
+
+    <update id="completeJobRun">
+        UPDATE scheduled_job_run
+        SET status        = 'SUCCEEDED',
+            heartbeat_at  = #{finishedAt},
+            finished_at   = #{finishedAt},
+            error_message = NULL,
+            version       = version + 1
+        WHERE job_type = #{jobType}
+          AND scope_type = #{scopeType}
+          AND scope_key = #{scopeKey}
+          AND status = 'RUNNING'
+          AND owner_instance = #{ownerInstance}
+    </update>
+
+    <update id="failJobRun">
+        UPDATE scheduled_job_run
+        SET status        = 'FAILED',
+            heartbeat_at  = #{finishedAt},
+            finished_at   = #{finishedAt},
+            error_message = #{errorMessage},
+            version       = version + 1
+        WHERE job_type = #{jobType}
+          AND scope_type = #{scopeType}
+          AND scope_key = #{scopeKey}
+          AND status = 'RUNNING'
+          AND owner_instance = #{ownerInstance}
+    </update>
+
+    <!--
+      Ba truy vấn đối soát dưới đây trả về map thô giống checkZeroSumLedger của sổ cái Xu và được
+      LedgerIntegrityCheckSchedule gọi định kỳ. Chúng bỏ qua bản ghi vừa được sửa trong 10 giây
+      gần nhất để không báo động giả khi có giao dịch đang chạy dở.
+    -->
+
+    <select id="checkAccountLotDrift" resultType="map">
+        SELECT a.user_id,
+               a.available_balance,
+               COALESCE(SUM(l.remaining_amount), 0) AS lot_remaining
+        FROM monthly_ticket_account a
+                 LEFT JOIN monthly_ticket_lot l
+                           ON l.user_id = a.user_id AND l.status = 'ACTIVE'
+        WHERE a.update_time &lt; CURRENT_TIMESTAMP(3) - INTERVAL 10 SECOND
+        GROUP BY a.user_id, a.available_balance
+        HAVING a.available_balance &lt;&gt; COALESCE(SUM(l.remaining_amount), 0)
+    </select>
+
+    <select id="checkAllocationImbalance" resultType="map">
+        SELECT g.id AS ledger_id,
+               g.entry_type,
+               ABS(g.amount)                  AS ledger_amount,
+               COALESCE(SUM(a.amount), 0)     AS allocated_amount
+        FROM monthly_ticket_ledger g
+                 LEFT JOIN monthly_ticket_lot_allocation a ON a.ledger_id = g.id
+        WHERE g.entry_type IN ('SPEND', 'EXPIRE', 'REVOKE')
+          AND g.create_time &lt; CURRENT_TIMESTAMP(3) - INTERVAL 10 SECOND
+        GROUP BY g.id, g.entry_type, g.amount
+        HAVING COALESCE(SUM(a.amount), 0) &lt;&gt; ABS(g.amount)
+    </select>
+
+    <select id="checkOrphanLots" resultType="map">
+        SELECT l.id AS lot_id, l.user_id, l.grant_ledger_id
+        FROM monthly_ticket_lot l
+                 LEFT JOIN monthly_ticket_ledger g ON g.id = l.grant_ledger_id
+        WHERE l.create_time &lt; CURRENT_TIMESTAMP(3) - INTERVAL 10 SECOND
+          AND (g.id IS NULL OR g.entry_type &lt;&gt; 'GRANT' OR g.user_id &lt;&gt; l.user_id)
+    </select>
+
+    <select id="checkStuckJobs" resultType="map">
+        SELECT 'STALE_JOB' AS alert_type,
+               j.id        AS scope_id,
+               CONCAT(j.job_type, ':', j.scope_type, ':', j.scope_key) AS scope_key,
+               j.heartbeat_at AS observed_at
+        FROM scheduled_job_run j
+        WHERE j.status = 'RUNNING'
+          AND j.heartbeat_at &lt; #{jobCutoff}
+        UNION ALL
+        SELECT 'REVIEW_OVERDUE' AS alert_type,
+               s.id             AS scope_id,
+               s.period_code    AS scope_key,
+               s.review_at      AS observed_at
+        FROM monthly_ticket_season s
+        WHERE s.status = 'REVIEW'
+          AND (s.review_at IS NULL
+            OR s.review_at &lt; #{reviewCutoff})
+    </select>
+
+    <select id="checkPendingRewards" resultType="map">
+        SELECT a.id AS allocation_id,
+               a.allocation_no,
+               a.author_id,
+               a.amount_xu,
+               a.posted_at
+        FROM author_reward_allocation a
+        WHERE a.status = 'POSTED_PENDING'
+          AND (a.posted_at IS NULL
+            OR a.posted_at &lt; #{claimCutoff})
+    </select>
+
+    <!--
+      Chỉ lấy vote của người dùng đã bật tường minh (ticker_opt_out = 0); cột mặc định 1 nên
+      không JOIN gamification_profile nghĩa là ẩn theo mặc định, đúng chính sách opt-in.
+      Không trả user_id hay bất kỳ định danh nào ngoài nickname đã đặt.
+    -->
+    <select id="selectRecentTickerEntries"
+            resultType="com.java2nb.novel.service.gamification.TickerEntryRow">
+        SELECT u.nick_name AS nickname,
+               b.book_name AS bookName,
+               v.ticket_count AS ticketCount
+        FROM monthly_ticket_vote v
+                 JOIN gamification_profile p ON p.user_id = v.user_id AND p.ticker_opt_out = 0
+                 JOIN user u ON u.id = v.user_id
+                 JOIN book b ON b.id = v.book_id
+        WHERE v.status = 'VALID'
+        ORDER BY v.id DESC
+        LIMIT #{limit}
+    </select>
+
+</mapper>

@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.java2nb.novel.mapper.GamificationProgressMapper">
+
+    <insert id="insertEventIgnore">
+        INSERT IGNORE INTO gamification_event
+            (event_type, source_key, user_id, book_id, occurred_at, local_date,
+             payload_hash, payload, status, attempt, policy_version)
+        VALUES (#{event.eventType}, #{event.sourceKey}, #{event.userId}, #{event.bookId},
+                #{event.occurredAt}, #{event.localDate}, #{event.payloadHash},
+                #{event.payloadJson}, 'PENDING', 0, #{event.policyVersion})
+    </insert>
+
+    <select id="selectEventBySourceKey"
+            resultType="com.java2nb.novel.service.gamification.GamificationEventRow">
+        SELECT id,
+               event_type    AS eventType,
+               source_key    AS sourceKey,
+               user_id       AS userId,
+               book_id       AS bookId,
+               occurred_at   AS occurredAt,
+               local_date    AS localDate,
+               payload_hash  AS payloadHash,
+               payload       AS payloadJson,
+               status,
+               attempt,
+               processed_at  AS processedAt,
+               error_message AS errorMessage,
+               policy_version AS policyVersion,
+               version,
+               create_time   AS createTime
+        FROM gamification_event
+        WHERE source_key = #{sourceKey}
+        LIMIT 1
+    </select>
+
+    <select id="selectPendingEventIds" resultType="long">
+        SELECT id
+        FROM gamification_event
+        WHERE status = 'PENDING'
+          AND attempt &lt; #{maxAttempt}
+        ORDER BY id ASC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectEventById"
+            resultType="com.java2nb.novel.service.gamification.GamificationEventRow">
+        SELECT id, event_type AS eventType, source_key AS sourceKey, user_id AS userId,
+               book_id AS bookId, occurred_at AS occurredAt, local_date AS localDate,
+               payload_hash AS payloadHash, payload AS payloadJson, status, attempt,
+               processed_at AS processedAt, error_message AS errorMessage,
+               policy_version AS policyVersion, version, create_time AS createTime
+        FROM gamification_event
+        WHERE id = #{eventId}
+        LIMIT 1
+    </select>
+
+    <update id="claimEvent">
+        UPDATE gamification_event
+        SET attempt = attempt + 1,
+            processed_at = #{claimedAt},
+            error_message = NULL,
+            version = version + 1
+        WHERE id = #{eventId}
+          AND status = 'PENDING'
+          AND attempt &lt; #{maxAttempt}
+          AND version = #{expectedVersion}
+    </update>
+
+    <update id="completeEvent">
+        UPDATE gamification_event
+        SET status = #{status},
+            processed_at = #{processedAt},
+            error_message = NULL,
+            version = version + 1
+        WHERE id = #{eventId}
+          AND status = 'PENDING'
+          AND version = #{expectedVersion}
+    </update>
+
+    <update id="recordEventFailure">
+        UPDATE gamification_event
+        SET attempt = attempt + 1,
+            status = CASE WHEN attempt + 1 &gt;= #{maxAttempt} THEN 'FAILED' ELSE 'PENDING' END,
+            processed_at = #{failedAt},
+            error_message = #{errorMessage},
+            version = version + 1
+        WHERE id = #{eventId}
+          AND status = 'PENDING'
+          AND attempt &lt; #{maxAttempt}
+          AND version = #{expectedVersion}
+    </update>
+
+    <select id="selectActiveQuestsByEventType"
+            resultType="com.java2nb.novel.service.gamification.QuestDefinitionRow">
+        SELECT quest_code AS questCode, event_type AS eventType, period_type AS periodType,
+               target_count AS targetCount, name_key AS nameKey, sort_no AS sortNo, active
+        FROM quest_definition
+        WHERE event_type = #{eventType}
+          AND active = 1
+        ORDER BY sort_no ASC, quest_code ASC
+    </select>
+
+    <insert id="insertQuestProgressIgnore">
+        INSERT IGNORE INTO user_quest_progress
+            (user_id, quest_code, period_key, current_count, target_count)
+        VALUES (#{userId}, #{questCode}, #{periodKey}, 0, #{targetCount})
+    </insert>
+
+    <update id="incrementQuestProgress">
+        UPDATE user_quest_progress
+        SET current_count = LEAST(current_count + 1, target_count),
+            completed_at = CASE
+                WHEN current_count + 1 &gt;= target_count THEN COALESCE(completed_at, #{completedAt})
+                ELSE completed_at END,
+            version = version + 1
+        WHERE user_id = #{userId}
+          AND quest_code = #{questCode}
+          AND period_key = #{periodKey}
+          AND current_count &lt; target_count
+    </update>
+
+    <select id="selectActiveQuestCampaigns"
+            resultType="com.java2nb.novel.service.gamification.QuestCampaignRow">
+        SELECT id, campaign_code AS campaignCode, start_at AS startAt, end_at AS endAt,
+               status, policy_version AS policyVersion
+        FROM quest_campaign
+        WHERE status = 'ACTIVE'
+          AND start_at &lt;= #{observedAt}
+          AND end_at &gt; #{observedAt}
+        ORDER BY start_at DESC, campaign_code ASC
+        LIMIT 2
+    </select>
+
+    <select id="selectQuestProgress"
+            resultType="com.java2nb.novel.service.gamification.QuestProgressRow">
+        SELECT q.quest_code AS questCode,
+               q.period_type AS periodType,
+               CASE q.period_type
+                   WHEN 'DAILY' THEN #{dailyKey}
+                   WHEN 'WEEKLY' THEN #{weeklyKey}
+                   ELSE 'ALL'
+               END AS periodKey,
+               COALESCE(p.target_count, q.target_count) AS targetCount,
+               q.name_key AS nameKey,
+               q.sort_no AS sortNo,
+               COALESCE(p.current_count, 0) AS currentCount,
+               p.completed_at AS completedAt,
+               c.id AS claimId,
+               c.create_time AS claimedAt,
+                COALESCE((SELECT SUM(r.amount) FROM quest_reward r
+                          WHERE r.quest_code = q.quest_code
+                            AND r.campaign_code = #{campaignCode}
+                            AND r.reward_type = 'EXP'),
+                         (SELECT SUM(r.amount) FROM quest_reward r
+                          WHERE r.quest_code = q.quest_code
+                            AND r.campaign_code = 'DEFAULT'
+                            AND r.reward_type = 'EXP'), 0) AS expReward,
+                COALESCE((SELECT SUM(r.amount) FROM quest_reward r
+                          WHERE r.quest_code = q.quest_code
+                            AND r.campaign_code = #{campaignCode}
+                            AND r.reward_type = 'TICKET'),
+                         (SELECT SUM(r.amount) FROM quest_reward r
+                          WHERE r.quest_code = q.quest_code
+                            AND r.campaign_code = 'DEFAULT'
+                            AND r.reward_type = 'TICKET'), 0) AS ticketReward
+        FROM quest_definition q
+        LEFT JOIN user_quest_progress p
+               ON p.user_id = #{userId}
+              AND p.quest_code = q.quest_code
+              AND p.period_key = CASE q.period_type
+                  WHEN 'DAILY' THEN #{dailyKey}
+                  WHEN 'WEEKLY' THEN #{weeklyKey}
+                  ELSE 'ALL'
+              END
+        LEFT JOIN quest_claim c
+               ON c.user_id = #{userId}
+              AND c.quest_code = q.quest_code
+              AND c.period_key = CASE q.period_type
+                  WHEN 'DAILY' THEN #{dailyKey}
+                  WHEN 'WEEKLY' THEN #{weeklyKey}
+                  ELSE 'ALL'
+              END
+        WHERE q.active = 1
+        ORDER BY q.sort_no ASC, q.quest_code ASC
+    </select>
+
+    <select id="selectQuestByCode"
+            resultType="com.java2nb.novel.service.gamification.QuestDefinitionRow">
+        SELECT quest_code AS questCode, event_type AS eventType, period_type AS periodType,
+               target_count AS targetCount, name_key AS nameKey, sort_no AS sortNo, active
+        FROM quest_definition
+        WHERE quest_code = #{questCode}
+        LIMIT 1
+    </select>
+
+    <select id="lockQuestProgress"
+            resultType="com.java2nb.novel.service.gamification.QuestProgressRow">
+        SELECT quest_code AS questCode, period_key AS periodKey,
+               target_count AS targetCount, current_count AS currentCount,
+               completed_at AS completedAt
+        FROM user_quest_progress
+        WHERE user_id = #{userId}
+          AND quest_code = #{questCode}
+          AND period_key = #{periodKey}
+        FOR UPDATE
+    </select>
+
+    <select id="selectQuestClaim"
+            resultType="com.java2nb.novel.service.gamification.QuestClaimRow">
+        SELECT id, user_id AS userId, quest_code AS questCode, period_key AS periodKey,
+               campaign_code AS campaignCode, exp_amount AS expAmount,
+               ticket_amount AS ticketAmount, exp_ledger_id AS expLedgerId,
+               ticket_ledger_id AS ticketLedgerId, idempotency_key AS idempotencyKey,
+               policy_version AS policyVersion, create_time AS createTime
+        FROM quest_claim
+        WHERE user_id = #{userId}
+          AND quest_code = #{questCode}
+          AND period_key = #{periodKey}
+        LIMIT 1
+    </select>
+
+    <select id="selectQuestRewardSummary"
+            resultType="com.java2nb.novel.service.gamification.QuestRewardSummary">
+        SELECT COALESCE(SUM(CASE WHEN reward_type = 'EXP' THEN amount ELSE 0 END), 0) AS expAmount,
+               COALESCE(SUM(CASE WHEN reward_type = 'TICKET' THEN amount ELSE 0 END), 0) AS ticketAmount
+        FROM quest_reward
+        WHERE quest_code = #{questCode}
+          AND campaign_code = #{campaignCode}
+    </select>
+
+    <insert id="insertExpLedger">
+        INSERT INTO user_exp_ledger
+            (user_id, source_key, source_type, amount, balance_after, rule_version, policy_version)
+        VALUES (#{userId}, #{sourceKey}, #{sourceType}, #{amount}, #{balanceAfter},
+                #{ruleVersion}, #{policyVersion})
+    </insert>
+
+    <select id="selectExpLedgerBySourceKey"
+            resultType="com.java2nb.novel.service.gamification.UserExpLedgerRow">
+        SELECT id, user_id AS userId, source_key AS sourceKey, source_type AS sourceType,
+               amount, balance_after AS balanceAfter, rule_version AS ruleVersion,
+               policy_version AS policyVersion, create_time AS createTime
+        FROM user_exp_ledger
+        WHERE source_key = #{sourceKey}
+        LIMIT 1
+    </select>
+
+    <select id="selectLevelRuleForExp"
+            resultType="com.java2nb.novel.service.gamification.LevelRuleRow">
+        SELECT rule_version AS ruleVersion, level, min_exp AS minExp,
+               title_key AS titleKey, frame_code AS frameCode
+        FROM level_rule
+        WHERE rule_version = #{ruleVersion}
+          AND min_exp &lt;= #{totalExp}
+        ORDER BY min_exp DESC
+        LIMIT 1
+    </select>
+
+    <update id="updateProfileExp">
+        UPDATE gamification_profile
+        SET total_exp = #{totalExp},
+            level = #{level},
+            frame_code = #{frameCode},
+            version = version + 1
+        WHERE user_id = #{userId}
+          AND version = #{expectedVersion}
+    </update>
+
+    <update id="updateCheckIn">
+        UPDATE gamification_profile
+        SET last_checkin_date = #{lastCheckInDate},
+            checkin_streak = #{checkInStreak},
+            longest_streak = #{longestStreak},
+            version = version + 1
+        WHERE user_id = #{userId}
+          AND version = #{expectedVersion}
+    </update>
+
+    <insert id="insertQuestClaim">
+        INSERT INTO quest_claim
+            (user_id, quest_code, period_key, campaign_code, exp_amount, ticket_amount,
+             exp_ledger_id, ticket_ledger_id, idempotency_key, policy_version)
+        VALUES (#{userId}, #{questCode}, #{periodKey}, #{campaignCode}, #{expAmount},
+                #{ticketAmount}, #{expLedgerId}, #{ticketLedgerId}, #{idempotencyKey},
+                #{policyVersion})
+    </insert>
+
+    <sql id="profileColumns">
+        id,
+        user_id AS userId,
+        level,
+        total_exp AS totalExp,
+        rule_version AS ruleVersion,
+        realm_code AS realmCode,
+        frame_code AS frameCode,
+        checkin_streak AS checkinStreak,
+        longest_streak AS longestStreak,
+        last_checkin_date AS lastCheckinDate,
+        realm_changed_at AS realmChangedAt,
+        ticker_opt_out AS tickerOptOut,
+        version
+    </sql>
+
+    <insert id="insertProfileIgnore">
+        INSERT IGNORE INTO gamification_profile (user_id, rule_version)
+        VALUES (#{userId}, #{ruleVersion})
+    </insert>
+
+    <select id="selectProfile"
+            resultType="com.java2nb.novel.service.gamification.GamificationProfileRow">
+        SELECT <include refid="profileColumns"/>
+        FROM gamification_profile
+        WHERE user_id = #{userId}
+        LIMIT 1
+    </select>
+
+    <select id="lockProfile"
+            resultType="com.java2nb.novel.service.gamification.GamificationProfileRow">
+        SELECT <include refid="profileColumns"/>
+        FROM gamification_profile
+        WHERE user_id = #{userId}
+        FOR UPDATE
+    </select>
+
+    <select id="selectRealm"
+            resultType="com.java2nb.novel.service.gamification.RealmCatalogRow">
+        SELECT realm_code AS realmCode,
+               name_key AS nameKey,
+               min_level AS minLevel,
+               active
+        FROM realm_catalog
+        WHERE realm_code = #{realmCode}
+        LIMIT 1
+    </select>
+
+    <select id="selectNextLevelRule"
+            resultType="com.java2nb.novel.service.gamification.LevelRuleRow">
+        SELECT rule_version AS ruleVersion,
+               level,
+               min_exp AS minExp,
+               title_key AS titleKey,
+               frame_code AS frameCode
+        FROM level_rule
+        WHERE rule_version = #{ruleVersion}
+          AND min_exp &gt; #{totalExp}
+        ORDER BY min_exp ASC
+        LIMIT 1
+    </select>
+
+    <update id="updateRealm">
+        UPDATE gamification_profile
+        SET realm_code = #{realmCode},
+            realm_changed_at = #{changedAt},
+            version = version + 1
+        WHERE user_id = #{userId}
+          AND version = #{expectedVersion}
+    </update>
+
+    <insert id="insertProfileAudit">
+        INSERT INTO gamification_profile_audit
+            (user_id, change_type, from_value, to_value, operator_type, operator_id, reason)
+        VALUES (#{userId}, #{changeType}, #{fromValue}, #{toValue},
+                #{operatorType}, #{operatorId}, #{reason})
+    </insert>
+
+    <update id="updateTickerOptOut">
+        UPDATE gamification_profile
+        SET ticker_opt_out = #{optOut},
+            version = version + 1
+        WHERE user_id = #{userId}
+          AND version = #{expectedVersion}
+    </update>
+
+</mapper>

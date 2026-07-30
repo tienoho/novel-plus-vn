@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.java2nb.novel.mapper.ReadingSubscriptionPurchaseMapper">
+    <sql id="purchaseColumns">
+        id, out_trade_no AS outTradeNo, user_id AS userId, plan_id AS planId,
+        plan_code_snapshot AS planCodeSnapshot, plan_name_snapshot AS planNameSnapshot,
+        price_vnd_snapshot AS priceVndSnapshot,
+        tickets_per_period_snapshot AS ticketsPerPeriodSnapshot,
+        period_months_snapshot AS periodMonthsSnapshot,
+        ticket_validity_days_snapshot AS ticketValidityDaysSnapshot,
+        pay_channel AS payChannel, client_request_id AS clientRequestId,
+        request_hash AS requestHash, policy_version AS policyVersion, zone_id AS zoneId,
+        status, subscription_id AS subscriptionId,
+        settled_at AS settledAt, version, create_time AS createTime, update_time AS updateTime
+    </sql>
+    <select id="selectByUserRequest"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionPurchaseRow">
+        SELECT <include refid="purchaseColumns"/>
+        FROM reading_subscription_purchase
+        WHERE user_id=#{userId} AND client_request_id=#{clientRequestId}
+        LIMIT 1 FOR UPDATE
+    </select>
+    <select id="selectOpenByUser"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionPurchaseRow">
+        SELECT <include refid="purchaseColumns"/>
+        FROM reading_subscription_purchase
+        WHERE open_user_id=#{userId}
+        LIMIT 1 FOR UPDATE
+    </select>
+    <select id="selectByOutTradeNoForUpdate"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionPurchaseRow">
+        SELECT <include refid="purchaseColumns"/>
+        FROM reading_subscription_purchase
+        WHERE out_trade_no=#{outTradeNo}
+        LIMIT 1 FOR UPDATE
+    </select>
+    <select id="selectByIdForUpdate"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionPurchaseRow">
+        SELECT <include refid="purchaseColumns"/>
+        FROM reading_subscription_purchase
+        WHERE id=#{purchaseId}
+        LIMIT 1 FOR UPDATE
+    </select>
+    <select id="selectById"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionPurchaseRow">
+        SELECT <include refid="purchaseColumns"/>
+        FROM reading_subscription_purchase
+        WHERE id=#{purchaseId}
+        LIMIT 1
+    </select>
+    <select id="selectReviews"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionPurchaseRow">
+        SELECT <include refid="purchaseColumns"/>
+        FROM reading_subscription_purchase
+        WHERE status=#{status}
+        ORDER BY update_time ASC, id ASC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+    <select id="countReviews" resultType="long">
+        SELECT COUNT(*) FROM reading_subscription_purchase WHERE status=#{status}
+    </select>
+    <insert id="insertPurchase">
+        INSERT INTO reading_subscription_purchase
+            (out_trade_no, user_id, plan_id, plan_code_snapshot, plan_name_snapshot,
+             price_vnd_snapshot, tickets_per_period_snapshot, period_months_snapshot,
+             ticket_validity_days_snapshot, pay_channel, client_request_id, request_hash,
+             policy_version, zone_id, status, create_time, update_time)
+        VALUES (#{outTradeNo}, #{userId}, #{plan.id}, #{plan.planCode}, #{plan.planName},
+                #{plan.priceVnd}, #{plan.ticketsPerPeriod}, #{plan.periodMonths},
+                #{plan.ticketValidityDays}, #{payChannel}, #{clientRequestId}, #{requestHash},
+                #{policyVersion}, #{zoneId}, 'PENDING', #{createdAt}, #{createdAt})
+    </insert>
+    <update id="markActivated">
+        UPDATE reading_subscription_purchase
+        SET status='ACTIVATED', subscription_id=#{subscriptionId}, settled_at=#{settledAt},
+            version=version+1, update_time=#{settledAt}
+        WHERE id=#{purchaseId} AND status='PENDING' AND version=#{expectedVersion}
+    </update>
+    <update id="markPaidReview">
+        UPDATE reading_subscription_purchase
+        SET status='PAID_REVIEW', settled_at=#{settledAt}, version=version+1,
+            update_time=#{settledAt}
+        WHERE id=#{purchaseId} AND status='PENDING' AND version=#{expectedVersion}
+    </update>
+    <update id="markFailed">
+        UPDATE reading_subscription_purchase
+        SET status='FAILED', settled_at=#{settledAt}, version=version+1,
+            update_time=#{settledAt}
+        WHERE id=#{purchaseId} AND status='PENDING' AND version=#{expectedVersion}
+    </update>
+    <update id="markReviewActivated">
+        UPDATE reading_subscription_purchase
+        SET status='ACTIVATED', subscription_id=#{subscriptionId}, version=version+1,
+            update_time=#{updatedAt}
+        WHERE id=#{purchaseId} AND status='PAID_REVIEW' AND version=#{expectedVersion}
+    </update>
+    <update id="markRefundPending">
+        UPDATE reading_subscription_purchase
+        SET status='REFUND_PENDING', version=version+1, update_time=#{updatedAt}
+        WHERE id=#{purchaseId} AND status='PAID_REVIEW' AND version=#{expectedVersion}
+    </update>
+    <insert id="insertReviewAudit">
+        INSERT INTO reading_subscription_purchase_review_audit
+            (purchase_id, out_trade_no, event_type, from_status, to_status, operator_id,
+             reason, purchase_version_before, purchase_version_after, create_time)
+        VALUES (#{purchase.id}, #{purchase.outTradeNo}, #{eventType}, #{purchase.status},
+                #{toStatus}, #{operatorId}, #{reason}, #{purchase.version}, #{versionAfter},
+                #{createdAt})
+    </insert>
+</mapper>

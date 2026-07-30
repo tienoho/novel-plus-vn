@@ -1,6 +1,7 @@
 package com.java2nb.novel.controller;
 
 import com.java2nb.novel.core.bean.UserDetails;
+import com.java2nb.novel.core.config.VietQrProperties;
 import com.java2nb.novel.core.config.VnpayProperties;
 import com.java2nb.novel.core.i18n.Messages;
 import com.java2nb.novel.core.utils.IpUtil;
@@ -25,7 +26,6 @@ import com.java2nb.novel.common.annotation.AuditLog;
 import com.java2nb.novel.common.annotation.LimitType;
 import com.java2nb.novel.common.annotation.RateLimit;
 import com.java2nb.novel.core.payment.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -43,16 +43,16 @@ public class PayController extends BaseController {
     private final VnpayService vnpayService;
     private final OrderService orderService;
     private final Messages messages;
-
-    @Autowired(required = false)
-    private PaymentAdapterFactory paymentAdapterFactory;
+    private final VietQrProperties vietQrProperties;
+    private final PaymentAdapterFactory paymentAdapterFactory;
 
     @ResponseBody
     @GetMapping("channels")
     public List<Map<String, Object>> listChannels() {
         List<Map<String, Object>> channels = new ArrayList<>();
         channels.add(Map.of("code", 4, "name", "VNPAY", "enabled", vnpayProperties.isConfigured()));
-        channels.add(Map.of("code", 5, "name", "VIETQR", "enabled", true));
+        channels.add(Map.of("code", 5, "name", "VIETQR", "enabled",
+            vietQrProperties.isConfigured() && paymentAdapterFactory.findAdapter(VIETQR_CHANNEL).isPresent()));
         return channels;
     }
 
@@ -89,22 +89,20 @@ public class PayController extends BaseController {
     public Map<String, Object> vietqr(@RequestParam("payAmount") Integer payAmount, HttpServletRequest request) {
         UserDetails userDetails = getUserDetails(request);
         if (userDetails == null) {
-            return Map.of("code", 401, "msg", "Chưa đăng nhập");
+            return Map.of("code", 401, "msg", message("auth.login.required", "Vui lòng đăng nhập trước"));
         }
-        if (payAmount == null || payAmount <= 0) {
-            return Map.of("code", 400, "msg", "Số tiền nạp không hợp lệ");
+        PaymentAdapter vietQrAdapter = paymentAdapterFactory.findAdapter(VIETQR_CHANNEL).orElse(null);
+        if (!vietQrProperties.isConfigured() || vietQrAdapter == null) {
+            return Map.of("code", 503, "msg", message("payment.vietqr.unavailable",
+                "VietQR chưa được cấu hình an toàn"));
+        }
+        if (payAmount == null || !vnpayProperties.isAllowedAmount(payAmount)) {
+            return Map.of("code", 400, "msg", message("payment.amount.invalid",
+                "Mệnh giá nạp không hợp lệ"));
         }
 
         int accountAmount = vnpayProperties.calculateXu(payAmount);
         PayOrderCreation order = orderService.createPayOrder(VIETQR_CHANNEL, payAmount, accountAmount, userDetails.getId());
-
-        PaymentAdapter vietQrAdapter = paymentAdapterFactory != null
-            ? paymentAdapterFactory.findAdapter(VIETQR_CHANNEL).orElse(null)
-            : null;
-
-        if (vietQrAdapter == null) {
-            return Map.of("code", 500, "msg", "PaymentAdapter VietQR chưa sẵn sàng");
-        }
 
         PaymentCreationRequest creationRequest = PaymentCreationRequest.builder()
             .outTradeNo(order.outTradeNo())
@@ -133,33 +131,27 @@ public class PayController extends BaseController {
         Map<String, String> headers = extractHeaders(request);
         Map<String, String> params = singleValueParams(request);
 
-        PaymentAdapter vietQrAdapter = paymentAdapterFactory != null
-            ? paymentAdapterFactory.findAdapter(VIETQR_CHANNEL).orElse(null)
-            : null;
-
-        WebhookVerifyResult verifyResult;
-        if (vietQrAdapter != null) {
-            verifyResult = vietQrAdapter.verifyAndParseWebhook(headers, params, body);
-        } else {
-            verifyResult = WebhookVerifyResult.builder().valid(true).outTradeNo(params.get("outTradeNo")).amountVnd(parseAmountVnd(params.get("amount"))).build();
+        PaymentAdapter vietQrAdapter = paymentAdapterFactory.findAdapter(VIETQR_CHANNEL).orElse(null);
+        if (!vietQrProperties.isConfigured() || vietQrAdapter == null) {
+            return Map.of("code", 503, "msg", message("payment.vietqr.unavailable",
+                "VietQR chưa được cấu hình an toàn"));
         }
+        WebhookVerifyResult verifyResult = vietQrAdapter.verifyAndParseWebhook(headers, params, body);
 
         if (!verifyResult.isValid()) {
             return Map.of("code", 401, "msg", verifyResult.getResponseMessage());
         }
 
         String outTradeNoStr = verifyResult.getOutTradeNo();
-        if (outTradeNoStr == null) {
+        if (outTradeNoStr == null || verifyResult.getBankTradeNo() == null
+            || verifyResult.getAmountVnd() == null || !verifyResult.isSuccessful()) {
             return Map.of("code", 400, "msg", "Missing outTradeNo");
         }
 
         try {
             long outTradeNo = Long.parseLong(outTradeNoStr);
-            String bankTradeNo = verifyResult.getBankTradeNo() != null ? verifyResult.getBankTradeNo() : "VQ" + System.currentTimeMillis();
+            String bankTradeNo = verifyResult.getBankTradeNo();
             Integer amountVnd = verifyResult.getAmountVnd();
-            if (amountVnd == null) {
-                amountVnd = 0;
-            }
 
             PayOrderUpdateResult result = orderService.processPayOrder(outTradeNo, bankTradeNo, VIETQR_CHANNEL, amountVnd, true);
             return switch (result) {
@@ -284,5 +276,10 @@ public class PayController extends BaseController {
         } catch (RuntimeException exception) {
             return null;
         }
+    }
+
+    private String message(String key, String fallback) {
+        String value = messages.get(key);
+        return value == null || value.isBlank() ? fallback : value;
     }
 }

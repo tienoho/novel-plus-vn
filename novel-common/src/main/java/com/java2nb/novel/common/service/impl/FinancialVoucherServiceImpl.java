@@ -7,29 +7,46 @@ import com.java2nb.novel.common.tax.PitTaxCalculatorService;
 import com.java2nb.novel.common.tax.PitTaxResult;
 import com.java2nb.novel.common.tax.VatTaxCalculatorService;
 import com.java2nb.novel.common.tax.VatTaxResult;
+import com.java2nb.novel.core.enums.ResponseStatus;
+import com.java2nb.novel.core.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentInformation;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.UUID;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class FinancialVoucherServiceImpl implements FinancialVoucherService {
+
+    private static final String REGULAR_FONT = "/fonts/ttf/OpenSans/OpenSans-Regular.ttf";
+    private static final String BOLD_FONT = "/fonts/ttf/OpenSans/OpenSans-Bold.ttf";
+    private static final int PDF_BODY_LINES_PER_PAGE = 40;
 
     private final FinancialVoucherDao voucherDao;
     private final VatTaxCalculatorService vatCalculatorService;
@@ -61,7 +78,7 @@ public class FinancialVoucherServiceImpl implements FinancialVoucherService {
                 .voucherType("RECHARGE_RECEIPT")
                 .referenceType("ORDER_PAY")
                 .referenceId(orderNo)
-                .payerName(StringUtils.defaultIfBlank(payerName, "Khach hang nap Xu"))
+                .payerName(StringUtils.defaultIfBlank(payerName, "Khách hàng nạp Xu"))
                 .payerTaxCode(StringUtils.defaultIfBlank(payerTaxCode, "N/A"))
                 .payeeName(platformLegalName.trim())
                 .payeeTaxCode(platformTaxCode.trim())
@@ -104,7 +121,7 @@ public class FinancialVoucherServiceImpl implements FinancialVoucherService {
                 .referenceId(refId)
                 .payerName(platformLegalName.trim())
                 .payerTaxCode(platformTaxCode.trim())
-                .payeeName(StringUtils.defaultIfBlank(payeeName, "Tac gia nhan payout"))
+                .payeeName(StringUtils.defaultIfBlank(payeeName, "Tác giả nhận thu nhập"))
                 .payeeTaxCode(StringUtils.defaultIfBlank(payeeTaxCode, "N/A"))
                 .grossAmountVnd(grossAmountVnd)
                 .taxAmountVnd(actualTax)
@@ -122,6 +139,18 @@ public class FinancialVoucherServiceImpl implements FinancialVoucherService {
     @Override
     public FinancialVoucherDO getByVoucherNo(String voucherNo) {
         return voucherDao.selectByVoucherNo(voucherNo);
+    }
+
+    @Override
+    public FinancialVoucherDO getAuthorVoucher(String voucherNo, long authorId) {
+        requireAuthorIdentity(authorId);
+        return voucherDao.selectAuthorVoucherByNo(voucherNo, authorId);
+    }
+
+    @Override
+    public List<FinancialVoucherDO> listAuthorVouchers(long authorId) {
+        requireAuthorIdentity(authorId);
+        return voucherDao.selectAuthorVouchers(authorId);
     }
 
     @Override
@@ -143,45 +172,65 @@ public class FinancialVoucherServiceImpl implements FinancialVoucherService {
     public byte[] exportVoucherPdf(String voucherNo) {
         FinancialVoucherDO voucher = voucherDao.selectByVoucherNo(voucherNo);
         if (voucher == null) {
-            throw new IllegalArgumentException("Khong tim thay chung tu: " + voucherNo);
+            throw new IllegalArgumentException("Không tìm thấy chứng từ: " + voucherNo);
         }
 
-        DecimalFormat df = new DecimalFormat("#,###");
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        return exportVoucherPdf(voucher);
+    }
+
+    @Override
+    public byte[] exportAuthorVoucherPdf(String voucherNo, long authorId) {
+        FinancialVoucherDO voucher = getAuthorVoucher(voucherNo, authorId);
+        if (voucher == null) {
+            throw new BusinessException(ResponseStatus.AUTHOR_VOUCHER_NOT_FOUND);
+        }
+
+        return exportVoucherPdf(voucher);
+    }
+
+    private byte[] exportVoucherPdf(FinancialVoucherDO voucher) {
+        NumberFormat numberFormat = NumberFormat.getIntegerInstance(Locale.forLanguageTag("vi-VN"));
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.forLanguageTag("vi-VN"));
+        dateFormat.setTimeZone(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
 
         String title = "RECHARGE_RECEIPT".equals(voucher.getVoucherType()) ?
-                "BIEN NHAN NAP TIEN (RECHARGE RECEIPT)" : "PHIEU CHI TAI CHINH (PAYOUT VOUCHER)";
+                "BIÊN NHẬN NẠP XU" : "PHIẾU CHI THU NHẬP TÁC GIẢ";
+        String taxLabel = "RECHARGE_RECEIPT".equals(voucher.getVoucherType())
+                ? "Thuế GTGT" : "Thuế TNCN đã khấu trừ";
 
         String contentText = String.format(
-                "BT / Title: %s\n" +
-                "So chung tu / Voucher No: %s\n" +
-                "Ngay phat hanh / Date: %s\n" +
-                "Trang thai / Status: %s\n" +
+                "Số chứng từ: %s\n" +
+                "Ngày phát hành: %s\n" +
+                "Trạng thái: %s\n" +
                 "----------------------------------------\n" +
-                "Nguoi tra / Payer: %s (MST: %s)\n" +
-                "Nguoi nhan / Payee: %s (MST: %s)\n" +
-                "Loai tham chiếu / Ref Type: %s (ID: %s)\n" +
+                "Người trả: %s (MST: %s)\n" +
+                "Người nhận: %s (MST: %s)\n" +
+                "Tham chiếu: %s (ID: %s)\n" +
                 "----------------------------------------\n" +
-                "Tong tien gop / Gross Amount: %s VND\n" +
-                "Thue khau tru / Tax Amount: %s VND (%s)\n" +
-                "Tien thuc nhan / Net Amount: %s VND\n" +
+                "Tổng tiền: %s VND\n" +
+                "%s: %s VND\n" +
+                "Thực nhận: %s VND\n" +
                 "----------------------------------------\n" +
-                "Xac thuc / Checksum: %s\n",
-                title,
+                "Mã kiểm tra: %s\n",
                 voucher.getVoucherNo(),
-                voucher.getIssuedAt() != null ? sdf.format(voucher.getIssuedAt()) : sdf.format(new Date()),
+                voucher.getIssuedAt() != null ? dateFormat.format(voucher.getIssuedAt()) : dateFormat.format(new Date()),
                 voucher.getStatus(),
                 voucher.getPayerName(), voucher.getPayerTaxCode(),
                 voucher.getPayeeName(), voucher.getPayeeTaxCode(),
                 voucher.getReferenceType(), voucher.getReferenceId(),
-                df.format(voucher.getGrossAmountVnd()),
-                df.format(voucher.getTaxAmountVnd()),
-                "RECHARGE_RECEIPT".equals(voucher.getVoucherType()) ? "VAT 10%" : "PIT 10%",
-                df.format(voucher.getNetAmountVnd()),
+                numberFormat.format(voucher.getGrossAmountVnd()),
+                taxLabel, numberFormat.format(voucher.getTaxAmountVnd()),
+                numberFormat.format(voucher.getNetAmountVnd()),
                 computeSha256(voucher.getVoucherNo() + "|" + voucher.getGrossAmountVnd() + "|" + voucher.getNetAmountVnd())
         );
 
         return generatePdfFromText(title, contentText);
+    }
+
+    private void requireAuthorIdentity(long authorId) {
+        if (authorId <= 0) {
+            throw new IllegalArgumentException("Tác giả không hợp lệ");
+        }
     }
 
     @Override
@@ -195,8 +244,8 @@ public class FinancialVoucherServiceImpl implements FinancialVoucherService {
 
             writer.println("Voucher No,Voucher Type,Ref Type,Ref ID,Payer Name,Payer Tax Code,Payee Name,Payee Tax Code,Gross Amount (VND),Tax Amount (VND),Net Amount (VND),Status,Issued At");
 
-            DecimalFormat df = new DecimalFormat("#");
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            sdf.setTimeZone(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
 
             for (FinancialVoucherDO v : list) {
                 writer.printf("\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",%d,%d,%d,\"%s\",\"%s\"\n",
@@ -285,85 +334,84 @@ public class FinancialVoucherServiceImpl implements FinancialVoucherService {
         }
     }
 
-    /**
-     * Helper to construct a binary PDF 1.4 file containing printable document text.
-     */
     private byte[] generatePdfFromText(String title, String bodyText) {
-        try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-
-            // Prepare text commands for PDF stream
-            StringBuilder streamContent = new StringBuilder();
-            streamContent.append("BT\n");
-            streamContent.append("/F1 14 Tf\n");
-            streamContent.append("50 750 Td\n");
-            streamContent.append("(").append(escapePdfText(title)).append(") Tj\n");
-            streamContent.append("/F1 10 Tf\n");
-            streamContent.append("0 -25 Td\n");
-
-            String[] lines = bodyText.split("\n");
-            for (String line : lines) {
-                streamContent.append("(").append(escapePdfText(line)).append(") Tj\n");
-                streamContent.append("0 -15 Td\n");
+        try (PDDocument document = new PDDocument();
+             InputStream regularInput = requireFont(REGULAR_FONT);
+             InputStream boldInput = requireFont(BOLD_FONT);
+             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            PDFont regular = PDType0Font.load(document, regularInput, true);
+            PDFont bold = PDType0Font.load(document, boldInput, true);
+            List<String> lines = new ArrayList<>();
+            for (String rawLine : bodyText.split("\\R")) {
+                lines.addAll(wrapLine(regular, rawLine, 10, 495));
             }
-            streamContent.append("ET\n");
+            if (lines.isEmpty()) {
+                lines.add("");
+            }
 
-            byte[] streamBytes = streamContent.toString().getBytes(StandardCharsets.ISO_8859_1);
+            for (int offset = 0; offset < lines.size(); offset += PDF_BODY_LINES_PER_PAGE) {
+                PDPage page = new PDPage(PDRectangle.A4);
+                document.addPage(page);
+                try (PDPageContentStream content = new PDPageContentStream(document, page)) {
+                    content.beginText();
+                    content.newLineAtOffset(50, 790);
+                    content.setFont(bold, 14);
+                    content.showText(offset == 0 ? title : title + " (tiếp)");
+                    content.setLeading(16);
+                    content.newLine();
+                    content.newLine();
+                    content.setFont(regular, 10);
+                    int end = Math.min(offset + PDF_BODY_LINES_PER_PAGE, lines.size());
+                    for (int index = offset; index < end; index++) {
+                        content.showText(lines.get(index));
+                        content.newLine();
+                    }
+                    content.endText();
+                }
+            }
 
-            // Construct PDF objects
-            StringBuilder pdf = new StringBuilder();
-            pdf.append("%PDF-1.4\n");
-
-            // Object 1: Catalog
-            int obj1Offset = pdf.length();
-            pdf.append("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
-
-            // Object 2: Pages
-            int obj2Offset = pdf.length();
-            pdf.append("2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n");
-
-            // Object 3: Page
-            int obj3Offset = pdf.length();
-            pdf.append("3 0 obj\n<< /Type /Page /Parent 2 0 R /Resources << /Font << /F1 4 0 R >> >> /MediaBox [0 0 612 792] /Contents 5 0 R >>\nendobj\n");
-
-            // Object 4: Font
-            int obj4Offset = pdf.length();
-            pdf.append("4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>\nendobj\n");
-
-            // Object 5: Content Stream Header
-            int obj5Offset = pdf.length();
-            pdf.append("5 0 obj\n<< /Length ").append(streamBytes.length).append(" >>\nstream\n");
-            out.write(pdf.toString().getBytes(StandardCharsets.ISO_8859_1));
-            out.write(streamBytes);
-
-            StringBuilder pdfTrailer = new StringBuilder();
-            pdfTrailer.append("\nendstream\nendobj\n");
-
-            // Xref Table
-            int xrefOffset = out.size() + pdfTrailer.length();
-            pdfTrailer.append("xref\n");
-            pdfTrailer.append("0 6\n");
-            pdfTrailer.append("0000000000 65535 f \n");
-            pdfTrailer.append(String.format("%010d 00000 n \n", obj1Offset));
-            pdfTrailer.append(String.format("%010d 00000 n \n", obj2Offset));
-            pdfTrailer.append(String.format("%010d 00000 n \n", obj3Offset));
-            pdfTrailer.append(String.format("%010d 00000 n \n", obj4Offset));
-            pdfTrailer.append(String.format("%010d 00000 n \n", obj5Offset));
-            pdfTrailer.append("trailer\n<< /Size 6 /Root 1 0 R >>\n");
-            pdfTrailer.append("startxref\n").append(xrefOffset).append("\n%%EOF\n");
-
-            out.write(pdfTrailer.toString().getBytes(StandardCharsets.ISO_8859_1));
-            return out.toByteArray();
+            PDDocumentInformation information = new PDDocumentInformation();
+            information.setTitle(title);
+            information.setProducer("Novel Plus");
+            document.setDocumentInformation(information);
+            document.save(output);
+            return output.toByteArray();
         } catch (Exception e) {
-            log.error("PDF generation error", e);
-            return ("%PDF-1.4 Error generating PDF: " + e.getMessage()).getBytes(StandardCharsets.UTF_8);
+            throw new IllegalStateException("Không thể tạo PDF chứng từ", e);
         }
     }
 
-    private String escapePdfText(String text) {
-        if (text == null) return "";
-        return text.replace("\\", "\\\\")
-                   .replace("(", "\\(")
-                   .replace(")", "\\)");
+    private InputStream requireFont(String resourcePath) {
+        InputStream input = FinancialVoucherServiceImpl.class.getResourceAsStream(resourcePath);
+        if (input == null) {
+            throw new IllegalStateException("Thiếu font PDF: " + resourcePath);
+        }
+        return input;
+    }
+
+    private List<String> wrapLine(PDFont font, String value, float fontSize, float maxWidth)
+            throws Exception {
+        String text = value == null ? "" : value.strip();
+        if (text.isEmpty()) {
+            return List.of("");
+        }
+        List<String> lines = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        for (String word : text.split("\\s+")) {
+            String candidate = current.isEmpty() ? word : current + " " + word;
+            float width = font.getStringWidth(candidate) / 1000f * fontSize;
+            if (width <= maxWidth || current.isEmpty()) {
+                current.setLength(0);
+                current.append(candidate);
+            } else {
+                lines.add(current.toString());
+                current.setLength(0);
+                current.append(word);
+            }
+        }
+        if (!current.isEmpty()) {
+            lines.add(current.toString());
+        }
+        return lines;
     }
 }

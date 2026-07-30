@@ -63,4 +63,20 @@ Ngày 28/07/2026, bộ reader-state đạt 15/15 test service/packaging và `Rea
 
 Smoke runtime đã xác minh đăng nhập bằng cookie, lưu progress, tạo/hiển thị/sửa/xóa ghi chú, tạo/xóa bookmark, reload, panel desktop/mobile và cách ly user A/B. Toàn bộ fixture `9974...`, gồm analytics event append-only, được dọn sạch; trigger bất biến được tái tạo và đối chiếu sau cleanup.
 
-Các lượt regression tiếp theo vẫn phải kiểm tra chương VIP chưa mua, tác phẩm bị gỡ/đang chờ duyệt, giới hạn độ tuổi, conflict version và khôi phục vị trí trên chương dài ở desktop/mobile.
+Regression service hiện kiểm tra cả hai chiều của quyền truy cập: chương VIP chưa mua bị chặn nhưng
+đã mua được phép đọc trạng thái; nội dung 18+ chặn hồ sơ chưa xác minh nhưng cho phép người lớn đã
+xác minh; tác phẩm bị ẩn/gỡ, chương chưa duyệt và ID chương thuộc truyện khác đều không làm lộ dữ
+liệu. Test stale version cũng xác nhận thiết bị cũ không ghi đè ghi chú mới.
+
+Ngày 30/07/2026, smoke test chạy trực tiếp từ `novel-front.zip` trên MySQL/Redis cô lập đã xác minh
+chương dài 240 đoạn: lưu ở đoạn 237 (`character_offset=28095`, `progress_percent=98.77`), mở lại
+chương ở đầu trang và khôi phục tới vùng cuối chương. Phông serif và giãn dòng `2.2` vẫn được áp
+dụng sau navigation mới; console không có lỗi. Request dùng User-Agent iPhone cũng render template
+mobile, có viewport mobile và nạp cùng `reader-tools.js`.
+
+Smoke test này phát hiện ID lấy từ input HTML đã bị ép sang JavaScript `Number`, trong khi API cố ý
+trả Java `Long` dưới dạng chuỗi để không mất độ chính xác. Reader tools nay giữ `bookId` và
+`bookIndexId` ở dạng chuỗi từ DOM tới request; test đóng gói cấm đưa `Number(valueOf(...))` trở lại
+và đối chiếu năm bản script nền/theme bằng SHA-256.
+
+Chưa thay thế kiểm thử trên thiết bị vật lý và chưa tái chạy bằng JDK 21 trong lượt này.

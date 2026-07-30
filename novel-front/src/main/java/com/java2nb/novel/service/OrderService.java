@@ -20,6 +20,10 @@ public interface OrderService {
      */
     PayOrderCreation createPayOrder(Byte payChannel, Integer payAmount, Integer accountAmount, Long userId);
 
+    /** Tạo đơn mua một kỳ thuê bao từ snapshot plan phía server. */
+    ReadingSubscriptionCheckoutCreation createSubscriptionCheckout(
+        byte payChannel, long userId, String planCode, String clientRequestId);
+
     /**
      * Đối chiếu dữ liệu VNPAY trả về với đơn đã lưu mà không thay đổi trạng thái đơn.
      */

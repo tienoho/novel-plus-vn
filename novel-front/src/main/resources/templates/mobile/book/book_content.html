@@ -7,6 +7,8 @@
     <meta name="keywords" th:content="${book.bookName}+','+${bookIndex.indexName}">
     <meta name="description" th:content="#{reader.seo.chapter.description(${book.bookName})}">
     <div th:include="mobile/common/css :: css"></div>
+    <link href="/css/reading-ticket.css" rel="stylesheet"/>
+    <script src="/javascript/reading-ticket.js?v=2" defer></script>
     <script>
         function reinitIframe() {
             var iframe=document.getElementById('frame_content');
@@ -45,6 +47,7 @@
     <input type="hidden" id="offlineEligible" value="true"
            th:if="${offlineEligible}"/>
     <input type="hidden" id="readerContentAvailable" value="true" th:if="${!needBuy}"/>
+    <input type="hidden" id="readingHeartbeatEnabled" th:value="${readingHeartbeatEnabled}"/>
 
     <div style="height:50px;line-height:50px;text-align:center" class="layui-header header header-doc layui-bg-cyan">
         <div style="width:10%;float:left;margin-left:10px"><button type="button" onclick="history.back()" th:aria-label="#{reader.back}" style="border:0;background:transparent;cursor:pointer"><i aria-hidden="true" style="font-size:20px;color:#fff" class="layui-icon">&#xe65c;</i></button></div>
@@ -68,7 +71,7 @@
     </div>
 
     <div th:replace="mobile/common/js :: js"></div>
-<script src="/javascript/reader-tools.js?v=6"></script>
+<script src="/javascript/reader-tools.js?v=7"></script>
     <div id="chaptercontent" class="Readarea ReadAjax_content screen_container" style="color:#000;font-size:20px" th:if="${!needBuy}">
         <p style="width:100%;text-align:center;overflow:auto;-webkit-overflow-scrolling:touch"><span th:utext="${bookContent.content}"></span></p>
     </div>
@@ -76,6 +79,7 @@
         <h5 th:text="#{reader.vip.required}">Đây là chương VIP. Bạn cần mua chương để tiếp tục đọc.</h5>
         <span th:text="#{book.price}+': '">Giá: </span><span style="color:red" th:text="${bookIndex.bookPrice}+' '+#{payment.currency}+' ('+#{reader.vip.rate}+')'"></span><br/>
         <a href="javascript:buyBookIndex()" type="button" class="layui-btn layui-btn-sm layui-btn-radius" th:text="#{book.buy}">Mua chương</a>
+        <div th:replace="common/reading_ticket_unlock :: unlock"></div>
     </div>
 
     <div class="indexDiv" style="height:42px;line-height:42px;text-align:center;background:#f2f2f2">

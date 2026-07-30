@@ -7,6 +7,11 @@
     var LINE_HEIGHT_KEY = 'novel:reader:line-height:v1';
     var FONT_FAMILY_KEY = 'novel:reader:font-family:v1';
     var BACKGROUND_KEY = 'novel:reader:background:v1';
+    var READING_HEARTBEAT_INTERVAL_MS = 60000;
+    var READING_HEARTBEAT_SAMPLE_MS = 1000;
+    var READING_HEARTBEAT_RETRY_MS = 5000;
+    var READING_HEARTBEAT_MIN_ACTIVE_SECONDS = 30;
+    var READING_HEARTBEAT_MAX_ACTIVE_SECONDS = 120;
     var speech = window.speechSynthesis;
     var utterance = null;
 
@@ -54,6 +59,20 @@
         return window.fetch(url, options).then(function (response) {
             return response.json();
         });
+    }
+
+    function readingSessionId() {
+        var bytes = new Uint8Array(16);
+        if (window.crypto && window.crypto.getRandomValues) {
+            window.crypto.getRandomValues(bytes);
+        } else {
+            for (var index = 0; index < bytes.length; index++) {
+                bytes[index] = Math.floor(Math.random() * 256);
+            }
+        }
+        return Array.prototype.map.call(bytes, function (value) {
+            return value.toString(16).padStart(2, '0');
+        }).join('');
     }
 
     function textWalker(root) {
@@ -384,9 +403,24 @@
         }
         refreshDataSaverLabel();
 
-        var bookId = Number(valueOf(['bookId', 'bookIdHidden']));
-        var chapterId = Number(valueOf(['preContentId', 'contentIdHidden']));
+        var bookId = valueOf(['bookId', 'bookIdHidden']);
+        var chapterId = valueOf(['preContentId', 'contentIdHidden']);
+        var readingHeartbeatEnabled = valueOf(['readingHeartbeatEnabled']) === 'true';
         var readerState = {authenticated: null, progress: null, annotations: []};
+        var readingHeartbeat = {
+            activeSeconds: 0,
+            activityTimer: null,
+            heartbeatTimer: null,
+            inFlight: false,
+            lastSampleAt: 0,
+            nextSequence: 0,
+            pending: null,
+            retryTimer: null,
+            sessionId: null,
+            started: false,
+            stopped: false,
+            wasActive: false
+        };
         var savePosition = createButton(message('readerSyncSave', 'Lưu vị trí'));
         var addBookmark = createButton(message('readerBookmarkAdd', 'Đánh dấu đoạn'));
         var addNote = createButton(message('readerNoteAdd', 'Ghi chú'));
@@ -428,9 +462,126 @@
             return result && result.code === 200;
         }
 
+        function isReadingActive() {
+            return document.visibilityState !== 'hidden' &&
+                (typeof document.hasFocus !== 'function' || document.hasFocus());
+        }
+
+        function sampleReadingActivity() {
+            if (!readingHeartbeat.started || readingHeartbeat.stopped) { return; }
+            var now = Date.now();
+            var elapsedSeconds = Math.floor((now - readingHeartbeat.lastSampleAt) / 1000);
+            if (elapsedSeconds > 0 && readingHeartbeat.wasActive) {
+                readingHeartbeat.activeSeconds += Math.min(elapsedSeconds, 2);
+            }
+            readingHeartbeat.lastSampleAt = now;
+            readingHeartbeat.wasActive = isReadingActive();
+        }
+
+        function stopReadingHeartbeat() {
+            readingHeartbeat.stopped = true;
+            readingHeartbeat.pending = null;
+            window.clearInterval(readingHeartbeat.activityTimer);
+            window.clearInterval(readingHeartbeat.heartbeatTimer);
+            window.clearTimeout(readingHeartbeat.retryTimer);
+            readingHeartbeat.activityTimer = null;
+            readingHeartbeat.heartbeatTimer = null;
+            readingHeartbeat.retryTimer = null;
+        }
+
+        function heartbeatPayload(force) {
+            if (readingHeartbeat.pending) { return readingHeartbeat.pending; }
+            if (readingHeartbeat.nextSequence !== 0 && !force &&
+                readingHeartbeat.activeSeconds < READING_HEARTBEAT_MIN_ACTIVE_SECONDS) {
+                return null;
+            }
+            var activeSeconds = readingHeartbeat.nextSequence === 0 ? 0 :
+                Math.min(Math.floor(readingHeartbeat.activeSeconds),
+                    READING_HEARTBEAT_MAX_ACTIVE_SECONDS);
+            if (readingHeartbeat.nextSequence !== 0 && activeSeconds <= 0) { return null; }
+            readingHeartbeat.activeSeconds -= activeSeconds;
+            readingHeartbeat.pending = {
+                sessionId: readingHeartbeat.sessionId,
+                bookId: bookId,
+                bookIndexId: chapterId,
+                sequence: readingHeartbeat.nextSequence,
+                activeSeconds: activeSeconds
+            };
+            return readingHeartbeat.pending;
+        }
+
+        function scheduleHeartbeatRetry() {
+            if (readingHeartbeat.stopped || readingHeartbeat.retryTimer) { return; }
+            readingHeartbeat.retryTimer = window.setTimeout(function () {
+                readingHeartbeat.retryTimer = null;
+                sendReadingHeartbeat(false, false);
+            }, READING_HEARTBEAT_RETRY_MS);
+        }
+
+        function isTerminalHeartbeatResult(result) {
+            return result && (result.code === 1001 || result.code === 7001 ||
+                result.code === 7007 || result.code === 7016);
+        }
+
+        function validHeartbeatResponse(payload, data) {
+            return data && data.sessionId === payload.sessionId &&
+                Number(data.nextSequence) === payload.sequence + 1;
+        }
+
+        function sendReadingHeartbeat(force, keepalive) {
+            if (!readingHeartbeat.started || readingHeartbeat.stopped || readingHeartbeat.inFlight) {
+                return Promise.resolve(null);
+            }
+            var payload = heartbeatPayload(force);
+            if (!payload) { return Promise.resolve(null); }
+            readingHeartbeat.inFlight = true;
+            return requestJson('/user/gamification/reading-heartbeat', {
+                method: 'POST',
+                body: JSON.stringify(payload),
+                keepalive: !!keepalive
+            }).then(function (result) {
+                readingHeartbeat.inFlight = false;
+                if (isSuccessful(result) && validHeartbeatResponse(payload, result.data)) {
+                    readingHeartbeat.pending = null;
+                    readingHeartbeat.nextSequence = Number(result.data.nextSequence);
+                    if (result.data.capReached === true) { stopReadingHeartbeat(); }
+                    return result.data;
+                }
+                if (isTerminalHeartbeatResult(result)) {
+                    stopReadingHeartbeat();
+                    return null;
+                }
+                scheduleHeartbeatRetry();
+                return null;
+            }).catch(function () {
+                readingHeartbeat.inFlight = false;
+                scheduleHeartbeatRetry();
+                return null;
+            });
+        }
+
+        function startReadingHeartbeat() {
+            if (!readingHeartbeatEnabled || readingHeartbeat.started || readerState.authenticated !== true ||
+                !bookId || !chapterId || !window.fetch) {
+                return;
+            }
+            readingHeartbeat.started = true;
+            readingHeartbeat.sessionId = readingSessionId();
+            readingHeartbeat.lastSampleAt = Date.now();
+            readingHeartbeat.wasActive = isReadingActive();
+            readingHeartbeat.activityTimer = window.setInterval(
+                sampleReadingActivity, READING_HEARTBEAT_SAMPLE_MS);
+            readingHeartbeat.heartbeatTimer = window.setInterval(function () {
+                sampleReadingActivity();
+                sendReadingHeartbeat(false, false);
+            }, READING_HEARTBEAT_INTERVAL_MS);
+            sendReadingHeartbeat(true, false);
+        }
+
         function markLoginRequired(result) {
             if (result && result.code === 1001) {
                 readerState.authenticated = false;
+                stopReadingHeartbeat();
                 setReaderStateEnabled(false);
                 status.textContent = message('readerSyncLogin', 'Đăng nhập để đồng bộ vị trí và ghi chú.');
                 return true;
@@ -591,6 +742,7 @@
                         readerState.annotations = result.data && result.data.annotations || [];
                         setReaderStateEnabled(true);
                         renderAnnotations();
+                        startReadingHeartbeat();
                         if (readerState.progress && readerState.progress.bookIndexId === chapterId &&
                             readerState.progress.characterOffset > 0) {
                             resume.hidden = false;
@@ -794,6 +946,15 @@
         window.addEventListener('pagehide', function () {
             cancelSpeechWithoutErrorStatus();
             saveReaderProgress(true, true);
+            sampleReadingActivity();
+            sendReadingHeartbeat(true, true);
+        });
+
+        document.addEventListener('visibilitychange', function () {
+            sampleReadingActivity();
+            if (document.visibilityState === 'hidden') {
+                sendReadingHeartbeat(true, true);
+            }
         });
     }
 
