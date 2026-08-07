@@ -3,6 +3,7 @@ package com.java2nb.novel.controller;
 import com.java2nb.common.annotation.Log;
 import com.java2nb.novel.config.ReadingSubscriptionAdminProperties;
 import com.java2nb.novel.service.subscription.ReadingSubscriptionService;
+import com.java2nb.novel.service.subscription.ReadingSubscriptionRenewalService;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.junit.jupiter.api.Test;
 
@@ -24,11 +25,17 @@ class ReadingSubscriptionAdminControllerTest {
         assertPermission("getCurrent", "novel:readingSubscription:view", long.class);
         assertPermission("listPurchaseReviews", "novel:readingSubscription:review",
             String.class, int.class, int.class);
+        assertPermission("listRenewalQueue", "novel:readingSubscription:review",
+            String.class, int.class);
+        assertPermission("listRenewalAttempts", "novel:readingSubscription:review",
+            long.class, int.class);
+        assertPermission("listRenewalAudits", "novel:readingSubscription:review",
+            long.class, int.class);
         assertAudited("createPlan", "novel:readingSubscription:config",
-            String.class, String.class, long.class, long.class, int.class, int.class);
+            String.class, String.class, long.class, Long.class, long.class, int.class, int.class);
         assertAudited("updatePlan", "novel:readingSubscription:config",
-            long.class, long.class, String.class, String.class, long.class, long.class,
-            int.class, int.class);
+            long.class, long.class, String.class, String.class, long.class, Long.class,
+            long.class, int.class, int.class);
         assertAudited("changePlanStatus", "novel:readingSubscription:config",
             long.class, long.class, String.class);
         assertAudited("activate", "novel:readingSubscription:activate",
@@ -37,6 +44,8 @@ class ReadingSubscriptionAdminControllerTest {
             long.class, long.class, String.class);
         assertAudited("sendPurchaseToRefund", "novel:readingSubscription:review",
             long.class, long.class, String.class);
+        assertAudited("retryRenewal", "novel:readingSubscription:review",
+            long.class, long.class, String.class);
     }
 
     @Test
@@ -44,7 +53,8 @@ class ReadingSubscriptionAdminControllerTest {
         ReadingSubscriptionService service = mock(ReadingSubscriptionService.class);
         ReadingSubscriptionAdminProperties properties = new ReadingSubscriptionAdminProperties();
         ReadingSubscriptionAdminController controller =
-            new ReadingSubscriptionAdminController(service, properties);
+            new ReadingSubscriptionAdminController(service, properties,
+                mock(ReadingSubscriptionRenewalService.class));
 
         assertThatThrownBy(() -> controller.activate(
             11L, "BASIC_MONTHLY", 1_798_761_600_000L, null, "request_0001"))

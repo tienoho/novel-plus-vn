@@ -112,34 +112,10 @@
                 if (data.code == 200) {
                     var crawlSourceList = data.data.list;
                     if (crawlSourceList.length > 0) {
-                        var crawlSourceListHtml = "";
+                        $("#crawlSourceList").empty();
                         for (var i = 0; i < crawlSourceList.length; i++) {
-                            var crawlSource = crawlSourceList[i];
-                            crawlSourceListHtml += (" <tr class=\"book_list\" vals=\"291\">\n" +
-                                "                            <td class=\"style bookclass\">\n" +
-                                "                                [" + (i + 1) + "]\n" +
-                                "                            </td>\n" +
-                                "                            <td class=\"name\">\n" +
-                                "                                " + crawlSource.bookName + "\n" +
-                                "                            </td>\n" +
-                                "                            <td class=\"name\">\n" +
-                                "                                " + crawlSource.authorName + "\n" +
-                                "                            </td>\n" +
-                                "                            <td class=\"goread\">\n" +
-                                "                                " + crawlSource.crawlChapters + " " + crawlMessages.chapter +
-                                "                            </td>\n" +
-                                "                            <td class=\"goread\">\n" +
-                                "                                " + crawlSource.excCount + "\n" +
-                                "                            </td>\n" +
-                                "                            <td class=\"goread\">\n" +
-                                "                                " + (crawlSource.taskStatus == 0 ? crawlMessages.failed : (crawlSource.taskStatus == 1 ? crawlMessages.success : (crawlSource.taskStatus == 3 || crawlSource.excCount > 0 ? crawlMessages.collecting : crawlMessages.queued))) + "\n" +
-                                "                            </td>\n" +
-                                "                            <td class=\"name\" valsc=\"291|2037554|1\">"
-                                + crawlSource.createTime + "</td>\n" +
-
-                                " <td class=\"goread\" id='opt" + crawlSource.id + "'><a href='javascript:del(" + crawlSource.id + ")'>" + crawlMessages.deleteLabel + "  </a></td>                     </tr>");
+                            renderCrawlTaskRow(crawlSourceList[i], i);
                         }
-                        $("#crawlSourceList").html(crawlSourceListHtml);
 
                         layui.use('laypage', function () {
                             var laypage = layui.laypage;
@@ -179,7 +155,7 @@
                     location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
 
                 } else if (!isUpdate) {
-                    layer.alert(data.msg);
+                    layer.alert(crawlEscapeHtml(data.msg || ""));
                 }
                 isUpdate = true;
 
@@ -192,6 +168,43 @@
             }
         })
 
+    }
+
+    function appendTaskCell(row, className, value) {
+        $("<td>", {"class": className})
+            .text(value == null ? "" : String(value))
+            .appendTo(row);
+    }
+
+    function renderCrawlTaskRow(crawlSource, index) {
+        var taskId = Number(crawlSource.id);
+        if (!Number.isInteger(taskId) || taskId <= 0) {
+            return;
+        }
+        var taskStatus = Number(crawlSource.taskStatus);
+        var exceptionCount = Number(crawlSource.excCount) || 0;
+        var statusText = taskStatus === 0
+            ? crawlMessages.failed
+            : (taskStatus === 1
+                ? crawlMessages.success
+                : (taskStatus === 3 || exceptionCount > 0 ? crawlMessages.collecting : crawlMessages.queued));
+        var row = $("<tr>", {"class": "book_list"});
+        appendTaskCell(row, "style bookclass", "[" + (index + 1) + "]");
+        appendTaskCell(row, "name", crawlSource.bookName);
+        appendTaskCell(row, "name", crawlSource.authorName);
+        appendTaskCell(row, "goread", String(crawlSource.crawlChapters == null ? "" : crawlSource.crawlChapters) + " " + crawlMessages.chapter);
+        appendTaskCell(row, "goread", exceptionCount);
+        appendTaskCell(row, "goread", statusText);
+        appendTaskCell(row, "name", crawlSource.createTime);
+        var actions = $("<td>", {"class": "goread", "id": "opt" + taskId}).appendTo(row);
+        $("<a>", {"href": "#"})
+            .text(crawlMessages.deleteLabel + "  ")
+            .on("click", function (event) {
+                event.preventDefault();
+                del(taskId);
+            })
+            .appendTo(actions);
+        row.appendTo("#crawlSourceList");
     }
 
 
@@ -208,7 +221,7 @@
 
 
                 } else {
-                    layer.alert(data.msg);
+                    layer.alert(crawlEscapeHtml(data.msg || ""));
                 }
 
             },

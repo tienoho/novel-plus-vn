@@ -41,6 +41,33 @@ jQuery.cookie = function (name, value, options) {
         return cookieValue;
     }
 };
+
+function crawlCsrfToken() {
+    return jQuery.cookie("XSRF-TOKEN");
+}
+
+jQuery.ajaxPrefilter(function (options, originalOptions, jqXHR) {
+    var method = String(options.type || options.method || "GET").toUpperCase();
+    if (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method)) {
+        return;
+    }
+
+    var target;
+    try {
+        target = new URL(options.url || window.location.href, window.location.href);
+    } catch (ignored) {
+        return;
+    }
+    if (target.origin !== window.location.origin) {
+        return;
+    }
+
+    var token = crawlCsrfToken();
+    if (token) {
+        jqXHR.setRequestHeader("X-XSRF-TOKEN", token);
+    }
+});
+
 $(function () {
 
 
@@ -84,21 +111,29 @@ var HeaderShowUtil = {
     headerShowHistory: function (obj) {
         if ($("#headerUserHistory").html().length < 10) {
             var messages = window.crawlCommonMessages || {};
-            var rStr = '<div class="record_box">';
-            rStr += '					<div class="record_title" id="hdShowTitle"><a href="javascript:void(0);" class="record_tit1 on" onclick="javascript:HeaderShowUtil.headerShowHistoryLog(this);">' + messages.recentReading + '</a><a href="javascript:void(0);" class="record_tit2" onclick="javascript:HeaderShowUtil.headerShowFavLog(this);">' + messages.bookshelf + '</a></div>';
-            rStr += '					<div class="record_list record_list1" id="hdShowHistory">';
-            rStr += '						<ul>';
-            rStr += '						</ul>';
-            rStr += '						<a class="all" href="/" >' + messages.viewAll + '</a>';
-            rStr += '					</div>';
-            rStr += '					<div class="record_list record_list2" style="display:none" id="hsShowFav">';
-            rStr += '						<ul>';
-            rStr += '						</ul>';
-            rStr += '						<a class="all" href="/" >' + messages.viewAll + '</a>';
-            rStr += '					</div>';
-            rStr += '					<p class="sp"></p>';
-            rStr += '				</div>';
-            $("#headerUserHistory").html(rStr);
+            var recordBox = $("<div>", {"class": "record_box"});
+            var title = $("<div>", {"class": "record_title", "id": "hdShowTitle"});
+            $("<a>", {"href": "#", "class": "record_tit1 on"})
+                .text(messages.recentReading || "")
+                .on("click", function (event) {
+                    event.preventDefault();
+                    HeaderShowUtil.headerShowHistoryLog(this);
+                })
+                .appendTo(title);
+            $("<a>", {"href": "#", "class": "record_tit2"})
+                .text(messages.bookshelf || "")
+                .on("click", function (event) {
+                    event.preventDefault();
+                    HeaderShowUtil.headerShowFavLog(this);
+                })
+                .appendTo(title);
+            title.appendTo(recordBox);
+            HeaderShowUtil.createRecordList("hdShowHistory", "record_list record_list1", messages.viewAll, false)
+                .appendTo(recordBox);
+            HeaderShowUtil.createRecordList("hsShowFav", "record_list record_list2", messages.viewAll, true)
+                .appendTo(recordBox);
+            $("<p>", {"class": "sp"}).appendTo(recordBox);
+            $("#headerUserHistory").empty().append(recordBox);
         }
         $("#headerUserHistory").show();
         $("#headerUserHistoryBtn").addClass("on");
@@ -107,6 +142,15 @@ var HeaderShowUtil = {
     headerHideHistory: function () {
         $("#headerUserHistory").hide();
         $("#headerUserHistoryBtn").removeClass("on");
+    },
+    createRecordList: function (id, className, viewAllText, hidden) {
+        var list = $("<div>", {"id": id, "class": className});
+        if (hidden) {
+            list.hide();
+        }
+        $("<ul>").appendTo(list);
+        $("<a>", {"class": "all", "href": "/"}).text(viewAllText || "").appendTo(list);
+        return list;
     },
     headerShowHistoryLog: function (obj) {
         if (obj != undefined) {
@@ -133,7 +177,8 @@ var HeaderShowUtil = {
 
         }
         else {
-            $("#hdShowHistory ul").html("<li>" + (window.crawlCommonMessages || {}).emptyHistory + "</li>");
+            var emptyItem = $("<li>").text((window.crawlCommonMessages || {}).emptyHistory || "");
+            $("#hdShowHistory ul").empty().append(emptyItem);
         }
     },
     headerShowFavLog: function (obj) {
@@ -141,14 +186,20 @@ var HeaderShowUtil = {
         $(obj).addClass("on");
         $("#hsShowFav").show();
         $("#hdShowHistory").hide();
-        var rStr = '';
         var uname = jQuery.cookie("waplogname");
         if (uname != undefined && uname != "") {
         }
         else {
-            rStr = '<li><a href="/user/login.html">' + (window.crawlCommonMessages || {}).loginRequired + '</a></li>';
-            $("#hsShowFav ul").html(rStr);
+            var loginLink = $("<a>", {"href": "/user/login.html"})
+                .text((window.crawlCommonMessages || {}).loginRequired || "");
+            $("#hsShowFav ul").empty().append($("<li>").append(loginLink));
         }
 
     }
+}
+
+function crawlEscapeHtml(value) {
+    var container = document.createElement("div");
+    container.textContent = value == null ? "" : String(value);
+    return container.innerHTML;
 }

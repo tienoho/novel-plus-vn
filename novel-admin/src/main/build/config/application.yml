@@ -13,7 +13,13 @@ novel:
     policy-version: ${READING_TICKET_POLICY_VERSION:v1}
 spring:
   redis:
-    host: 127.0.0.1
-    port: 6379
-    password: test123456
+    host: ${SPRING_REDIS_HOST:127.0.0.1}
+    port: ${SPRING_REDIS_PORT:6379}
+    password: ${SPRING_REDIS_PASSWORD:}
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:127.0.0.1}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      password: ${SPRING_DATA_REDIS_PASSWORD:}
+      timeout: 10s
 

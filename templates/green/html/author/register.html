@@ -129,7 +129,7 @@
 </head>
 <body style="background-color: #444;">
 <div style="width: 800px; margin-left: auto; margin-right: auto; margin-top: 150px;">
-    <form method="post" action="/author/register.html" id="form1" onsubmit="return $(this).form(&quot;validate&quot;);">
+    <form method="post" action="/author/register.html" id="form1">
         <div id="main">
             <table width="100%" border="0" cellpadding="8" cellspacing="0" class="tableBasic" style="line-height:40px;">
                 <tr>
@@ -194,10 +194,10 @@
                     </td>
                     <td>
                         <div>
-                            <ul class="ipage">
-                                <input type="hidden" name="workDirection" id="HidSexclass" /><!-- th:attr="class=${author.workDirection} == '0'? 'ahover':''"-->
-                                <a href="javascript:void(0);" val="0" th:text="#{author.direction.male}">Nhân vật nam, chọn kênh truyện nam</a>
-                                <a href="javascript:void(0);" val="1">
+                            <ul class="ipage" id="authorDirectionOptions">
+                                <input type="hidden" name="workDirection" id="HidSexclass" th:value="${author.workDirection}"/><!-- th:attr="class=${author.workDirection} == '0'? 'ahover':''"-->
+                                <a href="#direction-male" data-author-direction="0" th:text="#{author.direction.male}">Nhân vật nam, chọn kênh truyện nam</a>
+                                <a href="#direction-female" data-author-direction="1">
                                 <span th:text="#{author.direction.female}">Nhân vật nữ, chọn kênh truyện nữ</span></a>
                                 <div class="clear">
                                 </div>
@@ -229,37 +229,6 @@
         <input type="hidden" name="HidUId" id="HidUId" value="1095" />
     </form>
 </div>
-<script language="javascript" type="text/javascript">
-
-    $(function () {
-        $(".ipage a").click(function () {
-            $(".ipage a").each(function () {
-                $(this).removeClass("ahover");
-            });
-            $(this).addClass("ahover");
-            $("#HidSexclass").val($(this).attr("val"));
-            $("#btnSubmit").removeAttr("disabled");
-            $("#btnSubmit").removeClass("btnGray");
-            $("#btnSubmit").addClass("btn");
-
-        });
-
-        var sexClass = $("#HidSexclass").val();
-        if (sexClass == 1 || sexClass == 2) {
-            $(".ipage a").each(function () {
-                $(this).removeClass("ahover");
-                if (sexClass == $(this).attr("val")) {
-                    $(this).addClass("ahover");
-                }
-            });
-            $("#btnSubmit").removeClass("btnGray");
-            $("#btnSubmit").addClass("btn");
-        }
-        else {
-            $("#btnSubmit").attr("disabled", "disabled");
-        }
-    });
-
-</script>
+<script src="/javascript/author-register-page.js" type="text/javascript"></script>
 </body>
 </html>

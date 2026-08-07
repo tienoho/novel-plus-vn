@@ -13,6 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 /**
  * Cấu hình Spring Security
@@ -29,6 +30,9 @@ public class SecurityConfiguration {
 
     @Value("${admin.password}")
     private String password;
+
+    @Value("${security.csrf.cookie-secure:false}")
+    private boolean csrfCookieSecure;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -47,10 +51,17 @@ public class SecurityConfiguration {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        CookieCsrfTokenRepository csrfRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        csrfRepository.setCookieCustomizer(cookie -> cookie
+                .path("/")
+                .secure(csrfCookieSecure)
+                .sameSite("Lax"));
+
         http
-                .csrf(csrf -> csrf.disable()) // Tắt CSRF
+                .csrf(csrf -> csrf.csrfTokenRepository(csrfRepository))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/css/**", "/favicon.ico").permitAll() // Cho phép truy cập tài nguyên tĩnh
+                        .requestMatchers("/actuator/health", "/actuator/prometheus").permitAll()
                         .anyRequest().hasRole("ADMIN") // Các yêu cầu khác cần vai trò ADMIN
                 )
                 .formLogin(form -> form

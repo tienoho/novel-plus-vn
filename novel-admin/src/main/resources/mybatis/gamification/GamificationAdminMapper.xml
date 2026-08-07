@@ -260,4 +260,101 @@
         </where>
     </select>
 
+    <select id="listTickerNicknames" resultType="map">
+        SELECT p.user_id         AS userId,
+               u.username        AS username,
+               u.nick_name       AS nickName,
+               p.ticker_opt_out  AS tickerOptOut,
+               p.version         AS version,
+               p.update_time     AS updateTime
+        FROM gamification_profile p
+                 LEFT JOIN `user` u ON u.id = p.user_id
+        <where>
+            <if test="userId != null and userId != ''">p.user_id = #{userId}</if>
+            <if test="nickname != null and nickname != ''">
+                AND u.nick_name LIKE CONCAT('%', #{nickname}, '%')
+            </if>
+            <if test="optedIn != null and optedIn != ''">AND p.ticker_opt_out = 0</if>
+        </where>
+        ORDER BY p.update_time DESC, p.user_id DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countTickerNicknames" resultType="int">
+        SELECT COUNT(*)
+        FROM gamification_profile p
+                 LEFT JOIN `user` u ON u.id = p.user_id
+        <where>
+            <if test="userId != null and userId != ''">p.user_id = #{userId}</if>
+            <if test="nickname != null and nickname != ''">
+                AND u.nick_name LIKE CONCAT('%', #{nickname}, '%')
+            </if>
+            <if test="optedIn != null and optedIn != ''">AND p.ticker_opt_out = 0</if>
+        </where>
+    </select>
+
+    <select id="listRiskReviews" resultType="map">
+        SELECT assessment.id,
+               assessment.user_id AS userId,
+               user.username,
+               user.nick_name AS nickName,
+               assessment.season_id AS seasonId,
+               assessment.book_id AS bookId,
+               assessment.risk_score AS riskScore,
+               assessment.action,
+               assessment.matched_rules AS matchedRules,
+               LEFT(assessment.device_hash, 12) AS deviceHashPrefix,
+               LEFT(assessment.ip_hash, 12) AS ipHashPrefix,
+               assessment.policy_version AS policyVersion,
+               assessment.assessed_at AS assessedAt,
+               review.status AS reviewStatus,
+               review.version
+        FROM gamification_risk_review review
+                 JOIN gamification_risk_assessment assessment ON assessment.id = review.assessment_id
+                 LEFT JOIN `user` user ON user.id = assessment.user_id
+        <where>
+            <if test="status != null and status != ''">review.status = #{status}</if>
+            <if test="action != null and action != ''">AND assessment.action = #{action}</if>
+            <if test="userId != null and userId != ''">AND assessment.user_id = #{userId}</if>
+        </where>
+        ORDER BY assessment.risk_score DESC, assessment.id ASC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countRiskReviews" resultType="int">
+        SELECT COUNT(*)
+        FROM gamification_risk_review review
+                 JOIN gamification_risk_assessment assessment ON assessment.id = review.assessment_id
+        <where>
+            <if test="status != null and status != ''">review.status = #{status}</if>
+            <if test="action != null and action != ''">AND assessment.action = #{action}</if>
+            <if test="userId != null and userId != ''">AND assessment.user_id = #{userId}</if>
+        </where>
+    </select>
+
+    <select id="listPublicPolicies" resultType="map">
+        SELECT id, policy_version AS policyVersion, title, status,
+               published_by AS publishedBy, published_at AS publishedAt,
+               version, create_time AS createTime
+        FROM gamification_public_policy
+        <where>
+            <if test="status != null and status != ''">status = #{status}</if>
+            <if test="policyVersion != null and policyVersion != ''">
+                AND policy_version = #{policyVersion}
+            </if>
+        </where>
+        ORDER BY id DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countPublicPolicies" resultType="int">
+        SELECT COUNT(*) FROM gamification_public_policy
+        <where>
+            <if test="status != null and status != ''">status = #{status}</if>
+            <if test="policyVersion != null and policyVersion != ''">
+                AND policy_version = #{policyVersion}
+            </if>
+        </where>
+    </select>
+
 </mapper>

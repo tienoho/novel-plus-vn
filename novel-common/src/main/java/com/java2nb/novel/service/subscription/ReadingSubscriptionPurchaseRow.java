@@ -12,7 +12,13 @@ public class ReadingSubscriptionPurchaseRow {
     private Long planId;
     private String planCodeSnapshot;
     private String planNameSnapshot;
+    private Long planVersionSnapshot;
     private Long priceVndSnapshot;
+    private Long priceXuSnapshot;
+    private Boolean autoRenew;
+    private String primaryFundingSource;
+    private String fallbackFundingSource;
+    private Long acceptedPlanVersion;
     private Long ticketsPerPeriodSnapshot;
     private Integer periodMonthsSnapshot;
     private Integer ticketValidityDaysSnapshot;

@@ -32,10 +32,15 @@ class AuthorStoryPackagingTest {
         Path module = Path.of("").toAbsolutePath().normalize();
         Path repository = module.getParent();
         String marker = "/author/story_bible.html?bookId=";
+        assertThat(read(module.resolve("src/main/resources/static/javascript/author-index-page.js")))
+            .contains(marker);
 
-        assertThat(read(module.resolve("src/main/resources/templates/author/index.html"))).contains(marker);
-        assertThat(read(repository.resolve("templates/green/html/author/index.html"))).contains(marker);
-        assertThat(read(repository.resolve("templates/orange/html/author/index.html"))).contains(marker);
+        assertThat(read(module.resolve("src/main/resources/templates/author/index.html")))
+            .contains("/javascript/author-index-page.js", "data-story=#{author.story.open}");
+        assertThat(read(repository.resolve("templates/green/html/author/index.html")))
+            .contains("/javascript/author-index-page.js", "data-story=#{author.story.open}");
+        assertThat(read(repository.resolve("templates/orange/html/author/index.html")))
+            .contains("/javascript/author-index-page.js", "data-story=#{author.story.open}");
         assertThat(repository.resolve("templates/dark/html/author/index.html")).doesNotExist();
         assertThat(repository.resolve("templates/blue/html/author/index.html")).doesNotExist();
     }
@@ -45,14 +50,16 @@ class AuthorStoryPackagingTest {
         Path repository = Path.of("").toAbsolutePath().normalize().getParent();
         String migration = read(repository.resolve("doc/sql/20260727_author_story_bible.sql"));
         String mapper = read(repository.resolve("novel-front/src/main/resources/mybatis/mapping/AuthorStoryMapper.xml"));
-        String compose = read(repository.resolve("compose.yaml"));
+        String flywayImage = read(repository.resolve("deploy/flyway/Dockerfile"));
 
         assertThat(migration)
             .contains("CREATE TABLE IF NOT EXISTS `author_story_item`")
             .contains("'OUTLINE', 'CHARACTER', 'LOCATION', 'TIMELINE'")
             .doesNotContain("DROP TABLE");
         assertThat(mapper).contains("version = version + 1", "version = #{expectedVersion}");
-        assertThat(compose).contains("/migrations/20260727_author_story_bible.sql");
+        assertThat(flywayImage).contains(
+            "COPY --chmod=0444 doc/sql/20260727_author_story_bible.sql "
+                + "/flyway/sql/V2026072702__author_story_bible.sql");
     }
 
     private String read(Path path) throws Exception {

@@ -68,6 +68,19 @@ public class WalletLedgerServiceImpl implements WalletLedgerService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
+    public WalletPostResult chargeReaderSubscription(long userId, long amount,
+                                                     String businessId,
+                                                     String idempotencyKey) {
+        requirePositive(amount, "Giá gia hạn thuê bao bằng Xu phải lớn hơn 0");
+        Map<WalletRef, Long> entries = new LinkedHashMap<>();
+        entries.put(readerWallet(userId), -amount);
+        entries.put(PLATFORM_REVENUE, amount);
+        return post("SUBSCRIPTION_RENEWAL", businessId, amount, idempotencyKey,
+            "Tự gia hạn thuê bao bằng Xu", entries, userId, null);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
     public WalletPostResult creditReaderReward(long userId, long amount, String businessId, String idempotencyKey,
                                                String description) {
         requirePositive(amount, "Số Xu thưởng phải lớn hơn 0");

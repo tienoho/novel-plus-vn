@@ -10,7 +10,15 @@ const TEXT_EXTENSIONS = new Set([
     ".css", ".gitignore", ".html", ".java", ".js", ".json", ".less", ".md",
     ".properties", ".sh", ".sql", ".txt", ".vm", ".vue", ".xml", ".yaml", ".yml"
 ]);
-const IGNORED_DIRECTORIES = new Set([".git", ".idea", "node_modules", "target"]);
+const IGNORED_DIRECTORIES = new Set([
+    ".auth",
+    ".git",
+    ".idea",
+    "node_modules",
+    "playwright-report",
+    "target",
+    "test-results"
+]);
 
 const wholeFileAllowRules = [
     {

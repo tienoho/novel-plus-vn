@@ -17,7 +17,7 @@
 <div class="main box_center cf">
     <div class="nav_sub">
         <a href="/" th:text="${application.website.name}"></a>&gt;<a th:href="'/book/bookclass.html?c='+${book.catId}" th:text="${book.catName}"></a>&gt;<a
-            th:href="'/book/'+${book.id}+'.html'" th:utext="${book.bookName}"></a>&gt;<a
+            th:href="'/book/'+${book.id}+'.html'" th:text="${book.bookName}"></a>&gt;<a
             th:href="'/book/indexList-'+${book.id}+'.html'" th:text="#{book.catalog}">Mục lục tác phẩm</a>
     </div>
     <div class="channelWrap channelChapterlist cf mb50">
@@ -26,11 +26,11 @@
             <div class="bookCover cf">
                 <div class="book_info1">
                     <div class="tit">
-                        <h1 th:utext="${book.bookName}"></h1><!--<i class="vip_b">VIP</i>-->
+                        <h1 th:text="${book.bookName}"></h1><!--<i class="vip_b">VIP</i>-->
                     </div>
                     <ul class="list">
                         <li>
-                            <span><span th:text="#{book.author}+': '">Tác giả: </span><a href="javascript:void(0)" th:utext="${book.authorName}"></a></span>
+                            <span><span th:text="#{book.author}+': '">Tác giả: </span><span th:text="${book.authorName}"></span></span>
                             <span><span th:text="#{book.category}+': '">Thể loại: </span><a th:href="'/book/bookclass.html?c='+${book.catId}" th:text="${book.catName}"></a></span>
                             <span th:switch="${book.bookStatus}"><span th:text="#{book.status}+': '">Trạng thái: </span><em class="black3" th:case="'0'" th:text="#{book.status.serializing}">Đang ra</em><em class="black3"
                                                                                   th:case="*" th:text="#{book.status.completed}">Đã hoàn thành</em></span>
@@ -45,9 +45,9 @@
                 <div class="dirList">
                     <ul th:each="bookIndex : ${bookIndexList}">
                         <li><a th:if="${bookIndex.isVip} != '1'" th:href="'/book/'+${book.id}+'/'+${bookIndex.id}+'.html'" >
-                            <span th:utext="${bookIndex.indexName}"></span><i class="red" th:text="' ['+#{book.free}+']'"> [Miễn phí]</i>
+                            <span th:text="${bookIndex.indexName}"></span><i class="red" th:text="' ['+#{book.free}+']'"> [Miễn phí]</i>
                         </a>
-                            <a th:if="${bookIndex.isVip} == '1'" th:href="'/book/'+${book.id}+'/'+${bookIndex.id}+'.html'" th:utext="${bookIndex.indexName}">
+                            <a th:if="${bookIndex.isVip} == '1'" th:href="'/book/'+${book.id}+'/'+${bookIndex.id}+'.html'" th:text="${bookIndex.indexName}">
                             </a></li>
                     </ul>
                 </div>

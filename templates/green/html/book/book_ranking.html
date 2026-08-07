@@ -1,31 +1,32 @@
-
-
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="vi">
 <head th:replace="common/header :: common_head(~{::title},~{::meta},~{::link},~{})">
     <title th:text="#{book.ranking}+'_'+${application.website.name}"></title>
-    <meta name="keywords" th:content="#{book.ranking}+','+#{book.ranking.views}+','+#{book.ranking.new}+','+#{book.ranking.updates}" />
-    <meta name="description" th:content="#{book.seo.list.description(${application.website.name})}" />
-    <link rel="stylesheet" href="/css/main.css" />
-    <link rel="stylesheet" href="/css/book.css" />
+    <meta name="keywords" th:content="#{book.ranking}+','+#{book.ranking.views}+','+#{book.ranking.new}+','+#{book.ranking.updates}"/>
+    <meta name="description" th:content="#{book.seo.list.description(${application.website.name})}"/>
+    <link rel="stylesheet" href="/css/main.css"/>
+    <link rel="stylesheet" href="/css/book.css"/>
 </head>
-<body>
+<body id="bookRankingPage"
+      th:attr="data-ten-thousand-unit=#{book.tenThousandUnit},
+               data-rank-views=#{book.ranking.views},
+               data-rank-new=#{book.ranking.new},
+               data-rank-updates=#{book.ranking.updates},
+               data-rank-comments=#{book.ranking.comments},
+               data-network-error=#{auth.networkError}">
 
-<div th:replace="common/top :: top('2')">
-</div>
+<div th:replace="common/top :: top('2')"></div>
 <div th:replace="common/monthly_ticket :: ranking_widget"></div>
-<div class="main box_center cf mb50">
+<main class="main box_center cf mb50">
     <div class="channelRankingContent cf">
         <div class="wrap_left fl">
             <div class="wrap_bg">
-                <!-- Bắt đầu chi tiết bảng xếp hạng. -->
                 <div class="pad20">
-
                     <div class="book_tit">
                         <div class="fl">
                             <h3 class="font26 mt5 mb5" id="rankName" th:text="#{book.ranking.views}">Xếp hạng lượt xem</h3>
                         </div>
-                        <a class="fr"></a>
                     </div>
                     <div class="updateTable rankTable">
                         <table cellpadding="0" cellspacing="0">
@@ -39,119 +40,33 @@
                                 <th class="word" th:text="#{book.wordCount}">Số chữ</th>
                             </tr>
                             </thead>
-                            <tbody id="bookRankList">
-
-
-                            </tbody>
+                            <tbody id="bookRankList"></tbody>
                         </table>
                     </div>
                 </div>
-                <!-- Kết thúc chi tiết bảng xếp hạng. -->
-
             </div>
         </div>
 
-        <div class="wrap_right fr">
+        <aside class="wrap_right fr">
             <div class="wrap_inner wrap_right_cont mb20">
                 <div class="title cf noborder">
                     <h3 class="on" th:text="#{book.ranking}">Bảng xếp hạng truyện</h3>
                 </div>
                 <div class="rightList2">
                     <ul id="rankType">
-                        <li><a class="on" href="javascript:listRank(0)" th:text="#{book.ranking.views}">Xếp hạng lượt xem</a></li>
-                        <li><a href="javascript:listRank(1)" th:text="#{book.ranking.new}">Xếp hạng truyện mới</a></li>
-                        <li><a href="javascript:listRank(2)" th:text="#{book.ranking.updates}">Xếp hạng cập nhật</a></li>
-                        <li><a href="javascript:listRank(3)" th:text="#{book.ranking.comments}">Xếp hạng bình luận</a></li>
+                        <li><a class="on" href="#rank-views" data-rank-type="0" th:text="#{book.ranking.views}">Xếp hạng lượt xem</a></li>
+                        <li><a href="#rank-new" data-rank-type="1" th:text="#{book.ranking.new}">Xếp hạng truyện mới</a></li>
+                        <li><a href="#rank-updates" data-rank-type="2" th:text="#{book.ranking.updates}">Xếp hạng cập nhật</a></li>
+                        <li><a href="#rank-comments" data-rank-type="3" th:text="#{book.ranking.comments}">Xếp hạng bình luận</a></li>
                     </ul>
                 </div>
             </div>
-        </div>
+        </aside>
     </div>
-</div>
+</main>
 
-<div th:replace="common/footer :: footer">
-</div>
+<div th:replace="common/footer :: footer"></div>
 <div th:replace="common/js :: js"></div>
-
-<script type="text/javascript" th:inline="javascript">
-    const tenThousandUnitText = /*[[#{book.tenThousandUnit}]]*/ 'vạn';
-    const viewsRankText = /*[[#{book.ranking.views}]]*/ 'Xếp hạng lượt xem';
-    const newRankText = /*[[#{book.ranking.new}]]*/ 'Xếp hạng truyện mới';
-    const updatesRankText = /*[[#{book.ranking.updates}]]*/ 'Xếp hạng cập nhật';
-    const commentsRankText = /*[[#{book.ranking.comments}]]*/ 'Xếp hạng bình luận';
-    const networkErrorText = /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng';
-    $("#rankType a").click(function () {
-        $("#rankType .on").removeClass("on");
-        $(this).addClass("on");
-    })
-
-    var rankType = getSearchString("type");
-    if(rankType==undefined){
-        rankType=0;
-    }else{
-        $("#rankType a").eq(rankType).click();
-    }
-    listRank(rankType);
-
-    function listRank(rankType){
-        $.ajax({
-            type: "get",
-            url: "/book/listRank",
-            data: {'type':rankType,'limit':30},
-            dataType: "json",
-            success: function (data) {
-                if (data.code == 200) {
-                    var bookRankList = data.data;
-                    var bookRankListHtml = "";
-                    for(var i=0;i<bookRankList.length;i++){
-                        var book = bookRankList[i];
-                        var classHtml = "";
-                        if(i<3){
-                            classHtml="num"+(i+1);
-                        }
-                        bookRankListHtml+=("<tr>\n" +
-                            "                                <td class=\"rank\"><i class=\""+classHtml+"\">"+(i+1)+"</i></td>\n" +
-                            "                                <td class=\"style\"><a href=\"/book/bookclass.html?c="+book.catId+"\" >["+book.catName+"]</a></td>\n" +
-                            "                                <td class=\"name\"><a href=\"/book/"+book.id+".html\" >"+book.bookName+"</a></td>\n" +
-                            "                                <td class=\"chapter\"><a href=\"/book/"+book.id+".html\" >"+book.lastIndexName+"</a>\n" +
-                            "                                </td>\n" +
-                            "                                <td class=\"author\"><a href=\"javascript:void(0)\">"+book.authorName+"</a></td>\n" +
-                            "                                <td class=\"word\">"+(book.wordCount / 10000).toFixed(2)+" " + tenThousandUnitText + "</td>\n" +
-                            "                            </tr>");
-                    }
-                    $("#bookRankList").html(bookRankListHtml);
-
-                } else {
-                    layer.alert(data.msg);
-                }
-
-            },
-            error: function () {
-                layer.alert(networkErrorText);
-            }
-        })
-        switch (rankType) {
-            case 0 : {
-                $("#rankName").html(viewsRankText);
-                break;
-            }
-            case 1 : {
-                $("#rankName").html(newRankText);
-                break;
-            }
-            case 2 : {
-                $("#rankName").html(updatesRankText);
-                break;
-            }
-            case 3 : {
-                $("#rankName").html(commentsRankText);
-                break;
-            }
-
-        }
-
-    }
-</script>
-
+<script src="/javascript/book-ranking-page.js" type="text/javascript"></script>
 </body>
 </html>

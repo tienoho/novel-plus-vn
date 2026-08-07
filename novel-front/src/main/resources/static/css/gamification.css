@@ -321,6 +321,8 @@
 }
 
 .monthly-ticket-vote-controls input,
+.monthly-ticket-season-picker select,
+.monthly-ticket-ranking-toolbar select,
 .monthly-ticket-ranking-toolbar input {
     box-sizing: border-box;
     min-height: 42px;
@@ -469,6 +471,20 @@
     display: flex;
     gap: 10px;
     justify-content: flex-end;
+}
+
+.gamification-public-policy {
+    margin-top: 18px;
+    padding: 14px;
+    border: 1px solid var(--gamification-border);
+    border-radius: 10px;
+}
+
+.gamification-public-policy pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font: inherit;
+    line-height: 1.65;
 }
 
 .monthly-ticket-home-timing {

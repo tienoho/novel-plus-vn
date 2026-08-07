@@ -1,6 +1,8 @@
 package com.java2nb.novel.core.schedule;
 
 import com.java2nb.novel.core.config.GamificationProperties;
+import com.java2nb.novel.core.observability.NovelBusinessMetrics;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import com.java2nb.novel.mapper.GamificationProgressMapper;
 import com.java2nb.novel.service.gamification.EventProcessResult;
 import com.java2nb.novel.service.impl.GamificationEventFailureWriter;
@@ -38,8 +40,9 @@ class GamificationEventDrainScheduleTest {
         mapper = mock(GamificationProgressMapper.class);
         processor = mock(GamificationEventProcessor.class);
         failureWriter = mock(GamificationEventFailureWriter.class);
+        NovelBusinessMetrics metrics = new NovelBusinessMetrics(new SimpleMeterRegistry());
         schedule = new GamificationEventDrainSchedule(properties, mapper, processor, failureWriter,
-            Clock.fixed(NOW, ZoneOffset.UTC));
+            metrics, Clock.fixed(NOW, ZoneOffset.UTC));
     }
 
     @Test

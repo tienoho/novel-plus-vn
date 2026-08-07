@@ -1,6 +1,7 @@
 package com.java2nb.novel.controller;
 
 import com.java2nb.novel.core.bean.UserDetails;
+import com.java2nb.novel.core.utils.AuthCookieService;
 import com.java2nb.novel.core.utils.JwtTokenUtil;
 import com.java2nb.novel.entity.Author;
 import com.java2nb.novel.mapper.BookOwnershipProofMapper;
@@ -19,6 +20,7 @@ import com.java2nb.novel.service.transfer.BookImportResult;
 import com.java2nb.novel.service.transfer.BookTransferFormat;
 import io.github.xxyopen.model.resp.RestResult;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -60,7 +62,9 @@ class AuthorBookTransferControllerTest {
             chapterCommercialPolicyService, copyrightAppealMapper, bookOwnershipProofMapper,
             copyrightReportMapper);
         controller.setJwtTokenUtil(jwtTokenUtil);
-        when(request.getHeader("Authorization")).thenReturn("test-token");
+        when(request.getCookies()).thenReturn(new Cookie[]{
+            new Cookie(AuthCookieService.ACCESS_COOKIE, "test-token")
+        });
         when(jwtTokenUtil.getUserDetailsFromToken("test-token")).thenReturn(userDetails);
         when(userDetails.getId()).thenReturn(100L);
         Author author = new Author();

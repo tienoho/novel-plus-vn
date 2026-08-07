@@ -51,7 +51,7 @@
                                     <h2 class="hero-slide-title">
                                         <a th:href="'/book/'+${book.bookId}+'.html'" th:text="${book.bookName}"></a>
                                     </h2>
-                                    <p class="hero-slide-desc" th:utext="${book.bookDesc}"></p>
+                                    <p class="hero-slide-desc" th:text="${book.bookDesc}"></p>
                                     <a class="hero-slide-btn" th:href="'/book/'+${book.bookId}+'.html'">
                                         <span th:text="#{book.read}">Đọc Ngay</span>
                                     </a>
@@ -80,7 +80,7 @@
                 <dl class="hot_notice" id="indexNews">
                     <dd style="text-align:left;" th:each="news : ${newsList}">
                         <span th:text="'['+${news.catName}+']'"></span>
-                        <a th:href="'/about/newsInfo-'+${news.id}+'.html'" th:utext="${news.title}"></a>
+                        <a th:href="'/about/newsInfo-'+${news.id}+'.html'" th:text="${news.title}"></a>
                     </dd>
                 </dl>
             </div>
@@ -96,7 +96,7 @@
                         <div class="book_intro">
                             <div class="cover"><a th:href="'/book/'+${book.bookId}+'.html'"><img th:src="${book.picUrl}" th:alt="${book.bookName}" width="100" height="130"></a>
                             </div>
-                            <a class="txt" th:href="'/book/'+${book.bookId}+'.html'" th:utext="${book.bookDesc}"></a>
+                            <a class="txt" th:href="'/book/'+${book.bookId}+'.html'" th:text="${book.bookDesc}"></a>
                         </div>
                     </li>
                 </ul>
@@ -117,7 +117,7 @@
                     <div class="items_txt">
                         <h4><a th:href="'/book/'+${book.bookId}+'.html'" th:text="${book.bookName}"></a></h4>
                         <p class="author"><span class="author-name" th:text="#{book.authorBy(${book.authorName})}"></span></p>
-                        <p class="intro"><a th:href="'/book/'+${book.bookId}+'.html'" th:utext="${book.bookDesc}"></a>
+                        <p class="intro"><a th:href="'/book/'+${book.bookId}+'.html'" th:text="${book.bookDesc}"></a>
                         </p>
                     </div>
                 </div>
@@ -150,7 +150,7 @@
                     <div class="items_txt">
                         <h4><a th:href="'/book/'+${book.bookId}+'.html'" th:text="${book.bookName}"></a></h4>
                         <p class="author"><span class="author-name" th:text="#{book.authorBy(${book.authorName})}"></span></p>
-                        <p class="intro"><a th:href="'/book/'+${book.bookId}+'.html'" th:utext="${book.bookDesc}"></a>
+                        <p class="intro"><a th:href="'/book/'+${book.bookId}+'.html'" th:text="${book.bookDesc}"></a>
                         </p>
                     </div>
                 </div>
@@ -316,7 +316,7 @@
                     }
                     $("#clickRankBooks").html(clickRankBooksHtml);
                 } else {
-                    layer.alert(data.msg);
+                    novelAlertText(data.msg);
                 }
             },
             error: function () {
@@ -360,7 +360,7 @@
                     }
                     $("#newRankBooks").html(newRankBooksHtml);
                 } else {
-                    layer.alert(data.msg);
+                    novelAlertText(data.msg);
                 }
             },
             error: function () {
@@ -417,7 +417,7 @@
                     $("#updateRankBooks").html(updateRankBookHtml);
                     $("#newRankBooks2").html(updateRankBookHtml2);
                 } else {
-                    layer.alert(data.msg);
+                    novelAlertText(data.msg);
                 }
             },
             error: function () {
@@ -441,7 +441,7 @@
                     }
                     $("#friendLink").append(friendLinkHtml);
                 } else {
-                    layer.alert(data.msg);
+                    novelAlertText(data.msg);
                 }
             },
             error: function () {

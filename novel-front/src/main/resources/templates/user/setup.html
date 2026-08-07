@@ -5,14 +5,18 @@
     <title th:text="#{user.settings}+'_'+${application.website.name}"></title>
     <link rel="stylesheet" href="/css/user.css"/>
 </head>
-<body class="">
+<body id="userSettingsPage" data-settings-mode="setup"
+      th:attr="data-edit-text=#{user.edit},
+               data-male-text=#{user.gender.male},
+               data-female-text=#{user.gender.female},
+               data-select-text=#{user.gender.select},
+               data-network-error=#{auth.networkError},
+               data-select-upload=#{user.avatar.select}">
 
-<div th:replace="common/top :: top('')">
-</div>
-<div class="main box_center cf">
+<div th:replace="common/top :: top('')"></div>
+<main class="main box_center cf">
     <div class="userBox cf">
         <div class="my_l">
-
             <ul class="log_list">
                 <li><a class="link_1" href="/user/userinfo.html" th:text="#{user.center}">Tài khoản của tôi</a></li>
                 <li><a class="link_4" href="/user/favorites.html" th:text="#{user.bookshelf}">Tủ sách</a></li>
@@ -20,138 +24,37 @@
                 <li><a class="link_7" href="/user/feedback_list.html" th:text="#{user.feedback}">Phản hồi của tôi</a></li>
                 <li><a class="link_8 on" href="/user/setup.html" th:text="#{user.settings}">Cài đặt tài khoản</a></li>
             </ul>
-
         </div>
         <div class="my_r">
             <div class="my_info cf">
                 <div class="my_info_txt">
                     <ul class="mytab_list">
-                        <li><i class="tit" th:text="#{user.avatar}">Ảnh đại diện</i>
-                            <a style="position: relative">
+                        <li>
+                            <i class="tit" th:text="#{user.avatar}">Ảnh đại diện</i>
+                            <a href="#avatar-upload" style="position: relative">
                                 <img id="imgLogo" class="user_img" th:alt="#{user.avatar}" src="/images/man.png"/>
-                                <input class="opacity" onchange="picChange()" type="file" id="file0" name="file"
+                                <input class="opacity" type="file" id="file0" name="file"
+                                       accept=".jpg,.jpeg,.gif,.png,image/jpeg,image/gif,image/png"
                                        th:title="#{user.avatar.upload}"
-                                       style="z-index: 100;cursor: pointer;left: 0px; top: -25px; width: 60px; height: 80px; opacity: 0; position: absolute;  "/>
-
+                                       style="z-index:100;cursor:pointer;left:0;top:-25px;width:60px;height:80px;opacity:0;position:absolute"/>
                             </a>
-
                         </li>
                         <li><i class="tit" th:text="#{user.nickname}">Biệt danh</i><a href="/user/set_name.html" id="my_name"></a></li>
-                        <li style="display:none"><i class="tit" th:text="#{user.email}">Email</i><a href="javascript:void(0);"></a></li>
+                        <li style="display:none"><i class="tit" th:text="#{user.email}">Email</i><span></span></li>
                         <li><i class="tit" th:text="#{user.gender}">Giới tính</i><a href="/user/set_sex.html" id="my_sex"></a></li>
                         <li><i class="tit" th:text="#{user.password}">Mật khẩu</i><a href="/user/set_password.html" th:text="#{user.password.change}">Đổi mật khẩu</a></li>
-                        <li><i class="tit" th:text="#{user.currentStatus}">Trạng thái hiện tại</i><a href="javascript:logout()" th:text="#{site.logout}">Đăng xuất</a></li>
+                        <li><i class="tit" th:text="#{user.currentStatus}">Trạng thái hiện tại</i><a href="#logout" data-user-action="logout" th:text="#{site.logout}">Đăng xuất</a></li>
                     </ul>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</main>
 
-<div th:replace="common/footer :: footer">
-</div>
+<div th:replace="common/footer :: footer"></div>
 <div th:replace="common/js :: js"></div>
 <script src="/javascript/user.js" type="text/javascript"></script>
 <script src="/javascript/ajaxfileupload.js" type="text/javascript"></script>
-<script type="text/javascript" th:inline="javascript">
-    const editText = /*[[#{user.edit}]]*/ 'Sửa';
-    const maleText = /*[[#{user.gender.male}]]*/ 'Nam';
-    const femaleText = /*[[#{user.gender.female}]]*/ 'Nữ';
-    const selectText = /*[[#{user.gender.select}]]*/ 'Vui lòng chọn';
-    const networkErrorText = /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng';
-    const selectUploadText = /*[[#{user.avatar.select}]]*/ 'Vui lòng chọn tệp ảnh để tải lên.';
-    // Tải thông tin người dùng.
-    $.ajax({
-        type: "get",
-        url: "/user/userInfo",
-        data: {},
-        dataType: "json",
-        success: function (data) {
-            if (data.code == 200) {
-                if (data.data.userPhoto) {
-                    $("#imgLogo").attr("src", data.data.userPhoto);
-                }
-                if (data.data.nickName) {
-                    $("#my_name").html(data.data.nickName + "<em class=\"ml10\">[" + editText + "]</em>");
-                } else {
-                    $("#my_name").html(data.data.username + "<em class=\"ml10\">[" + editText + "]</em>");
-                }
-                if (data.data.userSex === '0') {
-                    $("#my_sex").html(maleText + "<em class=\"ml10\">[" + editText + "]</em>");
-                } else if (data.data.userSex === '1') {
-                    $("#my_sex").html(femaleText + "<em class=\"ml10\">[" + editText + "]</em>");
-                } else {
-                    $("#my_sex").html(selectText);
-                }
-
-
-            } else if (data.code == 1001) {
-                // Phiên đăng nhập đã hết hạn.
-                location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
-
-            } else {
-                layer.alert(data.msg);
-            }
-
-        },
-        error: function () {
-            layer.alert(networkErrorText);
-        }
-    })
-
-
-    function picChange() {
-        var file = $("#file0").val(); // Tên tệp.
-        if (file != "") {
-
-            if (checkPicUpload($("#file0")[0])) {
-
-                $.ajaxFileUpload({
-                    url: "/file/picUpload", // Endpoint tải tệp lên.
-                    secureuri: false, // Plugin cũ không dùng secure URI.
-                    fileElementId: "file0", // ID input tệp.
-                    dataType: "json", // Kiểu phản hồi.
-                    type: "post",
-                    success: function (data) { // Xử lý phản hồi thành công.
-                        if (data.code == 200) {
-
-                            $.ajax({
-                                type: "POST",
-                                url: "/user/updateUserInfo",
-                                data: {'userPhoto': data.data},
-                                dataType: "json",
-                                success: function (data) {
-                                    if (data.code == 200) {
-                                        window.location.href = '/user/setup.html';
-
-                                    } else if (data.code == 1001) {
-                                        // Phiên đăng nhập đã hết hạn.
-                                        location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
-
-                                    } else {
-                                        layer.alert(data.msg);
-                                    }
-
-                                },
-                                error: function () {
-                                    layer.alert(networkErrorText);
-                                }
-                            })
-
-                        } else {
-                            layer.alert(data.msg);
-                        }
-
-                    }
-
-                });
-            }
-        } else {
-            alert(selectUploadText);
-        }
-
-
-    }
-</script>
+<script src="/javascript/user-settings-page.js" type="text/javascript"></script>
 </body>
 </html>

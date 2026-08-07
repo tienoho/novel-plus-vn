@@ -77,6 +77,70 @@ class GamificationMySqlIntegrationTest {
     @Autowired
     private ReadingHeartbeatWriter readingHeartbeatWriter;
 
+    @Autowired
+    private MonthlyRankingService monthlyRankingService;
+
+    @Autowired
+    private TicketRiskService ticketRiskService;
+
+    @Autowired
+    private GamificationPublicPolicyService gamificationPublicPolicyService;
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void publicPolicyPublishKeepsOnePublishedVersionAndImmutableAudit() {
+        long suffix = Math.floorMod(System.nanoTime(), 900_000);
+        String policyVersion = "policy-it-" + suffix;
+        String staleVersion = "policy-stale-" + suffix;
+        String content = "Nội dung luật chơi integration test mô tả thời hạn Đuốc, cách xếp hạng, "
+            + "đối soát thưởng và cơ chế chống lạm dụng cho toàn bộ độc giả trên nền tảng.";
+        Date publishedAt = new Date();
+
+        GamificationPublicPolicyRow draft = gamificationPublicPolicyService.createDraft(
+            policyVersion, "Luật chơi integration test", content, 1L);
+        GamificationPublicPolicyRow published = gamificationPublicPolicyService.publish(
+            draft.getId(), draft.getVersion(), 1L, publishedAt);
+
+        assertThat(published.getStatus()).isEqualTo("PUBLISHED");
+        assertThat(published.getContentText()).isEqualTo(content);
+        assertThat(jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM gamification_public_policy WHERE status='PUBLISHED'",
+            Integer.class)).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("""
+            SELECT COUNT(*) FROM gamification_public_policy_audit
+            WHERE policy_id=? AND event_type IN ('CREATED', 'PUBLISHED')
+            """, Integer.class, draft.getId())).isEqualTo(2);
+
+        assertThatThrownBy(() -> jdbcTemplate.update(
+            "UPDATE gamification_public_policy SET content_text='changed' WHERE id=?",
+            draft.getId()))
+            .isInstanceOf(DataAccessException.class)
+            .hasMessageContaining("published gamification policy content is immutable");
+
+        GamificationPublicPolicyRow stale = gamificationPublicPolicyService.createDraft(
+            staleVersion, "Luật chơi stale integration", content, 1L);
+        assertThatThrownBy(() -> gamificationPublicPolicyService.publish(
+            stale.getId(), stale.getVersion() + 1, 1L, publishedAt))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("version");
+        assertThat(jdbcTemplate.queryForObject(
+            "SELECT status FROM gamification_public_policy WHERE id=?", String.class, stale.getId()))
+            .isEqualTo("DRAFT");
+
+        assertThatThrownBy(() -> jdbcTemplate.update("""
+            INSERT INTO gamification_public_policy
+                (policy_version, title, content_text, status, published_by, published_at)
+            VALUES (?, 'Bản phát hành trùng', ?, 'PUBLISHED', 1, NOW(3))
+            """, "policy-duplicate-" + suffix, content))
+            .isInstanceOf(DataAccessException.class);
+        assertThatThrownBy(() -> jdbcTemplate.update("""
+            UPDATE gamification_public_policy_audit SET event_type='CHANGED'
+            WHERE policy_id=? LIMIT 1
+            """, draft.getId()))
+            .isInstanceOf(DataAccessException.class)
+            .hasMessageContaining("gamification_public_policy_audit is immutable");
+    }
+
     @Test
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     void eventProcessorAdvancesQuestOnceAndSkipsUnmatchedEvents() {
@@ -135,6 +199,144 @@ class GamificationMySqlIntegrationTest {
         } finally {
             deleteQuestProgressFixture(userId);
         }
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void levelRewardConsumerIsIdempotentAcrossDuplicateLevelEvents() {
+        long suffix = Math.floorMod(System.nanoTime(), 900_000);
+        long userId = 99_744_000_000L + suffix;
+        String policyVersion = "level-it-" + suffix;
+        Date occurredAt = Date.from(Instant.parse("2027-02-01T03:00:00Z"));
+        jdbcTemplate.update("""
+            INSERT INTO user
+                (id, username, password, nick_name, account_balance, status, create_time, update_time)
+            VALUES (?, ?, 'level-reward-it', 'Level reward IT', 0, 0, NOW(), NOW())
+            """, userId, "level_reward_" + suffix);
+        jdbcTemplate.update("""
+            INSERT INTO level_reward_policy
+                (policy_version, level, ticket_amount, ticket_validity_days)
+            VALUES (?, 3, 2, 60)
+            """, policyVersion);
+        for (int index = 0; index < 2; index++) {
+            String sourceKey = "GAMIFY:LEVEL_REACHED:" + userId + ":3:v1-" + index;
+            jdbcTemplate.update("""
+                INSERT INTO gamification_event
+                    (event_type, source_key, user_id, occurred_at, local_date, payload_hash,
+                     payload, status, attempt, policy_version)
+                VALUES ('LEVEL_REACHED', ?, ?, ?, '2027-02-01', ?, JSON_OBJECT('level', 3),
+                        'PENDING', 0, ?)
+                """, sourceKey, userId, occurredAt, Integer.toHexString(index).repeat(64),
+                policyVersion);
+            long eventId = jdbcTemplate.queryForObject(
+                "SELECT id FROM gamification_event WHERE source_key=?", Long.class, sourceKey);
+            assertThat(gamificationEventProcessor.process(eventId, occurredAt, 10))
+                .isEqualTo(EventProcessResult.PROCESSED);
+        }
+
+        assertThat(jdbcTemplate.queryForObject(
+            "SELECT available_balance FROM monthly_ticket_account WHERE user_id=?",
+            Long.class, userId)).isEqualTo(2L);
+        assertThat(jdbcTemplate.queryForObject("""
+            SELECT COUNT(*) FROM monthly_ticket_ledger
+            WHERE user_id=? AND business_type='LEVEL_UP'
+            """, Integer.class, userId)).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM level_reward_grant WHERE user_id=?",
+            Integer.class, userId)).isEqualTo(1);
+        long grantId = jdbcTemplate.queryForObject(
+            "SELECT id FROM level_reward_grant WHERE user_id=?", Long.class, userId);
+        assertThatThrownBy(() -> jdbcTemplate.update(
+            "UPDATE level_reward_grant SET ticket_amount=3 WHERE id=?", grantId))
+            .isInstanceOf(DataAccessException.class)
+            .hasMessageContaining("level_reward_grant is immutable");
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void sharedDeviceRiskCreatesReviewQueueAndImmutableAudit() {
+        long suffix = Math.floorMod(System.nanoTime(), 800_000);
+        long firstUser = 99_750_000_000L + suffix;
+        long secondUser = 99_751_000_000L + suffix;
+        long reviewedUser = 99_752_000_000L + suffix;
+        long authorId = 99_753_000_000L + suffix;
+        long bookId = 99_754_000_000L + suffix;
+        String periodCode = "risk-" + suffix;
+        String policyVersion = "risk-it-" + suffix;
+        Date now = new Date();
+        Date start = new Date(now.getTime() - 3_600_000);
+        Date end = new Date(now.getTime() + 86_400_000);
+        String deviceHash = "a".repeat(64);
+        String ipHash = "b".repeat(64);
+
+        for (long userId : List.of(firstUser, secondUser, reviewedUser)) {
+            jdbcTemplate.update("""
+                INSERT INTO user
+                    (id, username, password, nick_name, account_balance, status, create_time, update_time)
+                VALUES (?, ?, 'risk-it', ?, 0, 0, ?, NOW())
+                """, userId, "risk_" + userId, "Risk " + userId,
+                new Date(now.getTime() - 86_400_000));
+        }
+        jdbcTemplate.update("""
+            INSERT INTO author (id, user_id, pen_name, tel_phone, status, create_time)
+            VALUES (?, ?, ?, ?, 0, NOW())
+            """, authorId, reviewedUser + 1, "Risk author " + suffix,
+            "07" + String.format("%08d", suffix));
+        jdbcTemplate.update("""
+            INSERT INTO book
+                (id, pic_url, book_name, author_id, author_name, book_desc, score,
+                 book_status, word_count, status, update_time, create_time,
+                 audit_status, cover_audit_status)
+            VALUES (?, '/pic/risk-it.png', ?, ?, ?, 'Risk fixture', 8.0,
+                    0, 1000, 1, NOW(), NOW(), 1, 1)
+            """, bookId, "Risk book " + suffix, authorId, "Risk author " + suffix);
+        jdbcTemplate.update("""
+            INSERT INTO monthly_ticket_season
+                (period_code, season_type, zone_id, start_at, end_at, vote_cutoff_at,
+                 status, policy_version)
+            VALUES (?, 'FESTIVAL', 'Asia/Ho_Chi_Minh', ?, ?, ?, 'OPEN', 'v1')
+            """, periodCode, start, end, end);
+        long seasonId = jdbcTemplate.queryForObject(
+            "SELECT id FROM monthly_ticket_season WHERE period_code=?", Long.class, periodCode);
+        TicketPolicy ticketPolicy = new TicketPolicy("v1", 60, 10, 20, 50, 100, 50, false);
+        int index = 0;
+        for (long userId : List.of(firstUser, secondUser)) {
+            service.grant(new TicketGrantCommand(userId, 1, "ADMIN_GRANT",
+                "risk-it-" + suffix + '-' + index, "ADMIN_GRANT:risk-it:" + userId,
+                start, end, "ADMIN", 1L, "risk integration test", "v1"));
+            service.castVote(new TicketVoteCommand(userId, bookId, seasonId, 1,
+                "risk-vote-" + suffix + '-' + index, ipHash, deviceHash, now,
+                LocalDate.of(2026, 8, 1)), ticketPolicy);
+            index++;
+        }
+        jdbcTemplate.update("""
+            INSERT INTO gamification_abuse_policy (policy_version, review_score_threshold)
+            VALUES (?, 5)
+            """, policyVersion);
+        jdbcTemplate.update("""
+            INSERT INTO gamification_abuse_rule
+                (policy_version, rule_code, metric_name, threshold_value,
+                 window_minutes, score, hard_block)
+            VALUES (?, 'SHARED_DEVICE', 'DEVICE_USERS', 2, 60, 5, 0)
+            """, policyVersion);
+
+        TicketRiskDecision decision = ticketRiskService.assess(new TicketRiskCommand(
+            reviewedUser, seasonId, bookId, "risk-assess-" + suffix, deviceHash, ipHash,
+            now, policyVersion));
+
+        assertThat(decision.action()).isEqualTo("REVIEW");
+        TicketRiskReviewRow reviewed = ticketRiskService.review(decision.assessmentId(), 0,
+            "APPROVED", 9L, "Đã xác minh thiết bị dùng chung hợp lệ", now);
+        assertThat(reviewed.getStatus()).isEqualTo("APPROVED");
+        assertThat(jdbcTemplate.queryForObject("""
+            SELECT COUNT(*) FROM gamification_risk_review_audit
+            WHERE assessment_id=? AND to_status='APPROVED'
+            """, Integer.class, decision.assessmentId())).isEqualTo(1);
+        assertThatThrownBy(() -> jdbcTemplate.update(
+            "UPDATE gamification_risk_assessment SET risk_score=0 WHERE id=?",
+            decision.assessmentId()))
+            .isInstanceOf(DataAccessException.class)
+            .hasMessageContaining("gamification_risk_assessment is immutable");
     }
 
     @Test
@@ -395,6 +597,8 @@ class GamificationMySqlIntegrationTest {
     void grantVoteAndStorageTriggersPreserveInvariants() {
         Date now = new Date();
         seedFixture(now);
+        long seasonId = jdbcTemplate.queryForObject(
+            "SELECT id FROM monthly_ticket_season WHERE period_code='2099-10'", Long.class);
         TicketPolicy policy = new TicketPolicy("v1", 60, 10, 20, 50, 100, 50, false);
 
         assertThat(service.grant(new TicketGrantCommand(USER_ID, 5, "ADMIN_GRANT", "mysql-it",
@@ -402,8 +606,9 @@ class GamificationMySqlIntegrationTest {
             new Date(now.getTime() + 86_400_000), "ADMIN", 1L, "integration test", "v1")))
             .isEqualTo(TicketPostResult.POSTED);
 
-        TicketVoteResult result = service.castVote(new TicketVoteCommand(USER_ID, BOOK_ID, 3,
-            "mysql-it-request-1", "b".repeat(64), now, LocalDate.of(2026, 8, 15)), policy);
+        TicketVoteResult result = service.castVote(new TicketVoteCommand(USER_ID, BOOK_ID, seasonId, 3,
+            "mysql-it-request-1", "b".repeat(64), "c".repeat(64), now,
+            LocalDate.of(2026, 8, 15)), policy);
 
         assertThat(result.status()).isEqualTo(TicketPostResult.POSTED);
         assertThat(result.availableBalance()).isEqualTo(2);
@@ -433,6 +638,38 @@ class GamificationMySqlIntegrationTest {
             """))
             .isInstanceOf(DataAccessException.class)
             .hasMessageContaining("invalid monthly_ticket_season status transition");
+    }
+
+    @Test
+    void regularAndSpecialSeasonsReceiveIndependentVotes() {
+        Date now = new Date();
+        seedFixture(now);
+        Date sharedStart = jdbcTemplate.queryForObject(
+            "SELECT start_at FROM monthly_ticket_season WHERE period_code='2099-10'", Date.class);
+        long regularSeasonId = jdbcTemplate.queryForObject(
+            "SELECT id FROM monthly_ticket_season WHERE period_code='2099-10'", Long.class);
+        MonthlySeasonRow special = monthlyRankingService.createSpecialSeason(
+            "le-hoi-doc-sach-2099", "FESTIVAL", sharedStart,
+            new Date(now.getTime() + 86_400_000), new Date(now.getTime() + 43_200_000),
+            ZoneId.of("Asia/Ho_Chi_Minh"), "v1");
+        TicketPolicy policy = new TicketPolicy("v1", 60, 10, 20, 50, 100, 50, false);
+        service.grant(new TicketGrantCommand(USER_ID, 2, "ADMIN_GRANT", "parallel-season-it",
+            "ADMIN_GRANT:parallel-season-it:" + USER_ID, new Date(now.getTime() - 60_000),
+            new Date(now.getTime() + 86_400_000), "ADMIN", 1L, "integration test", "v1"));
+
+        service.castVote(new TicketVoteCommand(USER_ID, BOOK_ID, regularSeasonId, 1,
+            "parallel-regular", "d".repeat(64), "e".repeat(64), now,
+            LocalDate.of(2026, 8, 15)), policy);
+        service.castVote(new TicketVoteCommand(USER_ID, BOOK_ID, special.getId(), 1,
+            "parallel-special", "d".repeat(64), "e".repeat(64), now,
+            LocalDate.of(2026, 8, 15)), policy);
+
+        assertThat(jdbcTemplate.queryForObject("""
+            SELECT total_tickets FROM monthly_rank_counter WHERE season_id=? AND book_id=?
+            """, Long.class, regularSeasonId, BOOK_ID)).isEqualTo(1L);
+        assertThat(jdbcTemplate.queryForObject("""
+            SELECT total_tickets FROM monthly_rank_counter WHERE season_id=? AND book_id=?
+            """, Long.class, special.getId(), BOOK_ID)).isEqualTo(1L);
     }
 
     @Test
@@ -542,6 +779,52 @@ class GamificationMySqlIntegrationTest {
                      JOIN ledger_transaction tx ON tx.id=entry.ledger_transaction_id
             WHERE tx.business_id=? AND wallet.owner_type='AUTHOR'
             """, Integer.class, "2199-01:" + bookId + ":1:" + authorId)).isZero();
+    }
+
+    @Test
+    void specialSeasonIsIgnoredByRegularSeasonSelectionButPersistsWithGivenType() {
+        Date at = Date.from(Instant.parse("2199-09-03T00:00:00Z"));
+        Date start = Date.from(Instant.parse("2199-09-01T00:00:00Z"));
+        Date end = Date.from(Instant.parse("2199-09-08T00:00:00Z"));
+        Date cutoff = Date.from(Instant.parse("2199-09-07T00:00:00Z"));
+
+        MonthlySeasonRow created = monthlyRankingService.createSpecialSeason(
+            "ky-ky-niem-2199", "ANNIVERSARY", start, end, cutoff, ZoneId.of("Asia/Ho_Chi_Minh"), "v1");
+        MonthlySeasonRow replay = monthlyRankingService.createSpecialSeason(
+            "ky-ky-niem-2199", "ANNIVERSARY", start, end, cutoff,
+            ZoneId.of("Asia/Ho_Chi_Minh"), "v1");
+
+        assertThat(created.getSeasonType()).isEqualTo("ANNIVERSARY");
+        assertThat(replay.getId()).isEqualTo(created.getId());
+        assertThat(jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM monthly_ticket_season WHERE period_code=?", Integer.class,
+            "ky-ky-niem-2199")).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("""
+            SELECT COUNT(*) FROM monthly_ticket_season
+            WHERE period_code=? AND season_type='REGULAR'
+            """, Integer.class, "ky-ky-niem-2199")).isZero();
+        assertThatThrownBy(() -> monthlyRankingService.createSpecialSeason(
+            "ky-ky-niem-2199-2", "REGULAR", start, end, cutoff, ZoneId.of("Asia/Ho_Chi_Minh"), "v1"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void adminTickerModerationOverridesUserVisibilityAndAudits() {
+        long userId = 99_749_500_000L + Math.floorMod(System.nanoTime(), 400_000);
+        GamificationProfileRow initial = gamificationProgressService.getProfile(userId, "v1");
+        assertThat(initial.getTickerOptOut()).isTrue();
+
+        GamificationProfileRow shown = gamificationProgressService.adminSetTickerOptOut(
+            userId, false, 8L, "Đã xác minh lại, không vi phạm", "v1");
+        GamificationProfileRow hidden = gamificationProgressService.adminSetTickerOptOut(
+            userId, true, 8L, "Nickname vi phạm quy định cộng đồng", "v1");
+
+        assertThat(shown.getTickerOptOut()).isFalse();
+        assertThat(hidden.getTickerOptOut()).isTrue();
+        assertThat(jdbcTemplate.queryForObject("""
+            SELECT COUNT(*) FROM gamification_profile_audit
+            WHERE user_id=? AND change_type='TICKER_OPT' AND operator_type='ADMIN'
+            """, Integer.class, userId)).isEqualTo(2);
     }
 
     private void seedFixture(Date now) {

@@ -44,6 +44,13 @@
         LIMIT #{limit}
     </select>
 
+    <select id="countPendingEvents" resultType="long">
+        SELECT COUNT(*)
+        FROM gamification_event
+        WHERE status = 'PENDING'
+          AND attempt &lt; #{maxAttempt}
+    </select>
+
     <select id="selectEventById"
             resultType="com.java2nb.novel.service.gamification.GamificationEventRow">
         SELECT id, event_type AS eventType, source_key AS sourceKey, user_id AS userId,
@@ -257,6 +264,48 @@
         ORDER BY min_exp DESC
         LIMIT 1
     </select>
+
+    <select id="selectLevelRulesBetween"
+            resultType="com.java2nb.novel.service.gamification.LevelRuleRow">
+        SELECT rule_version AS ruleVersion, level, min_exp AS minExp,
+               title_key AS titleKey, frame_code AS frameCode
+        FROM level_rule
+        WHERE rule_version = #{ruleVersion}
+          AND level &gt; #{fromLevel}
+          AND level &lt;= #{toLevel}
+        ORDER BY level ASC
+    </select>
+
+    <select id="selectLevelRewardPolicy"
+            resultType="com.java2nb.novel.service.gamification.LevelRewardPolicyRow">
+        SELECT policy_version AS policyVersion, level, ticket_amount AS ticketAmount,
+               ticket_validity_days AS ticketValidityDays
+        FROM level_reward_policy
+        WHERE policy_version = #{policyVersion}
+          AND level = #{level}
+        LIMIT 1
+    </select>
+
+    <select id="selectLevelRewardGrant"
+            resultType="com.java2nb.novel.service.gamification.LevelRewardGrantRow">
+        SELECT id, event_id AS eventId, user_id AS userId, level,
+               policy_version AS policyVersion, ticket_amount AS ticketAmount,
+               ticket_ledger_id AS ticketLedgerId, idempotency_key AS idempotencyKey,
+               create_time AS createTime
+        FROM level_reward_grant
+        WHERE user_id = #{userId}
+          AND level = #{level}
+          AND policy_version = #{policyVersion}
+        LIMIT 1
+    </select>
+
+    <insert id="insertLevelRewardGrantIgnore">
+        INSERT IGNORE INTO level_reward_grant
+            (event_id, user_id, level, policy_version, ticket_amount,
+             ticket_ledger_id, idempotency_key)
+        VALUES (#{eventId}, #{userId}, #{level}, #{policyVersion}, #{ticketAmount},
+                #{ticketLedgerId}, #{idempotencyKey})
+    </insert>
 
     <update id="updateProfileExp">
         UPDATE gamification_profile

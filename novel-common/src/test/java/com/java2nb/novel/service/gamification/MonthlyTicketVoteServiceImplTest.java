@@ -88,7 +88,7 @@ class MonthlyTicketVoteServiceImplTest {
         rankCounter.setBookId(BOOK_ID);
         rankCounter.setTotalTickets(14L);
 
-        when(mapper.selectOpenSeason(any(Date.class))).thenReturn(season);
+        when(mapper.selectOpenSeasonById(SEASON_ID, NOW)).thenReturn(season);
         when(mapper.lockAccountByUserId(USER_ID)).thenReturn(account);
         when(mapper.selectAccount(USER_ID)).thenReturn(account);
         when(mapper.selectBookEligibility(BOOK_ID, USER_ID)).thenReturn(eligibleBook);
@@ -102,7 +102,7 @@ class MonthlyTicketVoteServiceImplTest {
         when(mapper.selectLedgerByIdempotencyKey(anyString())).thenReturn(ledger);
         when(mapper.debitAccount(71L, 4L, 4L)).thenReturn(1);
         when(mapper.insertVote(anyLong(), anyLong(), anyLong(), anyLong(), anyLong(), anyLong(),
-            anyString(), anyString(), anyString(), anyString(), anyString())).thenReturn(1);
+            anyString(), anyString(), anyString(), anyString(), anyString(), anyString())).thenReturn(1);
         when(mapper.insertRankVoterIgnore(SEASON_ID, BOOK_ID, USER_ID)).thenReturn(1);
         // MySQL có thể trả 2 cho nhánh UPDATE của ON DUPLICATE KEY; service phải chấp nhận > 0.
         when(mapper.upsertRankCounter(anyLong(), anyLong(), anyLong(), anyInt(), any(Date.class)))
@@ -144,7 +144,7 @@ class MonthlyTicketVoteServiceImplTest {
             .hasMessageContaining("không khớp");
         verify(mapper, never()).debitAccount(anyLong(), anyLong(), anyLong());
         verify(mapper, never()).insertVote(anyLong(), anyLong(), anyLong(), anyLong(), anyLong(),
-            anyLong(), anyString(), anyString(), anyString(), anyString(), anyString());
+            anyLong(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
     }
 
     @Test
@@ -240,7 +240,8 @@ class MonthlyTicketVoteServiceImplTest {
     }
 
     private TicketVoteCommand command(int count) {
-        return new TicketVoteCommand(USER_ID, BOOK_ID, count, CLIENT_REQUEST_ID, IP_HASH, NOW, LOCAL_DATE);
+        return new TicketVoteCommand(USER_ID, BOOK_ID, SEASON_ID, count, CLIENT_REQUEST_ID,
+            IP_HASH, "d".repeat(64), NOW, LOCAL_DATE);
     }
 
     private TicketLotRow lot(long id, long remaining, long version) {

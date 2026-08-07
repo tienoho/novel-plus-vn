@@ -15,19 +15,20 @@
                 </ul>
             </div>
             <div class="search">
-                <form method="get" name="search" action="/#" target="_blank">
-                    <input type="text" name="keyword" id="q" th:placeholder="#{site.search.placeholder}" placeholder="Tên truyện, tác giả hoặc từ khóa" class="search-key">
+                <form method="get" name="search" action="/book/bookclass.html">
+                    <input type="text" name="k" id="q" th:placeholder="#{site.search.placeholder}" placeholder="Tên truyện, tác giả hoặc từ khóa" class="search-key">
                     <button type="submit" class="search-btn" id="search-btn" th:text="#{site.search}">Tìm kiếm</button>
                 </form>
             </div>
             <div class="other">
                 <a href="/user/notifications.html"><span th:text="#{notification.title}">Thông báo</span><b data-notification-badge style="display:none;margin-left:3px;padding:1px 5px;border-radius:9px;background:#e64a19;color:#fff;font-size:11px">0</b></a>
                 <a class="link-wap" href="/" th:text="#{site.mobileVersion}">Phiên bản di động</a>
-                <button type="button" id="themeToggleBtn" class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Chuyển chế độ giao diện" title="Chuyển chế độ giao diện">
+                <button type="button" id="themeToggleBtn" class="theme-toggle-btn" data-top-action="toggle-theme" aria-label="Chuyển chế độ giao diện" title="Chuyển chế độ giao diện">
                     <span class="theme-toggle-icon">🌙</span>
                 </button>
             </div>
             <script src="/javascript/theme-toggle.js"></script>
+            <script src="/javascript/top-actions.js"></script>
             <script src="/javascript/notification-badge.js" defer></script>
         </div>
 </div>

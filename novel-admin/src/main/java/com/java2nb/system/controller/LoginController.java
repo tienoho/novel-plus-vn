@@ -1,13 +1,13 @@
 package com.java2nb.system.controller;
 
 import com.java2nb.common.annotation.Log;
-import com.java2nb.common.config.JnConfig;
 import com.java2nb.common.controller.BaseController;
 import com.java2nb.common.domain.FileDO;
 import com.java2nb.common.domain.Tree;
 import com.java2nb.common.service.FileService;
 import com.java2nb.common.utils.*;
 import com.java2nb.system.domain.MenuDO;
+import com.java2nb.system.domain.UserDO;
 import com.java2nb.system.service.MenuService;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
@@ -22,8 +22,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 
 @Controller
@@ -34,8 +34,6 @@ public class LoginController extends BaseController {
     MenuService menuService;
     @Autowired
     FileService fileService;
-    @Autowired
-    JnConfig jnConfig;
     @Autowired
     Messages messages;
 
@@ -61,9 +59,7 @@ public class LoginController extends BaseController {
     }
 
     @GetMapping("/login")
-    String login(Model model) {
-        model.addAttribute("username", jnConfig.getUsername());
-        model.addAttribute("password", jnConfig.getPassword());
+    String login() {
         return "login";
     }
 
@@ -86,12 +82,13 @@ public class LoginController extends BaseController {
             logger.error("Không thể kiểm tra mã xác minh", e);
             return R.error(messages.get("auth.captcha.failed"));
         }
-        password = MD5Utils.encrypt(username, password);
         UsernamePasswordToken token = new UsernamePasswordToken(username, password);
         Subject subject = SecurityUtils.getSubject();
         try {
             subject.login(token);
-            return R.ok();
+            UserDO authenticatedUser = (UserDO) subject.getPrincipal();
+            return R.ok().put("mustChangePassword",
+                Boolean.TRUE.equals(authenticatedUser.getMustChangePassword()));
         } catch (AuthenticationException e) {
             return R.error(messages.get("auth.login.failed"));
         }

@@ -10,14 +10,14 @@ spring:
       #Cổng kết nối Redis
       port: 6379
       #Mật khẩu kết nối Redis
-      password: test123456
+      password: ${SPRING_DATA_REDIS_PASSWORD:}
       #Thời gian chờ kết nối (mili giây)
       timeout: 10000
 
 #Tên đăng nhập và mật khẩu
 admin:
   username: admin
-  password: admin
+  password: ${CRAWLER_ADMIN_PASSWORD}
 #
 ## Số luồng tự động cập nhật dữ liệu thu thập
 ## Nên đặt là 1 khi số tác phẩm ít hoặc đang chạy tác vụ nhập tác phẩm mới
@@ -42,9 +42,9 @@ http:
     # Cổng proxy
     port: 2312
     # Tên người dùng proxy
-    username: bestproxy_u
+    username: ${HTTP_PROXY_USERNAME:}
     # Mật khẩu proxy
-    password: bestproxy_p
+    password: ${HTTP_PROXY_PASSWORD:}
 
 ---
 
@@ -55,9 +55,9 @@ spring:
     #Tên hiển thị người gửi
     nickname: novel-plus
     #Tài khoản email
-    username: xxyopen@163.com
+    username: ${MAIL_USERNAME:disabled}
     #Mã ủy quyền email bên thứ ba
-    password: novel123456
+    password: ${MAIL_PASSWORD:disabled}
 
 
 # Cấu hình giám sát đĩa

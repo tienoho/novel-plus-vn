@@ -5,7 +5,6 @@ import com.java2nb.common.config.Constant;
 import com.java2nb.common.controller.BaseController;
 import com.java2nb.common.domain.Tree;
 import com.java2nb.common.service.DictService;
-import com.java2nb.common.utils.MD5Utils;
 import com.java2nb.common.utils.PageBean;
 import com.java2nb.common.utils.Query;
 import com.java2nb.common.utils.R;
@@ -18,11 +17,12 @@ import com.java2nb.system.vo.UserVO;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +38,8 @@ public class SysUserController extends BaseController {
     RoleService roleService;
     @Autowired
     DictService dictService;
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
     @RequiresPermissions("sys:user:user")
     @GetMapping("")
@@ -76,10 +78,6 @@ public class SysUserController extends BaseController {
         return prefix + "/edit";
     }
 
-    public static void main(String[] args) {
-        System.out.println(MD5Utils.encrypt("admin", "admin"));
-    }
-
     @RequiresPermissions("sys:user:add")
     @Log("Lưu người dùng")
     @PostMapping("/save")
@@ -88,7 +86,8 @@ public class SysUserController extends BaseController {
         if (Constant.DEMO_ACCOUNT.equals(getUsername())) {
             return R.error(1, messages.get("error.demoReadOnly"));
         }
-        user.setPassword(MD5Utils.encrypt(user.getUsername(), user.getPassword()));
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setMustChangePassword(true);
         if (userService.save(user) > 0) {
             return R.ok();
         }

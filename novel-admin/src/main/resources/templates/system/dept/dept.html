@@ -10,16 +10,16 @@
                 <div class="fixed-table-toolbar">
                     <div class="columns pull-left">
                         <button shiro:hasPermission="system:sysDept:add" type="button" class="btn  btn-primary"
-                                onclick="add(0)">
+                                data-admin-action="add" data-admin-arg="0">
                             <i class="fa fa-plus hidden" aria-hidden="true"></i><span th:text="#{common.add}">Thêm</span>
                         </button>
                         <button shiro:hasPermission="system:sysDept:batchRemove" type="button" class="btn  btn-danger"
-                                onclick="batchRemove()">
+                                data-admin-action="batch-remove">
                             <i class="fa fa-trash" aria-hidden="true"></i><span th:text="#{common.deleteAction}">Xóa</span>
                         </button>
                     </div>
                     <div class="columns pull-right">
-                        <button class="btn btn-success" onclick="reLoad()" th:text="#{common.query}">Tra cứu</button>
+                        <button class="btn btn-success" data-admin-action="reload" th:text="#{common.query}">Tra cứu</button>
                     </div>
 
                     <div class="columns pull-right col-md-2">

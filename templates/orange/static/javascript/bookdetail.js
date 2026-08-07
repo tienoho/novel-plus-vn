@@ -6,15 +6,42 @@
         //$(".cCover").width($(".cDetail").width());
     },
     DescriptionMore: function (sClass) {
-        if (sClass == "") {
-            if ($("#pDesMore").html().length > 150) {
-                $("#divDescription").html($("#pDesMore").html().substring(0, 150) + "<a href=\"javascript:void(0);\" class=\"info_txt_more\" onclick=\"javascript:BookDetail.DescriptionMore('down');\">" + novelMessage('expand', 'Mở rộng') + "<img src=\"../images/arrow_d.png\" /></a>");
-            } else {
-                $("#divDescription").html($("#pDesMore").html());
-            }
-        } else {
-            $("#divDescription").html($("#pDesMore").html() + "<a href=\"javascript:void(0);\" class=\"info_txt_more\" onclick=\"javascript:BookDetail.DescriptionMore('');\">" + novelMessage('collapse', 'Thu gọn') + "<img src=\"../images/arrow_t.png\" /></a>");
+        var source = document.getElementById('pDesMore');
+        var target = document.getElementById('divDescription');
+        if (!source || !target) {
+            return;
         }
+        var description = source.textContent || '';
+        var expanded = sClass !== '';
+        target.textContent = expanded ? description : description.substring(0, 150);
+        if (description.length > 150) {
+            var link = document.createElement('a');
+            link.href = expanded ? '#collapse-description' : '#expand-description';
+            link.className = 'info_txt_more';
+            link.setAttribute('data-book-detail-action', expanded ? 'collapse-description' : 'expand-description');
+            link.appendChild(document.createTextNode(expanded
+                ? novelMessage('collapse', 'Thu gọn')
+                : novelMessage('expand', 'Mở rộng')));
+            var image = document.createElement('img');
+            image.src = expanded ? '../images/arrow_t.png' : '../images/arrow_d.png';
+            image.alt = '';
+            link.appendChild(image);
+            target.appendChild(link);
+        }
+    },
+    renderFavoriteSaved: function (layerStatus) {
+        var link = document.createElement('a');
+        link.href = '#saved';
+        link.className = layerStatus == 1 ? 'ico_shelf' : 'btn_ora_white btn_addsj';
+        link.setAttribute('data-book-detail-action', 'noop');
+        if (layerStatus == 1) {
+            var label = document.createElement('b');
+            label.textContent = novelMessage('inShelf', 'Đã lưu');
+            link.appendChild(label);
+        } else {
+            link.textContent = novelMessage('inShelf', 'Đã lưu');
+        }
+        $('#cFavs').empty().append(link);
     },
     AddFavorites: function (BId, CId, layerStatus) {
         $.ajax({
@@ -25,10 +52,10 @@
             success: function (data) {
                 if (data.code == 200) {
                     if (layerStatus == 1) {
-                        $("#cFavs").html("<a class=\"ico_shelf\" href=\"javascript:void(0);\"><b>" + novelMessage('inShelf', 'Đã lưu') + "</b></a>");
+                        BookDetail.renderFavoriteSaved(1);
                         jQuery.cookie("u-faorites", "1");
                     } else {
-                        $("#cFavs").html("<a class=\"btn_ora_white btn_addsj\" href=\"javascript:void(0);\">" + novelMessage('inShelf', 'Đã lưu') + "</a>");
+                        BookDetail.renderFavoriteSaved(0);
                     }
 
 
@@ -37,7 +64,7 @@
                     location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
 
                 } else {
-                    layer.alert(data.msg);
+                    novelAlertText(data.msg);
                 }
 
             },
@@ -50,7 +77,7 @@
         if (jQuery.cookie("u-faorites") == null) {
         } else {
             if (jQuery.cookie("u-faorites") == "1") {
-                $("#cFavs").html("<a class=\"ico_shelf\" href=\"javascript:void(0);\"><b>" + novelMessage('inShelf', 'Đã lưu') + "</b></a>");
+                BookDetail.renderFavoriteSaved(1);
             }
         }
         /*BookDetail.SetWholeTip();*/
@@ -123,7 +150,7 @@
                     location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
 
                 } else {
-                    layer.alert(data.msg);
+                    novelAlertText(data.msg);
                 }
 
             },
@@ -169,7 +196,7 @@
                     location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
 
                 } else {
-                    layer.alert(data.msg);
+                    novelAlertText(data.msg);
                 }
 
             },
@@ -343,10 +370,36 @@
         if (isDianZan == 1) {
             /* Khi thích, tăng bộ đếm và khóa thao tác lặp. */
             var dzData = parseInt($("#read_dz_bar a").text()) + 1;
-            $("#read_dz_bar").html('<a class="read_dz on" href="javascript:void(0)"><i></i>' + dzData + '</a>');
+            var link = document.createElement('a');
+            link.className = 'read_dz on';
+            link.href = '#liked';
+            link.setAttribute('data-book-detail-action', 'noop');
+            link.appendChild(document.createElement('i'));
+            link.appendChild(document.createTextNode(String(dzData)));
+            $('#read_dz_bar').empty().append(link);
         }
     }
-}
+};
+
+$(document).off('click.bookDetailActions', '[data-book-detail-action]').on('click.bookDetailActions', '[data-book-detail-action]', function (event) {
+    event.preventDefault();
+    var action = $(this).attr('data-book-detail-action');
+    if (action === 'expand-description') {
+        BookDetail.DescriptionMore('down');
+    } else if (action === 'collapse-description') {
+        BookDetail.DescriptionMore('');
+    } else if (action === 'add-favorite') {
+        BookDetail.AddFavorites(0, 0, 0);
+    } else if (action === 'comment-like' && typeof window.toggleCommentLike === 'function') {
+        window.toggleCommentLike($(this).attr('data-comment-id'));
+    } else if (action === 'comment-unlike' && typeof window.toggleCommentUnLike === 'function') {
+        window.toggleCommentUnLike($(this).attr('data-comment-id'));
+    } else if (action === 'publish-comment') {
+        BookDetail.SaveComment(0, 0, $('#txtComment').val());
+    } else if (action === 'publish-reply') {
+        BookDetail.SaveCommentReply(0, 0, $('#txtComment').val());
+    }
+});
 var rand = {};
 rand.get = function (begin, end) {
     return Math.floor(Math.random() * (end - begin)) + begin;

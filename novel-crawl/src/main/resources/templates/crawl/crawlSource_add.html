@@ -151,7 +151,7 @@
                                 <li><textarea id="filterContent"
                                               th:placeholder="#{crawl.source.contentFilter}" placeholder="Nội dung cần lọc khỏi chương, mỗi dòng một giá trị" rows="5" cols="52"></textarea></li>
 
-                                <li><input type="button" onclick="addCrawlSource()" name="btnRegister" th:value="#{crawl.submit}" value="Gửi"
+                                <li><input type="button" name="btnRegister" th:value="#{crawl.submit}" value="Gửi"
                                            id="btnRegister" class="btn_red"></li>
                             </ul>
                         </div>
@@ -187,6 +187,8 @@
         contentEndRequired: /*[[#{crawl.source.contentEnd.required}]]*/ 'Vui lòng nhập chuỗi kết thúc nội dung chương',
         networkError: /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng'
     };
+    $("#btnRegister").on("click", addCrawlSource);
+
     function addCrawlSource() {
 
         var crawlRule = {};
@@ -422,7 +424,7 @@
 
 
                 } else {
-                    layer.alert(data.msg);
+                    layer.alert(crawlEscapeHtml(data.msg || ""));
                 }
 
             },

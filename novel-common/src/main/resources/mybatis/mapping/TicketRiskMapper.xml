@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.java2nb.novel.mapper.TicketRiskMapper">
+
+    <select id="selectPolicy"
+            resultType="com.java2nb.novel.service.gamification.TicketRiskPolicyRow">
+        SELECT policy_version AS policyVersion,
+               review_score_threshold AS reviewScoreThreshold
+        FROM gamification_abuse_policy
+        WHERE policy_version = #{policyVersion}
+        LIMIT 1
+    </select>
+
+    <select id="selectRules"
+            resultType="com.java2nb.novel.service.gamification.TicketRiskRuleRow">
+        SELECT rule_code AS ruleCode, metric_name AS metricName,
+               threshold_value AS thresholdValue, window_minutes AS windowMinutes,
+               score, hard_block AS hardBlock
+        FROM gamification_abuse_rule
+        WHERE policy_version = #{policyVersion}
+        ORDER BY rule_code ASC
+    </select>
+
+    <select id="selectUserCreatedAt" resultType="java.util.Date">
+        SELECT create_time FROM user WHERE id = #{userId} LIMIT 1
+    </select>
+
+    <select id="countVotesByUserSince" resultType="long">
+        SELECT COUNT(*) FROM monthly_ticket_vote
+        WHERE user_id = #{userId} AND status = 'VALID' AND create_time &gt;= #{since}
+    </select>
+
+    <select id="countVotesByDeviceSince" resultType="long">
+        SELECT COUNT(*) FROM monthly_ticket_vote
+        WHERE source_device_hash = #{deviceHash} AND status = 'VALID' AND create_time &gt;= #{since}
+    </select>
+
+    <select id="countUsersByDeviceSince" resultType="long">
+        SELECT COUNT(DISTINCT user_id) FROM monthly_ticket_vote
+        WHERE source_device_hash = #{deviceHash} AND status = 'VALID' AND create_time &gt;= #{since}
+    </select>
+
+    <select id="countVotesByIpSince" resultType="long">
+        SELECT COUNT(*) FROM monthly_ticket_vote
+        WHERE source_ip_hash = #{ipHash} AND status = 'VALID' AND create_time &gt;= #{since}
+    </select>
+
+    <select id="countUsersByIpSince" resultType="long">
+        SELECT COUNT(DISTINCT user_id) FROM monthly_ticket_vote
+        WHERE source_ip_hash = #{ipHash} AND status = 'VALID' AND create_time &gt;= #{since}
+    </select>
+
+    <sql id="assessmentColumns">
+        id, user_id AS userId, season_id AS seasonId, book_id AS bookId,
+        client_request_id AS clientRequestId, device_hash AS deviceHash, ip_hash AS ipHash,
+        risk_score AS riskScore, action, matched_rules AS matchedRules,
+        policy_version AS policyVersion, create_time AS createTime
+    </sql>
+
+    <select id="selectAssessment"
+            resultType="com.java2nb.novel.service.gamification.TicketRiskAssessmentRow">
+        SELECT <include refid="assessmentColumns"/>
+        FROM gamification_risk_assessment
+        WHERE user_id = #{userId} AND client_request_id = #{clientRequestId}
+        LIMIT 1
+    </select>
+
+    <insert id="insertAssessmentIgnore">
+        INSERT IGNORE INTO gamification_risk_assessment
+            (user_id, season_id, book_id, client_request_id, device_hash, ip_hash,
+             risk_score, action, matched_rules, policy_version, assessed_at)
+        VALUES (#{command.userId}, #{command.seasonId}, #{command.bookId},
+                #{command.clientRequestId}, #{command.deviceHash}, #{command.ipHash},
+                #{riskScore}, #{action}, #{matchedRules}, #{command.policyVersion},
+                #{command.occurredAt})
+    </insert>
+
+    <insert id="insertReviewIgnore">
+        INSERT IGNORE INTO gamification_risk_review (assessment_id, status)
+        VALUES (#{assessmentId}, 'PENDING')
+    </insert>
+
+    <sql id="reviewColumns">
+        assessment_id AS assessmentId, status, reviewed_by AS reviewedBy,
+        review_reason AS reviewReason, reviewed_at AS reviewedAt, version
+    </sql>
+
+    <select id="lockReview"
+            resultType="com.java2nb.novel.service.gamification.TicketRiskReviewRow">
+        SELECT <include refid="reviewColumns"/>
+        FROM gamification_risk_review
+        WHERE assessment_id = #{assessmentId}
+        FOR UPDATE
+    </select>
+
+    <select id="selectReview"
+            resultType="com.java2nb.novel.service.gamification.TicketRiskReviewRow">
+        SELECT <include refid="reviewColumns"/>
+        FROM gamification_risk_review
+        WHERE assessment_id = #{assessmentId}
+        LIMIT 1
+    </select>
+
+    <update id="updateReview">
+        UPDATE gamification_risk_review
+        SET status = #{decision}, reviewed_by = #{operatorId}, review_reason = #{reason},
+            reviewed_at = #{reviewedAt}, version = version + 1
+        WHERE assessment_id = #{assessmentId}
+          AND status = 'PENDING'
+          AND version = #{expectedVersion}
+    </update>
+
+    <insert id="insertReviewAudit">
+        INSERT INTO gamification_risk_review_audit
+            (assessment_id, from_status, to_status, operator_id, reason)
+        VALUES (#{assessmentId}, #{fromStatus}, #{toStatus}, #{operatorId}, #{reason})
+    </insert>
+</mapper>

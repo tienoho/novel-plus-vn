@@ -31,6 +31,14 @@
                 'OPEN', #{policyVersion})
     </insert>
 
+    <insert id="insertSpecialSeasonIgnore">
+        INSERT IGNORE INTO monthly_ticket_season
+            (period_code, season_type, zone_id, start_at, end_at, vote_cutoff_at,
+             status, policy_version)
+        VALUES (#{periodCode}, #{seasonType}, #{zoneId}, #{startAt}, #{endAt}, #{voteCutoffAt},
+                'OPEN', #{policyVersion})
+    </insert>
+
     <select id="selectSeasonByPeriod"
             resultType="com.java2nb.novel.service.gamification.MonthlySeasonRow">
         SELECT id,
@@ -99,6 +107,30 @@
         WHERE season_type = 'REGULAR'
         ORDER BY start_at DESC
         LIMIT 1
+    </select>
+
+    <select id="selectOpenSeasons"
+            resultType="com.java2nb.novel.service.gamification.MonthlySeasonRow">
+        SELECT id,
+               period_code    AS periodCode,
+               season_type    AS seasonType,
+               zone_id        AS zoneId,
+               start_at       AS startAt,
+               end_at         AS endAt,
+               vote_cutoff_at AS voteCutoffAt,
+               status,
+               policy_version AS policyVersion,
+               snapshot_id    AS snapshotId,
+               closing_at     AS closingAt,
+               review_at      AS reviewAt,
+               finalized_at   AS finalizedAt,
+               finalized_by   AS finalizedBy,
+               version
+        FROM monthly_ticket_season
+        WHERE status = 'OPEN'
+          AND start_at &lt;= #{at}
+          AND vote_cutoff_at &gt; #{at}
+        ORDER BY (season_type = 'REGULAR') DESC, vote_cutoff_at ASC, id ASC
     </select>
 
     <select id="selectSeasonsReadyToClose"

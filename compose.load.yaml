@@ -1,0 +1,5 @@
+services:
+  mysql:
+    volumes:
+      - ./e2e/fixtures:/e2e/fixtures:ro
+      - ./scripts/load-test:/load-test:ro

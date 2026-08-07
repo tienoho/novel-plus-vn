@@ -6,6 +6,9 @@ import com.java2nb.novel.service.GamificationAdminService;
 import com.java2nb.novel.service.gamification.MonthlyTicketService;
 import com.java2nb.novel.service.gamification.MonthlyRankingService;
 import com.java2nb.novel.service.gamification.MonthlyRankDriftRow;
+import com.java2nb.novel.service.gamification.MonthlySeasonRow;
+import com.java2nb.novel.service.gamification.GamificationProfileRow;
+import com.java2nb.novel.service.gamification.GamificationProgressService;
 import com.java2nb.novel.service.gamification.SeasonPhaseResult;
 import com.java2nb.novel.service.gamification.TicketGrantCommand;
 import com.java2nb.novel.service.gamification.TicketPostResult;
@@ -18,6 +21,10 @@ import com.java2nb.novel.service.gamification.QuestCampaignConfigService;
 import com.java2nb.novel.service.gamification.QuestCampaignDraftCommand;
 import com.java2nb.novel.service.gamification.QuestCampaignRow;
 import com.java2nb.novel.service.gamification.QuestRewardCommand;
+import com.java2nb.novel.service.gamification.TicketRiskService;
+import com.java2nb.novel.service.gamification.TicketRiskReviewRow;
+import com.java2nb.novel.service.gamification.GamificationPublicPolicyService;
+import com.java2nb.novel.service.gamification.GamificationPublicPolicyRow;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +44,9 @@ public class GamificationAdminServiceImpl implements GamificationAdminService {
     private final MonthlyRankingService monthlyRankingService;
     private final AuthorRewardService authorRewardService;
     private final QuestCampaignConfigService questCampaignConfigService;
+    private final GamificationProgressService progressService;
+    private final TicketRiskService ticketRiskService;
+    private final GamificationPublicPolicyService publicPolicyService;
     private final GamificationAdminSettings settings;
     private final Clock clock;
     private final String ownerInstance;
@@ -46,10 +56,14 @@ public class GamificationAdminServiceImpl implements GamificationAdminService {
                                         MonthlyTicketService monthlyTicketService,
                                         MonthlyRankingService monthlyRankingService,
                                         AuthorRewardService authorRewardService,
-                                        QuestCampaignConfigService questCampaignConfigService,
-                                        GamificationAdminSettings settings) {
+                                         QuestCampaignConfigService questCampaignConfigService,
+                                         GamificationProgressService progressService,
+                                         TicketRiskService ticketRiskService,
+                                         GamificationPublicPolicyService publicPolicyService,
+                                         GamificationAdminSettings settings) {
         this(dao, monthlyTicketService, monthlyRankingService, authorRewardService,
-            questCampaignConfigService, settings, Clock.systemUTC(),
+            questCampaignConfigService, progressService, ticketRiskService, publicPolicyService,
+            settings, Clock.systemUTC(),
             "admin-season-" + UUID.randomUUID());
     }
 
@@ -57,14 +71,20 @@ public class GamificationAdminServiceImpl implements GamificationAdminService {
                                  MonthlyTicketService monthlyTicketService,
                                  MonthlyRankingService monthlyRankingService,
                                  AuthorRewardService authorRewardService,
-                                 QuestCampaignConfigService questCampaignConfigService,
-                                 GamificationAdminSettings settings, Clock clock,
+                                  QuestCampaignConfigService questCampaignConfigService,
+                                  GamificationProgressService progressService,
+                                  TicketRiskService ticketRiskService,
+                                  GamificationPublicPolicyService publicPolicyService,
+                                  GamificationAdminSettings settings, Clock clock,
                                  String ownerInstance) {
         this.dao = dao;
         this.monthlyTicketService = monthlyTicketService;
         this.monthlyRankingService = monthlyRankingService;
         this.authorRewardService = authorRewardService;
         this.questCampaignConfigService = questCampaignConfigService;
+        this.progressService = progressService;
+        this.ticketRiskService = ticketRiskService;
+        this.publicPolicyService = publicPolicyService;
         this.settings = settings;
         this.clock = clock;
         this.ownerInstance = ownerInstance;
@@ -214,6 +234,80 @@ public class GamificationAdminServiceImpl implements GamificationAdminService {
         requireSeasonOperation(seasonId, actorId);
         return monthlyRankingService.finalizeSeason(
             seasonId, actorId, Date.from(clock.instant()));
+    }
+
+    @Override
+    public MonthlySeasonRow createSpecialSeason(String periodCode, String seasonType,
+                                                long startAtMillis, long endAtMillis,
+                                                long voteCutoffAtMillis, long actorId) {
+        if (!settings.getSeason().isEnabled() || !settings.isConfigured() || actorId <= 0) {
+            throw new IllegalStateException(
+                "Kỳ xếp hạng Ngọn Đuốc chưa được bật, cấu hình chưa hợp lệ hoặc thiếu quản trị viên");
+        }
+        return monthlyRankingService.createSpecialSeason(periodCode, seasonType,
+            Date.from(Instant.ofEpochMilli(startAtMillis)), Date.from(Instant.ofEpochMilli(endAtMillis)),
+            Date.from(Instant.ofEpochMilli(voteCutoffAtMillis)), settings.resolveZoneId(),
+            settings.getPolicyVersion());
+    }
+
+    @Override
+    public List<Map<String, Object>> listTickerNicknames(Map<String, Object> params) {
+        return dao.listTickerNicknames(params);
+    }
+
+    @Override
+    public int countTickerNicknames(Map<String, Object> params) {
+        return dao.countTickerNicknames(params);
+    }
+
+    @Override
+    public List<Map<String, Object>> listRiskReviews(Map<String, Object> params) {
+        return dao.listRiskReviews(params);
+    }
+
+    @Override
+    public int countRiskReviews(Map<String, Object> params) {
+        return dao.countRiskReviews(params);
+    }
+
+    @Override
+    public TicketRiskReviewRow reviewRisk(long assessmentId, long expectedVersion,
+                                          String decision, String reason, long actorId) {
+        return ticketRiskService.review(assessmentId, expectedVersion, decision, actorId,
+            reason, Date.from(clock.instant()));
+    }
+
+    @Override
+    public List<Map<String, Object>> listPublicPolicies(Map<String, Object> params) {
+        return dao.listPublicPolicies(params);
+    }
+
+    @Override
+    public int countPublicPolicies(Map<String, Object> params) {
+        return dao.countPublicPolicies(params);
+    }
+
+    @Override
+    public GamificationPublicPolicyRow createPublicPolicy(String policyVersion, String title,
+                                                          String contentText, long actorId) {
+        return publicPolicyService.createDraft(policyVersion, title, contentText, actorId);
+    }
+
+    @Override
+    public GamificationPublicPolicyRow publishPublicPolicy(long policyId, long expectedVersion,
+                                                           long actorId) {
+        return publicPolicyService.publish(policyId, expectedVersion, actorId,
+            Date.from(clock.instant()));
+    }
+
+    @Override
+    public GamificationProfileRow moderateTickerVisibility(long userId, boolean hide, String reason,
+                                                            long actorId) {
+        if (!settings.isConfigured() || userId <= 0 || actorId <= 0) {
+            throw new IllegalArgumentException("Yêu cầu kiểm duyệt bảng chạy không hợp lệ");
+        }
+        return progressService.adminSetTickerOptOut(userId, hide, actorId, reason,
+            settings.getPolicyVersion());
     }
 
     @Override

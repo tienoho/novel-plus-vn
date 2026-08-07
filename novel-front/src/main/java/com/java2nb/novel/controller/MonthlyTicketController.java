@@ -7,12 +7,14 @@ import com.java2nb.novel.core.config.GamificationProperties;
 import com.java2nb.novel.core.enums.ResponseStatus;
 import com.java2nb.novel.core.exception.BusinessException;
 import com.java2nb.novel.core.utils.AgeRatingUtil;
+import com.java2nb.novel.core.utils.DeviceCookieService;
 import com.java2nb.novel.core.utils.IpUtil;
 import com.java2nb.novel.dto.gamification.MonthlyTicketAccountResponse;
 import com.java2nb.novel.dto.gamification.MonthlyTicketHistoryResponse;
 import com.java2nb.novel.dto.gamification.MonthlyTicketLotResponse;
 import com.java2nb.novel.dto.gamification.MonthlyTicketRankingResponse;
 import com.java2nb.novel.dto.gamification.MonthlyTicketSummaryResponse;
+import com.java2nb.novel.dto.gamification.MonthlyTicketSeasonResponse;
 import com.java2nb.novel.dto.gamification.MonthlyTicketVoteRequest;
 import com.java2nb.novel.dto.gamification.MonthlyTicketVoteResponse;
 import com.java2nb.novel.entity.Book;
@@ -24,9 +26,13 @@ import com.java2nb.novel.service.gamification.MonthlyRankingService;
 import com.java2nb.novel.service.gamification.TicketAccountRow;
 import com.java2nb.novel.service.gamification.TicketBookSummary;
 import com.java2nb.novel.service.gamification.TicketPolicy;
+import com.java2nb.novel.service.gamification.TicketRiskCommand;
+import com.java2nb.novel.service.gamification.TicketRiskDecision;
+import com.java2nb.novel.service.gamification.TicketRiskService;
 import com.java2nb.novel.service.gamification.TicketVoteCommand;
 import io.github.xxyopen.model.resp.RestResult;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -48,6 +54,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.HexFormat;
+import java.util.List;
 
 @Validated
 @RestController
@@ -58,37 +65,54 @@ public class MonthlyTicketController extends BaseController {
     private final BookService bookService;
     private final UserService userService;
     private final GamificationProperties properties;
+    private final TicketRiskService ticketRiskService;
+    private final DeviceCookieService deviceCookieService;
     private final Clock clock;
 
     @Autowired
     public MonthlyTicketController(MonthlyTicketService monthlyTicketService,
                                    MonthlyRankingService monthlyRankingService, BookService bookService,
-                                   UserService userService, GamificationProperties properties) {
+                                   UserService userService, GamificationProperties properties,
+                                   TicketRiskService ticketRiskService,
+                                   DeviceCookieService deviceCookieService) {
         // Clock chỉ cung cấp Instant; múi giờ nghiệp vụ được resolve sau feature guard để một
         // cấu hình đang tắt nhưng gõ sai zone không làm toàn ứng dụng thất bại lúc khởi động.
         this(monthlyTicketService, monthlyRankingService, bookService, userService, properties,
-            Clock.systemUTC());
+            ticketRiskService, deviceCookieService, Clock.systemUTC());
     }
 
     MonthlyTicketController(MonthlyTicketService monthlyTicketService,
                             MonthlyRankingService monthlyRankingService, BookService bookService,
-                            UserService userService, GamificationProperties properties, Clock clock) {
+                            UserService userService, GamificationProperties properties,
+                            TicketRiskService ticketRiskService,
+                            DeviceCookieService deviceCookieService, Clock clock) {
         this.monthlyTicketService = monthlyTicketService;
         this.monthlyRankingService = monthlyRankingService;
         this.bookService = bookService;
         this.userService = userService;
         this.properties = properties;
+        this.ticketRiskService = ticketRiskService;
+        this.deviceCookieService = deviceCookieService;
         this.clock = clock;
     }
 
     @GetMapping("book/monthly-ticket-ranking")
     public RestResult<MonthlyTicketRankingResponse> getRanking(
+        @RequestParam(value = "seasonId", required = false) Long seasonId,
         @RequestParam(value = "period", required = false) String period,
         @RequestParam(value = "page", defaultValue = "1") @Min(1) int page,
         @RequestParam(value = "limit", defaultValue = "20") @Min(1) @Max(100) int limit) {
         requireRankingEnabled();
         return RestResult.ok(MonthlyTicketRankingResponse.from(
-            monthlyRankingService.getRanking(period, page, limit, Date.from(clock.instant()))));
+            monthlyRankingService.getRanking(seasonId, period, page, limit,
+                Date.from(clock.instant()))));
+    }
+
+    @GetMapping("book/monthly-ticket-seasons")
+    public RestResult<List<MonthlyTicketSeasonResponse>> getOpenSeasons() {
+        requireRankingEnabled();
+        return RestResult.ok(monthlyRankingService.listOpenSeasons(Date.from(clock.instant())).stream()
+            .map(MonthlyTicketSeasonResponse::from).toList());
     }
 
     @GetMapping("user/monthly-tickets")
@@ -115,11 +139,13 @@ public class MonthlyTicketController extends BaseController {
 
     @GetMapping("book/{bookId}/monthly-ticket-summary")
     public RestResult<MonthlyTicketSummaryResponse> getBookSummary(
-        @PathVariable("bookId") @Min(1) long bookId, HttpServletRequest request) {
+        @PathVariable("bookId") @Min(1) long bookId,
+        @RequestParam("seasonId") @Min(1) long seasonId,
+        HttpServletRequest request) {
         requireVoteEnabled();
         long userId = requireUser(request).getId();
         TicketBookSummary summary = monthlyTicketService.getBookSummary(
-            userId, bookId, Date.from(clock.instant()), ticketPolicy());
+            userId, bookId, seasonId, Date.from(clock.instant()), ticketPolicy());
         if (summary.eligible()) {
             ResponseStatus denial = AgeRatingUtil.publicBookDenialReason(
                 bookService.queryBookDetail(bookId), userService.userInfo(userId));
@@ -137,7 +163,7 @@ public class MonthlyTicketController extends BaseController {
     public RestResult<MonthlyTicketVoteResponse> castVote(
         @PathVariable("bookId") @Min(1) long bookId,
         @Valid @RequestBody MonthlyTicketVoteRequest input,
-        HttpServletRequest request) {
+        HttpServletRequest request, HttpServletResponse response) {
         requireVoteEnabled();
         long userId = requireUser(request).getId();
         Book book = bookService.queryBookDetail(bookId);
@@ -150,8 +176,16 @@ public class MonthlyTicketController extends BaseController {
         Instant now = clock.instant();
         ZoneId zoneId = properties.resolveZoneId();
         LocalDate localDate = now.atZone(zoneId).toLocalDate();
-        TicketVoteCommand command = new TicketVoteCommand(userId, bookId, input.count(),
-            input.clientRequestId(), hashIp(IpUtil.getRealIp(request)), Date.from(now), localDate);
+        String ipHash = hashIdentifier("IP", IpUtil.getRealIp(request));
+        String deviceHash = hashIdentifier("DEVICE", deviceCookieService.resolve(request, response));
+        TicketRiskDecision risk = ticketRiskService.assess(new TicketRiskCommand(userId,
+            input.seasonId(), bookId, input.clientRequestId(), deviceHash, ipHash,
+            Date.from(now), properties.getPolicyVersion()));
+        if (risk.blocked()) {
+            throw new BusinessException(ResponseStatus.GAMIFICATION_VOTE_RISK_BLOCKED);
+        }
+        TicketVoteCommand command = new TicketVoteCommand(userId, bookId, input.seasonId(), input.amount(),
+            input.clientRequestId(), ipHash, deviceHash, Date.from(now), localDate);
         return RestResult.ok(MonthlyTicketVoteResponse.from(
             monthlyTicketService.castVote(command, ticketPolicy())));
     }
@@ -191,8 +225,9 @@ public class MonthlyTicketController extends BaseController {
         return user;
     }
 
-    private String hashIp(String rawIp) {
-        String canonical = properties.getVote().getIpHashSalt() + '|' + (rawIp == null ? "" : rawIp.trim());
+    private String hashIdentifier(String domain, String rawValue) {
+        String canonical = properties.getVote().getIpHashSalt() + '|' + domain + '|'
+            + (rawValue == null ? "" : rawValue.trim());
         try {
             byte[] digest = MessageDigest.getInstance("SHA-256")
                 .digest(canonical.getBytes(StandardCharsets.UTF_8));

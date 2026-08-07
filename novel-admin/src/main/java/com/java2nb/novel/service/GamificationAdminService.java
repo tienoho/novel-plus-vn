@@ -3,6 +3,8 @@ package com.java2nb.novel.service;
 import com.java2nb.novel.service.gamification.TicketPostResult;
 import com.java2nb.novel.service.gamification.SeasonPhaseResult;
 import com.java2nb.novel.service.gamification.MonthlyRankDriftRow;
+import com.java2nb.novel.service.gamification.MonthlySeasonRow;
+import com.java2nb.novel.service.gamification.GamificationProfileRow;
 import com.java2nb.novel.service.gamification.RewardCampaignRow;
 import com.java2nb.novel.service.gamification.AuthorRewardAllocationRow;
 
@@ -41,6 +43,26 @@ public interface GamificationAdminService {
     SeasonPhaseResult retrySeason(long seasonId, long actorId);
     List<MonthlyRankDriftRow> reconcileSeason(long seasonId);
     SeasonPhaseResult finalizeSeason(long seasonId, long actorId);
+    MonthlySeasonRow createSpecialSeason(String periodCode, String seasonType,
+                                         long startAtMillis, long endAtMillis,
+                                         long voteCutoffAtMillis, long actorId);
+
+    List<Map<String, Object>> listTickerNicknames(Map<String, Object> params);
+    int countTickerNicknames(Map<String, Object> params);
+    GamificationProfileRow moderateTickerVisibility(long userId, boolean hide, String reason,
+                                                     long actorId);
+
+    List<Map<String, Object>> listRiskReviews(Map<String, Object> params);
+    int countRiskReviews(Map<String, Object> params);
+    com.java2nb.novel.service.gamification.TicketRiskReviewRow reviewRisk(
+        long assessmentId, long expectedVersion, String decision, String reason, long actorId);
+
+    List<Map<String, Object>> listPublicPolicies(Map<String, Object> params);
+    int countPublicPolicies(Map<String, Object> params);
+    com.java2nb.novel.service.gamification.GamificationPublicPolicyRow createPublicPolicy(
+        String policyVersion, String title, String contentText, long actorId);
+    com.java2nb.novel.service.gamification.GamificationPublicPolicyRow publishPublicPolicy(
+        long policyId, long expectedVersion, long actorId);
 
     RewardCampaignRow calculateRewardCampaign(long seasonId, long budgetXu, String sharesBps);
     RewardCampaignRow approveRewardCampaign(long campaignId, long actorId);

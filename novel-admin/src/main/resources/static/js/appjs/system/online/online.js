@@ -87,9 +87,7 @@ function load() {
 									field : 'id',
 									align : 'center',
 									formatter : function(value, row, index) {
-										var d = '<a class="btn btn-warning btn-sm" href="#" title="' + adminMessage('deleteLabel', 'Xóa') + '"  mce_href="#" onclick="forceLogout(\''
-												+ row.id
-												+ '\')"><i class="fa fa-remove"></i></a> ';
+										var d = adminRowAction({action: 'force-logout', args: [row.id], variant: 'warning', title: adminMessage('deleteLabel', 'Xóa'), icon: 'remove'});
 										return d;
 									}
 								} ]

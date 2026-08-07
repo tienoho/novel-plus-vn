@@ -7,7 +7,7 @@ jQuery.extend({
         if(window.ActiveXObject)
         {
             if(typeof uri== 'boolean'){
-                iframeHtml += ' src="' + 'javascript:false' + '"';
+                iframeHtml += ' src="about:blank"';
 
             }
             else if(typeof uri== 'string'){
@@ -192,16 +192,11 @@ jQuery.extend({
         var data = !type;
         data = type == "xml" || data ? r.responseXML : r.responseText;
 
-        // If the type is "script", eval it in global context
-        if ( type == "script" )
-            jQuery.globalEval( data );
+        if ( type == "script" || type == "html" )
+            throw new Error("Executable upload responses are not supported");
         // Get the JavaScript object, if JSON is used.
         if ( type == "json" )
             data = jQuery.parseJSON(jQuery(data).text());
-        // evaluate scripts within html
-        if ( type == "html" )
-            jQuery("<div>").html(data).evalScripts();
-
         return data;
     },
 

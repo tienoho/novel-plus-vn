@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title th:utext="${book.bookName}+${bookIndex.indexName}"></title>
+    <title th:text="${book.bookName}+${bookIndex.indexName}"></title>
 
     <meta name="keywords" th:content="${book.bookName}+','+${bookIndex.indexName}">
 
@@ -25,7 +25,7 @@
                 iframe.height =  iframe.contentWindow.document.documentElement.scrollHeight;
             }catch (ex){}
         }
-        window.setInterval("reinitIframe()", 200);
+        window.setInterval(reinitIframe, 200);
     </script>
     <script th:fragment="js" src="/js/jquery-1.9.1.js"></script>
     <script th:fragment="js" src="/layui/layui.all.js"></script>
@@ -201,17 +201,13 @@
 <input type="hidden" id="readerContentAvailable" value="true" th:if="${!needBuy}"/>
 <input type="hidden" id="readingHeartbeatEnabled" th:value="${readingHeartbeatEnabled}"/>
 
-<script>
-    var token = localStorage.getItem("token");
-</script>
-
 <div style="height: 50px;line-height: 50px;text-align: center" class="layui-header header header-doc  layui-bg-cyan">
 
     <div style="width:10%;float: left;margin-left: 10px">
-        <button type="button" onclick="history.back()" th:aria-label="#{reader.back}" style="border:0;background:transparent;cursor:pointer">
+        <button type="button" data-reader-action="history-back" th:aria-label="#{reader.back}" style="border:0;background:transparent;cursor:pointer">
             <i aria-hidden="true" style="font-size: 20px;color: #92B8B1;" class="layui-icon">&#xe65c;</i></button>
     </div>
-    <a style="color: #ffffff;" th:href="'/book/'+ ${book.id} + '.html'"><b style="padding-left: 5%;float: left;width: 69%" class="line-limit-length" th:utext="${bookIndex.indexName}+' '+${book.bookName}"></b></a>
+    <a style="color: #ffffff;" th:href="'/book/'+ ${book.id} + '.html'"><b style="padding-left: 5%;float: left;width: 69%" class="line-limit-length" th:text="${bookIndex.indexName}+' '+${book.bookName}"></b></a>
     <div style="width:10%;float: right;margin-right: 10px"><a href="/" th:aria-label="#{site.home}">
         <i aria-hidden="true" style="font-size: 20px;color: #92B8B1;" class="layui-icon">&#xe68e;</i>
     </a>
@@ -220,11 +216,11 @@
 
 
 <p class="Readpage" style="background:#FFFFFF;padding:2px;">
-    <button type="button" id="lightdiv" class="button lighton" onclick="nr_setbg('light')" th:text="#{reader.lightOn}">Bật đèn</button>
-    <button type="button" id="huyandiv" class="button huyanon" onclick="nr_setbg('huyan')" th:text="#{reader.eyeCare}">Bảo vệ mắt</button>&nbsp;&nbsp;&nbsp;&nbsp;
-    <span th:text="#{reader.fontSize}+': '">Cỡ chữ: </span><button type="button" id="fontbig" class="sizebg" onclick="nr_setbg('big')" th:text="#{reader.font.large}">Lớn</button> <button type="button" id="fontmiddle" class="button sizebgon"
-                                                                         onclick="nr_setbg('middle')" th:text="#{reader.font.medium}">Vừa</button> <button type="button"
-        id="fontsmall" class="sizebg" onclick="nr_setbg('small')" th:text="#{reader.font.small}">Nhỏ</button>
+    <button type="button" id="lightdiv" class="button lighton" data-reader-action="set-mobile-theme" data-reader-value="light" th:text="#{reader.lightOn}">Bật đèn</button>
+    <button type="button" id="huyandiv" class="button huyanon" data-reader-action="set-mobile-theme" data-reader-value="huyan" th:text="#{reader.eyeCare}">Bảo vệ mắt</button>&nbsp;&nbsp;&nbsp;&nbsp;
+    <span th:text="#{reader.fontSize}+': '">Cỡ chữ: </span><button type="button" id="fontbig" class="sizebg" data-reader-action="set-mobile-theme" data-reader-value="big" th:text="#{reader.font.large}">Lớn</button> <button type="button" id="fontmiddle" class="button sizebgon"
+                                                                         data-reader-action="set-mobile-theme" data-reader-value="middle" th:text="#{reader.font.medium}">Vừa</button> <button type="button"
+        id="fontsmall" class="sizebg" data-reader-action="set-mobile-theme" data-reader-value="small" th:text="#{reader.font.small}">Nhỏ</button>
 </p>
 <div class="indexDiv" style="height: 42px;line-height: 42px;text-align:center;background: #f2f2f2">
 
@@ -264,7 +260,7 @@
      style="color: rgb(0, 0, 0); font-size: 10px;background-color: #fff" th:if="${needBuy}">
     <h5 th:text="#{reader.vip.required}">Đây là chương VIP. Bạn cần mua chương để tiếp tục đọc.</h5>
     <span th:text="#{book.price}+'：'">Giá:</span><span style="color: red" th:text="${bookIndex.bookPrice}+' '+#{payment.currency}+' ('+#{reader.vip.rate}+')'"></span><br/>
-    <a href="javascript:buyBookIndex()" type="button" class="layui-btn layui-btn-sm layui-btn-radius" th:text="#{book.buy}">Mua chương</a>
+    <a href="#" data-reader-action="buy-chapter" class="layui-btn layui-btn-sm layui-btn-radius" th:text="#{book.buy}">Mua chương</a>
     <div th:replace="common/reading_ticket_unlock :: unlock"></div>
 
 </div>
@@ -365,12 +361,7 @@
     localStorage.setItem("historyBooks", JSON.stringify(booksArr));//
 
     function toMyCollect() {
-        var token = localStorage.getItem("token");
-        if (token) {
-            window.location.href = "/book/search?token=" + token;
-        } else {
-            window.location.href = "/user/login.html";
-        }
+        window.location.href = "/user/favorites.html";
     }
 
     function buyBookIndex(){
@@ -389,7 +380,7 @@
                     // Chưa đăng nhập
 
                 }else {
-                    layer.alert(data.msg);
+                    novelAlertText(data.msg);
                 }
 
             },
@@ -404,6 +395,7 @@
     });
 
 </script>
+<script src="/javascript/reader-page.js?v=1"></script>
 
 
 

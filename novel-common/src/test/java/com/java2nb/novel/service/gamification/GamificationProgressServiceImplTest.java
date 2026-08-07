@@ -18,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.never;
@@ -344,6 +345,7 @@ class GamificationProgressServiceImplTest {
             .thenReturn(new QuestRewardSummary(20L, 0L));
         when(mapper.lockProfile(11L)).thenReturn(profile);
         when(mapper.selectLevelRuleForExp("v1", 110L)).thenReturn(levelRule);
+        when(mapper.selectLevelRulesBetween("v1", 1, 2)).thenReturn(List.of(levelRule));
         when(mapper.insertExpLedger(11L, "QUEST_EXP:11:DAILY_READING:2026-07-30",
             "QUEST", 20L, 110L, "v1", "v2")).thenReturn(1);
         when(mapper.selectExpLedgerBySourceKey("QUEST_EXP:11:DAILY_READING:2026-07-30"))
@@ -488,6 +490,60 @@ class GamificationProgressServiceImplTest {
             .isInstanceOf(BusinessException.class);
 
         verify(mapper, never()).updateTickerOptOut(anyLong(), anyBoolean(), anyLong());
+    }
+
+    @Test
+    void adminModerationHidesUserAndAuditsAsAdmin() {
+        GamificationProfileRow locked = profile("NHAP_MON", 4L, null);
+        locked.setTickerOptOut(false);
+        GamificationProfileRow updated = profile("NHAP_MON", 5L, null);
+        updated.setTickerOptOut(true);
+        when(mapper.lockProfile(11L)).thenReturn(locked);
+        when(mapper.updateTickerOptOut(11L, true, 4L)).thenReturn(1);
+        when(mapper.insertProfileAudit(11L, "TICKER_OPT", "false", "true",
+            "ADMIN", 9L, "Nickname vi phạm quy định cộng đồng")).thenReturn(1);
+        when(mapper.selectProfile(11L)).thenReturn(updated);
+
+        GamificationProfileRow result = service.adminSetTickerOptOut(11L, true, 9L,
+            "Nickname vi phạm quy định cộng đồng", "v1");
+
+        assertThat(result).isSameAs(updated);
+        verify(mapper).updateTickerOptOut(11L, true, 4L);
+        verify(mapper).insertProfileAudit(11L, "TICKER_OPT", "false", "true",
+            "ADMIN", 9L, "Nickname vi phạm quy định cộng đồng");
+    }
+
+    @Test
+    void adminModerationIsNoOpWhenAlreadyHidden() {
+        GamificationProfileRow locked = profile("NHAP_MON", 4L, null);
+        locked.setTickerOptOut(true);
+        when(mapper.lockProfile(11L)).thenReturn(locked);
+
+        GamificationProfileRow result = service.adminSetTickerOptOut(11L, true, 9L,
+            "Nickname vi phạm quy định cộng đồng", "v1");
+
+        assertThat(result).isSameAs(locked);
+        verify(mapper, never()).updateTickerOptOut(anyLong(), anyBoolean(), anyLong());
+        verify(mapper, never()).insertProfileAudit(anyLong(), anyString(), anyString(),
+            anyString(), anyString(), anyLong(), anyString());
+    }
+
+    @Test
+    void adminModerationRejectsShortReason() {
+        GamificationProfileRow locked = profile("NHAP_MON", 4L, null);
+        locked.setTickerOptOut(false);
+        when(mapper.lockProfile(11L)).thenReturn(locked);
+
+        assertThatThrownBy(() -> service.adminSetTickerOptOut(11L, true, 9L, "quá ngắn", "v1"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void adminModerationRejectsMissingOperator() {
+        assertThatThrownBy(() -> service.adminSetTickerOptOut(11L, true, 0L,
+            "Nickname vi phạm quy định cộng đồng", "v1"))
+            .isInstanceOf(IllegalArgumentException.class);
+        verify(mapper, never()).lockProfile(anyLong());
     }
 
     private GamificationProfileRow profile(String realmCode, long version, Date changedAt) {

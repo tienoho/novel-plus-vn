@@ -1,0 +1,123 @@
+groups:
+  - name: novel-plus-availability
+    rules:
+      - alert: NovelServiceDown
+        expr: up{job=~"novel-(front|admin|crawl)"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Dịch vụ Novel Plus không được scrape"
+          description: "{{ $labels.job }} đã down hoặc endpoint metric không truy cập được trong 2 phút."
+
+      - alert: NovelHttpErrorRateHigh
+        expr: |
+          sum by (application) (rate(http_server_requests_seconds_count{status=~"5.."}[5m]))
+          /
+          clamp_min(sum by (application) (rate(http_server_requests_seconds_count[5m])), 0.001)
+          > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Tỷ lệ HTTP 5xx vượt 5%"
+          description: "{{ $labels.application }} có tỷ lệ lỗi 5xx cao liên tục trong 5 phút."
+
+      - alert: NovelHttpP95LatencyHigh
+        expr: |
+          histogram_quantile(0.95,
+            sum by (application, le) (rate(http_server_requests_seconds_bucket[5m]))) > 1.5
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Độ trễ HTTP p95 vượt 1,5 giây"
+          description: "{{ $labels.application }} vượt ngưỡng p95 trong 10 phút."
+
+      - alert: NovelDatabasePoolNearExhaustion
+        expr: |
+          max by (application, pool) (hikaricp_connections_active)
+          /
+          clamp_min(max by (application, pool) (hikaricp_connections_max), 1) > 0.85
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Pool kết nối database gần cạn"
+          description: "{{ $labels.application }}/{{ $labels.pool }} dùng trên 85% kết nối trong 5 phút."
+
+  - name: novel-plus-finance
+    rules:
+      - alert: NovelPaymentFailures
+        expr: increase(novel_payment_operations_total{outcome=~"failed|unavailable"}[10m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Có lỗi thanh toán hoặc đối soát"
+          description: "{{ $labels.provider }}/{{ $labels.operation }} ghi nhận lỗi trong 10 phút gần nhất."
+
+      - alert: NovelLedgerMismatch
+        expr: novel_ledger_mismatch_records > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Phát hiện lệch sổ cái hoặc projection"
+          description: "Kiểm tra {{ $labels.check }} có {{ $value }} bản ghi lệch."
+
+      - alert: NovelRenewalProviderPending
+        expr: novel_subscription_renewal_queue{state="provider_pending"} > 0
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Cycle gia hạn chờ provider quá lâu"
+          description: "Còn {{ $value }} cycle phải QueryDr/đối soát provider."
+
+      - alert: NovelSubscriptionsPastDue
+        expr: novel_subscription_renewal_queue{state="past_due"} > 0
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Có thuê bao quá hạn thanh toán"
+          description: "Còn {{ $value }} thuê bao PAST_DUE cần theo dõi trong grace period."
+
+      - alert: NovelMigrationFailed
+        expr: novel_migration_success == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Flyway migrate/validate thất bại"
+          description: "Job migration Compose gần nhất đã thất bại."
+
+      - alert: NovelMigrationStatusMissing
+        expr: absent(novel_migration_success)
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Không nhận được trạng thái Flyway"
+          description: "Pushgateway không có metric kết quả migration trong 10 phút."
+
+  - name: novel-plus-gamification
+    rules:
+      - alert: NovelGamificationBacklogHigh
+        expr: novel_gamification_queue{state="pending_events"} > 500
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Backlog gamification vượt 500 event"
+          description: "Worker còn {{ $value }} event chưa xử lý."
+
+      - alert: NovelGamificationRewardPending
+        expr: novel_gamification_queue{state=~"pending_rewards|stale_jobs|review_overdue"} > 0
+        for: 15m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Gamification có reward/job cần xử lý"
+          description: "Hàng đợi {{ $labels.state }} còn {{ $value }} bản ghi."

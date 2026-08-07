@@ -1,4 +1,4 @@
-param(
+﻿param(
     [switch]$ConfigOnly,
     [switch]$StopAfter
 )
@@ -11,6 +11,19 @@ $repository = Split-Path -Parent $scriptDir
 $dotEnvPath = Join-Path $repository '.env'
 $tempRoot = Join-Path $repository 'tmp'
 $mavenTemp = Join-Path $tempRoot 'maven-gamification'
+$composeSecretTemp = Join-Path $tempRoot 'compose-secrets-gamification'
+$verifyProjectName = if ([string]::IsNullOrWhiteSpace($env:VERIFY_COMPOSE_PROJECT_NAME)) {
+    'novel-plus-verify'
+} else {
+    $env:VERIFY_COMPOSE_PROJECT_NAME
+}
+if ($verifyProjectName -notmatch '^[a-z0-9][a-z0-9_-]*$') {
+    throw 'VERIFY_COMPOSE_PROJECT_NAME chỉ được chứa chữ thường, chữ số, dấu gạch ngang và gạch dưới.'
+}
+$composeArguments = @(
+    'compose', '--project-name', $verifyProjectName,
+    '-f', 'compose.yaml', '-f', 'compose.test.yaml'
+)
 
 function Invoke-Native {
     param(
@@ -63,6 +76,65 @@ function Get-RequiredSetting {
     return $value
 }
 
+function Get-SecretSetting {
+    param(
+        [Parameter(Mandatory = $true)][string]$Name,
+        [Parameter(Mandatory = $true)][string]$FileName,
+        [string]$DefaultValue = ''
+    )
+
+    $value = Get-Setting -Name $Name
+    if ([string]::IsNullOrWhiteSpace($value)) {
+        $sourceDirectory = Get-Setting -Name 'SECRETS_DIR' -DefaultValue (Join-Path $repository 'secrets')
+        if (-not [System.IO.Path]::IsPathRooted($sourceDirectory)) {
+            $sourceDirectory = Join-Path $repository $sourceDirectory
+        }
+        $sourceFile = Join-Path $sourceDirectory $FileName
+        if (Test-Path -LiteralPath $sourceFile) {
+            $value = [System.IO.File]::ReadAllText($sourceFile).TrimEnd("`r", "`n")
+        }
+    }
+    if ([string]::IsNullOrWhiteSpace($value)) {
+        $value = $DefaultValue
+    }
+    if ([string]::IsNullOrWhiteSpace($value)) {
+        throw "Missing required secret: $Name or $FileName"
+    }
+    return $value
+}
+
+function Initialize-ComposeSecrets {
+    New-Item -ItemType Directory -Force -Path $composeSecretTemp | Out-Null
+    $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+    $secretValues = [ordered]@{
+        mysql_root_password = Get-SecretSetting -Name 'MYSQL_ROOT_PASSWORD' -FileName 'mysql_root_password'
+        mysql_app_password = Get-SecretSetting -Name 'MYSQL_APP_PASSWORD' -FileName 'mysql_app_password'
+        redis_password = Get-SecretSetting -Name 'REDIS_PASSWORD' -FileName 'redis_password'
+        jwt_secret = Get-SecretSetting -Name 'JWT_SECRET' -FileName 'jwt_secret'
+        cache_manager_password = Get-SecretSetting -Name 'CACHE_MANAGER_PASSWORD' -FileName 'cache_manager_password'
+        pii_encryption_key = Get-SecretSetting -Name 'PII_ENCRYPTION_KEY' -FileName 'pii_encryption_key'
+        admin_bootstrap_password = Get-SecretSetting -Name 'ADMIN_BOOTSTRAP_PASSWORD' -FileName 'admin_bootstrap_password'
+        crawler_admin_password = Get-SecretSetting -Name 'CRAWLER_ADMIN_PASSWORD' -FileName 'crawler_admin_password'
+        backup_encryption_password = Get-SecretSetting -Name 'BACKUP_ENCRYPTION_PASSWORD' `
+            -FileName 'backup_encryption_password' -DefaultValue 'integration-backup-encryption-password'
+        vnpay_hash_secret = Get-SecretSetting -Name 'VNPAY_HASH_SECRET' `
+            -FileName 'vnpay_hash_secret' -DefaultValue 'disabled'
+        vnpay_recurring_password = Get-SecretSetting -Name 'VNPAY_RECURRING_PASSWORD' `
+            -FileName 'vnpay_recurring_password' -DefaultValue 'disabled'
+        vnpay_recurring_client_secret = Get-SecretSetting -Name 'VNPAY_RECURRING_CLIENT_SECRET' `
+            -FileName 'vnpay_recurring_client_secret' -DefaultValue 'disabled'
+        vnpay_recurring_hash_secret = Get-SecretSetting -Name 'VNPAY_RECURRING_HASH_SECRET' `
+            -FileName 'vnpay_recurring_hash_secret' -DefaultValue 'disabled'
+        vietqr_webhook_secret = Get-SecretSetting -Name 'VIETQR_WEBHOOK_SECRET' `
+            -FileName 'vietqr_webhook_secret' -DefaultValue 'disabled'
+    }
+    foreach ($entry in $secretValues.GetEnumerator()) {
+        [System.IO.File]::WriteAllText((Join-Path $composeSecretTemp $entry.Key), $entry.Value, $utf8NoBom)
+    }
+    $env:SECRETS_DIR = $composeSecretTemp
+    return $secretValues
+}
+
 function Resolve-Maven {
     $configured = [Environment]::GetEnvironmentVariable('MAVEN_CMD')
     if (-not [string]::IsNullOrWhiteSpace($configured)) {
@@ -87,7 +159,8 @@ try {
         throw 'Docker CLI was not found.'
     }
 
-    Invoke-Native -FilePath 'docker' -Arguments @('compose', 'config', '--quiet')
+    $secrets = Initialize-ComposeSecrets
+    Invoke-Native -FilePath 'docker' -Arguments ($composeArguments + @('config', '--quiet'))
     Write-Output '[OK] Docker Compose configuration is valid.'
     if ($ConfigOnly) {
         exit 0
@@ -96,16 +169,17 @@ try {
     Invoke-Native -FilePath 'docker' -Arguments @('info', '--format', '{{.ServerVersion}}')
     $database = Get-Setting -Name 'MYSQL_DATABASE' -DefaultValue 'novel_plus'
     $username = Get-Setting -Name 'MYSQL_USER' -DefaultValue 'novel'
-    $password = Get-RequiredSetting -Name 'MYSQL_APP_PASSWORD'
+    $password = $secrets.mysql_app_password
     $hostPortText = Get-Setting -Name 'MYSQL_HOST_PORT' -DefaultValue '3307'
     $hostPort = 0
     if (-not [int]::TryParse($hostPortText, [ref]$hostPort) -or $hostPort -lt 1 -or $hostPort -gt 65535) {
         throw 'MYSQL_HOST_PORT must be an integer from 1 to 65535.'
     }
 
-    Invoke-Native -FilePath 'docker' -Arguments @('compose', 'up', '-d', 'mysql')
-    Invoke-Native -FilePath 'docker' -Arguments @('compose', 'run', '--rm', 'migrate')
-    Invoke-Native -FilePath 'docker' -Arguments @('compose', 'run', '--rm', 'migrate')
+    Invoke-Native -FilePath 'docker' -Arguments ($composeArguments + @('build', 'migrate'))
+    Invoke-Native -FilePath 'docker' -Arguments ($composeArguments + @('up', '-d', 'mysql'))
+    Invoke-Native -FilePath 'docker' -Arguments ($composeArguments + @('run', '--rm', 'migrate'))
+    Invoke-Native -FilePath 'docker' -Arguments ($composeArguments + @('run', '--rm', 'migrate'))
     Write-Output '[OK] Migration succeeded twice.'
 
     New-Item -ItemType Directory -Force -Path $mavenTemp | Out-Null
@@ -140,7 +214,16 @@ try {
 }
 finally {
     if ($StopAfter -and -not $ConfigOnly) {
-        & docker compose stop mysql
+        $downArguments = $composeArguments + @('down', '--volumes', '--remove-orphans')
+        & docker @downArguments
+    }
+    if (Test-Path -LiteralPath $composeSecretTemp) {
+        $resolvedTempRoot = [System.IO.Path]::GetFullPath($tempRoot)
+        $resolvedSecretTemp = [System.IO.Path]::GetFullPath($composeSecretTemp)
+        if ($resolvedSecretTemp.StartsWith($resolvedTempRoot + [System.IO.Path]::DirectorySeparatorChar,
+                [System.StringComparison]::OrdinalIgnoreCase)) {
+            Remove-Item -LiteralPath $resolvedSecretTemp -Recurse -Force
+        }
     }
     Pop-Location
 }

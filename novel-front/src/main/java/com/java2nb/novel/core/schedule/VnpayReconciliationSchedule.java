@@ -1,6 +1,10 @@
 package com.java2nb.novel.core.schedule;
 
 import com.java2nb.novel.core.config.VnpayProperties;
+import com.java2nb.novel.core.observability.NovelBusinessMetrics;
+import com.java2nb.novel.core.observability.NovelBusinessMetrics.Outcome;
+import com.java2nb.novel.core.observability.NovelBusinessMetrics.PaymentOperation;
+import com.java2nb.novel.core.observability.NovelBusinessMetrics.PaymentProvider;
 import com.java2nb.novel.service.OrderService;
 import com.java2nb.novel.service.PayOrderSnapshot;
 import com.java2nb.novel.service.PayOrderUpdateResult;
@@ -26,6 +30,7 @@ public class VnpayReconciliationSchedule {
     private final VnpayProperties properties;
     private final OrderService orderService;
     private final VnpayQueryService queryService;
+    private final NovelBusinessMetrics metrics;
 
     @Scheduled(
         fixedDelayString = "${vnpay.reconciliation-delay-ms:300000}",
@@ -50,6 +55,8 @@ public class VnpayReconciliationSchedule {
             }
             try {
                 VnpayQueryResult queryResult = queryService.query(order);
+                metrics.recordPayment(PaymentProvider.VNPAY, PaymentOperation.QUERY,
+                    queryOutcome(queryResult.status()));
                 PayOrderUpdateResult updateResult = switch (queryResult.status()) {
                     case SUCCESS -> orderService.processPayOrder(order.outTradeNo(), queryResult.tradeNo(),
                         VNPAY_CHANNEL, order.totalAmount(), true);
@@ -62,8 +69,18 @@ public class VnpayReconciliationSchedule {
                         updateResult);
                 }
             } catch (RuntimeException exception) {
+                metrics.recordPayment(PaymentProvider.VNPAY, PaymentOperation.QUERY, Outcome.FAILED);
                 log.error("Đối soát VNPAY thất bại cho đơn {}", order.outTradeNo(), exception);
             }
         }
+    }
+
+    private Outcome queryOutcome(VnpayQueryResult.Status status) {
+        return switch (status) {
+            case SUCCESS -> Outcome.SUCCESS;
+            case FAILED -> Outcome.FAILED;
+            case PENDING -> Outcome.PENDING;
+            case UNAVAILABLE -> Outcome.UNAVAILABLE;
+        };
     }
 }

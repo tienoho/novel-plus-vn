@@ -10,10 +10,6 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="format-detection" content="telephone=no">
     <link rel="stylesheet" href="/layuimini/lib/layui-v2.5.4/css/layui.css" media="all">
-    <!--[if lt IE 9]>
-    <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
-    <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
-    <![endif]-->
     <style>
         html, body {width: 100%;height: 100%;overflow: hidden}
         body {background: #009688;}
@@ -35,7 +31,8 @@
 <div class="layui-container">
     <div class="admin-login-background">
         <div class="layui-form login-form">
-            <form id="signupForm" class="layui-form" action="">
+            <form id="signupForm" class="layui-form" action=""
+                  th:attr="data-username-required=#{auth.username.required},data-password-required=#{auth.password.required},data-captcha-required=#{auth.captcha.required}">
                 <div class="layui-form-item logo-title">
                     <h1 th:text="#{admin.title}">Quản trị Novel Plus</h1>
                 </div>
@@ -51,8 +48,8 @@
                     <label class="layui-icon layui-icon-vercode" for="captcha"></label>
                     <input type="text" name="verify" id="verify" th:placeholder="#{auth.captcha}" autocomplete="off" class="layui-input verification captcha">
                     <div class="captcha-img">
-                        <a href="javascript:void(0);" rel="external nofollow" th:title="#{auth.captcha.refresh}">
-                        <img id="imgVerify" src="" th:alt="#{auth.captcha.refresh}" onclick="getVerify(this);">
+                        <a id="captchaRefresh" href="#refresh-captcha" rel="external nofollow" th:title="#{auth.captcha.refresh}">
+                        <img id="imgVerify" src="" th:alt="#{auth.captcha.refresh}">
                         </a>
                     </div>
                 </div>
@@ -67,68 +64,9 @@
     </div>
 </div>
 <script src="/layuimini/lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+<script src="/js/csrf.js"></script>
 <script src="/layuimini/lib/layui-v2.5.4/layui.js" charset="utf-8"></script>
 <script src="/layuimini/lib/jq-module/jquery.particleground.min.js" charset="utf-8"></script>
-<script type="text/javascript" th:inline="javascript">
-    const loginMessages = {
-        usernameRequired: /*[[#{auth.username.required}]]*/ 'Vui lòng nhập tên đăng nhập',
-        passwordRequired: /*[[#{auth.password.required}]]*/ 'Vui lòng nhập mật khẩu',
-        captchaRequired: /*[[#{auth.captcha.required}]]*/ 'Vui lòng nhập mã xác minh'
-    };
-    $("#imgVerify").click()
-    layui.use(['form'], function () {
-        var form = layui.form,
-            layer = layui.layer;
-
-        // Thoát khỏi iframe khi phiên đăng nhập hết hạn.
-        if (top.location != self.location) top.location = self.location;
-
-        // Hiệu ứng nền hạt.
-        $(document).ready(function(){
-            $('.layui-container').particleground({
-                dotColor:'#5cbdaa',
-                lineColor:'#5cbdaa'
-            });
-        });
-
-        // Gửi yêu cầu đăng nhập.
-        form.on('submit(login)', function (data) {
-            data = data.field;
-            if (data.username == '') {
-                layer.msg(loginMessages.usernameRequired);
-                return false;
-            }
-            if (data.password == '') {
-                layer.msg(loginMessages.passwordRequired);
-                return false;
-            }
-            if (data.verify == '') {
-                layer.msg(loginMessages.captchaRequired);
-                return false;
-            }
-            $.ajax({
-                type: "POST",
-                url: "/login",
-                data: $('#signupForm').serialize(),
-                success: function (r) {
-                    if (r.code == 0) {
-                        parent.location.href = '/index';
-                    } else {
-                        layer.msg(r.msg);
-                    }
-                },
-            });
-            return false;
-        });
-    });
-
-
-
-    // Lấy mã xác minh mới.
-    function getVerify(obj) {
-        obj.src = "/getVerify?" + Math.random();
-        console.log(obj)
-    }
-</script>
+<script src="/js/login.js"></script>
 </body>
 </html>

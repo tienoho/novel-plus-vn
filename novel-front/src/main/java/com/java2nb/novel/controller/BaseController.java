@@ -2,6 +2,7 @@ package com.java2nb.novel.controller;
 
 import com.java2nb.novel.core.bean.UserDetails;
 import com.java2nb.novel.core.utils.CookieUtil;
+import com.java2nb.novel.core.utils.AuthCookieService;
 import com.java2nb.novel.core.utils.JwtTokenUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
@@ -17,11 +18,7 @@ public class BaseController {
 
 
     protected String getToken(HttpServletRequest request){
-        String token = CookieUtil.getCookie(request,"Authorization");
-        if(token != null){
-            return token;
-        }
-        return request.getHeader("Authorization");
+        return CookieUtil.getCookie(request, AuthCookieService.ACCESS_COOKIE);
     }
 
     protected UserDetails getUserDetails(HttpServletRequest request) {

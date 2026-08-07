@@ -3,11 +3,16 @@ name: ${COMPOSE_PROJECT_NAME:-novel-plus}
 x-app-environment: &app-environment
   TZ: ${TZ:-Asia/Ho_Chi_Minh}
   SPRING_PROFILES_ACTIVE: prod
+  SERVER_FORWARD_HEADERS_STRATEGY: framework
+  SERVER_SERVLET_SESSION_COOKIE_HTTP_ONLY: "true"
+  SERVER_SERVLET_SESSION_COOKIE_SAME_SITE: lax
+  SERVER_SERVLET_SESSION_COOKIE_SECURE: "true"
+  CSP_ENFORCE: ${CSP_ENFORCE:-true}
   DB_HOST: mysql
   DB_PORT: 3306
   DB_NAME: ${MYSQL_DATABASE:-novel_plus}
   DB_USERNAME: ${MYSQL_USER:-novel}
-  DB_PASSWORD: ${MYSQL_APP_PASSWORD:?Hãy đặt MYSQL_APP_PASSWORD trong tệp .env}
+  DB_PASSWORD_FILE: /run/secrets/mysql_app_password
   DB_TIMEZONE: ${DB_TIMEZONE:-Asia/Ho_Chi_Minh}
   SHARDING_SQL_SHOW: ${SHARDING_SQL_SHOW:-false}
   FINANCIAL_VOUCHER_ISSUANCE_ENABLED: ${FINANCIAL_VOUCHER_ISSUANCE_ENABLED:-false}
@@ -61,6 +66,9 @@ x-app-environment: &app-environment
   READING_SUBSCRIPTION_GRANT_CRON: ${READING_SUBSCRIPTION_GRANT_CRON:-0 10 0 * * ?}
   READING_SUBSCRIPTION_ZONE_ID: ${READING_SUBSCRIPTION_ZONE_ID:-Asia/Ho_Chi_Minh}
   READING_SUBSCRIPTION_GRANT_BATCH_SIZE: ${READING_SUBSCRIPTION_GRANT_BATCH_SIZE:-200}
+  READING_SUBSCRIPTION_RENEWAL_ENABLED: ${READING_SUBSCRIPTION_RENEWAL_ENABLED:-false}
+  READING_SUBSCRIPTION_RENEWAL_DELAY_MS: ${READING_SUBSCRIPTION_RENEWAL_DELAY_MS:-60000}
+  READING_SUBSCRIPTION_RENEWAL_BATCH_SIZE: ${READING_SUBSCRIPTION_RENEWAL_BATCH_SIZE:-100}
   READING_SUBSCRIPTION_ADMIN_ACTIVATION_ENABLED: ${READING_SUBSCRIPTION_ADMIN_ACTIVATION_ENABLED:-false}
   GIFT_CODE_ENABLED: ${GIFT_CODE_ENABLED:-false}
   GIFT_CODE_HMAC_KEY_ID: ${GIFT_CODE_HMAC_KEY_ID:-legacy-v1}
@@ -81,29 +89,26 @@ x-app-defaults: &app-defaults
 
 services:
   mysql:
-    build:
-      context: ./doc/sql
-      dockerfile: Dockerfile
-    image: novel-plus/mysql:${IMAGE_TAG:-local}
+    image: mysql:8.4
     environment:
       TZ: ${TZ:-Asia/Ho_Chi_Minh}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Hãy đặt MYSQL_ROOT_PASSWORD trong tệp .env}
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
       MYSQL_DATABASE: ${MYSQL_DATABASE:-novel_plus}
       MYSQL_USER: ${MYSQL_USER:-novel}
-      MYSQL_PASSWORD: ${MYSQL_APP_PASSWORD:?Hãy đặt MYSQL_APP_PASSWORD trong tệp .env}
+      MYSQL_PASSWORD_FILE: /run/secrets/mysql_app_password
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
       - --default-time-zone=+07:00
-    ports:
-      # Chỉ bind loopback để Maven integration test trên host truy cập được mà không mở DB ra LAN.
-      - "127.0.0.1:${MYSQL_HOST_PORT:-3307}:3306"
     volumes:
       - mysql-data:/var/lib/mysql
+    secrets:
+      - mysql_root_password
+      - mysql_app_password
     expose:
       - "3306"
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$(cat /run/secrets/mysql_root_password)\" --silent"]
       interval: 10s
       timeout: 5s
       retries: 20
@@ -111,69 +116,67 @@ services:
     restart: unless-stopped
 
   migrate:
-    image: mysql:8.4
+    build:
+      context: .
+      dockerfile: deploy/flyway/Dockerfile
+    image: novel-plus/migrations:${IMAGE_TAG:-local}
     environment:
-      # Migration cần quyền tạo trigger bất biến cho sổ cái; ứng dụng vẫn dùng MYSQL_USER ít quyền hơn.
-      MYSQL_PWD: ${MYSQL_ROOT_PASSWORD:?Hãy đặt MYSQL_ROOT_PASSWORD trong tệp .env}
-      MYSQL_USER: root
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-novel_plus}
-    command:
-      - /bin/sh
-      - -ec
-      - |
-        for migration in /migrations/20260712_vi_localization.sql /migrations/20260716_vnpay_hardening.sql /migrations/20260717_wallet_ledger.sql /migrations/20260718_author_payout.sql /migrations/20260720_refund_reconciliation_vietqr.sql /migrations/20260725_moderation_copyright.sql /migrations/20260725_reports_security.sql /migrations/20260726_author_editor.sql /migrations/20260726_simhash_storage.sql /migrations/20260726_cover_moderation.sql /migrations/20260726_author_analytics.sql /migrations/20260726_vietnamese_search.sql /migrations/20260726_chapter_notifications.sql /migrations/20260727_recommendation.sql /migrations/20260727_author_story_bible.sql /migrations/20260727_author_collaboration.sql /migrations/20260727_reader_annotations.sql /migrations/20260728_author_ai.sql /migrations/20260728_chapter_commercial_policy.sql /migrations/20260729_gamification_monthly_ticket.sql /migrations/20260730_reader_entitlements.sql /migrations/20260731_reader_subscriptions.sql /migrations/20260801_reader_subscription_admin.sql /migrations/20260802_gift_codes.sql /migrations/20260803_gift_code_revoke.sql /migrations/20260804_reader_subscription_checkout.sql /migrations/20260805_reader_subscription_paid_review.sql /migrations/20260806_gift_code_hmac_rotation.sql /migrations/20260807_vi_friend_link.sql; do
-          mysql --default-character-set=utf8mb4 --protocol=TCP --host=mysql --port=3306 --user="$$MYSQL_USER" "$$MYSQL_DATABASE" < "$$migration"
-        done
-    volumes:
-      - ./doc/sql/20260712_vi_localization.sql:/migrations/20260712_vi_localization.sql:ro
-      - ./doc/sql/20260716_vnpay_hardening.sql:/migrations/20260716_vnpay_hardening.sql:ro
-      - ./doc/sql/20260717_wallet_ledger.sql:/migrations/20260717_wallet_ledger.sql:ro
-      - ./doc/sql/20260718_author_payout.sql:/migrations/20260718_author_payout.sql:ro
-      - ./doc/sql/20260720_refund_reconciliation_vietqr.sql:/migrations/20260720_refund_reconciliation_vietqr.sql:ro
-      - ./doc/sql/20260725_moderation_copyright.sql:/migrations/20260725_moderation_copyright.sql:ro
-      - ./doc/sql/20260725_reports_security.sql:/migrations/20260725_reports_security.sql:ro
-      - ./doc/sql/20260726_author_editor.sql:/migrations/20260726_author_editor.sql:ro
-      - ./doc/sql/20260726_simhash_storage.sql:/migrations/20260726_simhash_storage.sql:ro
-      - ./doc/sql/20260726_cover_moderation.sql:/migrations/20260726_cover_moderation.sql:ro
-      - ./doc/sql/20260726_author_analytics.sql:/migrations/20260726_author_analytics.sql:ro
-      - ./doc/sql/20260726_vietnamese_search.sql:/migrations/20260726_vietnamese_search.sql:ro
-      - ./doc/sql/20260726_chapter_notifications.sql:/migrations/20260726_chapter_notifications.sql:ro
-      - ./doc/sql/20260727_recommendation.sql:/migrations/20260727_recommendation.sql:ro
-      - ./doc/sql/20260727_author_story_bible.sql:/migrations/20260727_author_story_bible.sql:ro
-      - ./doc/sql/20260727_author_collaboration.sql:/migrations/20260727_author_collaboration.sql:ro
-      - ./doc/sql/20260727_reader_annotations.sql:/migrations/20260727_reader_annotations.sql:ro
-      - ./doc/sql/20260728_author_ai.sql:/migrations/20260728_author_ai.sql:ro
-      - ./doc/sql/20260728_chapter_commercial_policy.sql:/migrations/20260728_chapter_commercial_policy.sql:ro
-      - ./doc/sql/20260729_gamification_monthly_ticket.sql:/migrations/20260729_gamification_monthly_ticket.sql:ro
-      - ./doc/sql/20260730_reader_entitlements.sql:/migrations/20260730_reader_entitlements.sql:ro
-      - ./doc/sql/20260731_reader_subscriptions.sql:/migrations/20260731_reader_subscriptions.sql:ro
-      - ./doc/sql/20260801_reader_subscription_admin.sql:/migrations/20260801_reader_subscription_admin.sql:ro
-      - ./doc/sql/20260802_gift_codes.sql:/migrations/20260802_gift_codes.sql:ro
-      - ./doc/sql/20260803_gift_code_revoke.sql:/migrations/20260803_gift_code_revoke.sql:ro
-      - ./doc/sql/20260804_reader_subscription_checkout.sql:/migrations/20260804_reader_subscription_checkout.sql:ro
-      - ./doc/sql/20260805_reader_subscription_paid_review.sql:/migrations/20260805_reader_subscription_paid_review.sql:ro
-      - ./doc/sql/20260806_gift_code_hmac_rotation.sql:/migrations/20260806_gift_code_hmac_rotation.sql:ro
-      - ./doc/sql/20260807_vi_friend_link.sql:/migrations/20260807_vi_friend_link.sql:ro
+      # Flyway dùng root để tạo trigger bất biến; ứng dụng vẫn dùng MYSQL_USER ít quyền hơn.
+      FLYWAY_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-novel_plus}?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=Asia/Ho_Chi_Minh
+      FLYWAY_USER: root
+      FLYWAY_PASSWORD_FILE: /run/secrets/mysql_root_password
+      FLYWAY_CONNECT_RETRIES: 60
+      FLYWAY_VALIDATE_MIGRATION_NAMING: "true"
+      PUSHGATEWAY_URL: http://pushgateway:9091
     depends_on:
       mysql:
         condition: service_healthy
+      pushgateway:
+        condition: service_healthy
+    secrets:
+      - mysql_root_password
     restart: "no"
 
   redis:
     image: redis:7-alpine
-    environment:
-      REDIS_PASSWORD: ${REDIS_PASSWORD:?Hãy đặt REDIS_PASSWORD trong tệp .env}
-    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:?Hãy đặt REDIS_PASSWORD trong tệp .env}"]
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        password=$$(cat /run/secrets/redis_password)
+        exec redis-server --appendonly yes --requirepass "$$password"
     volumes:
       - redis-data:/data
+    secrets:
+      - redis_password
     expose:
       - "6379"
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep PONG"]
+      test: ["CMD-SHELL", "redis-cli -a \"$$(cat /run/secrets/redis_password)\" ping | grep PONG"]
       interval: 10s
       timeout: 5s
       retries: 20
       start_period: 10s
+    restart: unless-stopped
+
+  pushgateway:
+    image: prom/pushgateway:v1.11.1
+    command:
+      - --web.listen-address=:9091
+      - --persistence.file=/data/metrics.db
+      - --persistence.interval=5m
+    expose:
+      - "9091"
+    volumes:
+      - pushgateway-data:/data
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "--quiet", "http://127.0.0.1:9091/-/ready"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    security_opt:
+      - no-new-privileges:true
     restart: unless-stopped
 
   front:
@@ -185,19 +188,21 @@ services:
     image: novel-plus/front:${IMAGE_TAG:-local}
     environment:
       <<: *app-environment
+      SPRING_APPLICATION_NAME: novel-front
       SERVER_PORT: 8083
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
-      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD:?Hãy đặt REDIS_PASSWORD trong tệp .env}
+      SPRING_DATA_REDIS_PASSWORD_FILE: /run/secrets/redis_password
       TEMPLATES_NAME: ${NOVEL_THEME:-green}
       PIC_SAVE_TYPE: 2
       PIC_SAVE_STORAGE: local
       PIC_SAVE_PATH: /data/pic
       CONTENT_SAVE_STORAGE: db
       CONTENT_SAVE_PATH: /data/books
-      JWT_SECRET: ${JWT_SECRET:?Hãy đặt JWT_SECRET trong tệp .env}
-      CACHE_MANAGER_PASSWORD: ${CACHE_MANAGER_PASSWORD:?Hãy đặt CACHE_MANAGER_PASSWORD trong tệp .env}
-      PII_ENCRYPTION_KEY: ${PII_ENCRYPTION_KEY:-disabled}
+      JWT_SECRET_FILE: /run/secrets/jwt_secret
+      AUTH_COOKIE_SECURE: "true"
+      CACHE_MANAGER_PASSWORD_FILE: /run/secrets/cache_manager_password
+      PII_ENCRYPTION_KEY_FILE: /run/secrets/pii_encryption_key
       SPRING_AI_OPENAI_API_KEY: ${OPENAI_API_KEY:-disabled}
       SPRING_AI_OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com}
       SPRING_AI_OPENAI_IMAGE_ENABLED: ${AI_IMAGE_ENABLED:-false}
@@ -206,7 +211,7 @@ services:
       OPENAI_CHAT_MODEL: ${OPENAI_CHAT_MODEL:-gpt-4.1-mini}
       VNPAY_ENABLED: ${VNPAY_ENABLED:-false}
       VNPAY_TMN_CODE: ${VNPAY_TMN_CODE:-disabled}
-      VNPAY_HASH_SECRET: ${VNPAY_HASH_SECRET:-disabled}
+      VNPAY_HASH_SECRET_FILE: /run/secrets/vnpay_hash_secret
       VNPAY_PAY_URL: ${VNPAY_PAY_URL:-https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
       VNPAY_RETURN_URL: ${VNPAY_RETURN_URL:-http://localhost:8083/pay/vnpay/return}
       VNPAY_QUERY_URL: ${VNPAY_QUERY_URL:-https://sandbox.vnpayment.vn/merchant_webapi/api/transaction}
@@ -219,11 +224,26 @@ services:
       VNPAY_RECONCILIATION_MIN_AGE_MINUTES: ${VNPAY_RECONCILIATION_MIN_AGE_MINUTES:-20}
       VNPAY_RECONCILIATION_MAX_AGE_DAYS: ${VNPAY_RECONCILIATION_MAX_AGE_DAYS:-30}
       VNPAY_RECONCILIATION_BATCH_SIZE: ${VNPAY_RECONCILIATION_BATCH_SIZE:-50}
+      VNPAY_RECURRING_ENABLED: ${VNPAY_RECURRING_ENABLED:-false}
+      VNPAY_RECURRING_BASE_URL: ${VNPAY_RECURRING_BASE_URL:-https://sandbox.vnpayment.vn}
+      VNPAY_RECURRING_CLIENT_ID: ${VNPAY_RECURRING_CLIENT_ID:-disabled}
+      VNPAY_RECURRING_USERNAME: ${VNPAY_RECURRING_USERNAME:-disabled}
+      VNPAY_RECURRING_PASSWORD_FILE: /run/secrets/vnpay_recurring_password
+      VNPAY_RECURRING_CLIENT_SECRET_FILE: /run/secrets/vnpay_recurring_client_secret
+      VNPAY_RECURRING_TMN_CODE: ${VNPAY_RECURRING_TMN_CODE:-disabled}
+      VNPAY_RECURRING_HASH_SECRET_FILE: /run/secrets/vnpay_recurring_hash_secret
+      VNPAY_RECURRING_PAY_URL: ${VNPAY_RECURRING_PAY_URL:-https://sandbox.vnpayment.vn/recurring-payment/pay}
+      VNPAY_RECURRING_RETURN_URL: ${VNPAY_RECURRING_RETURN_URL:-http://localhost:8083/payment/vnpay-recurring/return}
+      VNPAY_RECURRING_CANCEL_URL: ${VNPAY_RECURRING_CANCEL_URL:-http://localhost:8083/payment/vnpay-recurring/cancel}
+      VNPAY_RECURRING_RESULT_REDIRECT_URL: ${VNPAY_RECURRING_RESULT_REDIRECT_URL:-/pay}
+      VNPAY_RECURRING_ORDER_TYPE: ${VNPAY_RECURRING_ORDER_TYPE:-other}
+      VNPAY_RECURRING_CONNECT_TIMEOUT_SECONDS: ${VNPAY_RECURRING_CONNECT_TIMEOUT_SECONDS:-5}
+      VNPAY_RECURRING_REQUEST_TIMEOUT_SECONDS: ${VNPAY_RECURRING_REQUEST_TIMEOUT_SECONDS:-15}
       VIETQR_ENABLED: ${VIETQR_ENABLED:-false}
       VIETQR_BANK_BIN: ${VIETQR_BANK_BIN:-disabled}
       VIETQR_ACCOUNT_NO: ${VIETQR_ACCOUNT_NO:-disabled}
       VIETQR_ACCOUNT_NAME: ${VIETQR_ACCOUNT_NAME:-disabled}
-      VIETQR_WEBHOOK_SECRET: ${VIETQR_WEBHOOK_SECRET:-disabled}
+      VIETQR_WEBHOOK_SECRET_FILE: /run/secrets/vietqr_webhook_secret
       AUTHOR_PAYOUT_ENABLED: ${AUTHOR_PAYOUT_ENABLED:-false}
       AUTHOR_PAYOUT_VND_PER_XU: ${AUTHOR_PAYOUT_VND_PER_XU:-10}
       AUTHOR_PAYOUT_MIN_XU: ${AUTHOR_PAYOUT_MIN_XU:-100000}
@@ -240,8 +260,8 @@ services:
       NOVEL_FILE_BUCKET_NAME: ${OSS_BUCKET_NAME:-disabled}
       NOVEL_FILE_FILE_HOST: ${OSS_FILE_HOST:-pic}
       NOVEL_FILE_WEB_URL: ${OSS_WEB_URL:-http://localhost:8083/pic}
-    ports:
-      - "${FRONT_PORT:-8083}:8083"
+    expose:
+      - "8083"
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8083/actuator/health || exit 1"]
       interval: 15s
@@ -251,6 +271,17 @@ services:
     volumes:
       - novel-media:/data/pic
       - novel-books:/data/books
+    secrets:
+      - mysql_app_password
+      - redis_password
+      - jwt_secret
+      - cache_manager_password
+      - pii_encryption_key
+      - vnpay_hash_secret
+      - vnpay_recurring_password
+      - vnpay_recurring_client_secret
+      - vnpay_recurring_hash_secret
+      - vietqr_webhook_secret
 
   crawl:
     <<: *app-defaults
@@ -261,12 +292,14 @@ services:
     image: novel-plus/crawl:${IMAGE_TAG:-local}
     environment:
       <<: *app-environment
+      SPRING_APPLICATION_NAME: novel-crawl
       SERVER_PORT: 8081
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
-      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD:?Hãy đặt REDIS_PASSWORD trong tệp .env}
+      SPRING_DATA_REDIS_PASSWORD_FILE: /run/secrets/redis_password
       CRAWLER_ADMIN_USERNAME: ${CRAWLER_ADMIN_USERNAME:-admin}
-      CRAWLER_ADMIN_PASSWORD: ${CRAWLER_ADMIN_PASSWORD:?Hãy đặt CRAWLER_ADMIN_PASSWORD trong tệp .env}
+      CRAWLER_ADMIN_PASSWORD_FILE: /run/secrets/crawler_admin_password
+      AUTH_COOKIE_SECURE: "true"
       CONTENT_SAVE_STORAGE: db
       CONTENT_SAVE_PATH: /data/books
       MAIL_HOST: ${MAIL_HOST:-smtp.example.com}
@@ -277,10 +310,10 @@ services:
       MANAGEMENT_HEALTH_MAIL_ENABLED: ${CRAWLER_MAIL_HEALTH_ENABLED:-false}
       DISK_MONITOR_ENABLED: ${DISK_MONITOR_ENABLED:-false}
       DISK_MONITOR_RECIPIENTS: ${DISK_MONITOR_RECIPIENTS:-}
-    ports:
-      - "${CRAWL_PORT:-8081}:8081"
+    expose:
+      - "8081"
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider --user=\"$$CRAWLER_ADMIN_USERNAME\" --password=\"$$CRAWLER_ADMIN_PASSWORD\" http://localhost:8081/actuator/health || exit 1"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider --user=\"$$CRAWLER_ADMIN_USERNAME\" --password=\"$$(cat /run/secrets/crawler_admin_password)\" http://localhost:8081/actuator/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -288,6 +321,10 @@ services:
     volumes:
       - novel-media:/data/pic
       - novel-books:/data/books
+    secrets:
+      - mysql_app_password
+      - redis_password
+      - crawler_admin_password
 
   admin:
     <<: *app-defaults
@@ -298,14 +335,21 @@ services:
     image: novel-plus/admin:${IMAGE_TAG:-local}
     environment:
       <<: *app-environment
+      SPRING_APPLICATION_NAME: novel-admin
       SERVER_PORT: 80
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
-      SPRING_REDIS_PASSWORD: ${REDIS_PASSWORD:?Hãy đặt REDIS_PASSWORD trong tệp .env}
+      SPRING_REDIS_PASSWORD_FILE: /run/secrets/redis_password
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD_FILE: /run/secrets/redis_password
+      ADMIN_BOOTSTRAP_USERNAME: ${ADMIN_BOOTSTRAP_USERNAME:-admin}
+      ADMIN_BOOTSTRAP_PASSWORD_FILE: /run/secrets/admin_bootstrap_password
+      AUTH_COOKIE_SECURE: "true"
       JAVA2NB_UPLOAD_PATH: /data/pic/
-      PII_ENCRYPTION_KEY: ${PII_ENCRYPTION_KEY:-disabled}
-    ports:
-      - "${ADMIN_PORT:-8080}:80"
+      PII_ENCRYPTION_KEY_FILE: /run/secrets/pii_encryption_key
+    expose:
+      - "80"
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80/actuator/health || exit 1"]
       interval: 15s
@@ -314,9 +358,260 @@ services:
       start_period: 30s
     volumes:
       - novel-media:/data/pic
+    secrets:
+      - mysql_app_password
+      - redis_password
+      - admin_bootstrap_password
+      - pii_encryption_key
+
+  alertmanager:
+    build:
+      context: .
+      dockerfile: deploy/observability/alertmanager/Dockerfile
+    image: novel-plus/alertmanager:${IMAGE_TAG:-local}
+    environment:
+      ALERTMANAGER_WEBHOOK_URL_FILE: /run/secrets/alertmanager_webhook_url
+      ALERTMANAGER_ALLOW_HTTP: ${ALERTMANAGER_ALLOW_HTTP:-false}
+    expose:
+      - "9093"
+    volumes:
+      - alertmanager-data:/alertmanager
+    secrets:
+      - alertmanager_webhook_url
+    healthcheck:
+      test: ["CMD", "/bin/amtool", "--alertmanager.url=http://127.0.0.1:9093", "config", "show"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  prometheus:
+    image: quay.io/prometheus/prometheus:v3.11.3
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=${PROMETHEUS_RETENTION:-30d}
+      - --web.enable-lifecycle
+    depends_on:
+      front:
+        condition: service_healthy
+      admin:
+        condition: service_healthy
+      crawl:
+        condition: service_healthy
+      alertmanager:
+        condition: service_healthy
+      pushgateway:
+        condition: service_healthy
+    expose:
+      - "9090"
+    volumes:
+      - ./deploy/observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./deploy/observability/rules:/etc/prometheus/rules:ro
+      - prometheus-data:/prometheus
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:13.1.0
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD__FILE: /run/secrets/grafana_admin_password
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_SERVER_DOMAIN: ${NOVEL_GRAFANA_DOMAIN:-grafana.localhost}
+      GF_SERVER_ROOT_URL: https://${NOVEL_GRAFANA_DOMAIN:-grafana.localhost}
+      GF_SECURITY_COOKIE_SECURE: "true"
+      GF_SECURITY_COOKIE_SAMESITE: lax
+      GF_LOG_MODE: console
+      GF_LOG_FORMAT: json
+    depends_on:
+      prometheus:
+        condition: service_started
+    expose:
+      - "3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./deploy/observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./deploy/observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    secrets:
+      - grafana_admin_password
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider --quiet http://127.0.0.1:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  caddy:
+    build:
+      context: .
+      dockerfile: deploy/caddy/Dockerfile
+    image: novel-plus/caddy:${IMAGE_TAG:-local}
+    environment:
+      NOVEL_DOMAIN: ${NOVEL_DOMAIN:-localhost}
+      NOVEL_ADMIN_DOMAIN: ${NOVEL_ADMIN_DOMAIN:-admin.localhost}
+      NOVEL_CRAWL_DOMAIN: ${NOVEL_CRAWL_DOMAIN:-crawl.localhost}
+      NOVEL_GRAFANA_DOMAIN: ${NOVEL_GRAFANA_DOMAIN:-grafana.localhost}
+      CADDY_ACME_EMAIL: ${CADDY_ACME_EMAIL:-ops@example.com}
+      CADDY_MAX_UPLOAD_SIZE: ${CADDY_MAX_UPLOAD_SIZE:-25MB}
+      CADDY_RATE_LIMIT_REQUESTS: ${CADDY_RATE_LIMIT_REQUESTS:-600}
+      CADDY_WRITE_RATE_LIMIT_REQUESTS: ${CADDY_WRITE_RATE_LIMIT_REQUESTS:-120}
+    depends_on:
+      front:
+        condition: service_healthy
+      admin:
+        condition: service_healthy
+      crawl:
+        condition: service_healthy
+      grafana:
+        condition: service_healthy
+    ports:
+      - "${CADDY_HTTP_PORT:-80}:80"
+      - "${CADDY_HTTPS_PORT:-443}:443"
+      - "${CADDY_HTTPS_PORT:-443}:443/udp"
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  backup:
+    profiles: ["tools"]
+    build:
+      context: .
+      dockerfile: deploy/backup/Dockerfile
+    image: novel-plus/backup:${IMAGE_TAG:-local}
+    entrypoint: ["/usr/local/bin/novel-backup"]
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-novel_plus}
+      MYSQL_USER: root
+    depends_on:
+      mysql:
+        condition: service_healthy
+    secrets:
+      - mysql_root_password
+      - backup_encryption_password
+    volumes:
+      - ${BACKUP_DIR:-./tmp/backups}:/backups
+      - backup-work:/work
+      - novel-media:/data/media:ro
+      - novel-books:/data/books:ro
+    security_opt:
+      - no-new-privileges:true
+    restart: "no"
+
+  restore:
+    profiles: ["tools"]
+    build:
+      context: .
+      dockerfile: deploy/backup/Dockerfile
+    image: novel-plus/backup:${IMAGE_TAG:-local}
+    entrypoint: ["/usr/local/bin/novel-restore"]
+    user: "0:0"
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-novel_plus}
+      MYSQL_USER: root
+      BACKUP_ARCHIVE: ${BACKUP_ARCHIVE:-}
+      RESTORE_CONFIRM: ${RESTORE_CONFIRM:-}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    secrets:
+      - mysql_root_password
+      - backup_encryption_password
+    volumes:
+      - ${BACKUP_DIR:-./tmp/backups}:/backups:ro
+      - backup-work:/work
+      - novel-media:/data/media
+      - novel-books:/data/books
+    security_opt:
+      - no-new-privileges:true
+    restart: "no"
+
+  restore-drill:
+    profiles: ["tools"]
+    build:
+      context: .
+      dockerfile: deploy/backup/Dockerfile
+    image: novel-plus/backup:${IMAGE_TAG:-local}
+    entrypoint: ["/usr/local/bin/novel-restore"]
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-novel_plus}
+      MYSQL_USER: root
+      BACKUP_ARCHIVE: ${BACKUP_ARCHIVE:-}
+      RESTORE_CONFIRM: RESTORE_DRILL
+      RESTORE_DRILL: "true"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    secrets:
+      - mysql_root_password
+      - backup_encryption_password
+    volumes:
+      - ${BACKUP_DIR:-./tmp/backups}:/backups:ro
+      - backup-work:/work
+    security_opt:
+      - no-new-privileges:true
+    restart: "no"
 
 volumes:
   mysql-data:
   redis-data:
   novel-media:
   novel-books:
+  caddy-data:
+  caddy-config:
+  backup-work:
+  prometheus-data:
+  alertmanager-data:
+  pushgateway-data:
+  grafana-data:
+
+secrets:
+  mysql_root_password:
+    file: ${SECRETS_DIR:-./secrets}/mysql_root_password
+  mysql_app_password:
+    file: ${SECRETS_DIR:-./secrets}/mysql_app_password
+  redis_password:
+    file: ${SECRETS_DIR:-./secrets}/redis_password
+  jwt_secret:
+    file: ${SECRETS_DIR:-./secrets}/jwt_secret
+  cache_manager_password:
+    file: ${SECRETS_DIR:-./secrets}/cache_manager_password
+  pii_encryption_key:
+    file: ${SECRETS_DIR:-./secrets}/pii_encryption_key
+  admin_bootstrap_password:
+    file: ${SECRETS_DIR:-./secrets}/admin_bootstrap_password
+  crawler_admin_password:
+    file: ${SECRETS_DIR:-./secrets}/crawler_admin_password
+  backup_encryption_password:
+    file: ${SECRETS_DIR:-./secrets}/backup_encryption_password
+  vnpay_hash_secret:
+    file: ${SECRETS_DIR:-./secrets}/vnpay_hash_secret
+  vnpay_recurring_password:
+    file: ${SECRETS_DIR:-./secrets}/vnpay_recurring_password
+  vnpay_recurring_client_secret:
+    file: ${SECRETS_DIR:-./secrets}/vnpay_recurring_client_secret
+  vnpay_recurring_hash_secret:
+    file: ${SECRETS_DIR:-./secrets}/vnpay_recurring_hash_secret
+  vietqr_webhook_secret:
+    file: ${SECRETS_DIR:-./secrets}/vietqr_webhook_secret
+  alertmanager_webhook_url:
+    file: ${SECRETS_DIR:-./secrets}/alertmanager_webhook_url
+  grafana_admin_password:
+    file: ${SECRETS_DIR:-./secrets}/grafana_admin_password

@@ -74,9 +74,11 @@ class ThemePackagingIsolationTest {
         int dockerCopy = activePom.indexOf(
             "<copy file=\"${basedir}/src/main/build/docker/Dockerfile\"");
         int createArchive = activePom.indexOf(
-            "<zip destfile='${project.build.directory}/build/${project.artifactId}.zip'>");
+            "<zip destfile='${project.build.directory}/build/${project.artifactId}.zip'");
 
         assertThat(dockerCopy).isGreaterThanOrEqualTo(0).isLessThan(createArchive);
+        assertThat(activePom.substring(createArchive, activePom.indexOf('>', createArchive) + 1))
+            .contains("compress=\"false\"");
     }
 
     @Test

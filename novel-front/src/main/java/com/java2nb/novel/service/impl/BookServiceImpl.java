@@ -11,6 +11,7 @@ import com.java2nb.novel.core.utils.ContentHashUtil;
 import com.java2nb.novel.core.utils.SimHashUtil;
 import com.java2nb.novel.core.utils.SensitiveWordFilter;
 import com.java2nb.novel.core.utils.StringUtil;
+import com.java2nb.novel.core.security.RichTextSanitizer;
 import com.java2nb.novel.entity.Book;
 import com.java2nb.novel.entity.*;
 import com.java2nb.novel.mapper.*;
@@ -49,6 +50,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.java2nb.novel.mapper.BookCategoryDynamicSqlSupport.bookCategory;
@@ -70,8 +72,12 @@ import static org.mybatis.dynamic.sql.select.SelectDSL.select;
 @Slf4j
 public class BookServiceImpl implements BookService {
     private static final int FUZZY_SEARCH_CANDIDATE_LIMIT = 500;
+    private static final Pattern LOCAL_COVER_PATTERN = Pattern.compile(
+        "^/localPic/\\d{4}/\\d{2}/\\d{2}/[A-Za-z0-9]+\\.(?:jpg|jpeg|gif|png|JPG|JPEG|GIF|PNG)$");
 
     private final Messages messages;
+
+    private final RichTextSanitizer richTextSanitizer;
 
     /**
      * Đường dẫn lưu ảnh cục bộ
@@ -444,6 +450,7 @@ public class BookServiceImpl implements BookService {
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void addBookComment(Long userId, BookComment comment) {
+        comment.setCommentContent(richTextSanitizer.sanitizeText(comment.getCommentContent()));
         //Kiểm tra người dùng đã bình luận tác phẩm hay chưa
         SelectStatementProvider selectStatement = select(count(BookCommentDynamicSqlSupport.id))
             .from(bookComment)
@@ -555,6 +562,17 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public void addBook(Book book, Long authorId, String penName) {
+        BookCategory category = Optional.ofNullable(book.getCatId())
+            .flatMap(bookCategoryMapper::selectByPrimaryKey)
+            .orElseThrow(() -> new BusinessException(ResponseStatus.BOOK_CATEGORY_INVALID));
+        book.setCatName(richTextSanitizer.sanitizeText(category.getName()));
+        book.setWorkDirection(category.getWorkDirection());
+        if (book.getPicUrl() == null || !LOCAL_COVER_PATTERN.matcher(book.getPicUrl()).matches()) {
+            book.setPicUrl(null);
+        }
+        book.setBookName(richTextSanitizer.sanitizeText(book.getBookName()));
+        book.setBookDesc(richTextSanitizer.sanitize(book.getBookDesc()));
+        penName = richTextSanitizer.sanitizeText(penName);
         book.setId(IdWorker.INSTANCE.nextId());
         //Kiểm tra tên tác phẩm có tồn tại hay không
         if (queryIdByNameAndAuthor(book.getBookName(), penName) != null) {
@@ -574,7 +592,6 @@ public class BookServiceImpl implements BookService {
             // Người dùng chưa tải bìa; AI tự động tạo ảnh bìa
             threadPoolExecutor.execute(() -> {
                 String prompt = messages.get("ai.cover.prompt", book.getBookName(), book.getAuthorName());
-                log.debug("prompt:{}", prompt);
                 ImageResponse response = openAiImageModel.call(
                     new ImagePrompt(prompt,
                         OpenAiImageOptions.builder()
@@ -621,6 +638,8 @@ public class BookServiceImpl implements BookService {
     @Override
     public Long addBookContent(Long bookId, String indexName, String content, Byte isVip, Long authorId) {
         collaborationService.requirePermission(authorId, bookId, BookPermission.PUBLISH_CHAPTERS);
+        indexName = richTextSanitizer.sanitizeText(indexName);
+        content = richTextSanitizer.sanitize(content);
         Book book = bookMapper.lockById(bookId);
         if (book == null) {
             throw new IllegalArgumentException("Không tìm thấy tác phẩm");
@@ -828,6 +847,8 @@ public class BookServiceImpl implements BookService {
 
         Long bookId = lockedIndex.getBookId();
         collaborationService.requirePermission(authorId, bookId, BookPermission.PUBLISH_CHAPTERS);
+        indexName = richTextSanitizer.sanitizeText(indexName);
+        content = richTextSanitizer.sanitize(content);
         Book lockedBook = bookMapper.lockById(bookId);
         if (lockedBook == null) {
             throw new IllegalArgumentException("Không tìm thấy tác phẩm");
@@ -958,6 +979,9 @@ public class BookServiceImpl implements BookService {
     @Override
     public void updateBookPic(Long bookId, String bookPic, Long authorId) {
         collaborationService.requirePermission(authorId, bookId, BookPermission.EDIT_BOOK);
+        if (bookPic == null || !LOCAL_COVER_PATTERN.matcher(bookPic).matches()) {
+            throw new BusinessException(ResponseStatus.FILE_NOT_IMAGE);
+        }
         bookMapper.update(update(book)
             .set(picUrl)
             .equalTo(bookPic)
@@ -980,6 +1004,7 @@ public class BookServiceImpl implements BookService {
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void addBookCommentReply(Long userId, BookCommentReply commentReply) {
+        commentReply.setReplyContent(richTextSanitizer.sanitizeText(commentReply.getReplyContent()));
         //Tăng phản hồi
         commentReply.setCreateUserId(userId);
         commentReply.setCreateTime(new Date());

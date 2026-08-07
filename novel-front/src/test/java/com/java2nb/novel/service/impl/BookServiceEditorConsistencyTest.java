@@ -2,7 +2,9 @@ package com.java2nb.novel.service.impl;
 
 import com.java2nb.novel.core.cache.CacheService;
 import com.java2nb.novel.core.i18n.Messages;
+import com.java2nb.novel.core.security.RichTextSanitizer;
 import com.java2nb.novel.entity.Book;
+import com.java2nb.novel.entity.BookCategory;
 import com.java2nb.novel.entity.BookContent;
 import com.java2nb.novel.entity.BookContentHistory;
 import com.java2nb.novel.entity.BookIndex;
@@ -23,6 +25,7 @@ import org.mybatis.dynamic.sql.update.render.UpdateStatementProvider;
 import org.springframework.ai.openai.OpenAiImageModel;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,6 +38,8 @@ class BookServiceEditorConsistencyTest {
     private BookIndexMapper bookIndexMapper;
     private BookContentMapper bookContentMapper;
     private BookContentHistoryMapper historyMapper;
+    private BookCategoryMapper categoryMapper;
+    private ThreadPoolExecutor executor;
     private AuthorBookCollaborationService collaborationService;
     private BookServiceImpl service;
 
@@ -44,6 +49,8 @@ class BookServiceEditorConsistencyTest {
         bookIndexMapper = mock(BookIndexMapper.class);
         bookContentMapper = mock(BookContentMapper.class);
         historyMapper = mock(BookContentHistoryMapper.class);
+        categoryMapper = mock(BookCategoryMapper.class);
+        executor = mock(ThreadPoolExecutor.class);
         collaborationService = mock(AuthorBookCollaborationService.class);
         AuthorBookAccess access = new AuthorBookAccess();
         access.setBookId(10L);
@@ -56,13 +63,54 @@ class BookServiceEditorConsistencyTest {
         when(commercial.calculateAutomaticPrice(anyInt())).thenReturn(5);
         when(commercial.resolveEffectivePrice(anyByte(), nullable(Integer.class), anyInt())).thenReturn(5);
         service = new BookServiceImpl(
-            mock(Messages.class), mock(FrontBookSettingMapper.class), bookMapper,
-            mock(BookCategoryMapper.class), bookIndexMapper, bookContentMapper,
+            mock(Messages.class), new RichTextSanitizer(), mock(FrontBookSettingMapper.class), bookMapper,
+            categoryMapper, bookIndexMapper, bookContentMapper,
             mock(FrontBookCommentMapper.class), mock(FrontBookCommentReplyMapper.class), historyMapper,
             mock(BookAuthorMapper.class), mock(CacheService.class), mock(AuthorService.class),
             collaborationService,
             mock(FileService.class), mock(LikeService.class), commercial, mock(OpenAiImageModel.class),
-            mock(ThreadPoolExecutor.class));
+            executor);
+    }
+
+    @Test
+    void addBookDerivesCategoryAndRejectsClientControlledCoverMetadata() {
+        BookCategory category = new BookCategory();
+        category.setId(3);
+        category.setName("Văn học Việt");
+        category.setWorkDirection((byte) 1);
+        when(categoryMapper.selectByPrimaryKey(3)).thenReturn(Optional.of(category));
+        when(bookMapper.selectMany(any(SelectStatementProvider.class))).thenReturn(List.of());
+
+        Book book = new Book();
+        book.setCatId(3);
+        book.setCatName("<img src=x onerror=alert(1)>");
+        book.setWorkDirection((byte) 0);
+        book.setBookName("Tác phẩm mới");
+        book.setBookDesc("Giới thiệu <script>alert(1)</script>");
+        book.setPicUrl("javascript:alert(1)");
+
+        service.addBook(book, 7L, "Bút danh");
+
+        ArgumentCaptor<Book> inserted = ArgumentCaptor.forClass(Book.class);
+        verify(bookMapper).insertSelective(inserted.capture());
+        assertThat(inserted.getValue().getCatName()).isEqualTo("Văn học Việt");
+        assertThat(inserted.getValue().getWorkDirection()).isEqualTo((byte) 1);
+        assertThat(inserted.getValue().getPicUrl()).isNull();
+        assertThat(inserted.getValue().getBookDesc()).doesNotContain("<script>");
+        verify(executor).execute(any(Runnable.class));
+    }
+
+    @Test
+    void addBookRejectsUnknownCategoryBeforeInsert() {
+        Book book = new Book();
+        book.setCatId(999);
+        book.setBookName("Tác phẩm mới");
+        book.setBookDesc("Giới thiệu");
+        when(categoryMapper.selectByPrimaryKey(999)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.addBook(book, 7L, "Bút danh"))
+            .isInstanceOf(io.github.xxyopen.web.exception.BusinessException.class);
+        verify(bookMapper, never()).insertSelective(any());
     }
 
     @Test
@@ -165,7 +213,8 @@ class BookServiceEditorConsistencyTest {
 
     @Test
     void changingCoverReturnsItToModerationQueue() {
-        service.updateBookPic(10L, "/pic/covers/new.png", 7L);
+        String cover = "/localPic/2026/08/01/ABC123.png";
+        service.updateBookPic(10L, cover, 7L);
 
         ArgumentCaptor<UpdateStatementProvider> update =
             ArgumentCaptor.forClass(UpdateStatementProvider.class);
@@ -175,6 +224,15 @@ class BookServiceEditorConsistencyTest {
             .contains("cover_audit_status")
             .contains("cover_audit_reason = null");
         assertThat(update.getValue().getParameters().values())
-            .contains("/pic/covers/new.png", (byte) 0, 10L);
+            .contains(cover, (byte) 0, 10L);
+    }
+
+    @Test
+    void changingCoverRejectsPathTraversalBeforeDatabaseUpdate() {
+        assertThatThrownBy(() -> service.updateBookPic(10L,
+            "/localPic/2026/08/01/../../../../application.yml", 7L))
+            .isInstanceOf(io.github.xxyopen.web.exception.BusinessException.class);
+
+        verify(bookMapper, never()).update(any(UpdateStatementProvider.class));
     }
 }

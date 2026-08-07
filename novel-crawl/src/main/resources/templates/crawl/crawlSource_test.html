@@ -49,7 +49,7 @@
                                 <li><textarea rows="20" cols="100" id="resultMap"></textarea></li>
 
 
-                                <li><input type="button" onclick="testCrawlSource()" name="btnRegister" th:value="#{crawl.test.action}" value="Kiểm thử"
+                                <li><input type="button" name="btnRegister" th:value="#{crawl.test.action}" value="Kiểm thử"
                                            id="btnRegister" class="btn_red"></li>
                             </ul>
                         </div>
@@ -80,6 +80,8 @@
         var testParseRule = localStorage.getItem("testParseRule");
         $("#rule").val(testParseRule);
     }
+
+    $("#btnRegister").on("click", testCrawlSource);
 
     function testCrawlSource() {
 
@@ -117,7 +119,7 @@
                     }
                     $("#resultMap").val(JSON.stringify(displayResult));
                 } else {
-                    layer.alert(data.msg);
+                    layer.alert(crawlEscapeHtml(data.msg || ""));
                 }
 
             },

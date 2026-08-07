@@ -73,7 +73,7 @@
          class="layui-header header header-doc  layui-bg-cyan">
 
         <div style="width:10%;float: left;margin-left: 10px">
-            <a href="javascript:history.go(-1)">
+            <a href="#" data-csp-action="history-back">
                 <i style="font-size: 20px;color: #fff;" class="layui-icon">&#xe65c;</i></a>
         </div>
         <b class="layui-icon" th:text="#{user.center}">Tài khoản của tôi</b>
@@ -214,7 +214,7 @@
 
 
     <a
-            href="javascript:logout()">
+            href="#" data-csp-action="logout">
 
         <blockquote class="layui-elem-quote"
                     style="background-color:#fafafa;border-left:0px;margin-top:10px;margin-bottom: 10px;text-align: center;padding:15px 10px;color: #3eaf7c;font-size: 16px">
@@ -267,7 +267,7 @@
                 location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
 
             } else {
-                layer.alert(data.msg);
+                novelAlertText(data.msg);
             }
 
         },
@@ -287,12 +287,7 @@
     }
 
     function toMyCollect() {
-        var token = localStorage.getItem("token");
-        if (token) {
-            window.location.href = "/book/book_ranking.html?token=" + token;
-        } else {
-            window.location.href = "/user/login.html";
-        }
+        window.location.href = "/user/favorites.html";
     }
 
 </script>

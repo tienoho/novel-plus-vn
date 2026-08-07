@@ -5,14 +5,13 @@
     <title th:text="#{user.gender.change}+'_'+${application.website.name}"></title>
     <link rel="stylesheet" href="/css/user.css"/>
 </head>
-<body class="">
+<body id="userSettingsPage" data-settings-mode="sex"
+      th:attr="data-network-error=#{auth.networkError}">
 
-<div th:replace="common/top :: top('')">
-</div>
-<div class="main box_center cf">
+<div th:replace="common/top :: top('')"></div>
+<main class="main box_center cf">
     <div class="userBox cf">
         <div class="my_l">
-
             <ul class="log_list">
                 <li><a class="link_1" href="/user/userinfo.html" th:text="#{user.center}">Tài khoản của tôi</a></li>
                 <li><a class="link_4" href="/user/favorites.html" th:text="#{user.bookshelf}">Tủ sách</a></li>
@@ -20,7 +19,6 @@
                 <li><a class="link_7" href="/user/feedback_list.html" th:text="#{user.feedback}">Phản hồi của tôi</a></li>
                 <li><a class="link_8 on" href="/user/setup.html" th:text="#{user.settings}">Cài đặt tài khoản</a></li>
             </ul>
-
         </div>
         <div class="my_r">
             <div class="my_info cf">
@@ -28,76 +26,19 @@
                     <ul class="mytab_list">
                         <li><i class="tit" th:text="#{user.gender}">Giới tính</i>
                             <label><input type="radio" name="sex" value="0"/>&nbsp;<span th:text="#{user.gender.male}">Nam</span></label>
-                            <label><input class="ml20" type="radio" name="sex" value="1" checked/>&nbsp;<span th:text="#{user.gender.female}">Nữ</span></label>
+                            <label><input class="ml20" type="radio" name="sex" value="1" checked="checked"/>&nbsp;<span th:text="#{user.gender.female}">Nữ</span></label>
                         </li>
-                        <li class="mt20"><i class="tit">&nbsp;</i><input type="button" onclick="updateSex()" name="btn"
-                                                                         th:value="#{common.change}" id="btn" class="s_btn btn_red"/>
-                        </li>
+                        <li class="mt20"><i class="tit">&nbsp;</i><button type="button" data-settings-action="update-sex" id="btn" class="s_btn btn_red" th:text="#{common.change}">Thay đổi</button></li>
                         <li><i class="tit">&nbsp;</i><span id="LabErr"></span></li>
                     </ul>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</main>
 
-<div th:replace="common/footer :: footer">
-</div>
+<div th:replace="common/footer :: footer"></div>
 <div th:replace="common/js :: js"></div>
-<script type="text/javascript" th:inline="javascript">
-    const networkErrorText = /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng';
-    // Tải thông tin người dùng.
-    $.ajax({
-        type: "get",
-        url: "/user/userInfo",
-        data: {},
-        dataType: "json",
-        success: function (data) {
-            if (data.code == 200) {
-                if (data.data.userSex === '0') {
-                    $("input[name=sex]").eq(0).attr("checked", true);
-                }
-
-
-            } else if (data.code == 1001) {
-                // Phiên đăng nhập đã hết hạn.
-                location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
-
-            } else {
-                layer.alert(data.msg);
-            }
-
-        },
-        error: function () {
-            layer.alert(networkErrorText);
-        }
-    })
-
-    function updateSex() {
-        $.ajax({
-            type: "POST",
-            url: "/user/updateUserInfo",
-            data: {'userSex': $("input[name=sex]:checked").val()},
-            dataType: "json",
-            success: function (data) {
-                if (data.code == 200) {
-                    window.location.href = '/user/setup.html';
-
-                } else if (data.code == 1001) {
-                    // Phiên đăng nhập đã hết hạn.
-                    location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
-
-                } else {
-                    layer.alert(data.msg);
-                }
-
-            },
-            error: function () {
-                layer.alert(networkErrorText);
-            }
-        })
-    }
-</script>
-
+<script src="/javascript/user-settings-page.js" type="text/javascript"></script>
 </body>
 </html>

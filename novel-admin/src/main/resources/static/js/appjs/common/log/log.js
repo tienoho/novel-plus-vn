@@ -96,15 +96,8 @@ function load() {
                         field: 'id',
                         align: 'center',
                         formatter: function (value, row, index) {
-                            var e = '<a class="btn btn-primary btn-sm" href="#" mce_href="#" title="' + adminMessage('edit', 'Sửa') + '" onclick="edit(\''
-                                + row.userId
-                                + '\')"><i class="fa fa-edit"></i></a> ';
-                            var d = '<a class="btn btn-warning btn-sm" href="#" title="' + adminMessage('deleteLabel', 'Xóa') + '"  mce_href="#" onclick="remove(\''
-                                + row.id
-                                + '\')"><i class="fa fa-remove"></i></a> ';
-                            var f = '<a class="btn btn-success btn-sm" href="#" title="' + adminMessage('resetPassword', 'Đặt lại mật khẩu') + '"  mce_href="#" onclick="resetPwd(\''
-                                + row.userId
-                                + '\')"><i class="fa fa-key"></i></a> ';
+                            var d = adminRowAction({action: 'remove', args: [row.id], variant: 'warning',
+                                title: adminMessage('deleteLabel', 'Xóa'), icon: 'remove'});
                             return d;
                         }
                     }]

@@ -19,7 +19,7 @@
 
                 <div class="tab-content m-t-md">
                     <div id="kycPanel" class="tab-pane active">
-                        <form id="kycSearchForm" class="form-inline" onsubmit="reloadKyc(); return false;">
+                        <form id="kycSearchForm" class="form-inline">
                             <div class="form-group">
                                 <label for="kycAuthorId" th:text="#{admin.authorFinance.authorId}">Mã tác giả</label>
                                 <input id="kycAuthorId" name="authorId" type="number" min="1" class="form-control">
@@ -39,8 +39,7 @@
                     </div>
 
                     <div id="withdrawalPanel" class="tab-pane">
-                        <form id="withdrawalSearchForm" class="form-inline"
-                              onsubmit="reloadWithdrawals(); return false;">
+                        <form id="withdrawalSearchForm" class="form-inline">
                             <div class="form-group">
                                 <label for="withdrawalAuthorId" th:text="#{admin.authorFinance.authorId}">Mã tác giả</label>
                                 <input id="withdrawalAuthorId" name="authorId" type="number" min="1"

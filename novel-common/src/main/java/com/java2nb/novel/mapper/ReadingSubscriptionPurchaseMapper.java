@@ -1,6 +1,7 @@
 package com.java2nb.novel.mapper;
 
 import com.java2nb.novel.service.subscription.ReadingSubscriptionPlanRow;
+import com.java2nb.novel.service.subscription.ReadingSubscriptionCheckoutOptions;
 import com.java2nb.novel.service.subscription.ReadingSubscriptionPurchaseRow;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -22,6 +23,7 @@ public interface ReadingSubscriptionPurchaseMapper {
     long countReviews(@Param("status") String status);
     int insertPurchase(@Param("outTradeNo") long outTradeNo, @Param("userId") long userId,
                        @Param("plan") ReadingSubscriptionPlanRow plan,
+                       @Param("options") ReadingSubscriptionCheckoutOptions options,
                        @Param("payChannel") byte payChannel,
                        @Param("clientRequestId") String clientRequestId,
                        @Param("requestHash") String requestHash,

@@ -17,6 +17,7 @@ import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.java2nb.common.utils.ShiroUtils;
 import com.java2nb.common.utils.Messages;
@@ -50,7 +51,8 @@ public class UserRealm extends AuthorizingRealm {
         SysUserDao userMapper = ApplicationContextRegister.getBean(SysUserDao.class);
         Messages messages = ApplicationContextRegister.getBean(Messages.class);
         // Truy vấn thông tin người dùng
-        UserDO user = userMapper.list(map).get(0);
+        List<UserDO> users = userMapper.list(map);
+        UserDO user = users.isEmpty() ? null : users.get(0);
 
         // Tài khoản không tồn tại
         if (user == null) {
@@ -58,7 +60,8 @@ public class UserRealm extends AuthorizingRealm {
         }
 
         // Mật khẩu sai
-        if (!password.equals(user.getPassword())) {
+        PasswordEncoder passwordEncoder = ApplicationContextRegister.getBean(PasswordEncoder.class);
+        if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new IncorrectCredentialsException(messages.get("auth.login.failed"));
         }
 

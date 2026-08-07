@@ -1,0 +1,27 @@
+.author-book-add-title {
+    height: 44px;
+    color: #fff;
+    font-size: 16px;
+    line-height: 48px;
+    text-align: center;
+}
+
+.author-cover-field {
+    position: relative;
+}
+
+.author-cover-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    width: 100px;
+    height: 130px;
+    cursor: pointer;
+    opacity: 0;
+}
+
+.author-cover-preview {
+    width: 100px;
+    height: 130px;
+}

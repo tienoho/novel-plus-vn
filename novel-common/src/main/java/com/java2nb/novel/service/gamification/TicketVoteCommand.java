@@ -7,15 +7,17 @@ import java.util.Date;
 public record TicketVoteCommand(
     long userId,
     long bookId,
-    int count,
+    long seasonId,
+    int amount,
     String clientRequestId,
     String sourceIpHash,
+    String sourceDeviceHash,
     Date occurredAt,
     LocalDate localDate
 ) {
 
     public TicketVoteCommand {
-        if (userId <= 0 || bookId <= 0 || count <= 0) {
+        if (userId <= 0 || bookId <= 0 || seasonId <= 0 || amount <= 0) {
             throw new IllegalArgumentException("Yêu cầu thắp đuốc không hợp lệ");
         }
         if (clientRequestId == null || clientRequestId.isBlank() || clientRequestId.length() > 64) {
@@ -23,6 +25,9 @@ public record TicketVoteCommand(
         }
         if (sourceIpHash == null || !sourceIpHash.matches("[0-9a-f]{64}")) {
             throw new IllegalArgumentException("Hash IP thắp đuốc không hợp lệ");
+        }
+        if (sourceDeviceHash == null || !sourceDeviceHash.matches("[0-9a-f]{64}")) {
+            throw new IllegalArgumentException("Hash thiết bị thắp đuốc không hợp lệ");
         }
         if (occurredAt == null || localDate == null) {
             throw new IllegalArgumentException("Thiếu thời điểm nghiệp vụ khi thắp đuốc");

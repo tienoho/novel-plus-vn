@@ -10,7 +10,7 @@ spring:
       #Cổng kết nối Redis
       port: 6379
       #Mật khẩu kết nối Redis
-      password: test123456
+      password: ${SPRING_DATA_REDIS_PASSWORD:}
       #Thời gian chờ kết nối (mili giây)
       timeout: 10000
 
@@ -29,6 +29,6 @@ http:
     # Cổng proxy
     port: 2312
     # Tên người dùng proxy
-    username: bestproxy_u
+    username: ${HTTP_PROXY_USERNAME:}
     # Mật khẩu proxy
-    password: bestproxy_p
+    password: ${HTTP_PROXY_PASSWORD:}

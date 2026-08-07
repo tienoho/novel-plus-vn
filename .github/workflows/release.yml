@@ -1,152 +1,134 @@
-name: Create novel-plus Maven Release with ZIPs
+name: Phát hành Novel Plus
 
 on:
   push:
-    # Khớp mọi tag bắt đầu bằng 'v'.
     tags:
       - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  build-and-release:
+  verify:
+    name: Kiểm tra trước khi phát hành
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     env:
       MYSQL_DATABASE: novel_plus
       MYSQL_USER: novel
       MYSQL_HOST_PORT: '3307'
-      MYSQL_ROOT_PASSWORD: release-ci-root-password
-      MYSQL_APP_PASSWORD: release-ci-app-password
-      REDIS_PASSWORD: release-ci-redis-password
-      JWT_SECRET: release-ci-jwt-secret-at-least-32-characters
-      CACHE_MANAGER_PASSWORD: release-ci-cache-password
-      CRAWLER_ADMIN_PASSWORD: release-ci-crawler-password
       MAVEN_CMD: mvn
 
     steps:
-      - name: Checkout code
+      - name: Lấy mã nguồn
         uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      - name: Cài đặt JDK 21
         uses: actions/setup-java@v4
         with:
+          distribution: temurin
           java-version: '21'
-          # Có thể chọn bản phân phối khác; mặc định dùng Temurin.
-          distribution: 'temurin'
           cache: maven
 
-      - name: Verify gamification MySQL invariants
+      - name: Sinh secret integration dùng một lần
+        shell: bash
+        run: |
+          {
+            echo "MYSQL_ROOT_PASSWORD=$(openssl rand -hex 48)"
+            echo "MYSQL_APP_PASSWORD=$(openssl rand -hex 48)"
+            echo "REDIS_PASSWORD=$(openssl rand -hex 48)"
+            echo "JWT_SECRET=$(openssl rand -hex 64)"
+            echo "CACHE_MANAGER_PASSWORD=$(openssl rand -hex 48)"
+            echo "CRAWLER_ADMIN_PASSWORD=CiCrawler!$(openssl rand -hex 24)"
+            echo "ADMIN_BOOTSTRAP_PASSWORD=CiAdmin!$(openssl rand -hex 24)"
+            echo "PII_ENCRYPTION_KEY=$(openssl rand -base64 32)"
+          } >> "$GITHUB_ENV"
+
+      - name: Kiểm tra Flyway và bất biến MySQL
         shell: pwsh
         run: ./scripts/verify-gamification.ps1 -StopAfter
 
-      - name: Build project with Maven
-        run: mvn clean install -Pcentral-repo
+      - name: Build và kiểm thử Maven reactor
+        run: mvn -B -ntp clean verify -Pcentral-repo
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
-        with:
-          # Dùng tag_name thay cho github.ref.
-          tag_name: ${{ github.ref_name }}
-          release_name: novel-plus ${{ github.ref_name }}
-          draft: false
-          prerelease: false
+      - name: Kiểm tra i18n, JavaScript và HTML
+        run: node scripts/verify-i18n.mjs
 
+      - name: Chặn token auth phía client và kiểm tra CSP
+        shell: pwsh
+        run: ./scripts/verify-csp.ps1
 
-      # Dùng action để tải lên thay vì gọi curl trực tiếp.
-      - name: Upload sql.zip
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/novel-common/target/build/sql.zip
-          asset_name: sql.zip
-          asset_content_type: application/zip
+  images:
+    name: Build và đẩy image ${{ matrix.image }}
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: novel-front
+            dockerfile: deploy/docker/Dockerfile
+            target: front
+          - image: novel-admin
+            dockerfile: deploy/docker/Dockerfile
+            target: admin
+          - image: novel-crawl
+            dockerfile: deploy/docker/Dockerfile
+            target: crawl
+          - image: novel-migrations
+            dockerfile: deploy/flyway/Dockerfile
+            target: ''
 
-      - name: Upload novel-crawl.zip
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/novel-crawl/target/build/novel-crawl.zip
-          asset_name: novel-crawl.zip
-          asset_content_type: application/zip
+    steps:
+      - name: Lấy mã nguồn
+        uses: actions/checkout@v4
 
-      - name: Upload novel-front.zip
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/novel-front/target/build/novel-front.zip
-          asset_name: novel-front.zip
-          asset_content_type: application/zip
+      - name: Cài đặt Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Upload novel-admin.zip
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/novel-admin/target/build/novel-admin.zip
-          asset_name: novel-admin.zip
-          asset_content_type: application/zip
-
-
-      # Đăng nhập Docker Hub.
-      - name: Login to Docker Hub
+      - name: Đăng nhập Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Build và đẩy image novel-front.
-      - name: Build and Push novel-front Docker Image
-        uses: docker/build-push-action@v5
+      - name: Tạo nhãn image
+        id: meta
+        uses: docker/metadata-action@v5
         with:
-          context: ./novel-front/target/build
-          file: ./novel-front/target/build/Dockerfile
-          push: true
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/novel-front:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/novel-front:${{ github.ref_name }}
+            type=ref,event=tag
+            type=raw,value=latest
 
-      # Build và đẩy image novel-admin.
-      - name: Build and Push novel-admin Docker Image
-        uses: docker/build-push-action@v5
+      - name: Build và đẩy image
+        uses: docker/build-push-action@v6
         with:
-          context: ./novel-admin/target/build
-          file: ./novel-admin/target/build/Dockerfile
+          context: .
+          file: ${{ matrix.dockerfile }}
+          target: ${{ matrix.target }}
           push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/novel-admin:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/novel-admin:${{ github.ref_name }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
+          provenance: mode=max
+          sbom: true
 
-      # Build và đẩy image novel-crawl.
-      - name: Build and Push novel-crawl Docker Image
-        uses: docker/build-push-action@v5
+  release:
+    name: Tạo GitHub Release
+    needs: images
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Tạo release notes
+        uses: softprops/action-gh-release@v2
         with:
-          context: ./novel-crawl/target/build
-          file: ./novel-crawl/target/build/Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/novel-crawl:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/novel-crawl:${{ github.ref_name }}
-
-      # Giải nén tệp SQL.
-      - name: Unzip MySQL SQL File
-        run: |
-          unzip -o ./doc/sql/novel_plus_data.sql.zip -d ./doc/sql/
-
-      # Build và đẩy image mysql-novel-plus.
-      - name: Build and Push mysql-novel-plus Docker Image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./doc/sql
-          file: ./doc/sql/Dockerfile
-          push: true
-          tags: |
-            201206030/mysql-novel-plus:latest
-            201206030/mysql-novel-plus:${{ github.ref_name }}
+          generate_release_notes: true

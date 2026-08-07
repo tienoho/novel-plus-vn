@@ -74,6 +74,40 @@ public class MonthlyRankingServiceImpl implements MonthlyRankingService {
         return season;
     }
 
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public MonthlySeasonRow createSpecialSeason(String periodCode, String seasonType, Date startAt,
+                                                Date endAt, Date voteCutoffAt, ZoneId zoneId,
+                                                String policyVersion) {
+        Objects.requireNonNull(zoneId, "Thiếu múi giờ kỳ đặc biệt");
+        if (periodCode == null || !periodCode.matches("[a-z0-9][a-z0-9-]{0,31}")) {
+            throw new IllegalArgumentException(
+                "Slug kỳ đặc biệt phải dài từ 1 đến 32 ký tự và chỉ gồm chữ thường, số, dấu gạch ngang");
+        }
+        if (seasonType == null || !seasonType.matches("[A-Z][A-Z0-9_]{1,23}")
+            || "REGULAR".equals(seasonType)) {
+            throw new IllegalArgumentException(
+                "Loại kỳ đặc biệt phải viết hoa, tối đa 24 ký tự và khác 'REGULAR'");
+        }
+        if (policyVersion == null || policyVersion.isBlank()) {
+            throw new IllegalArgumentException("Thiếu phiên bản chính sách của kỳ đặc biệt");
+        }
+        if (startAt == null || endAt == null || voteCutoffAt == null || !endAt.after(startAt)
+            || !voteCutoffAt.after(startAt) || voteCutoffAt.after(endAt)) {
+            throw new IllegalArgumentException("Khung thời gian kỳ đặc biệt không hợp lệ");
+        }
+        monthlyRankingMapper.insertSpecialSeasonIgnore(periodCode, seasonType, zoneId.getId(),
+            startAt, endAt, voteCutoffAt, policyVersion);
+        MonthlySeasonRow season = monthlyRankingMapper.selectSeasonByPeriod(periodCode);
+        if (season == null) {
+            throw new IllegalStateException("Không thể tạo hoặc đọc kỳ đặc biệt vừa tạo");
+        }
+        if (!seasonType.equals(season.getSeasonType())) {
+            throw new IllegalStateException("Mã kỳ đặc biệt đã tồn tại với loại kỳ khác");
+        }
+        return season;
+    }
+
     @Override
     public List<MonthlySeasonRow> listSeasonsReadyToClose(Date at, int limit) {
         Objects.requireNonNull(at, "Thiếu thời điểm tìm kỳ cần đóng");
@@ -83,6 +117,12 @@ public class MonthlyRankingServiceImpl implements MonthlyRankingService {
     @Override
     public List<MonthlySeasonRow> listClosingSeasons(int limit) {
         return monthlyRankingMapper.selectClosingSeasons(safeSeasonLimit(limit));
+    }
+
+    @Override
+    public List<MonthlySeasonRow> listOpenSeasons(Date at) {
+        Objects.requireNonNull(at, "Thiếu thời điểm liệt kê kỳ đang mở");
+        return monthlyRankingMapper.selectOpenSeasons(at);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -193,16 +233,24 @@ public class MonthlyRankingServiceImpl implements MonthlyRankingService {
     }
 
     @Override
-    public MonthlyRankingPage getRanking(String periodCode, int page, int pageSize, Date at) {
+    public MonthlyRankingPage getRanking(Long seasonId, String periodCode, int page, int pageSize, Date at) {
         Objects.requireNonNull(at, "Thiếu thời điểm đọc bảng xếp hạng");
+        if (seasonId != null && periodCode != null && !periodCode.isBlank()) {
+            throw new IllegalArgumentException("Chỉ được chọn seasonId hoặc period");
+        }
+        if (seasonId != null && seasonId <= 0) {
+            throw new IllegalArgumentException("Mã kỳ xếp hạng Ngọn Đuốc không hợp lệ");
+        }
         String normalizedPeriod = normalizePeriod(periodCode);
         int safePage = Math.max(1, page);
         int safePageSize = Math.max(1, Math.min(pageSize, MAX_PAGE_SIZE));
         long offset = Math.multiplyExact((long) safePage - 1, safePageSize);
-        MonthlySeasonRow season = normalizedPeriod == null
-            ? monthlyRankingMapper.selectSeasonAt(at)
-            : monthlyRankingMapper.selectSeasonByPeriod(normalizedPeriod);
-        if (season == null && normalizedPeriod == null) {
+        MonthlySeasonRow season = seasonId != null
+            ? monthlyRankingMapper.selectSeasonById(seasonId)
+            : normalizedPeriod == null
+                ? monthlyRankingMapper.selectSeasonAt(at)
+                : monthlyRankingMapper.selectSeasonByPeriod(normalizedPeriod);
+        if (season == null && seasonId == null && normalizedPeriod == null) {
             season = monthlyRankingMapper.selectLatestSeason();
         }
         if (season == null) {

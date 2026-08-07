@@ -268,7 +268,7 @@
                     }
                 });
             } else {
-                layer.alert(data.msg);
+                novelAlertText(data.msg);
             }
 
         },
@@ -326,7 +326,7 @@
 
                 } else {
                     lock = false;
-                    $("#LabErr").html(data.msg);
+                    $("#LabErr").text(data.msg || "");
                 }
 
             },

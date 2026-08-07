@@ -3,7 +3,7 @@
 <mapper namespace="com.java2nb.novel.mapper.ReadingSubscriptionMapper">
     <select id="selectActivePlanByCode"
             resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionPlanRow">
-        SELECT id, plan_code AS planCode, plan_name AS planName, price_vnd AS priceVnd,
+        SELECT id, plan_code AS planCode, plan_name AS planName, plan_version AS planVersion, price_vnd AS priceVnd, price_xu AS priceXu, price_announced_at AS priceAnnouncedAt, price_effective_at AS priceEffectiveAt,
                tickets_per_period AS ticketsPerPeriod, period_months AS periodMonths,
                ticket_validity_days AS ticketValidityDays, status, version
         FROM reading_subscription_plan
@@ -11,31 +11,31 @@
     </select>
     <select id="selectSubscriptionBySource"
             resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionRow">
-        SELECT id, user_id AS userId, plan_id AS planId, plan_code_snapshot AS planCodeSnapshot,
-               tickets_per_period_snapshot AS ticketsPerPeriodSnapshot,
+        SELECT id, user_id AS userId, plan_id AS planId, plan_code_snapshot AS planCodeSnapshot, plan_version_snapshot AS planVersionSnapshot,
+               price_vnd_snapshot AS priceVndSnapshot, price_xu_snapshot AS priceXuSnapshot, accepted_plan_version AS acceptedPlanVersion, tickets_per_period_snapshot AS ticketsPerPeriodSnapshot,
                period_months_snapshot AS periodMonthsSnapshot,
                ticket_validity_days_snapshot AS ticketValidityDaysSnapshot,
-               start_at AS startAt, next_grant_at AS nextGrantAt, end_at AS endAt,
-               status, source_type AS sourceType, source_ref AS sourceRef,
+               start_at AS startAt, current_period_start AS currentPeriodStart, current_period_end AS currentPeriodEnd, next_renewal_at AS nextRenewalAt, next_grant_at AS nextGrantAt, end_at AS endAt,
+               status, auto_renew AS autoRenew, primary_funding_source AS primaryFundingSource, fallback_funding_source AS fallbackFundingSource, price_consent_at AS priceConsentAt, cancel_requested_at AS cancelRequestedAt, source_type AS sourceType, source_ref AS sourceRef,
                policy_version AS policyVersion, version
         FROM user_reading_subscription
         WHERE source_type=#{sourceType} AND source_ref=#{sourceRef} LIMIT 1
     </select>
     <select id="selectSubscriptionBySourceForUpdate"
             resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionRow">
-        SELECT id, user_id AS userId, plan_id AS planId, plan_code_snapshot AS planCodeSnapshot,
-               tickets_per_period_snapshot AS ticketsPerPeriodSnapshot,
+        SELECT id, user_id AS userId, plan_id AS planId, plan_code_snapshot AS planCodeSnapshot, plan_version_snapshot AS planVersionSnapshot,
+               price_vnd_snapshot AS priceVndSnapshot, price_xu_snapshot AS priceXuSnapshot, accepted_plan_version AS acceptedPlanVersion, tickets_per_period_snapshot AS ticketsPerPeriodSnapshot,
                period_months_snapshot AS periodMonthsSnapshot,
                ticket_validity_days_snapshot AS ticketValidityDaysSnapshot,
-               start_at AS startAt, next_grant_at AS nextGrantAt, end_at AS endAt,
-               status, source_type AS sourceType, source_ref AS sourceRef,
+               start_at AS startAt, current_period_start AS currentPeriodStart, current_period_end AS currentPeriodEnd, next_renewal_at AS nextRenewalAt, next_grant_at AS nextGrantAt, end_at AS endAt,
+               status, auto_renew AS autoRenew, primary_funding_source AS primaryFundingSource, fallback_funding_source AS fallbackFundingSource, price_consent_at AS priceConsentAt, cancel_requested_at AS cancelRequestedAt, source_type AS sourceType, source_ref AS sourceRef,
                policy_version AS policyVersion, version
         FROM user_reading_subscription
         WHERE source_type=#{sourceType} AND source_ref=#{sourceRef} LIMIT 1 FOR UPDATE
     </select>
     <select id="selectActivePlans"
             resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionPlanRow">
-        SELECT id, plan_code AS planCode, plan_name AS planName, price_vnd AS priceVnd,
+        SELECT id, plan_code AS planCode, plan_name AS planName, plan_version AS planVersion, price_vnd AS priceVnd, price_xu AS priceXu, price_announced_at AS priceAnnouncedAt, price_effective_at AS priceEffectiveAt,
                tickets_per_period AS ticketsPerPeriod, period_months AS periodMonths,
                ticket_validity_days AS ticketValidityDays, status, version
         FROM reading_subscription_plan
@@ -44,7 +44,7 @@
     </select>
     <select id="selectAllPlans"
             resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionPlanRow">
-        SELECT id, plan_code AS planCode, plan_name AS planName, price_vnd AS priceVnd,
+        SELECT id, plan_code AS planCode, plan_name AS planName, plan_version AS planVersion, price_vnd AS priceVnd, price_xu AS priceXu, price_announced_at AS priceAnnouncedAt, price_effective_at AS priceEffectiveAt,
                tickets_per_period AS ticketsPerPeriod, period_months AS periodMonths,
                ticket_validity_days AS ticketValidityDays, status, version
         FROM reading_subscription_plan
@@ -52,28 +52,40 @@
     </select>
     <select id="selectPlanById"
             resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionPlanRow">
-        SELECT id, plan_code AS planCode, plan_name AS planName, price_vnd AS priceVnd,
+        SELECT id, plan_code AS planCode, plan_name AS planName, plan_version AS planVersion, price_vnd AS priceVnd, price_xu AS priceXu, price_announced_at AS priceAnnouncedAt, price_effective_at AS priceEffectiveAt,
                tickets_per_period AS ticketsPerPeriod, period_months AS periodMonths,
                ticket_validity_days AS ticketValidityDays, status, version
         FROM reading_subscription_plan WHERE id=#{planId} LIMIT 1
     </select>
     <select id="selectPlanByCode"
             resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionPlanRow">
-        SELECT id, plan_code AS planCode, plan_name AS planName, price_vnd AS priceVnd,
+        SELECT id, plan_code AS planCode, plan_name AS planName, plan_version AS planVersion, price_vnd AS priceVnd, price_xu AS priceXu, price_announced_at AS priceAnnouncedAt, price_effective_at AS priceEffectiveAt,
                tickets_per_period AS ticketsPerPeriod, period_months AS periodMonths,
                ticket_validity_days AS ticketValidityDays, status, version
         FROM reading_subscription_plan WHERE plan_code=#{planCode} LIMIT 1
     </select>
     <insert id="insertPlan">
         INSERT INTO reading_subscription_plan
-            (plan_code, plan_name, price_vnd, tickets_per_period, period_months,
+            (plan_code, plan_name, price_vnd, price_xu, tickets_per_period, period_months,
              ticket_validity_days, status)
-        VALUES (#{command.planCode}, #{command.planName}, #{command.priceVnd}, #{command.ticketsPerPeriod},
+        VALUES (#{command.planCode}, #{command.planName}, #{command.priceVnd}, #{command.priceXu}, #{command.ticketsPerPeriod},
                 #{command.periodMonths}, #{command.ticketValidityDays}, 'DRAFT')
     </insert>
     <update id="updatePlan">
         UPDATE reading_subscription_plan
-        SET plan_name=#{command.planName}, price_vnd=#{command.priceVnd},
+        SET price_announced_at=CASE
+                WHEN NOT (price_vnd &lt;=&gt; #{command.priceVnd})
+                  OR NOT (price_xu &lt;=&gt; #{command.priceXu}) THEN CURRENT_TIMESTAMP(3)
+                ELSE price_announced_at END,
+            price_effective_at=CASE
+                WHEN NOT (price_vnd &lt;=&gt; #{command.priceVnd})
+                  OR NOT (price_xu &lt;=&gt; #{command.priceXu})
+                THEN DATE_ADD(CURRENT_TIMESTAMP(3), INTERVAL 7 DAY)
+                ELSE price_effective_at END,
+            plan_version=plan_version + CASE
+                WHEN NOT (price_vnd &lt;=&gt; #{command.priceVnd})
+                  OR NOT (price_xu &lt;=&gt; #{command.priceXu}) THEN 1 ELSE 0 END,
+            plan_name=#{command.planName}, price_vnd=#{command.priceVnd}, price_xu=#{command.priceXu},
             tickets_per_period=#{command.ticketsPerPeriod},
             period_months=#{command.periodMonths},
             ticket_validity_days=#{command.ticketValidityDays}, version=version+1
@@ -87,17 +99,86 @@
     </update>
     <select id="selectCurrentSubscriptionByUserId"
             resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionRow">
-        SELECT id, user_id AS userId, plan_id AS planId, plan_code_snapshot AS planCodeSnapshot,
+        SELECT id, user_id AS userId, plan_id AS planId, plan_code_snapshot AS planCodeSnapshot, plan_version_snapshot AS planVersionSnapshot,
+               price_vnd_snapshot AS priceVndSnapshot, price_xu_snapshot AS priceXuSnapshot, accepted_plan_version AS acceptedPlanVersion, tickets_per_period_snapshot AS ticketsPerPeriodSnapshot,
+               period_months_snapshot AS periodMonthsSnapshot,
+               ticket_validity_days_snapshot AS ticketValidityDaysSnapshot,
+               start_at AS startAt, current_period_start AS currentPeriodStart, current_period_end AS currentPeriodEnd, next_renewal_at AS nextRenewalAt, next_grant_at AS nextGrantAt, end_at AS endAt,
+               status, auto_renew AS autoRenew, primary_funding_source AS primaryFundingSource, fallback_funding_source AS fallbackFundingSource, price_consent_at AS priceConsentAt, cancel_requested_at AS cancelRequestedAt, source_type AS sourceType, source_ref AS sourceRef,
+               policy_version AS policyVersion, version
+        FROM user_reading_subscription
+        WHERE user_id=#{userId}
+          AND status IN ('ACTIVE', 'PAST_DUE', 'PENDING_PRICE_CONSENT', 'CANCEL_AT_PERIOD_END')
+        ORDER BY id DESC LIMIT 1
+    </select>
+    <select id="selectSubscriptionForUserForUpdate"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionRow">
+        SELECT id, user_id AS userId, plan_id AS planId,
+               plan_code_snapshot AS planCodeSnapshot,
+               plan_version_snapshot AS planVersionSnapshot,
+               price_vnd_snapshot AS priceVndSnapshot,
+               price_xu_snapshot AS priceXuSnapshot,
+               accepted_plan_version AS acceptedPlanVersion,
                tickets_per_period_snapshot AS ticketsPerPeriodSnapshot,
                period_months_snapshot AS periodMonthsSnapshot,
                ticket_validity_days_snapshot AS ticketValidityDaysSnapshot,
-               start_at AS startAt, next_grant_at AS nextGrantAt, end_at AS endAt,
-               status, source_type AS sourceType, source_ref AS sourceRef,
+               start_at AS startAt, current_period_start AS currentPeriodStart,
+               current_period_end AS currentPeriodEnd, next_renewal_at AS nextRenewalAt,
+               next_grant_at AS nextGrantAt, end_at AS endAt, status,
+               auto_renew AS autoRenew, primary_funding_source AS primaryFundingSource,
+               fallback_funding_source AS fallbackFundingSource,
+               price_consent_at AS priceConsentAt,
+               cancel_requested_at AS cancelRequestedAt,
+               source_type AS sourceType, source_ref AS sourceRef,
                policy_version AS policyVersion, version
         FROM user_reading_subscription
-        WHERE user_id=#{userId} AND status IN ('ACTIVE', 'PAUSED')
-        ORDER BY id DESC LIMIT 1
+        WHERE id=#{subscriptionId} AND user_id=#{userId}
+        LIMIT 1 FOR UPDATE
     </select>
+    <select id="countActiveMandates" resultType="long">
+        SELECT COUNT(*) FROM reading_subscription_mandate
+        WHERE user_id=#{userId} AND provider='VNPAY_RECURRING' AND status='ACTIVE'
+    </select>
+    <update id="updateRenewalSettings">
+        UPDATE user_reading_subscription
+        SET auto_renew=#{autoRenew},
+            primary_funding_source=CASE WHEN #{autoRenew} THEN #{primaryFundingSource} ELSE NULL END,
+            fallback_funding_source=CASE WHEN #{autoRenew} THEN #{fallbackFundingSource} ELSE NULL END,
+            next_renewal_at=CASE WHEN #{autoRenew} THEN current_period_end ELSE NULL END,
+            end_at=CASE WHEN #{autoRenew} THEN NULL ELSE current_period_end END,
+            status=CASE WHEN #{autoRenew} THEN 'ACTIVE' ELSE 'CANCEL_AT_PERIOD_END' END,
+            cancel_requested_at=CASE WHEN #{autoRenew} THEN NULL ELSE #{updatedAt} END,
+            version=version+1
+        WHERE id=#{subscriptionId} AND user_id=#{userId} AND version=#{expectedVersion}
+          AND status IN ('ACTIVE', 'PAST_DUE', 'PENDING_PRICE_CONSENT', 'CANCEL_AT_PERIOD_END')
+    </update>
+    <insert id="insertPriceConsent">
+        INSERT INTO reading_subscription_price_consent
+            (subscription_id, user_id, plan_version, price_vnd_snapshot,
+             price_xu_snapshot, consented_at, client_request_id)
+        VALUES (#{subscription.id}, #{subscription.userId}, #{plan.planVersion},
+                #{plan.priceVnd}, #{plan.priceXu}, #{consentedAt}, #{clientRequestId})
+    </insert>
+    <update id="applyPriceConsent">
+        UPDATE user_reading_subscription
+        SET plan_version_snapshot=#{plan.planVersion},
+            price_vnd_snapshot=#{plan.priceVnd}, price_xu_snapshot=#{plan.priceXu},
+            accepted_plan_version=#{plan.planVersion}, price_consent_at=#{consentedAt},
+            status=CASE WHEN auto_renew=1 THEN 'ACTIVE' ELSE status END,
+            next_renewal_at=CASE WHEN auto_renew=1 THEN current_period_end ELSE NULL END,
+            version=version+1
+        WHERE id=#{subscriptionId} AND user_id=#{userId} AND version=#{expectedVersion}
+          AND status IN ('ACTIVE', 'PAST_DUE', 'PENDING_PRICE_CONSENT', 'CANCEL_AT_PERIOD_END')
+    </update>
+    <update id="cancelAtPeriodEnd">
+        UPDATE user_reading_subscription
+        SET auto_renew=0, primary_funding_source=NULL, fallback_funding_source=NULL,
+            next_renewal_at=NULL, end_at=current_period_end,
+            status='CANCEL_AT_PERIOD_END', cancel_requested_at=#{cancelledAt},
+            version=version+1
+        WHERE id=#{subscriptionId} AND user_id=#{userId} AND version=#{expectedVersion}
+          AND status IN ('ACTIVE', 'PAST_DUE', 'PENDING_PRICE_CONSENT', 'CANCEL_AT_PERIOD_END')
+    </update>
     <select id="selectPeriodGrantsByUser"
             resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionPeriodGrantRow">
         SELECT grant_row.id, grant_row.subscription_id AS subscriptionId,
@@ -115,42 +196,58 @@
     </select>
     <insert id="insertSubscription">
         INSERT INTO user_reading_subscription
-            (user_id, plan_id, plan_code_snapshot, tickets_per_period_snapshot,
+            (user_id, plan_id, plan_code_snapshot, plan_version_snapshot,
+             price_vnd_snapshot, price_xu_snapshot, accepted_plan_version,
+             tickets_per_period_snapshot,
              period_months_snapshot, ticket_validity_days_snapshot, start_at, next_grant_at,
-             end_at, status, source_type, source_ref, policy_version)
-        VALUES (#{command.userId}, #{plan.id}, #{plan.planCode}, #{plan.ticketsPerPeriod},
+             current_period_start, current_period_end, end_at, status, auto_renew,
+             source_type, source_ref, policy_version)
+        VALUES (#{command.userId}, #{plan.id}, #{plan.planCode}, #{plan.planVersion},
+                #{plan.priceVnd}, #{plan.priceXu}, #{plan.planVersion}, #{plan.ticketsPerPeriod},
                 #{plan.periodMonths}, #{plan.ticketValidityDays}, #{command.startAt},
-                #{command.startAt}, #{command.endAt}, 'ACTIVE', #{command.sourceType},
+                #{command.startAt}, #{command.startAt}, #{command.endAt}, #{command.endAt},
+                'ACTIVE', 0, #{command.sourceType},
                 #{command.sourceRef}, #{command.policyVersion})
     </insert>
     <insert id="insertPurchasedSubscription">
         INSERT INTO user_reading_subscription
-            (user_id, plan_id, plan_code_snapshot, tickets_per_period_snapshot,
+            (user_id, plan_id, plan_code_snapshot, plan_version_snapshot,
+             price_vnd_snapshot, price_xu_snapshot, accepted_plan_version,
+             tickets_per_period_snapshot,
              period_months_snapshot, ticket_validity_days_snapshot, start_at, next_grant_at,
-             end_at, status, source_type, source_ref, policy_version)
+             current_period_start, current_period_end, next_renewal_at, end_at, status,
+             auto_renew, primary_funding_source, fallback_funding_source,
+             source_type, source_ref, policy_version)
         SELECT #{command.userId}, #{command.planId}, #{command.planCode},
-               #{command.ticketsPerPeriod}, #{command.periodMonths},
+               #{command.planVersion}, #{command.priceVnd}, #{command.priceXu},
+               #{command.acceptedPlanVersion}, #{command.ticketsPerPeriod}, #{command.periodMonths},
                #{command.ticketValidityDays}, #{command.startAt}, #{command.startAt},
-               #{command.endAt}, 'ACTIVE', 'PAYMENT', #{command.sourceRef},
+               #{command.startAt}, #{command.endAt},
+               CASE WHEN #{command.autoRenew} THEN #{command.endAt} ELSE NULL END,
+               CASE WHEN #{command.autoRenew} THEN NULL ELSE #{command.endAt} END,
+               'ACTIVE', #{command.autoRenew}, #{command.primaryFundingSource},
+               #{command.fallbackFundingSource}, 'PAYMENT', #{command.sourceRef},
                #{command.policyVersion}
         FROM DUAL
         WHERE NOT EXISTS (
             SELECT 1 FROM user_reading_subscription
-            WHERE user_id=#{command.userId} AND status IN ('ACTIVE', 'PAUSED')
+            WHERE user_id=#{command.userId}
+              AND status IN ('ACTIVE', 'PAST_DUE', 'PENDING_PRICE_CONSENT', 'CANCEL_AT_PERIOD_END')
         )
     </insert>
     <select id="lockDueSubscription"
             resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionRow">
-        SELECT id, user_id AS userId, plan_id AS planId, plan_code_snapshot AS planCodeSnapshot,
-               tickets_per_period_snapshot AS ticketsPerPeriodSnapshot,
+        SELECT id, user_id AS userId, plan_id AS planId, plan_code_snapshot AS planCodeSnapshot, plan_version_snapshot AS planVersionSnapshot,
+               price_vnd_snapshot AS priceVndSnapshot, price_xu_snapshot AS priceXuSnapshot, accepted_plan_version AS acceptedPlanVersion, tickets_per_period_snapshot AS ticketsPerPeriodSnapshot,
                period_months_snapshot AS periodMonthsSnapshot,
                ticket_validity_days_snapshot AS ticketValidityDaysSnapshot,
-               start_at AS startAt, next_grant_at AS nextGrantAt, end_at AS endAt,
-               status, source_type AS sourceType, source_ref AS sourceRef,
+               start_at AS startAt, current_period_start AS currentPeriodStart, current_period_end AS currentPeriodEnd, next_renewal_at AS nextRenewalAt, next_grant_at AS nextGrantAt, end_at AS endAt,
+               status, auto_renew AS autoRenew, primary_funding_source AS primaryFundingSource, fallback_funding_source AS fallbackFundingSource, price_consent_at AS priceConsentAt, cancel_requested_at AS cancelRequestedAt, source_type AS sourceType, source_ref AS sourceRef,
                policy_version AS policyVersion, version
         FROM user_reading_subscription
         WHERE id=#{subscriptionId} AND status='ACTIVE' AND next_grant_at&lt;=#{now}
           AND (end_at IS NULL OR next_grant_at&lt;end_at)
+          AND (auto_renew=0 OR current_period_end IS NULL OR next_grant_at&lt;current_period_end)
         LIMIT 1 FOR UPDATE
     </select>
     <insert id="insertPeriodGrantFromLedger">
@@ -170,6 +267,7 @@
         SELECT id FROM user_reading_subscription
         WHERE status='ACTIVE' AND next_grant_at&lt;=#{now}
           AND (end_at IS NULL OR next_grant_at&lt;end_at)
+          AND (auto_renew=0 OR current_period_end IS NULL OR next_grant_at&lt;current_period_end)
         ORDER BY next_grant_at ASC, id ASC LIMIT #{limit}
     </select>
 </mapper>

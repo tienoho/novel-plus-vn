@@ -53,7 +53,7 @@
                                 </div>
                                 <div class="gg-formDetail">
                                     <input type="text" class="laydate-icon layer-date form-control" id="birth" name="birth" th:value="${user.birth}==null?null:${#dates.format(user.birth,'yyyy-MM-dd')}" th:placeholder="#{admin.profile.birthDate.placeholder}" placeholder="Chọn ngày sinh"
-                                           onclick="laydate({istime: true, format: 'YYYY-MM-DD'})" style="background-color: #fff;" readonly="readonly"/>
+                                           style="background-color: #fff;" readonly="readonly"/>
                                 </div>
                             </div>
                             <div class="gg-formGroup">

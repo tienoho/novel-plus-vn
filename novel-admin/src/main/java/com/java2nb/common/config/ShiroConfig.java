@@ -5,6 +5,7 @@ import com.java2nb.common.redis.shiro.RedisCacheManager;
 import com.java2nb.common.redis.shiro.RedisManager;
 import com.java2nb.common.redis.shiro.RedisSessionDAO;
 import com.java2nb.system.shiro.UserRealm;
+import com.java2nb.system.shiro.PasswordChangeFilter;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.session.SessionListener;
 import org.apache.shiro.session.mgt.eis.SessionDAO;
@@ -19,7 +20,10 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Map;
+import jakarta.servlet.Filter;
 
 /**
  * @author xiongxy
@@ -61,6 +65,9 @@ public class ShiroConfig {
         shiroFilterFactoryBean.setLoginUrl("/login");
         shiroFilterFactoryBean.setSuccessUrl("/index");
         shiroFilterFactoryBean.setUnauthorizedUrl("/403");
+        Map<String, Filter> filters = new HashMap<>();
+        filters.put("passwordChange", new PasswordChangeFilter());
+        shiroFilterFactoryBean.setFilters(filters);
         LinkedHashMap<String, String> filterChainDefinitionMap = new LinkedHashMap<>();
         filterChainDefinitionMap.put("/login", "anon");
         filterChainDefinitionMap.put("/getVerify", "anon");
@@ -69,6 +76,8 @@ public class ShiroConfig {
         filterChainDefinitionMap.put("/fonts/**", "anon");
         filterChainDefinitionMap.put("/img/**", "anon");
         filterChainDefinitionMap.put("/favicon.ico", "anon");
+        filterChainDefinitionMap.put("/actuator/health", "anon");
+        filterChainDefinitionMap.put("/actuator/prometheus", "anon");
         filterChainDefinitionMap.put("/docs/**", "anon");
         filterChainDefinitionMap.put("/layuimini/**", "anon");
         filterChainDefinitionMap.put("/upload/**", "anon");
@@ -76,7 +85,7 @@ public class ShiroConfig {
         filterChainDefinitionMap.put("/logout", "logout");
         filterChainDefinitionMap.put("/blog", "anon");
         filterChainDefinitionMap.put("/blog/open/**", "anon");
-        filterChainDefinitionMap.put("/**", "authc");
+        filterChainDefinitionMap.put("/**", "authc,passwordChange");
         shiroFilterFactoryBean.setFilterChainDefinitionMap(filterChainDefinitionMap);
         return shiroFilterFactoryBean;
     }

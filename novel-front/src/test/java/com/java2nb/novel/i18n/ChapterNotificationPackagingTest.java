@@ -19,8 +19,9 @@ class ChapterNotificationPackagingTest {
             "chapter_publish_event", "user_notification", "user_author_follow",
             "trg_book_index_publish_event_insert", "trg_book_index_publish_event_approve"
         );
-        assertThat(read(repository.resolve("compose.yaml")))
-            .contains("/migrations/20260726_chapter_notifications.sql");
+        assertThat(read(repository.resolve("deploy/flyway/Dockerfile")))
+            .contains("COPY --chmod=0444 doc/sql/20260726_chapter_notifications.sql "
+                + "/flyway/sql/V2026072606__chapter_notifications.sql");
     }
 
     @Test

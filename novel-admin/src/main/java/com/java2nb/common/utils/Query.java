@@ -15,6 +15,7 @@ public class Query extends LinkedHashMap<String, Object> {
 
 	public Query(Map<String, Object> params) {
 		this.putAll(params);
+		SafeSort.sanitize(this);
 		// Tham số phân trang
 		this.offset = Integer.parseInt(params.get("offset").toString());
 		this.limit = Integer.parseInt(params.get("limit").toString());

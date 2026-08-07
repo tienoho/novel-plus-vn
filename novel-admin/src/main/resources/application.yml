@@ -4,16 +4,42 @@ server:
   #        max-threads: 1000
   #        min-spare-threads: 30
   port: 80
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,metrics,prometheus"
+  endpoint:
+    health:
+      show-details: never
+  metrics:
+    tags:
+      application: ${spring.application.name:novel-admin}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
 #    uri-encoding: utf-8
 #security:
 #  basic:
 #    enabled: false
+security:
+  csp:
+    enabled: ${CSP_ENABLED:true}
+    # Chỉ chuyển sang true khi verifier không còn inline handler/script thiếu nonce.
+    enforce: ${CSP_ENFORCE:true}
+  admin-bootstrap:
+    username: ${ADMIN_BOOTSTRAP_USERNAME:admin}
+    password: ${ADMIN_BOOTSTRAP_PASSWORD:}
+  csrf:
+    cookie-secure: ${AUTH_COOKIE_SECURE:false}
+  pii:
+    encryption-key: ${PII_ENCRYPTION_KEY:disabled}
 spring:
   datasource:
     driverClassName: org.apache.shardingsphere.driver.ShardingSphereDriver
     url: jdbc:shardingsphere:absolutepath:${user.dir}/config/shardingsphere-jdbc.yml
   thymeleaf:
-    mode: LEGACYHTML5
+    mode: HTML
     cache: false
   jackson:
     time-zone: GMT+8
@@ -35,14 +61,9 @@ mybatis:
     #Tự ánh xạ cột có dấu gạch dưới sang thuộc tính camelCase của Java
     map-underscore-to-camel-case: true
   mapper-locations: classpath*:mybatis/**/*Mapper.xml
-  typeAliasesPackage: com.java2nb.**.domain
 
 logging:
   config: classpath:logback-boot.xml
-
-security:
-  pii:
-    encryption-key: ${PII_ENCRYPTION_KEY:disabled}
 
 novel:
   gift-code:

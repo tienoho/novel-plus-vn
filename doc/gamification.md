@@ -59,7 +59,7 @@ Bảng và dữ liệu không bao giờ bị xóa khi rollback, để không m�
 
 ## Mã cảnh báo
 
-Hệ thống **chưa có dashboard**. Kho mã có `spring-boot-starter-actuator` nhưng không có `micrometer-registry-prometheus`, và không có Prometheus hay Alertmanager đang chạy. Cảnh báo đi qua log có cấu trúc, giống khuôn `LedgerIntegrityCheckSchedule` hiện có.
+Compose có Prometheus, Alertmanager và dashboard Grafana `Novel Plus - Tổng quan vận hành`. Worker cập nhật các gauge `novel_gamification_queue` và `novel_ledger_mismatch_records`; rule trong `deploy/observability/rules/novel-plus-alerts.yml` cảnh báo backlog event, reward chờ, job stale, kỳ review quá hạn và sai lệch ledger. Các mã log dưới đây vẫn được giữ để điều tra chi tiết và đối chiếu audit.
 
 Mã nằm ở **đầu** thông điệp để cấu hình grep phía thu thập log.
 

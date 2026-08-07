@@ -42,7 +42,8 @@ class UserChapterPurchaseServiceTest {
         service = new UserServiceImpl(mock(FrontUserMapper.class), mock(FrontUserBookshelfMapper.class),
             mock(FrontUserReadHistoryMapper.class), mock(UserFeedbackMapper.class), buyRecordMapper,
             ledgerService, income, bookIndexMapper, commercialPolicyService, readingTicketService,
-            gamificationEventService);
+            gamificationEventService, mock(org.springframework.security.crypto.password.PasswordEncoder.class),
+            new com.java2nb.novel.core.security.RichTextSanitizer());
         when(bookIndexMapper.lockById(20L)).thenReturn(chapter());
         when(buyRecordMapper.count(any(CountDSLCompleter.class))).thenReturn(0L);
     }

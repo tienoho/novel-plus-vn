@@ -10,11 +10,11 @@
 				<div class="ibox-body">
 					<div id="exampleToolbar" role="group">
 						<button shiro:hasPermission="sys:role:add" type="button"
-							class="btn btn-primary" onclick="add()">
+							class="btn btn-primary" data-admin-action="add">
 							<i class="fa fa-plus" aria-hidden="true"></i><span th:text="#{common.add}">Thêm</span>
 						</button>
 						<button shiro:hasPermission="sys:role:batchRemove" type="button"
-							class="btn btn-danger" onclick="batchRemove()">
+							class="btn btn-danger" data-admin-action="batch-remove">
 							<i class="fa fa-trash" aria-hidden="true"></i><span th:text="#{common.deleteAction}">Xóa</span>
 						</button>
 					</div>

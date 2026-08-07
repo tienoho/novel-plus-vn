@@ -23,7 +23,7 @@
                                                    id="${column.attrname}"
                                                    name="${column.attrname}"
                                                    th:value="${${classname}.${column.attrname}}==null?null:${#dates.format(${classname}.${column.attrname},'yyyy-MM-dd HH:mm:ss')}"
-                                                   onclick="laydate({istime: true, format: 'YYYY-MM-DD hh:mm:ss'})"
+                                                   data-admin-laydate="datetime"
                                                    style="background-color: #fff;" readonly="readonly"/>
                                         #elseif($column.pageType == 1)
                                             <input id="${column.attrname}" name="${column.attrname}"

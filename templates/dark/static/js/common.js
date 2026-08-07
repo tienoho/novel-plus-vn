@@ -12,16 +12,6 @@ Array.prototype.remove = function (val) {
     }
 };
 
-var token = localStorage.getItem("token");
-if (token) {
-    $.get("/user/isLogin", {"token": token}, function (data) {
-        if (data.code != 1) {// Chưa đăng nhập
-            localStorage.removeItem("token");
-        }
-    })
-}
-
-
 function readHistory() {
 
     var books = localStorage.getItem("historyBooks");

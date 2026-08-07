@@ -91,7 +91,8 @@ public interface MonthlyTicketMapper {
                           @Param("expectedVersion") long expectedVersion,
                           @Param("amount") long amount);
 
-    TicketSeasonRow selectOpenSeason(@Param("at") Date at);
+    TicketSeasonRow selectOpenSeasonById(@Param("seasonId") long seasonId,
+                                         @Param("at") Date at);
 
     int countSeasonStillOpen(@Param("seasonId") long seasonId, @Param("at") Date at);
 
@@ -149,6 +150,7 @@ public interface MonthlyTicketMapper {
                    @Param("requestHash") String requestHash,
                    @Param("clientRequestId") String clientRequestId,
                    @Param("sourceIpHash") String sourceIpHash,
+                   @Param("sourceDeviceHash") String sourceDeviceHash,
                    @Param("policyVersion") String policyVersion);
 
     int insertRankVoterIgnore(@Param("seasonId") long seasonId,

@@ -92,15 +92,9 @@ function load() {
                         field: 'id',
                         align: 'center',
                         formatter: function (value, row, index) {
-                            var d = '<a class="btn btn-primary btn-sm ' + s_detail_h + '" href="#" mce_href="#" title="' + adminMessage('detail', 'Chi tiết') + '" onclick="detail(\''
-                                + row.id
-                                + '\')"><i class="fa fa-file"></i></a> ';
-                            var e = '<a class="btn btn-primary btn-sm ' + s_edit_h + '" href="#" mce_href="#" title="' + adminMessage('edit', 'Sửa') + '" onclick="edit(\''
-                                + row.id
-                                + '\')"><i class="fa fa-edit"></i></a> ';
-                            var r = '<a class="btn btn-warning btn-sm ' + s_remove_h + '" href="#" title="' + adminMessage('deleteLabel', 'Xóa') + '"  mce_href="#" onclick="remove(\''
-                                + row.id
-                                + '\')"><i class="fa fa-remove"></i></a> ';
+                            var d = adminRowAction({action: 'detail', args: [row.id], variant: 'primary', visibility: s_detail_h, title: adminMessage('detail', 'Chi tiết'), icon: 'detail'});
+                            var e = adminRowAction({action: 'edit', args: [row.id], variant: 'primary', visibility: s_edit_h, title: adminMessage('edit', 'Sửa'), icon: 'edit'});
+                            var r = adminRowAction({action: 'remove', args: [row.id], variant: 'warning', visibility: s_remove_h, title: adminMessage('deleteLabel', 'Xóa'), icon: 'remove'});
                             return d + e + r;
                         }
                     }]

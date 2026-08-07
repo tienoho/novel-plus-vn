@@ -19,11 +19,10 @@ class VietnameseSearchPackagingTest {
         assertThat(migration)
             .contains("book_name_search", "author_name_search", "ft_book_vi_search", "WITH PARSER ngram");
 
-        String compose = read(repository.resolve("compose.yaml"));
-        assertThat(compose).contains(
-            "/migrations/20260726_vietnamese_search.sql",
-            "./doc/sql/20260726_vietnamese_search.sql:/migrations/20260726_vietnamese_search.sql:ro"
-        );
+        String flywayImage = read(repository.resolve("deploy/flyway/Dockerfile"));
+        assertThat(flywayImage).contains(
+            "COPY --chmod=0444 doc/sql/20260726_vietnamese_search.sql "
+                + "/flyway/sql/V2026072605__vietnamese_search.sql");
 
         String mapper = read(module.resolve("src/main/resources/mybatis/mapping/BookMapper.xml"));
         assertThat(mapper)

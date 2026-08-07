@@ -16,6 +16,10 @@ class AuthorBookTransferPackagingTest {
         Path repository = module.getParent();
         Path runtime = module.resolve("src/main/resources/templates/author/index_list.html");
         String expected = read(runtime);
+        String script = read(module.resolve(
+            "src/main/resources/static/javascript/author-index-list-page.js"));
+        String style = read(module.resolve(
+            "src/main/resources/static/css/author-index-list-page.css"));
         for (Path page : new Path[]{
             repository.resolve("templates/green/html/author/index_list.html"),
             repository.resolve("templates/orange/html/author/index_list.html")
@@ -24,9 +28,12 @@ class AuthorBookTransferPackagingTest {
         }
         assertThat(expected)
             .contains("author.transfer.import", "author.transfer.export", "bookImportFile")
+            .contains("/javascript/author-index-list-page.js", "/css/author-index-list-page.css");
+        assertThat(script)
             .contains("/author/books/", "/import", "/export?format=")
-            .contains("processData: false", "credentials: \"same-origin\"")
-            .contains("file.size > 20 * 1024 * 1024", "flex-wrap: wrap");
+            .contains("processData: false", "credentials: 'same-origin'")
+            .contains("file.size > 20 * 1024 * 1024");
+        assertThat(style).contains("flex-wrap: wrap");
         assertThat(repository.resolve("templates/dark/html/author/index_list.html")).doesNotExist();
         assertThat(repository.resolve("templates/blue/html/author/index_list.html")).doesNotExist();
     }

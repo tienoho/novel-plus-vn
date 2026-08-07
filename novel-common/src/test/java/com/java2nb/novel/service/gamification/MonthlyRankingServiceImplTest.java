@@ -188,11 +188,39 @@ class MonthlyRankingServiceImplTest {
         MonthlyRankRow row = rank(120L, 220L, 9L, 3L, CUTOFF);
         when(mapper.selectLiveRankingPage(SEASON_ID, 10L, 10)).thenReturn(List.of(row));
 
-        MonthlyRankingPage page = service.getRanking("2026-08", 2, 10, CUTOFF);
+        MonthlyRankingPage page = service.getRanking(null, "2026-08", 2, 10, CUTOFF);
 
         assertThat(page.snapshot()).isFalse();
         assertThat(page.total()).isEqualTo(25L);
         assertThat(page.entries().get(0).getRankNo()).isEqualTo(11);
+    }
+
+    @Test
+    void rankingBySeasonIdReadsTheRequestedSpecialSeason() {
+        MonthlySeasonRow special = season("OPEN", 0L, null);
+        special.setPeriodCode("le-hoi-doc-sach-2026");
+        special.setSeasonType("FESTIVAL");
+        special.setVoteCutoffAt(CUTOFF);
+        when(mapper.selectSeasonById(SEASON_ID)).thenReturn(special);
+        when(mapper.countLiveRanking(SEASON_ID)).thenReturn(0L);
+        when(mapper.selectLiveRankingPage(SEASON_ID, 0L, 20)).thenReturn(List.of());
+
+        MonthlyRankingPage page = service.getRanking(SEASON_ID, null, 1, 20, CUTOFF);
+
+        assertThat(page.seasonId()).isEqualTo(SEASON_ID);
+        assertThat(page.periodCode()).isEqualTo("le-hoi-doc-sach-2026");
+        verify(mapper).selectSeasonById(SEASON_ID);
+    }
+
+    @Test
+    void listsEverySeasonOpenAtTheRequestedTime() {
+        MonthlySeasonRow regular = season("OPEN", 0L, null);
+        MonthlySeasonRow special = season("OPEN", 0L, null);
+        special.setId(72L);
+        when(mapper.selectOpenSeasons(CUTOFF)).thenReturn(List.of(regular, special));
+
+        assertThat(service.listOpenSeasons(CUTOFF)).extracting(MonthlySeasonRow::getId)
+            .containsExactly(SEASON_ID, 72L);
     }
 
     @Test
@@ -233,6 +261,44 @@ class MonthlyRankingServiceImplTest {
 
         assertThat(result.outcome()).isEqualTo(SeasonPhaseResult.Outcome.COMPLETED);
         verify(mapper).completeTerminalSnapshotJob(Long.toString(SEASON_ID), CUTOFF);
+    }
+
+    @Test
+    void createsSpecialSeasonWithGivenTypeAndWindow() {
+        Date start = Date.from(Instant.parse("2026-09-01T00:00:00Z"));
+        Date end = Date.from(Instant.parse("2026-09-08T00:00:00Z"));
+        Date cutoff = Date.from(Instant.parse("2026-09-07T00:00:00Z"));
+        MonthlySeasonRow inserted = season("OPEN", 0L, null);
+        inserted.setPeriodCode("ky-ky-niem-2026");
+        inserted.setSeasonType("ANNIVERSARY");
+        when(mapper.selectSeasonByPeriod("ky-ky-niem-2026")).thenReturn(inserted);
+
+        MonthlySeasonRow result = service.createSpecialSeason("ky-ky-niem-2026", "ANNIVERSARY",
+            start, end, cutoff, ZoneId.of("Asia/Ho_Chi_Minh"), "v1");
+
+        assertThat(result.getSeasonType()).isEqualTo("ANNIVERSARY");
+        verify(mapper).insertSpecialSeasonIgnore("ky-ky-niem-2026", "ANNIVERSARY", "Asia/Ho_Chi_Minh",
+            start, end, cutoff, "v1");
+    }
+
+    @Test
+    void specialSeasonRejectsRegularType() {
+        Date start = Date.from(Instant.parse("2026-09-01T00:00:00Z"));
+        Date end = Date.from(Instant.parse("2026-09-08T00:00:00Z"));
+
+        assertThatThrownBy(() -> service.createSpecialSeason("ky-ky-niem-2026", "REGULAR",
+            start, end, end, ZoneId.of("UTC"), "v1"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void specialSeasonRejectsInvertedWindow() {
+        Date start = Date.from(Instant.parse("2026-09-08T00:00:00Z"));
+        Date end = Date.from(Instant.parse("2026-09-01T00:00:00Z"));
+
+        assertThatThrownBy(() -> service.createSpecialSeason("ky-ky-niem-2026", "FESTIVAL",
+            start, end, start, ZoneId.of("UTC"), "v1"))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     private MonthlySeasonRow season(String status, long version, Long snapshotId) {

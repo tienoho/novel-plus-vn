@@ -5,14 +5,15 @@
     <title th:text="#{user.nickname.change}+'_'+${application.website.name}"></title>
     <link rel="stylesheet" href="/css/user.css"/>
 </head>
-<body class="">
+<body id="userSettingsPage" data-settings-mode="name"
+      th:attr="data-nickname-required=#{user.nickname.required},
+               data-nickname-invalid=#{user.nickname.invalid},
+               data-network-error=#{auth.networkError}">
 
-<div th:replace="common/top :: top('')">
-</div>
-<div class="main box_center cf">
+<div th:replace="common/top :: top('')"></div>
+<main class="main box_center cf">
     <div class="userBox cf">
         <div class="my_l">
-
             <ul class="log_list">
                 <li><a class="link_1" href="/user/userinfo.html" th:text="#{user.center}">Tài khoản của tôi</a></li>
                 <li><a class="link_4" href="/user/favorites.html" th:text="#{user.bookshelf}">Tủ sách</a></li>
@@ -20,98 +21,26 @@
                 <li><a class="link_7" href="/user/feedback_list.html" th:text="#{user.feedback}">Phản hồi của tôi</a></li>
                 <li><a class="link_8 on" href="/user/setup.html" th:text="#{user.settings}">Cài đặt tài khoản</a></li>
             </ul>
-
         </div>
         <div class="my_r">
             <div class="my_info cf">
                 <div class="my_info_txt">
                     <ul class="mytab_list">
-                        <li><i class="tit" th:text="#{user.nickname}">Biệt danh</i><input name="txtNiceName" type="text" value=""
-                                                          maxlength="11" id="txtNiceName" class="s_input"
-                                                          placeholder=""/></li>
-                        <li><i class="tit">&nbsp;</i><span th:text="#{user.nickname.rule}">Biệt danh chỉ được gồm chữ cái tiếng Anh, chữ số và dấu gạch dưới.</span></li>
-                        <li><i class="tit">&nbsp;</i><input type="button" onclick="updateName()" name="btn" th:value="#{common.change}"
-                                                            id="btn" class="s_btn btn_red"/></li>
+                        <li><i class="tit" th:text="#{user.nickname}">Biệt danh</i>
+                            <input name="txtNiceName" type="text" maxlength="11" id="txtNiceName" class="s_input"/>
+                        </li>
+                        <li><i class="tit">&nbsp;</i><span th:text="#{user.nickname.rule}">Biệt danh gồm chữ cái, chữ số hoặc dấu gạch dưới.</span></li>
+                        <li><i class="tit">&nbsp;</i><button type="button" data-settings-action="update-name" id="btn" class="s_btn btn_red" th:text="#{common.change}">Thay đổi</button></li>
                         <li><i class="tit">&nbsp;</i><span id="LabErr"></span></li>
                     </ul>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</main>
 
-<div th:replace="common/footer :: footer">
-</div>
+<div th:replace="common/footer :: footer"></div>
 <div th:replace="common/js :: js"></div>
-<script type="text/javascript" th:inline="javascript">
-    const nicknameRequiredText = /*[[#{user.nickname.required}]]*/ 'Biệt danh không được để trống.';
-    const nicknameInvalidText = /*[[#{user.nickname.invalid}]]*/ 'Biệt danh không đúng định dạng.';
-    const networkErrorText = /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng';
-    // Tải thông tin người dùng.
-    $.ajax({
-        type: "get",
-        url: "/user/userInfo",
-        data: {},
-        dataType: "json",
-        success: function (data) {
-            if (data.code == 200) {
-                if (data.data.nickName) {
-                    $("#txtNiceName").val(data.data.nickName);
-                } else {
-                    $("#txtNiceName").val(data.data.username);
-                }
-
-
-            } else if (data.code == 1001) {
-                // Phiên đăng nhập đã hết hạn.
-                location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
-
-            } else {
-                layer.alert(data.msg);
-            }
-
-        },
-        error: function () {
-            layer.alert(networkErrorText);
-        }
-    })
-
-    function updateName() {
-        var nickname = $("#txtNiceName").val();
-        if (nickname.isBlank()) {
-            $("#LabErr").html(nicknameRequiredText);
-            return;
-        }
-        if (!nickname.isNickName()) {
-            $("#LabErr").html(nicknameInvalidText);
-            return;
-        }
-        $.ajax({
-            type: "POST",
-            url: "/user/updateUserInfo",
-            data: {'nickName': nickname},
-            dataType: "json",
-            success: function (data) {
-                if (data.code == 200) {
-
-                    $.cookie('Authorization', data.data.token, {path: '/'});
-                    window.location.href = '/user/setup.html';
-
-                } else if (data.code == 1001) {
-                    // Phiên đăng nhập đã hết hạn.
-                    location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
-
-                } else {
-                    $("#LabErr").html(data.msg);
-                }
-
-            },
-            error: function () {
-                layer.alert(networkErrorText);
-            }
-        })
-    }
-</script>
-
+<script src="/javascript/user-settings-page.js" type="text/javascript"></script>
 </body>
 </html>

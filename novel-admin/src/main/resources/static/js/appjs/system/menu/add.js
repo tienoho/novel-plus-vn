@@ -38,7 +38,7 @@ function submit01() {
 				parent.layer.close(index);
 
 			} else {
-				layer.alert(data.msg)
+				layer.alert(HtmlUtil.htmlEncode(data.msg || ""))
 			}
 		}
 	});

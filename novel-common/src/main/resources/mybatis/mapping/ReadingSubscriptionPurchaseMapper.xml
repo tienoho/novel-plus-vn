@@ -4,7 +4,11 @@
     <sql id="purchaseColumns">
         id, out_trade_no AS outTradeNo, user_id AS userId, plan_id AS planId,
         plan_code_snapshot AS planCodeSnapshot, plan_name_snapshot AS planNameSnapshot,
-        price_vnd_snapshot AS priceVndSnapshot,
+        plan_version_snapshot AS planVersionSnapshot, price_vnd_snapshot AS priceVndSnapshot,
+        price_xu_snapshot AS priceXuSnapshot, auto_renew AS autoRenew,
+        primary_funding_source AS primaryFundingSource,
+        fallback_funding_source AS fallbackFundingSource,
+        accepted_plan_version AS acceptedPlanVersion,
         tickets_per_period_snapshot AS ticketsPerPeriodSnapshot,
         period_months_snapshot AS periodMonthsSnapshot,
         ticket_validity_days_snapshot AS ticketValidityDaysSnapshot,
@@ -62,11 +66,15 @@
     <insert id="insertPurchase">
         INSERT INTO reading_subscription_purchase
             (out_trade_no, user_id, plan_id, plan_code_snapshot, plan_name_snapshot,
-             price_vnd_snapshot, tickets_per_period_snapshot, period_months_snapshot,
+             plan_version_snapshot, price_vnd_snapshot, price_xu_snapshot, auto_renew,
+             primary_funding_source, fallback_funding_source, accepted_plan_version,
+             tickets_per_period_snapshot, period_months_snapshot,
              ticket_validity_days_snapshot, pay_channel, client_request_id, request_hash,
              policy_version, zone_id, status, create_time, update_time)
         VALUES (#{outTradeNo}, #{userId}, #{plan.id}, #{plan.planCode}, #{plan.planName},
-                #{plan.priceVnd}, #{plan.ticketsPerPeriod}, #{plan.periodMonths},
+                #{plan.planVersion}, #{plan.priceVnd}, #{plan.priceXu}, #{options.autoRenew},
+                #{options.primaryFundingSource}, #{options.fallbackFundingSource},
+                #{options.acceptedPlanVersion}, #{plan.ticketsPerPeriod}, #{plan.periodMonths},
                 #{plan.ticketValidityDays}, #{payChannel}, #{clientRequestId}, #{requestHash},
                 #{policyVersion}, #{zoneId}, 'PENDING', #{createdAt}, #{createdAt})
     </insert>

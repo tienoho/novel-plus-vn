@@ -22,7 +22,7 @@ Sao chép `.env.example` thành `.env`, sau đó cấu hình:
 |---|---:|---|
 | `VNPAY_ENABLED` | Có | Đặt `true` để mở VNPAY; mặc định `false` |
 | `VNPAY_TMN_CODE` | Có | Mã website 8 ký tự chữ/số do VNPAY cấp |
-| `VNPAY_HASH_SECRET` | Có | Khóa HMAC do VNPAY cấp |
+| `secrets/vnpay_hash_secret` | Có | File secret HMAC do VNPAY cấp; Compose nạp qua `VNPAY_HASH_SECRET_FILE` |
 | `VNPAY_PAY_URL` | Có | Endpoint tạo thanh toán sandbox/production |
 | `VNPAY_RETURN_URL` | Có | URL HTTPS công khai trả trình duyệt về website |
 | `VNPAY_QUERY_URL` | Khi bật QueryDr | API truy vấn giao dịch sandbox/production |
@@ -35,7 +35,7 @@ Ví dụ sandbox:
 ```dotenv
 VNPAY_ENABLED=true
 VNPAY_TMN_CODE=DEMOV210
-VNPAY_HASH_SECRET=thay-bang-khoa-sandbox-do-vnpay-cap
+# Ghi khóa Sandbox vào file secrets/vnpay_hash_secret, không đặt trong .env.
 VNPAY_PAY_URL=https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
 VNPAY_RETURN_URL=https://sandbox.example.vn/pay/vnpay/return
 VNPAY_QUERY_URL=https://sandbox.vnpayment.vn/merchant_webapi/api/transaction
@@ -88,6 +88,68 @@ Kết quả QueryDr:
 Migration [sql/20260716_vnpay_hardening.sql](sql/20260716_vnpay_hardening.sql) thêm `account_amount`, unique index `uk_order_pay_out_trade_no` và index `idx_order_pay_vnpay_reconcile`. Migration có thể chạy lại và sẽ dừng nếu dữ liệu cũ có mã đơn trùng.
 
 ## 6. Kiểm tra sandbox
+
+### Chuẩn bị môi trường UAT để đăng ký IPN
+
+Trước tiên trỏ DNS của bốn hostname UAT về máy chạy Compose và mở TCP 80/443. Chuẩn bị cấu hình,
+secret cùng nội dung email đăng ký mà không ghi credential vào Git:
+
+```powershell
+$env:VNPAY_SANDBOX_HASH_SECRET_FILE = 'C:\secure\vnpay-sandbox-hash-secret'
+./scripts/prepare-vnpay-uat.ps1 `
+  -Domain 'uat.example.vn' `
+  -TmnCode '<ma-sandbox-8-ky-tu>' `
+  -AcmeEmail 'ops@example.vn'
+```
+
+Lệnh sinh ba artifact ignored: `.env.uat`, `secrets/uat/` và `.vnpay-uat-registration.txt`. Sau đó dựng
+stack, migrate, nạp test data UAT và kiểm tra TLS/channel/IPN fail-closed:
+
+```powershell
+./scripts/start-vnpay-uat.ps1
+```
+
+Chỉ gửi nội dung `.vnpay-uat-registration.txt` sau khi preflight đạt. Không gửi file secret. Sau khi
+VNPAY xác nhận đã cấu hình IPN, chạy giao dịch kiểm chứng server-to-server:
+
+```powershell
+$env:VNPAY_SANDBOX_CARD_NUMBER = '<so-the-test-do-vnpay-cap>'
+$env:VNPAY_SANDBOX_CARD_HOLDER = '<chu-the-test>'
+$env:VNPAY_SANDBOX_CARD_DATE = '<MM/YY>'
+$env:VNPAY_SANDBOX_OTP = '<otp-test>'
+./scripts/test-vnpay-uat.ps1
+```
+
+`test-vnpay-uat.ps1` không chuyển tiếp IPN đầu tiên. Nó chỉ đạt khi VNPAY tự gọi URL đã đăng ký, đơn
+chuyển `SUCCESS`, lần replay của harness trả `02`, số Xu tăng đúng, projection ví khớp và giao dịch
+sổ cái kép cân bằng. Dừng UAT nhưng giữ dữ liệu bằng:
+
+```powershell
+docker compose --env-file .env.uat -p novel-plus-uat `
+  -f compose.yaml -f compose.e2e.yaml down
+```
+
+Smoke tự động trên database cô lập đọc checksum từ file ngoài Git và thông tin thẻ/OTP test từ biến
+môi trường tiến trình:
+
+```powershell
+$env:VNPAY_SANDBOX_HASH_SECRET_FILE = 'C:\secure\vnpay-sandbox-hash-secret'
+$env:VNPAY_SANDBOX_TMN_CODE = '<ma-website-sandbox-8-ky-tu>'
+$env:VNPAY_SANDBOX_CARD_NUMBER = '<so-the-test-do-vnpay-cap>'
+$env:VNPAY_SANDBOX_CARD_HOLDER = '<chu-the-test>'
+$env:VNPAY_SANDBOX_CARD_DATE = '<MM/YY>'
+$env:VNPAY_SANDBOX_OTP = '<otp-test>'
+./scripts/run-vnpay-sandbox-smoke.ps1
+```
+
+Runner migrate/seed MySQL mới, chỉ publish `front` trên loopback, thực hiện thanh toán NCB Sandbox,
+kiểm tra Return, IPN, replay, số Xu và ledger zero-sum rồi tự xóa container, volume và secret tạm.
+Report generated nằm tại `e2e/test-results/vnpay-sandbox-smoke.json` và không chứa checksum, thẻ, OTP
+hoặc URL có chữ ký.
+
+Harness chủ động chuyển tiếp payload Return do VNPAY ký sang IPN local để kiểm tra settlement. Kết quả
+này **không** chứng minh VNPAY server gọi được callback. Gate server-to-server chỉ đạt khi VNPAY gọi
+trực tiếp `https://<ten-mien>/pay/vnpay/ipn` đã đăng ký và log/audit ghi nhận request đó.
 
 1. Chạy migration và khởi động stack với credential sandbox.
 2. Xác nhận `/pay/index.html` hiển thị VNPAY và đúng mệnh giá VND/Xu.

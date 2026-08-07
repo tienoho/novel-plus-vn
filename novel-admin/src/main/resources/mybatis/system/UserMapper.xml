@@ -8,6 +8,7 @@
                `username`,
                `name`,
                `password`,
+               `must_change_password`,
                `dept_id`,
                `email`,
                `mobile`,
@@ -29,7 +30,7 @@
 
     <select id="list" resultType="com.java2nb.system.domain.UserDO">
         select
-        `user_id`,`username`,`name`,`password`,`dept_id`,`email`,`mobile`,`status`,`user_id_create`,`gmt_create`,`gmt_modified`,`sex`,`birth`,`pic_id`,`live_address`,`hobby`,`province`,`city`,`district`
+        `user_id`,`username`,`name`,`password`,`must_change_password`,`dept_id`,`email`,`mobile`,`status`,`user_id_create`,`gmt_create`,`gmt_modified`,`sex`,`birth`,`pic_id`,`live_address`,`hobby`,`province`,`city`,`district`
         from sys_user
         <where>
             <if test="userId != null and userId != ''">and user_id = #{userId}</if>
@@ -72,10 +73,10 @@
 
     <select id="listByPerm" resultType="com.java2nb.system.domain.UserDO">
         select
-        `user_id`,`username`,`name`,`password`,`dept_id`,`email`,`mobile`,`status`,`user_id_create`,`gmt_create`,`gmt_modified`,`sex`,`birth`,`pic_id`,`live_address`,`hobby`,`province`,`city`,`district`
+        `user_id`,`username`,`name`,`password`,`must_change_password`,`dept_id`,`email`,`mobile`,`status`,`user_id_create`,`gmt_create`,`gmt_modified`,`sex`,`birth`,`pic_id`,`live_address`,`hobby`,`province`,`city`,`district`
         from (
         select
-        `user_id`,`username`,`name`,`password`,`dept_id`,`email`,`mobile`,`status`,`user_id_create`,`gmt_create`,`gmt_modified`,`sex`,`birth`,`pic_id`,`live_address`,`hobby`,`province`,`city`,`district`
+        `user_id`,`username`,`name`,`password`,`must_change_password`,`dept_id`,`email`,`mobile`,`status`,`user_id_create`,`gmt_create`,`gmt_modified`,`sex`,`birth`,`pic_id`,`live_address`,`hobby`,`province`,`city`,`district`
         from sys_user
         <where>
             <if test="userId != null and userId != ''">and user_id = #{userId}</if>
@@ -119,7 +120,7 @@
     <select id="countByPerm" resultType="int">
         select count(*) from (
         select
-        `user_id`,`username`,`name`,`password`,`dept_id`,`email`,`mobile`,`status`,`user_id_create`,`gmt_create`,`gmt_modified`,`sex`,`birth`,`pic_id`,`live_address`,`hobby`,`province`,`city`,`district`
+        `user_id`,`username`,`name`,`password`,`must_change_password`,`dept_id`,`email`,`mobile`,`status`,`user_id_create`,`gmt_create`,`gmt_modified`,`sex`,`birth`,`pic_id`,`live_address`,`hobby`,`province`,`city`,`district`
         from sys_user
         <where>
             <if test="userId != null and userId != ''">and user_id = #{userId}</if>
@@ -175,6 +176,7 @@
         (`username`,
          `name`,
          `password`,
+         `must_change_password`,
          `dept_id`,
          `email`,
          `mobile`,
@@ -193,6 +195,7 @@
         values (#{username},
                 #{name},
                 #{password},
+                #{mustChangePassword},
                 #{deptId},
                 #{email},
                 #{mobile},
@@ -216,6 +219,7 @@
             <if test="username != null">`username` = #{username},</if>
             <if test="name != null">`name` = #{name},</if>
             <if test="password != null">`password` = #{password},</if>
+            <if test="mustChangePassword != null">`must_change_password` = #{mustChangePassword},</if>
             <if test="deptId != null">`dept_id` = #{deptId},</if>
             <if test="email != null">`email` = #{email},</if>
             <if test="mobile != null">`mobile` = #{mobile},</if>

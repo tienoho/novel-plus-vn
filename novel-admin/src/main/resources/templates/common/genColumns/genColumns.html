@@ -11,17 +11,17 @@
                 <!--<div class="fixed-table-toolbar">
                     <div class="columns pull-left">
                         <button shiro:hasPermission="common:genColumns:add" type="button"
-                                class="btn  btn-primary" onclick="add()">
+                                class="btn  btn-primary" data-admin-action="add">
                             <i class="fa fa-plus" aria-hidden="true"></i><span th:text="#{common.add}">Thêm</span>
                         </button>
                         <button shiro:hasPermission="common:genColumns:batchRemove" type="button"
                                 class="btn  btn-danger"
-                                onclick="batchRemove()">
+                                data-admin-action="batch-remove">
                             <i class="fa fa-trash" aria-hidden="true"></i><span th:text="#{common.deleteAction}">Xóa</span>
                         </button>
                     </div>
                     <div class="columns pull-right">
-                        <button class="btn btn-success" onclick="reLoad()" th:text="#{common.query}">Tra cứu</button>
+                        <button class="btn btn-success" data-admin-action="reload" th:text="#{common.query}">Tra cứu</button>
                     </div>
 
                     <form id="searchForm">
@@ -36,7 +36,7 @@
                 </table>
                 <div class="form-group">
                     <div class="col-sm-8 col-sm-offset-3">
-                        <button onclick="save()" type="submit" class="btn btn-primary" th:text="#{common.submit}">Gửi</button>
+                        <button data-admin-action="save" type="submit" class="btn btn-primary" th:text="#{common.submit}">Gửi</button>
                     </div>
                 </div>
             </div>

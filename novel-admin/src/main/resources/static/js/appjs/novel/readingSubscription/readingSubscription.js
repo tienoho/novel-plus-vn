@@ -32,7 +32,12 @@
             EXPIRED: messages.statusExpired,
             RETIRED: messages.statusRetired,
             PAID_REVIEW: messages.statusPaidReview,
-            REFUND_PENDING: messages.statusRefundPending
+            REFUND_PENDING: messages.statusRefundPending,
+            PROCESSING: messages.statusProcessing,
+            PROVIDER_PENDING: messages.statusProviderPending,
+            RETRY_WAIT: messages.statusRetryWait,
+            FAILED: messages.statusFailed,
+            GRACE_EXPIRED: messages.statusGraceExpired
         };
         return labels[status] || status;
     }
@@ -204,6 +209,85 @@
         }).fail(showError);
     }
 
+    function loadRenewalQueue() {
+        if (!permissions.review) return;
+        $.get(base + '/renewals', {
+            status: $('#renewalQueueStatus').val(),
+            limit: 100
+        }).done(function (response) {
+            renderRenewalQueue(response.data || []);
+        }).fail(showError);
+    }
+
+    function renderRenewalQueue(items) {
+        var body = document.querySelector('#renewalQueueTable tbody');
+        while (body.firstChild) body.removeChild(body.firstChild);
+        if (!items.length) {
+            var emptyRow = document.createElement('tr');
+            var emptyCell = document.createElement('td');
+            emptyCell.colSpan = 10;
+            emptyCell.textContent = messages.renewalEmpty;
+            emptyRow.appendChild(emptyCell);
+            body.appendChild(emptyRow);
+        }
+        items.forEach(function (cycle) {
+            var row = document.createElement('tr');
+            textCell(row, cycle.cycleId);
+            textCell(row, cycle.userId);
+            textCell(row, cycle.planCode);
+            textCell(row, statusLabel(cycle.status));
+            textCell(row, cycle.attemptCount);
+            textCell(row, cycle.fundingSource);
+            textCell(row, cycle.responseCode);
+            textCell(row, formatDate(cycle.nextAttemptAt));
+            textCell(row, formatDate(cycle.graceEndAt));
+            var actions = document.createElement('td');
+            actions.appendChild(actionButton(messages.renewalDetails, 'btn-info', function () {
+                loadRenewalDetails(cycle.cycleId);
+            }));
+            if (cycle.status === 'RETRY_WAIT') {
+                actions.appendChild(document.createTextNode(' '));
+                actions.appendChild(actionButton(messages.renewalRetry, 'btn-warning', function () {
+                    promptRenewalRetry(cycle);
+                }));
+            }
+            row.appendChild(actions);
+            body.appendChild(row);
+        });
+    }
+
+    function loadRenewalDetails(cycleId) {
+        $.when(
+            $.get(base + '/renewals/' + encodeURIComponent(cycleId) + '/attempts', {limit: 50}),
+            $.get(base + '/renewals/' + encodeURIComponent(cycleId) + '/audits', {limit: 50})
+        ).done(function (attemptResponse, auditResponse) {
+            var detail = document.getElementById('renewalQueueDetail');
+            detail.textContent = JSON.stringify({
+                attempts: attemptResponse[0].data || [],
+                audits: auditResponse[0].data || []
+            }, null, 2);
+        }).fail(showError);
+    }
+
+    function promptRenewalRetry(cycle) {
+        layer.prompt({title: messages.renewalRetryReason, formType: 2}, function (value, index) {
+            var reason = String(value || '').trim();
+            if (reason.length < 8 || reason.length > 500) {
+                layer.msg(messages.renewalRetryReason);
+                return;
+            }
+            layer.close(index);
+            $.post(base + '/renewals/retry', {
+                cycleId: cycle.cycleId,
+                expectedVersion: cycle.version,
+                reason: reason
+            }).done(function () {
+                layer.msg(messages.renewalRetryScheduled);
+                loadRenewalQueue();
+            }).fail(showError);
+        });
+    }
+
     function changeStatus(plan, status) {
         $.post(base + '/plans/status', {
             planId: plan.id, expectedVersion: plan.version, status: status
@@ -288,7 +372,13 @@
                 loadPurchaseReviews();
             }
         });
+        $('#renewalQueueFilter').on('submit', function (event) {
+            event.preventDefault();
+            document.getElementById('renewalQueueDetail').textContent = '';
+            loadRenewalQueue();
+        });
         loadPurchaseReviews();
+        loadRenewalQueue();
     }
 
     loadPlans();

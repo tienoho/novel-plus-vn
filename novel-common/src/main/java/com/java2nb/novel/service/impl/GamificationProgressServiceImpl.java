@@ -270,12 +270,19 @@ public class GamificationProgressServiceImpl implements GamificationProgressServ
         profile.setFrameCode(levelRule.getFrameCode());
         profile.setVersion(profile.getVersion() + 1);
         if (levelRule.getLevel() > previousLevel) {
-            eventRecorder.ingest(GamificationEventInputFactory.create("LEVEL_REACHED",
-                "GAMIFY:LEVEL_REACHED:" + command.userId() + ':' + levelRule.getLevel()
-                    + ':' + profile.getRuleVersion(),
-                command.userId(), null, command.claimedAt(),
-                "{\"level\":" + levelRule.getLevel() + '}', command.zoneId(),
-                rewardPolicyVersion));
+            List<LevelRuleRow> reachedLevels = mapper.selectLevelRulesBetween(
+                profile.getRuleVersion(), previousLevel, levelRule.getLevel());
+            if (reachedLevels.size() != levelRule.getLevel() - previousLevel) {
+                throw new IllegalStateException("Chuỗi quy tắc level không liên tục");
+            }
+            for (LevelRuleRow reachedLevel : reachedLevels) {
+                eventRecorder.ingest(GamificationEventInputFactory.create("LEVEL_REACHED",
+                    "GAMIFY:LEVEL_REACHED:" + command.userId() + ':' + reachedLevel.getLevel()
+                        + ':' + profile.getRuleVersion(),
+                    command.userId(), null, command.claimedAt(),
+                    "{\"level\":" + reachedLevel.getLevel() + '}', command.zoneId(),
+                    rewardPolicyVersion));
+            }
         }
         return ledger.getId();
     }
@@ -424,5 +431,45 @@ public class GamificationProgressServiceImpl implements GamificationProgressServ
             throw new IllegalStateException("Không đọc được hồ sơ sau khi đổi tuỳ chọn bảng chạy");
         }
         return updated;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public GamificationProfileRow adminSetTickerOptOut(long userId, boolean optOut, long operatorId,
+                                                        String reason, String ruleVersion) {
+        validateIdentity(userId, ruleVersion);
+        if (operatorId <= 0) {
+            throw new IllegalArgumentException("Quản trị viên kiểm duyệt không hợp lệ");
+        }
+        String normalizedReason = normalizeModerationReason(reason);
+        mapper.insertProfileIgnore(userId, ruleVersion);
+        GamificationProfileRow profile = mapper.lockProfile(userId);
+        if (profile == null) {
+            throw new IllegalStateException("Không thể khóa hồ sơ gamification");
+        }
+        if (Boolean.valueOf(optOut).equals(profile.getTickerOptOut())) {
+            return profile;
+        }
+        if (mapper.updateTickerOptOut(userId, optOut, profile.getVersion()) != 1) {
+            throw new BusinessException(ResponseStatus.GAMIFICATION_PROFILE_VERSION_CONFLICT);
+        }
+        if (mapper.insertProfileAudit(userId, "TICKER_OPT",
+            String.valueOf(profile.getTickerOptOut()), String.valueOf(optOut),
+            "ADMIN", operatorId, normalizedReason) != 1) {
+            throw new IllegalStateException("Không thể ghi audit kiểm duyệt bảng chạy");
+        }
+        GamificationProfileRow updated = mapper.selectProfile(userId);
+        if (updated == null) {
+            throw new IllegalStateException("Không đọc được hồ sơ sau khi kiểm duyệt bảng chạy");
+        }
+        return updated;
+    }
+
+    private String normalizeModerationReason(String value) {
+        String normalized = value == null ? "" : value.trim();
+        if (normalized.length() < 10 || normalized.length() > 255) {
+            throw new IllegalArgumentException("Lý do kiểm duyệt phải dài từ 10 đến 255 ký tự");
+        }
+        return normalized;
     }
 }

@@ -8,7 +8,7 @@
 </head>
 <body>
 <div style="height:50px;line-height:50px;text-align:center" class="layui-header header header-doc layui-bg-cyan">
-    <div style="float:left;margin-left:10px"><a href="javascript:history.go(-1)"><i style="font-size:20px;color:#fff" class="layui-icon">&#xe65c;</i></a></div>
+    <div style="float:left;margin-left:10px"><a href="#" data-csp-action="history-back"><i style="font-size:20px;color:#fff" class="layui-icon">&#xe65c;</i></a></div>
     <b th:text="#{notification.title}">Thông báo</b>
     <button id="markAllRead" class="layui-btn layui-btn-xs" style="float:right;margin:14px 10px 0 0" th:text="#{notification.markAllRead}">Đã đọc tất cả</button>
 </div>
@@ -38,7 +38,7 @@
                 $('<div>').css({color:'#999',marginTop:'6px'}).text(new Date(item.createTime).toLocaleString('vi-VN')).appendTo(card);
                 var actions=$('<div>').css({marginTop:'8px'}).appendTo(card);
                 $('<a>').attr('href','/book/'+item.bookId+'/'+item.chapterId+'.html').text(notificationMessages.readChapter).appendTo(actions);
-                if(!item.read){$('<a>').attr('href','javascript:void(0)').css({marginLeft:'18px'}).text(notificationMessages.markRead).on('click',function(){$.post('/user/notifications/'+item.id+'/read',function(){document.dispatchEvent(new Event('novel:notifications-changed'));loadNotifications(1,20);});}).appendTo(actions);}
+                if(!item.read){$('<a>').attr('href','#').css({marginLeft:'18px'}).text(notificationMessages.markRead).on('click',function(event){event.preventDefault();$.post('/user/notifications/'+item.id+'/read',function(){document.dispatchEvent(new Event('novel:notifications-changed'));loadNotifications(1,20);});}).appendTo(actions);}
                 $('#notificationList').append(card);
             });
             layui.laypage.render({elem:'notificationPage',count:page.total,curr:page.pageNum,limit:page.pageSize,

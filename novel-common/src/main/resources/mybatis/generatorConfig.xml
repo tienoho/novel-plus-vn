@@ -10,8 +10,8 @@
         </commentGenerator>
         <jdbcConnection
                 connectionURL="jdbc:mysql://127.0.0.1:3306/novel_plus?tinyInt1isBit=false&amp;useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=Asia/Shanghai&amp;nullCatalogMeansCurrent=true"
-                driverClass="com.mysql.jdbc.Driver" password="test123456"
-                userId="root"/>
+                driverClass="com.mysql.cj.jdbc.Driver" password="__DB_PASSWORD__"
+                userId="__DB_USERNAME__"/>
 
         <!-- Mặc định false: ánh xạ JDBC DECIMAL và NUMERIC thành Integer; khi true ánh xạ JDBC DECIMAL
             và NUMERIC thành java.math.BigDecimal -->

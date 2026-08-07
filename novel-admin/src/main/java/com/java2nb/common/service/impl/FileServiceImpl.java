@@ -5,11 +5,13 @@ import com.java2nb.common.config.JnConfig;
 import com.java2nb.common.dao.FileDao;
 import com.java2nb.common.domain.FileDO;
 import com.java2nb.common.service.FileService;
+import com.java2nb.common.utils.FileUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
@@ -61,12 +63,13 @@ public class FileServiceImpl implements FileService {
     @Override
     public Boolean isExist(String url) {
         Boolean isExist = false;
-        if (!StringUtils.isEmpty(url)) {
-            String filePath = url.replace(Constant.UPLOAD_FILES_PREFIX, "");
-            filePath = jnConfig.getUploadPath() + filePath;
-            File file = new File(filePath);
-            if (file.exists()) {
-                isExist = true;
+        if (!StringUtils.isEmpty(url) && url.startsWith(Constant.UPLOAD_FILES_PREFIX)) {
+            try {
+                Path filePath = FileUtil.resolveUnderRoot(jnConfig.getUploadPath(),
+                    url.substring(Constant.UPLOAD_FILES_PREFIX.length()));
+                isExist = Files.isRegularFile(filePath);
+            } catch (IllegalArgumentException ignored) {
+                isExist = false;
             }
         }
         return isExist;

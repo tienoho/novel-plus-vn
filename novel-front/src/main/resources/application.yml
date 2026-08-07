@@ -19,6 +19,9 @@ novel:
     subscription-grant-cron: ${READING_SUBSCRIPTION_GRANT_CRON:0 10 0 * * ?}
     subscription-zone-id: ${READING_SUBSCRIPTION_ZONE_ID:Asia/Ho_Chi_Minh}
     subscription-grant-batch-size: ${READING_SUBSCRIPTION_GRANT_BATCH_SIZE:200}
+    subscription-renewal-enabled: ${READING_SUBSCRIPTION_RENEWAL_ENABLED:false}
+    subscription-renewal-delay-ms: ${READING_SUBSCRIPTION_RENEWAL_DELAY_MS:60000}
+    subscription-renewal-batch-size: ${READING_SUBSCRIPTION_RENEWAL_BATCH_SIZE:100}
   payment:
     vietqr:
       enabled: ${VIETQR_ENABLED:false}
@@ -85,13 +88,18 @@ spring:
     include: website,vnpay,oss
 
 jwt:
-  secret: ${JWT_SECRET:change-me-with-at-least-32-random-characters}
-  expiration: 604800
+  secret: ${JWT_SECRET:}
+  access-expiration: ${JWT_ACCESS_EXPIRATION:900}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800}
+
+auth:
+  cookie:
+    secure: ${AUTH_COOKIE_SECURE:false}
 
 #Mật khẩu quản lý bộ nhớ đệm
 cache:
   manager:
-    password: ${CACHE_MANAGER_PASSWORD:change-me-cache-password}
+    password: ${CACHE_MANAGER_PASSWORD:}
 
 
 # Chống tấn công XSS
@@ -130,6 +138,10 @@ notification:
     schedule-initial-delay-ms: ${NOTIFICATION_CHAPTER_SCHEDULE_INITIAL_DELAY_MS:15000}
 
 security:
+  csp:
+    enabled: ${CSP_ENABLED:true}
+    # Chỉ chuyển sang true khi verifier không còn inline handler/script thiếu nonce.
+    enforce: ${CSP_ENFORCE:true}
   pii:
     encryption-key: ${PII_ENCRYPTION_KEY:disabled}
 

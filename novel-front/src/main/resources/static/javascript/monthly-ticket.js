@@ -91,6 +91,24 @@
         window.location.href = loginUrl + '?originUrl=' + encodeURIComponent(window.location.href);
     }
 
+    function renderSeasonOptions(select, seasons, messages, includePlaceholder) {
+        select.replaceChildren();
+        if (includePlaceholder) {
+            var placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = messages.chooseSeason;
+            select.appendChild(placeholder);
+        }
+        (Array.isArray(seasons) ? seasons : []).forEach(function (season) {
+            var option = document.createElement('option');
+            option.value = String(season.seasonId);
+            option.textContent = season.periodCode + ' · ' +
+                (season.seasonType === 'REGULAR' ? messages.regularSeason : messages.specialSeason);
+            option.dataset.seasonType = season.seasonType;
+            select.appendChild(option);
+        });
+    }
+
     function initializeBookWidget() {
         var root = document.getElementById('monthlyTicketBookApp');
         if (!root || !api) { return; }
@@ -105,12 +123,14 @@
         var total = document.getElementById('monthlyTicketBookTotal');
         var balance = document.getElementById('monthlyTicketBalance');
         var expiry = document.getElementById('monthlyTicketExpiry');
+        var seasonSelect = document.getElementById('monthlyTicketSeason');
         var countInput = document.getElementById('monthlyTicketCount');
         var voteButton = document.getElementById('monthlyTicketVoteButton');
         var currentSummary = null;
         var currentBalance = 0;
         var pendingVote = null;
         var inFlight = false;
+        var currentAccount = null;
 
         function showLogin() {
             content.hidden = true;
@@ -185,13 +205,44 @@
             updateVoteButton();
         }
 
+        function loadSummary() {
+            var seasonId = Number(seasonSelect.value);
+            pendingVote = null;
+            currentSummary = null;
+            updateVoteButton();
+            if (!Number.isSafeInteger(seasonId) || seasonId <= 0) {
+                period.textContent = messages.periodUnavailable;
+                total.textContent = '0';
+                setStatus(status, messages.chooseSeason, false);
+                return Promise.resolve();
+            }
+            setStatus(status, messages.loading, false);
+            return api.getBookMonthlyTicketSummary(bookId, seasonId).then(function (summary) {
+                render(summary, currentAccount);
+            }).catch(function (error) {
+                if (!terminalError(error)) {
+                    setStatus(status, error && error.code ? error.message : messages.loadError, true);
+                }
+            });
+        }
+
         function load() {
             setStatus(status, messages.loading, false);
-            return Promise.all([
-                api.getBookMonthlyTicketSummary(bookId),
-                api.getMonthlyTicketAccount()
-            ]).then(function (values) {
-                render(values[0], values[1]);
+            return Promise.all([api.getMonthlyTicketSeasons(), api.getMonthlyTicketAccount()])
+                .then(function (values) {
+                currentAccount = values[1];
+                currentBalance = Math.max(0, Number(currentAccount.availableBalance) || 0);
+                renderSeasonOptions(seasonSelect, values[0], messages, true);
+                period.textContent = messages.periodUnavailable;
+                total.textContent = '0';
+                balance.textContent = numberFormatter.format(currentBalance);
+                renderExpiry(currentAccount);
+                content.hidden = false;
+                login.hidden = true;
+                root.hidden = false;
+                setStatus(status, values[0].length ? messages.chooseSeason : messages.periodUnavailable,
+                    false);
+                updateVoteButton();
             }).catch(function (error) {
                 if (!terminalError(error)) {
                     root.hidden = false;
@@ -212,14 +263,20 @@
             }))) {
                 return;
             }
-            if (!pendingVote || pendingVote.count !== count) {
-                pendingVote = {count: count, clientRequestId: randomRequestId()};
+            if (!pendingVote || pendingVote.count !== count ||
+                pendingVote.seasonId !== currentSummary.seasonId) {
+                pendingVote = {
+                    seasonId: currentSummary.seasonId,
+                    count: count,
+                    clientRequestId: randomRequestId()
+                };
             }
             inFlight = true;
             countInput.readOnly = true;
             updateVoteButton();
             setStatus(status, '', false);
-            api.castMonthlyTicketVote(bookId, pendingVote.count, pendingVote.clientRequestId)
+            api.castMonthlyTicketVote(bookId, pendingVote.seasonId, pendingVote.count,
+                pendingVote.clientRequestId)
                 .then(function (result) {
                     pendingVote = null;
                     currentBalance = Math.max(0, Number(result.availableBalance) || 0);
@@ -258,6 +315,7 @@
             redirectToLogin(messages.loginUrl);
         });
         voteButton.addEventListener('click', vote);
+        seasonSelect.addEventListener('change', loadSummary);
         load();
     }
 
@@ -269,10 +327,11 @@
         var status = document.getElementById('monthlyTicketRankingStatus');
         var metadata = document.getElementById('monthlyTicketRankingMeta');
         var list = document.getElementById('monthlyTicketRankingList');
-        var periodInput = document.getElementById('monthlyTicketRankingPeriod');
+        var seasonSelect = document.getElementById('monthlyTicketRankingSeason');
         var loadButton = document.getElementById('monthlyTicketRankingLoad');
         var previousButton = document.getElementById('monthlyTicketRankingPrevious');
         var nextButton = document.getElementById('monthlyTicketRankingNext');
+        var policyRoot = document.getElementById('gamificationPublicPolicy');
         var page = 1;
         var loading = false;
         var seasonLabels = {
@@ -296,7 +355,9 @@
                 list.appendChild(fragment);
             }
             page = Number(result.page) || 1;
-            periodInput.value = result.periodCode || periodInput.value;
+            if (result.seasonId) {
+                seasonSelect.value = String(result.seasonId);
+            }
             var statusLabel = seasonLabels[result.seasonStatus] || result.seasonStatus || '';
             var modeLabel = result.snapshot ? messages.snapshot : messages.live;
             var cutoff = result.cutoffAt ? dateFormatter.format(new Date(result.cutoffAt)) : '';
@@ -320,7 +381,7 @@
             if (loading) { return; }
             setLoading(true);
             setStatus(status, messages.loading, false);
-            api.getMonthlyTicketRanking(periodInput.value || null, requestedPage, 20)
+            api.getMonthlyTicketRanking(Number(seasonSelect.value) || null, null, requestedPage, 20)
                 .then(render)
                 .catch(function (error) {
                     if (error && error.code === 7001) {
@@ -336,9 +397,30 @@
         }
 
         loadButton.addEventListener('click', function () { load(1); });
+        seasonSelect.addEventListener('change', function () { load(1); });
         previousButton.addEventListener('click', function () { load(Math.max(1, page - 1)); });
         nextButton.addEventListener('click', function () { load(page + 1); });
-        load(1);
+        api.getMonthlyTicketSeasons().then(function (seasons) {
+            renderSeasonOptions(seasonSelect, seasons, messages, false);
+            var regular = seasons.find(function (season) { return season.seasonType === 'REGULAR'; });
+            if (regular) {
+                seasonSelect.value = String(regular.seasonId);
+            }
+            load(1);
+        }).catch(function () {
+            load(1);
+        });
+        if (policyRoot) {
+            api.getPublicPolicy().then(function (policy) {
+                if (!policy) { return; }
+                document.getElementById('gamificationPublicPolicyTitle').textContent = policy.title || '';
+                document.getElementById('gamificationPublicPolicyVersion').textContent =
+                    policy.policyVersion || '';
+                document.getElementById('gamificationPublicPolicyContent').textContent =
+                    policy.contentText || '';
+                policyRoot.hidden = false;
+            }).catch(function () { policyRoot.hidden = true; });
+        }
     }
 
     function initializeHomeWidget() {
@@ -436,7 +518,7 @@
             setStatus(status, '', false);
         }
 
-        api.getMonthlyTicketRanking(null, 1, 5)
+        api.getMonthlyTicketRanking(null, null, 1, 5)
             .then(render)
             .catch(function (error) {
                 if (error && error.code === 7001) {

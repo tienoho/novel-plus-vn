@@ -1,0 +1,17 @@
+.aactive,
+.hactive:hover {
+    color: #13b5b7 !important;
+}
+
+#file-list::after {
+    clear: both;
+    content: "";
+    display: table;
+}
+
+.file-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    padding: 10px;
+}

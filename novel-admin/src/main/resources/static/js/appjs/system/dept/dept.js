@@ -60,18 +60,9 @@ function load() {
 						align : 'center',
                         valign : 'center',
 						formatter : function(item, index) {
-							var e = '<a class="btn btn-primary btn-sm ' + s_edit_h + '" href="#" mce_href="#" title="' + adminMessage('edit', 'Sửa') + '" onclick="edit(\''
-								+ item.deptId
-								+ '\')"><i class="fa fa-edit"></i></a> ';
-							var a = '<a class="btn btn-primary btn-sm ' + s_add_h + '" href="#" title="' + adminMessage('departmentAddChild', 'Thêm phòng ban con') + '"  mce_href="#" onclick="add(\''
-								+ item.deptId
-								+ '\')"><i class="fa fa-plus"></i></a> ';
-							var d = '<a class="btn btn-warning btn-sm ' + s_remove_h + '" href="#" title="' + adminMessage('deleteLabel', 'Xóa') + '"  mce_href="#" onclick="removeone(\''
-								+ item.deptId
-								+ '\')"><i class="fa fa-remove"></i></a> ';
-							var f = '<a class="btn btn-success btn-sm＂ href="#" title="' + adminMessage('backup', 'Dự phòng') + '"  mce_href="#" onclick="resetPwd(\''
-								+ item.deptId
-								+ '\')"><i class="fa fa-key"></i></a> ';
+							var e = adminRowAction({action: 'edit', args: [item.deptId], variant: 'primary', visibility: s_edit_h, title: adminMessage('edit', 'Sửa'), icon: 'edit'});
+							var a = adminRowAction({action: 'add', args: [item.deptId], variant: 'primary', visibility: s_add_h, title: adminMessage('departmentAddChild', 'Thêm phòng ban con'), icon: 'add'});
+							var d = adminRowAction({action: 'remove-one', args: [item.deptId], variant: 'warning', visibility: s_remove_h, title: adminMessage('deleteLabel', 'Xóa'), icon: 'remove'});
 							return e + a + d;
 						}
 					} ]

@@ -7,6 +7,9 @@ public interface WalletLedgerService {
     WalletPostResult purchaseChapter(long userId, long authorId, long amount, long authorAmount,
                                      String businessId, String idempotencyKey);
 
+    WalletPostResult chargeReaderSubscription(long userId, long amount, String businessId,
+                                              String idempotencyKey);
+
     WalletPostResult creditReaderReward(long userId, long amount, String businessId, String idempotencyKey,
                                         String description);
 

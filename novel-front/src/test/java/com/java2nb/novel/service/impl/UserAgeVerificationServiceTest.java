@@ -85,7 +85,9 @@ class UserAgeVerificationServiceTest {
             mock(BookIndexMapper.class),
             mock(ChapterCommercialPolicyService.class),
             mock(com.java2nb.novel.service.entitlement.ReadingTicketService.class),
-            mock(com.java2nb.novel.service.gamification.GamificationEventService.class)
+            mock(com.java2nb.novel.service.gamification.GamificationEventService.class),
+            mock(org.springframework.security.crypto.password.PasswordEncoder.class),
+            new com.java2nb.novel.core.security.RichTextSanitizer()
         );
     }
 }

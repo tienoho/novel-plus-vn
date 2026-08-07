@@ -13,7 +13,6 @@ Tài liệu này ghi nhận các vị trí được phép giữ chữ Hán sau k
 - `crawlSource_add.html`, `crawlSource_update.html`: giữ các token ví dụ `作者`, `状态`, `连载`, `完结`, `分`, `更新` vì đây là rule khớp website nguồn.
 - `IpLocationServiceImpl.java`: giữ tên tỉnh/thành Trung Quốc và `中国` làm khóa đầu vào của `ip2region`; kết quả hiển thị đã được ánh xạ sang tiếng Việt.
 - `author/book_add.html` ở runtime, green và orange: giữ `玄幻奇幻` trong hidden value tương thích dữ liệu cũ.
-- `mh_book_search.html`, `soft_book_search.html` ở runtime và các theme: giữ `已完成` trong query/điều kiện tương thích trạng thái DB hiện tại.
 
 ## Dữ liệu nội dung mẫu
 

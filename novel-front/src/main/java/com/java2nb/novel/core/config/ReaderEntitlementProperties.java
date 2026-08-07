@@ -20,6 +20,9 @@ public class ReaderEntitlementProperties {
     private String subscriptionGrantCron = "0 10 0 * * ?";
     private String subscriptionZoneId = "Asia/Ho_Chi_Minh";
     private int subscriptionGrantBatchSize = 200;
+    private boolean subscriptionRenewalEnabled;
+    private long subscriptionRenewalDelayMs = 60_000;
+    private int subscriptionRenewalBatchSize = 100;
 
     public boolean isConfigured() {
         return policyVersion != null && !policyVersion.isBlank()
@@ -30,7 +33,9 @@ public class ReaderEntitlementProperties {
             && expiryMaxLotsPerUser > 0 && expiryMaxLotsPerUser <= 10_000
             && subscriptionGrantCron != null && !subscriptionGrantCron.isBlank()
             && isValidZoneId(subscriptionZoneId)
-            && subscriptionGrantBatchSize > 0 && subscriptionGrantBatchSize <= 10_000;
+            && subscriptionGrantBatchSize > 0 && subscriptionGrantBatchSize <= 10_000
+            && subscriptionRenewalDelayMs >= 10_000 && subscriptionRenewalDelayMs <= 3_600_000
+            && subscriptionRenewalBatchSize > 0 && subscriptionRenewalBatchSize <= 500;
     }
 
     private boolean isValidZoneId(String zoneId) {

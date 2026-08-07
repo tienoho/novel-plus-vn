@@ -4,10 +4,12 @@ import com.java2nb.novel.common.entity.FinancialVoucherDO;
 import com.java2nb.novel.common.service.FinancialVoucherService;
 import com.java2nb.novel.core.bean.UserDetails;
 import com.java2nb.novel.core.exception.BusinessException;
+import com.java2nb.novel.core.utils.AuthCookieService;
 import com.java2nb.novel.entity.Author;
 import com.java2nb.novel.service.AuthorService;
 import io.github.xxyopen.model.resp.RestResult;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
@@ -38,8 +40,10 @@ public class AuthorFinanceReceiptsControllerTest {
 
     private HttpServletRequest createAuthenticatedRequest(UserDetails userDetails) {
         HttpServletRequest request = mock(HttpServletRequest.class);
-        when(request.getHeader("Authorization")).thenReturn("Bearer test-token");
-        when(jwtTokenUtil.getUserDetailsFromToken("Bearer test-token")).thenReturn(userDetails);
+        when(request.getCookies()).thenReturn(new Cookie[]{
+            new Cookie(AuthCookieService.ACCESS_COOKIE, "test-token")
+        });
+        when(jwtTokenUtil.getUserDetailsFromToken("test-token")).thenReturn(userDetails);
         return request;
     }
 

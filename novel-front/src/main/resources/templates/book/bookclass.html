@@ -16,15 +16,18 @@
 <div th:replace="common/top :: top('1')">
 </div>
 
-<div class="main box_center cf">
+<div class="main box_center cf" id="bookclassApp"
+     th:data-ten-thousand-unit="#{book.tenThousandUnit}"
+     th:data-unlimited="#{common.unlimited}"
+     th:data-network-error="#{auth.networkError}">
     <h1 class="sr-only" th:text="#{site.allBooks}">Tất cả tác phẩm</h1>
     <div class="channelWrap classTable cf">
         <div class="so_tag">
             <ul class="list">
                 <li class="so_pd" id="workDirection">
                     <span class="tit" th:text="#{book.channel}+': '">Kênh tác phẩm:</span>
-                    <a filter-value="0" href="javascript:listBookCategory();search(1,20)" class="on" th:text="#{book.channel.male}">Truyện nam</a>
-                    <a filter-value="1" href="javascript:listBookCategory();search(1,20)" th:text="#{book.channel.female}">Truyện nữ</a>
+                    <a filter-value="0" href="#filter-direction" data-book-filter="direction" class="on" th:text="#{book.channel.male}">Truyện nam</a>
+                    <a filter-value="1" href="#filter-direction" data-book-filter="direction" th:text="#{book.channel.female}">Truyện nữ</a>
                 </li>
                 <li id="idGirl" class="so_class">
                     <span class="tit" th:text="#{book.categoryFilter}+': '">Thể loại:</span>
@@ -41,32 +44,32 @@
                 </li>-->
                 <li class="so_progress">
                     <span class="tit" th:text="#{book.completionFilter}+': '">Trạng thái hoàn thành:</span>
-                    <a href="javascript:search(1,20)" class="on" th:text="#{common.unlimited}">Không giới hạn</a>
-                    <a filter-value="0" href="javascript:search(1,20)" class="" th:text="#{book.status.serializing}">Đang ra</a>
-                    <a filter-value="1" href="javascript:search(1,20)" class="" th:text="#{book.status.completed}">Đã hoàn thành</a>
+                    <a href="#filter" data-book-filter="auto" class="on" th:text="#{common.unlimited}">Không giới hạn</a>
+                    <a filter-value="0" href="#filter" data-book-filter="auto" class="" th:text="#{book.status.serializing}">Đang ra</a>
+                    <a filter-value="1" href="#filter" data-book-filter="auto" class="" th:text="#{book.status.completed}">Đã hoàn thành</a>
                 </li>
                 <li class="so_words">
                     <span class="tit" th:text="#{book.wordsFilter}+': '">Độ dài:</span>
-                    <a href="javascript:search(1,20)" class="on" th:text="#{common.unlimited}">Không giới hạn</a>
-                    <a filter-value-max="300000" href="javascript:search(1,20)" class="" th:text="#{book.words.below300k}">Dưới 300 nghìn chữ</a>
-                    <a filter-value-min="300000" filter-value-max="500000" href="javascript:search(1,20)" class="" th:text="#{book.words.300kTo500k}">300–500 nghìn chữ</a>
-                    <a filter-value-min="500000" filter-value-max="1000000" href="javascript:search(1,20)" class="" th:text="#{book.words.500kTo1m}">500 nghìn–1 triệu chữ</a>
-                    <a filter-value-min="1000000" href="javascript:search(1,20)" class="" th:text="#{book.words.above1m}">Trên 1 triệu chữ</a>
+                    <a href="#filter" data-book-filter="auto" class="on" th:text="#{common.unlimited}">Không giới hạn</a>
+                    <a filter-value-max="300000" href="#filter" data-book-filter="auto" class="" th:text="#{book.words.below300k}">Dưới 300 nghìn chữ</a>
+                    <a filter-value-min="300000" filter-value-max="500000" href="#filter" data-book-filter="auto" class="" th:text="#{book.words.300kTo500k}">300–500 nghìn chữ</a>
+                    <a filter-value-min="500000" filter-value-max="1000000" href="#filter" data-book-filter="auto" class="" th:text="#{book.words.500kTo1m}">500 nghìn–1 triệu chữ</a>
+                    <a filter-value-min="1000000" href="#filter" data-book-filter="auto" class="" th:text="#{book.words.above1m}">Trên 1 triệu chữ</a>
                 </li>
                 <li class="so_update">
                     <span class="tit" th:text="#{book.updateFilter}+': '">Thời gian cập nhật:</span>
-                    <a href="javascript:search(1,20)" class="on" th:text="#{common.unlimited}">Không giới hạn</a>
-                    <a filter-value="3" href="javascript:search(1,20)" class="" th:text="#{book.update.within3days}">Trong 3 ngày</a>
-                    <a filter-value="7" href="javascript:search(1,20)" class="" th:text="#{book.update.within7days}">Trong 7 ngày</a>
-                    <a filter-value="15" href="javascript:search(1,20)" class="" th:text="#{book.update.within15days}">Trong 15 ngày</a>
-                    <a filter-value="30" href="javascript:search(1,20)" class="" th:text="#{book.update.within30days}">Trong 30 ngày</a>
+                    <a href="#filter" data-book-filter="auto" class="on" th:text="#{common.unlimited}">Không giới hạn</a>
+                    <a filter-value="3" href="#filter" data-book-filter="auto" class="" th:text="#{book.update.within3days}">Trong 3 ngày</a>
+                    <a filter-value="7" href="#filter" data-book-filter="auto" class="" th:text="#{book.update.within7days}">Trong 7 ngày</a>
+                    <a filter-value="15" href="#filter" data-book-filter="auto" class="" th:text="#{book.update.within15days}">Trong 15 ngày</a>
+                    <a filter-value="30" href="#filter" data-book-filter="auto" class="" th:text="#{book.update.within30days}">Trong 30 ngày</a>
                 </li>
                 <li class="so_sort">
                     <span class="tit" th:text="#{book.sort}+': '">Cách sắp xếp:</span>
-                    <a href="javascript:search(1,20)" class="on" th:text="#{common.unlimited}">Không giới hạn</a>
-                    <a filter-value="last_index_update_time" href="javascript:search(1,20)" class="" th:text="#{book.sort.updated}">Cập nhật</a>
-                    <a filter-value="word_count" href="javascript:search(1,20)" class="" th:text="#{book.sort.words}">Tổng số chữ</a>
-                    <a filter-value="visit_count" href="javascript:search(1,20)" class="" th:text="#{book.sort.views}">Lượt xem</a>
+                    <a href="#filter" data-book-filter="auto" class="on" th:text="#{common.unlimited}">Không giới hạn</a>
+                    <a filter-value="last_index_update_time" href="#filter" data-book-filter="auto" class="" th:text="#{book.sort.updated}">Cập nhật</a>
+                    <a filter-value="word_count" href="#filter" data-book-filter="auto" class="" th:text="#{book.sort.words}">Tổng số chữ</a>
+                    <a filter-value="visit_count" href="#filter" data-book-filter="auto" class="" th:text="#{book.sort.views}">Lượt xem</a>
                 </li>
             </ul>
         </div>
@@ -102,268 +105,6 @@
 <div th:replace="common/footer :: footer">
 </div>
 <div th:replace="common/js :: js"></div>
-<script src="/javascript/bookclass.js" type="text/javascript"></script>
-
-<script type="text/javascript" th:inline="javascript">
-    const tenThousandUnitText = /*[[#{book.tenThousandUnit}]]*/ 'vạn';
-    const unlimitedText = /*[[#{common.unlimited}]]*/ 'Không giới hạn';
-    const networkErrorText = /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng';
-
-    var workDirection;
-    var catId = getSearchString('c');
-
-    listBookCategory(catId);
-
-    if(!catId){
-        search(1, 20);
-    }
-
-    function search(curr, limit) {
-        var searchData = {};
-        searchData.curr = curr;
-        searchData.limit = limit;
-
-        searchData.keyword = $("#searchKey").val();
-        var workDirection = $(".so_pd>.on").attr("filter-value");
-        if(workDirection != undefined){
-            searchData.workDirection = workDirection;
-        }
-
-        if(workDirection == 1){
-            var catId = $(".so_girl>.on").attr("filter-value");
-        }else{
-            var catId = $(".so_boy>.on").attr("filter-value");
-        }
-
-        if(catId != undefined){
-            searchData.catId = catId;
-        }
-
-        var bookStatus = $(".so_progress>.on").attr("filter-value");
-        if(bookStatus != undefined){
-            searchData.bookStatus = bookStatus;
-        }
-
-        var wordCountMin = $(".so_words>.on").attr("filter-value-min");
-        if(wordCountMin != undefined){
-            searchData.wordCountMin = wordCountMin;
-        }
-
-        var wordCountMax = $(".so_words>.on").attr("filter-value-max");
-        if(wordCountMax != undefined){
-            searchData.wordCountMax = wordCountMax;
-        }
-
-        var updatePeriod = $(".so_update>.on").attr("filter-value");
-        if(updatePeriod != undefined){
-            searchData.updatePeriod = updatePeriod;
-        }
-
-        var sort = $(".so_sort>.on").attr("filter-value");
-        if(sort != undefined){
-            searchData.sort = sort;
-        }
-
-
-
-
-        $.ajax({
-            type: "get",
-            url: "/book/searchByPage",
-            data: searchData,
-            dataType: "json",
-            success: function (data) {
-                if (data.code == 200) {
-                    var bookList = data.data.list;
-                    var bookListHtml = "";
-                    for (var i = 0; i < bookList.length; i++) {
-                        var book = bookList[i];
-                        var wordCount = (book.wordCount / 10000).toFixed(2);
-                        bookListHtml += (" <tr>\n" +
-                            "                    <td class=\"rank\"><i>" + (i + 1) + "</i></td>\n" +
-                            "                    <td class=\"style\"><a href=\"/book/bookclass.html?c="+book.catId+"\"  cls=\"13\">[" + book.catName + "]</a></td>\n" +
-                            "                    <td class=\"name\"><a href=\"/book/"+book.id+".html\" >" + book.bookName + "</a></td>\n" +
-                            "                    <td class=\"chapter\"><a href=\"/book/"+book.id+".html\" >" + book.lastIndexName + "</a>\n" +
-                            "                    </td>\n" +
-                            "                    <td class=\"author\"><a href=\"javascript:void(0)\">" + book.authorName + "</a></td>\n" +
-                            "                    <td class=\"word\">" + wordCount + " " + tenThousandUnitText + "</td>\n" +
-                            "                </tr>");
-                    }
-                    $("#bookList").html(bookListHtml);
-
-                    layui.use('laypage', function () {
-                        var laypage = layui.laypage;
-
-                        // Khởi tạo phân trang Layui.
-                        laypage.render({
-                            elem: 'books' // ID phần tử, không thêm dấu #.
-                            , count: data.data.total // Tổng số bản ghi từ máy chủ.
-                            , curr: data.data.pageNum
-                            , limit: data.data.pageSize
-                            , jump: function (obj, first) {
-
-
-                                // obj chứa các tham số phân trang hiện tại.
-                                console.log(obj.curr); // Trang hiện tại.
-                                console.log(obj.limit); // Số bản ghi mỗi trang.
-
-
-                                // Không gọi lại trong lần khởi tạo đầu tiên.
-                                if (!first) {
-                                    search(obj.curr, obj.limit);
-                                } else {
-
-                                }
-                            }
-                        });
-                    });
-                } else {
-                    layer.alert(data.msg);
-                }
-
-            },
-            error: function () {
-                layer.alert(networkErrorText);
-            }
-        })
-
-    }
-
-
-    function listBookCategory(c) {
-        $.ajax({
-            type: "get",
-            url: "/book/listBookCategory",
-            data: {},
-            dataType: "json",
-            success: function (data) {
-                if (data.code == 200) {
-                    var categoryList = data.data;
-                    var boyCategoryListHtml = "";
-                    boyCategoryListHtml += " <a href=\"javascript:search(1,20)\" class=\"on\">" + unlimitedText + "</a>";
-                    var girlCategoryListHtml = "";
-                    girlCategoryListHtml += " <a href=\"javascript:search(1,20)\" class=\"on\">" + unlimitedText + "</a>";
-                    for (var i = 0; i < categoryList.length; i++) {
-                        var category = categoryList[i];
-                        if (category.workDirection == 1) {
-                            if(category.id==c){
-                                workDirection = 1;
-                            }
-                            girlCategoryListHtml += (" <a filter-value='"+category.id+"' href=\"javascript:search(1,20)\">" + category.name + "</a>");
-                        } else {
-                            if(category.id==c){
-                                workDirection = 0;
-                            }
-                            boyCategoryListHtml += (" <a filter-value='"+category.id+"' href=\"javascript:search(1,20)\">" + category.name + "</a>");
-                        }
-                    }
-                    $("#boyCategoryList").html(boyCategoryListHtml);
-                    $("#girlCategoryList").html(girlCategoryListHtml);
-                    $(".so_girl a").click(function () {
-                        var index = $(this).index();
-                        console.log(index);
-                        $(".so_girl>.on").removeClass("on");
-                        $(".so_girl a").eq(index).addClass("on");
-                    })
-                    $(".so_boy a").click(function () {
-                        var index = $(this).index();
-                        console.log(index);
-                        $(".so_boy>.on").removeClass("on");
-                        $(".so_boy>.on").removeClass("on");
-                        $(".so_boy a").eq(index).addClass("on");
-                    })
-                    if(c) {
-                        if (workDirection === 1) {
-                            $(".so_pd a").eq(1).click();
-                            $("#girlCategoryList a[filter-value=" + c + "]").click();
-                        } else {
-                            $("#boyCategoryList a[filter-value=" + c + "]").click();
-                        }
-                        search(1, 20);
-                    }
-
-
-                } else {
-                    layer.alert(data.msg);
-                }
-
-            },
-            error: function () {
-                layer.alert(networkErrorText);
-            }
-        })
-
-    }
-</script>
-<script language="javascript" type="text/javascript">
-    $(function () {
-        $(".so_pd a").click(function () {
-            var index = $(this).index();
-            console.log(index);
-            $(".so_pd>.on").removeClass("on");
-            if (index == 2) {
-                $(".so_pd a").eq(1).addClass("on");
-                $(".so_girl").show();
-                $(".so_boy").hide();
-            } else {
-                $(".so_pd a").eq(0).addClass("on");
-                $(".so_girl").hide();
-                $(".so_boy").show();
-            }
-        })
-        $(".so_progress a").click(function () {
-            var index = $(this).index();
-            console.log(index);
-            $(".so_progress>.on").removeClass("on");
-            $(".so_progress>.on").removeClass("on");
-            $(".so_progress a").eq(index-1).addClass("on");
-        })
-        $(".so_words a").click(function () {
-            var index = $(this).index();
-            console.log(index);
-            $(".so_words>.on").removeClass("on");
-            $(".so_words>.on").removeClass("on");
-            $(".so_words a").eq(index-1).addClass("on");
-        })
-        $(".so_update a").click(function () {
-            var index = $(this).index();
-            console.log(index);
-            $(".so_update>.on").removeClass("on");
-            $(".so_update>.on").removeClass("on");
-            $(".so_update a").eq(index-1).addClass("on");
-        })
-        $(".so_sort a").click(function () {
-            var index = $(this).index();
-            console.log(index);
-            $(".so_sort>.on").removeClass("on");
-            $(".so_sort>.on").removeClass("on");
-            $(".so_sort a").eq(index-1).addClass("on");
-        })
-
-
-        $(".style a").each(function () {
-            var bId = $(this).attr("cls");
-            if (bId > 0) {
-                $(this).html("[" + getBName(bId) + "]");
-            }
-        });
-
-        if (2 == 1) {
-            $(".so_pd>.on").removeClass("on");
-            $(".so_pd a").eq(1).addClass("on");
-            $(".so_girl").hide();
-            $(".so_boy").show();
-        }
-    });
-
-    function getBName(bId) {
-        for (var i = 0; i < bClass.rows.length; i++) {
-            if (bId == bClass.rows[i].BId) {
-                return bClass.rows[i].Name;
-            }
-        }
-        return "";
-    }
-</script>
+<script src="/javascript/bookclass-page.js" type="text/javascript"></script>
 </body>
 </html>

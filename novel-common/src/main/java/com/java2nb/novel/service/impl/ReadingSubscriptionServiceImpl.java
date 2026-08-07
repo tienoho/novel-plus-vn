@@ -6,6 +6,7 @@ import com.java2nb.novel.service.entitlement.ReadingTicketGrantCommand;
 import com.java2nb.novel.service.entitlement.ReadingTicketPostResult;
 import com.java2nb.novel.service.entitlement.ReadingTicketService;
 import com.java2nb.novel.service.subscription.ReadingSubscriptionActivationCommand;
+import com.java2nb.novel.service.subscription.ReadingSubscriptionCheckoutOptions;
 import com.java2nb.novel.service.subscription.ReadingSubscriptionGrantResult;
 import com.java2nb.novel.service.subscription.ReadingSubscriptionGrantStatus;
 import com.java2nb.novel.service.subscription.ReadingSubscriptionPlanRow;
@@ -114,6 +115,85 @@ public class ReadingSubscriptionServiceImpl implements ReadingSubscriptionServic
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ReadingSubscriptionRow updateRenewalSettings(
+        long userId, long subscriptionId, long expectedVersion,
+        ReadingSubscriptionCheckoutOptions options) {
+        Objects.requireNonNull(options, "Thiếu cấu hình tự gia hạn");
+        ReadingSubscriptionRow subscription = requireOwnedSubscription(
+            userId, subscriptionId, expectedVersion);
+        ReadingSubscriptionPlanRow plan = mapper.selectPlanById(subscription.getPlanId());
+        if (plan == null || !"ACTIVE".equals(plan.getStatus())) {
+            throw new IllegalStateException("Gói thuê bao không còn hoạt động");
+        }
+        if (options.autoRenew()) {
+            if (!Objects.equals(options.acceptedPlanVersion(),
+                    subscription.getAcceptedPlanVersion())
+                || !Objects.equals(plan.getPlanVersion(), subscription.getAcceptedPlanVersion())) {
+                throw new IllegalStateException("Cần chấp nhận giá hiện hành trước khi bật tự gia hạn");
+            }
+            requireFundingAvailable(userId, plan, options.primaryFundingSource());
+            requireFundingAvailable(userId, plan, options.fallbackFundingSource());
+        }
+        if (mapper.updateRenewalSettings(subscriptionId, userId, expectedVersion,
+            options.autoRenew(), options.primaryFundingSource(), options.fallbackFundingSource(),
+            new Date()) != 1) {
+            throw new IllegalStateException("Thuê bao đã được cập nhật đồng thời");
+        }
+        return mapper.selectCurrentSubscriptionByUserId(userId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ReadingSubscriptionRow consentPrice(long userId, long subscriptionId,
+                                               long expectedVersion,
+                                               long acceptedPlanVersion,
+                                               String clientRequestId) {
+        String requestId = normalizeClientRequestId(clientRequestId);
+        ReadingSubscriptionRow subscription = requireOwnedSubscription(
+            userId, subscriptionId, expectedVersion);
+        ReadingSubscriptionPlanRow plan = mapper.selectPlanById(subscription.getPlanId());
+        if (plan == null || !Objects.equals(plan.getPlanVersion(), acceptedPlanVersion)) {
+            throw new IllegalStateException("Phiên bản giá cần chấp nhận không còn hiện hành");
+        }
+        if (Objects.equals(subscription.getAcceptedPlanVersion(), acceptedPlanVersion)) {
+            return subscription;
+        }
+        Date consentedAt = new Date();
+        try {
+            if (mapper.insertPriceConsent(subscription, plan, requestId, consentedAt) != 1) {
+                throw new IllegalStateException("Không thể ghi bằng chứng chấp nhận giá");
+            }
+        } catch (DuplicateKeyException exception) {
+            ReadingSubscriptionRow replay = mapper.selectCurrentSubscriptionByUserId(userId);
+            if (replay != null
+                && Objects.equals(replay.getAcceptedPlanVersion(), acceptedPlanVersion)) {
+                return replay;
+            }
+            throw new IllegalStateException("Mã yêu cầu chấp nhận giá đã được sử dụng", exception);
+        }
+        if (mapper.applyPriceConsent(subscriptionId, userId, expectedVersion, plan, consentedAt) != 1) {
+            throw new IllegalStateException("Thuê bao đã được cập nhật đồng thời");
+        }
+        return mapper.selectCurrentSubscriptionByUserId(userId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ReadingSubscriptionRow cancelAtPeriodEnd(long userId, long subscriptionId,
+                                                    long expectedVersion) {
+        ReadingSubscriptionRow subscription = requireOwnedSubscription(
+            userId, subscriptionId, expectedVersion);
+        if ("CANCEL_AT_PERIOD_END".equals(subscription.getStatus())) {
+            return subscription;
+        }
+        if (mapper.cancelAtPeriodEnd(subscriptionId, userId, expectedVersion, new Date()) != 1) {
+            throw new IllegalStateException("Thuê bao đã được cập nhật đồng thời");
+        }
+        return mapper.selectCurrentSubscriptionByUserId(userId);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<ReadingSubscriptionPeriodGrantRow> listPeriodGrants(
         long userId, long subscriptionId, int limit) {
@@ -166,7 +246,11 @@ public class ReadingSubscriptionServiceImpl implements ReadingSubscriptionServic
                 purchase.getUserId(), purchase.getPlanId(), purchase.getPlanCodeSnapshot(),
                 purchase.getTicketsPerPeriodSnapshot(), purchase.getPeriodMonthsSnapshot(),
                 purchase.getTicketValidityDaysSnapshot(), purchase.getSettledAt(), endAt,
-                Long.toString(purchase.getOutTradeNo()), purchase.getPolicyVersion()));
+                Long.toString(purchase.getOutTradeNo()), purchase.getPolicyVersion(),
+                purchase.getPlanVersionSnapshot(), purchase.getPriceVndSnapshot(),
+                purchase.getPriceXuSnapshot(), Boolean.TRUE.equals(purchase.getAutoRenew()),
+                purchase.getPrimaryFundingSource(), purchase.getFallbackFundingSource(),
+                purchase.getAcceptedPlanVersion()));
         Date reviewedAt = new Date();
         if (activated == null) {
             insertReviewAudit(purchase, "RETRY_BLOCKED", "PAID_REVIEW", operatorId,
@@ -323,6 +407,13 @@ public class ReadingSubscriptionServiceImpl implements ReadingSubscriptionServic
         if (!Objects.equals(row.getUserId(), command.userId())
             || !Objects.equals(row.getPlanId(), command.planId())
             || !Objects.equals(row.getPlanCodeSnapshot(), command.planCode())
+            || !Objects.equals(row.getPlanVersionSnapshot(), command.planVersion())
+            || !Objects.equals(row.getPriceVndSnapshot(), command.priceVnd())
+            || !Objects.equals(row.getPriceXuSnapshot(), command.priceXu())
+            || !Objects.equals(row.getAutoRenew(), command.autoRenew())
+            || !Objects.equals(row.getPrimaryFundingSource(), command.primaryFundingSource())
+            || !Objects.equals(row.getFallbackFundingSource(), command.fallbackFundingSource())
+            || !Objects.equals(row.getAcceptedPlanVersion(), command.acceptedPlanVersion())
             || !Objects.equals(row.getTicketsPerPeriodSnapshot(), command.ticketsPerPeriod())
             || !Objects.equals(row.getPeriodMonthsSnapshot(), command.periodMonths())
             || !Objects.equals(row.getTicketValidityDaysSnapshot(), command.ticketValidityDays())
@@ -347,6 +438,49 @@ public class ReadingSubscriptionServiceImpl implements ReadingSubscriptionServic
             throw new IllegalStateException("Gói thuê bao đã được cập nhật đồng thời");
         }
         return current;
+    }
+
+    private ReadingSubscriptionRow requireOwnedSubscription(
+        long userId, long subscriptionId, long expectedVersion) {
+        if (userId <= 0 || subscriptionId <= 0 || expectedVersion < 0) {
+            throw new IllegalArgumentException("Thuê bao hoặc phiên bản không hợp lệ");
+        }
+        ReadingSubscriptionRow subscription = mapper.selectSubscriptionForUserForUpdate(
+            subscriptionId, userId);
+        if (subscription == null) {
+            throw new IllegalStateException("Không tìm thấy thuê bao của người dùng");
+        }
+        if (!Objects.equals(subscription.getVersion(), expectedVersion)) {
+            throw new IllegalStateException("Thuê bao đã được cập nhật đồng thời");
+        }
+        if (!List.of("ACTIVE", "PAST_DUE", "PENDING_PRICE_CONSENT",
+            "CANCEL_AT_PERIOD_END").contains(subscription.getStatus())) {
+            throw new IllegalStateException("Thuê bao không còn mở");
+        }
+        return subscription;
+    }
+
+    private void requireFundingAvailable(long userId, ReadingSubscriptionPlanRow plan,
+                                         String fundingSource) {
+        if (fundingSource == null) {
+            return;
+        }
+        if ("WALLET_XU".equals(fundingSource)
+            && (plan.getPriceXu() == null || plan.getPriceXu() <= 0)) {
+            throw new IllegalStateException("Gói thuê bao chưa có giá Xu");
+        }
+        if ("VNPAY_RECURRING".equals(fundingSource)
+            && mapper.countActiveMandates(userId) != 1) {
+            throw new IllegalStateException("Chưa có ủy quyền VNPAY Recurring đang hoạt động");
+        }
+    }
+
+    private String normalizeClientRequestId(String value) {
+        String normalized = value == null ? "" : value.trim();
+        if (!normalized.matches("[A-Za-z0-9_-]{8,64}")) {
+            throw new IllegalArgumentException("Mã yêu cầu không hợp lệ");
+        }
+        return normalized;
     }
 
     private ReadingSubscriptionPurchaseRow requirePaidReview(

@@ -21,8 +21,8 @@
         <div class="my_r">
             <div class="my_bookshelf">
                 <div class="title cf">
-                    <h2 class="fl"><a href="javascript:void(0)" class="red" th:text="#{notification.title}">Thông báo</a></h2>
-                    <a class="fr" id="markAllRead" href="javascript:void(0)" th:text="#{notification.markAllRead}">Đánh dấu tất cả đã đọc</a>
+                    <h2 class="fl"><span class="red" th:text="#{notification.title}">Thông báo</span></h2>
+                    <a class="fr" id="markAllRead" href="#" th:text="#{notification.markAllRead}">Đánh dấu tất cả đã đọc</a>
                 </div>
                 <div id="notificationEmpty" style="display:none;padding:45px 20px;text-align:center;color:#888" th:text="#{notification.empty}">Bạn chưa có thông báo nào.</div>
                 <ul id="notificationList" style="padding:0 20px"></ul>
@@ -56,8 +56,8 @@
         var actions = $('<div>').css({marginTop:'8px'});
         $('<a>').attr('href','/book/'+item.bookId+'/'+item.chapterId+'.html').text(notificationMessages.readChapter).appendTo(actions);
         if (!item.read) {
-            $('<a>').attr('href','javascript:void(0)').css({marginLeft:'18px'}).text(notificationMessages.markRead)
-                .on('click', function () { markNotificationRead(item.id); }).appendTo(actions);
+            $('<a>').attr('href','#').css({marginLeft:'18px'}).text(notificationMessages.markRead)
+                .on('click', function (event) { event.preventDefault(); markNotificationRead(item.id); }).appendTo(actions);
         }
         return row.append(title, meta, actions);
     }
@@ -85,7 +85,8 @@
             loadNotifications(1,20);
         });
     }
-    $('#markAllRead').on('click', function () {
+    $('#markAllRead').on('click', function (event) {
+        event.preventDefault();
         $.post('/user/notifications/read-all').done(function () {
             document.dispatchEvent(new Event('novel:notifications-changed'));
             loadNotifications(1,20);

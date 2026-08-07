@@ -1,6 +1,8 @@
 package com.java2nb.novel.core.schedule;
 
 import com.java2nb.novel.core.config.GamificationProperties;
+import com.java2nb.novel.core.observability.NovelBusinessMetrics;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import com.java2nb.novel.mapper.MonthlyTicketMapper;
 import com.java2nb.novel.mapper.MonthlyRankingMapper;
 import com.java2nb.novel.mapper.WalletLedgerMapper;
@@ -34,7 +36,7 @@ class LedgerIntegrityCheckScheduleTest {
         GamificationProperties properties = new GamificationProperties();
 
         LedgerIntegrityCheckSchedule schedule = new LedgerIntegrityCheckSchedule(
-            mapper, ticketMapper, rankingMapper, properties, CLOCK);
+            mapper, ticketMapper, rankingMapper, properties, metrics(), CLOCK);
 
         schedule.runLedgerIntegrityAudit();
 
@@ -63,7 +65,7 @@ class LedgerIntegrityCheckScheduleTest {
         when(mapper.checkProjectionMismatch()).thenReturn(List.of());
 
         LedgerIntegrityCheckSchedule schedule = new LedgerIntegrityCheckSchedule(
-            mapper, ticketMapper, rankingMapper, new GamificationProperties(), CLOCK);
+            mapper, ticketMapper, rankingMapper, new GamificationProperties(), metrics(), CLOCK);
 
         assertThat(schedule.performAuditCheck()).isFalse();
     }
@@ -79,7 +81,7 @@ class LedgerIntegrityCheckScheduleTest {
             .thenReturn(List.of(Map.of("user_id", 99L, "available_balance", 2L, "lot_remaining", 1L)));
 
         LedgerIntegrityCheckSchedule schedule = new LedgerIntegrityCheckSchedule(
-            mapper, ticketMapper, rankingMapper, new GamificationProperties(), CLOCK);
+            mapper, ticketMapper, rankingMapper, new GamificationProperties(), metrics(), CLOCK);
 
         assertThat(schedule.performAuditCheck()).isFalse();
     }
@@ -92,6 +94,10 @@ class LedgerIntegrityCheckScheduleTest {
         when(mapper.checkStuckJobs(any(Date.class), any(Date.class))).thenReturn(List.of());
         when(mapper.checkPendingRewards(any(Date.class))).thenReturn(List.of());
         return mapper;
+    }
+
+    private NovelBusinessMetrics metrics() {
+        return new NovelBusinessMetrics(new SimpleMeterRegistry());
     }
 
     private MonthlyRankingMapper emptyRankingAuditMapper() {

@@ -15,7 +15,7 @@ class VietnameseResidualSeedPackagingTest {
     void defaultFriendLinkIsLocalizedWithoutOverwritingCustomizedData() throws Exception {
         String migration = Files.readString(repository.resolve(
             "doc/sql/20260807_vi_friend_link.sql"), StandardCharsets.UTF_8);
-        String compose = Files.readString(repository.resolve("compose.yaml"),
+        String flywayImage = Files.readString(repository.resolve("deploy/flyway/Dockerfile"),
             StandardCharsets.UTF_8);
         String cacheKeys = Files.readString(repository.resolve(
             "novel-common/src/main/java/com/java2nb/novel/core/cache/CacheKey.java"),
@@ -26,9 +26,9 @@ class VietnameseResidualSeedPackagingTest {
             .contains("WHERE `id` = 5")
             .contains("AND `link_url` = 'https://novel.xxyopen.com'")
             .contains("AND `link_name` = '\u5c0f\u8bf4\u7cbe\u54c1\u5c4b'");
-        assertThat(compose)
-            .contains("/migrations/20260807_vi_friend_link.sql")
-            .contains("./doc/sql/20260807_vi_friend_link.sql:");
+        assertThat(flywayImage).contains(
+            "COPY --chmod=0444 doc/sql/20260807_vi_friend_link.sql "
+                + "/flyway/sql/V2026080701__vi_friend_link.sql");
         assertThat(cacheKeys).contains("INDEX_LINK_KEY = \"indexLinkKey:vi-v2\"");
     }
 }

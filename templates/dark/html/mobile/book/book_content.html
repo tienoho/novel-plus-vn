@@ -50,24 +50,24 @@
     <input type="hidden" id="readingHeartbeatEnabled" th:value="${readingHeartbeatEnabled}"/>
 
     <div style="height:50px;line-height:50px;text-align:center" class="layui-header header header-doc layui-bg-cyan">
-        <div style="width:10%;float:left;margin-left:10px"><button type="button" onclick="history.back()" th:aria-label="#{reader.back}" style="border:0;background:transparent;cursor:pointer"><i aria-hidden="true" style="font-size:20px;color:#fff" class="layui-icon">&#xe65c;</i></button></div>
+        <div style="width:10%;float:left;margin-left:10px"><button type="button" data-reader-action="history-back" th:aria-label="#{reader.back}" style="border:0;background:transparent;cursor:pointer"><i aria-hidden="true" style="font-size:20px;color:#fff" class="layui-icon">&#xe65c;</i></button></div>
         <a style="color:#fff" th:href="'/book/'+${book.id}+'.html'"><b style="padding-left:5%;float:left;width:69%" class="line-limit-length" th:text="${bookIndex.indexName}+' '+${book.bookName}"></b></a>
         <div style="width:10%;float:right;margin-right:10px"><a href="/" th:aria-label="#{site.home}"><i aria-hidden="true" style="font-size:20px;color:#fff" class="layui-icon">&#xe68e;</i></a></div>
     </div>
 
     <p class="Readpage">
-        <button type="button" id="lightdiv" class="button lightoff" onclick="nr_setbg('light')" th:text="#{reader.lightOff}">Tắt đèn</button>
-        <button type="button" id="huyandiv" class="button huyanon" onclick="nr_setbg('huyan')" th:text="#{reader.eyeCare}">Bảo vệ mắt</button>&nbsp;&nbsp;
+        <button type="button" id="lightdiv" class="button lightoff" data-reader-action="set-mobile-theme" data-reader-value="light" th:text="#{reader.lightOff}">Tắt đèn</button>
+        <button type="button" id="huyandiv" class="button huyanon" data-reader-action="set-mobile-theme" data-reader-value="huyan" th:text="#{reader.eyeCare}">Bảo vệ mắt</button>&nbsp;&nbsp;
         <span th:text="#{reader.fontSize}+': '">Cỡ chữ: </span>
-        <button type="button" id="fontbig" class="sizebg" onclick="nr_setbg('big')" th:text="#{reader.font.large}">Lớn</button>
-        <button type="button" id="fontmiddle" class="button sizebgon" onclick="nr_setbg('middle')" th:text="#{reader.font.medium}">Vừa</button>
-        <button type="button" id="fontsmall" class="sizebg" onclick="nr_setbg('small')" th:text="#{reader.font.small}">Nhỏ</button>
+        <button type="button" id="fontbig" class="sizebg" data-reader-action="set-mobile-theme" data-reader-value="big" th:text="#{reader.font.large}">Lớn</button>
+        <button type="button" id="fontmiddle" class="button sizebgon" data-reader-action="set-mobile-theme" data-reader-value="middle" th:text="#{reader.font.medium}">Vừa</button>
+        <button type="button" id="fontsmall" class="sizebg" data-reader-action="set-mobile-theme" data-reader-value="small" th:text="#{reader.font.small}">Nhỏ</button>
     </p>
 
     <div class="indexDiv" style="height:42px;line-height:42px;text-align:center;background:#f2f2f2">
-        <a style="color:#333" th:href="'javascript:enterPreIndexPage(\''+${book.id}+'\',\''+${preBookIndexId}+'\');'" th:text="#{reader.previous}">Chương trước</a>
+        <a style="color:#333" th:href="${preBookIndexId != 0 ? '/book/' + book.id + '/' + preBookIndexId + '.html' : '/book/indexList-' + book.id + '.html'}" th:text="#{reader.previous}">Chương trước</a>
         <a style="color:#333" th:href="'/book/indexList-'+${book.id}+'.html'" th:text="#{book.catalog}">Mục lục</a>
-        <a style="color:#333" th:href="'javascript:enterNextIndexPage(\''+${book.id}+'\',\''+${nextBookIndexId}+'\');'" th:text="#{reader.next}">Chương sau</a>
+        <a style="color:#333" th:href="${nextBookIndexId != 0 ? '/book/' + book.id + '/' + nextBookIndexId + '.html' : '/book/indexList-' + book.id + '.html'}" th:text="#{reader.next}">Chương sau</a>
     </div>
 
     <div th:replace="mobile/common/js :: js"></div>
@@ -78,14 +78,14 @@
     <div class="Readarea ReadAjax_content screen_container" style="color:#000;font-size:20px;background:#fff" th:if="${needBuy}">
         <h5 th:text="#{reader.vip.required}">Đây là chương VIP. Bạn cần mua chương để tiếp tục đọc.</h5>
         <span th:text="#{book.price}+': '">Giá: </span><span style="color:red" th:text="${bookIndex.bookPrice}+' '+#{payment.currency}+' ('+#{reader.vip.rate}+')'"></span><br/>
-        <a href="javascript:buyBookIndex()" type="button" class="layui-btn layui-btn-sm layui-btn-radius" th:text="#{book.buy}">Mua chương</a>
+        <a href="#" data-reader-action="buy-chapter" class="layui-btn layui-btn-sm layui-btn-radius" th:text="#{book.buy}">Mua chương</a>
         <div th:replace="common/reading_ticket_unlock :: unlock"></div>
     </div>
 
     <div class="indexDiv" style="height:42px;line-height:42px;text-align:center;background:#f2f2f2">
-        <a style="color:#333" th:href="'javascript:enterPreIndexPage(\''+${book.id}+'\',\''+${preBookIndexId}+'\');'" th:text="#{reader.previous}">Chương trước</a>
+        <a style="color:#333" th:href="${preBookIndexId != 0 ? '/book/' + book.id + '/' + preBookIndexId + '.html' : '/book/indexList-' + book.id + '.html'}" th:text="#{reader.previous}">Chương trước</a>
         <a style="color:#333" th:href="'/book/indexList-'+${book.id}+'.html'" th:text="#{book.catalog}">Mục lục</a>
-        <a style="color:#333" th:href="'javascript:enterNextIndexPage(\''+${book.id}+'\',\''+${nextBookIndexId}+'\');'" th:text="#{reader.next}">Chương sau</a>
+        <a style="color:#333" th:href="${nextBookIndexId != 0 ? '/book/' + book.id + '/' + nextBookIndexId + '.html' : '/book/indexList-' + book.id + '.html'}" th:text="#{reader.next}">Chương sau</a>
     </div>
 </div>
 <div th:replace="mobile/common/footer :: footer"></div>
@@ -107,8 +107,7 @@
     localStorage.setItem('historyBooks',JSON.stringify(booksArr));
 
     function toMyCollect(){
-        var token=localStorage.getItem('token');
-        window.location.href=token?'/book/search?token='+token:'/user/login.html';
+        window.location.href='/user/favorites.html';
     }
 
     function buyBookIndex(){
@@ -117,7 +116,7 @@
             success:function(data){
                 if(data.code===200) location.reload();
                 else if(data.code===1001) location.href='/user/login.html?originUrl='+encodeURIComponent(location.href);
-                else layer.alert(data.msg);
+                else novelAlertText(data.msg);
             },
             error:function(){ layer.alert(/*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng'); }
         });
@@ -128,5 +127,6 @@
     function enterNextIndexPage(bookId,bookIndexId){ window.location.href=bookIndexId!=0?'/book/'+bookId+'/'+bookIndexId+'.html':'/book/indexList-'+bookId+'.html'; }
 
 </script>
+<script src="/javascript/reader-page.js?v=1"></script>
 </body>
 </html>

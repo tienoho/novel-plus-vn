@@ -107,14 +107,59 @@ Array.prototype.remove = function (val) {
     }
 };
 
-var token = $.cookie('Authorization');
-if (!token) {
+function novelCsrfToken() {
+    return $.cookie('XSRF-TOKEN');
+}
+
+$(document).ajaxSend(function (event, xhr, settings) {
+    var method = (settings.type || 'GET').toUpperCase();
+    if (!/^(GET|HEAD|OPTIONS|TRACE)$/.test(method)) {
+        var csrf = novelCsrfToken();
+        if (csrf) {
+            xhr.setRequestHeader('X-XSRF-TOKEN', csrf);
+        }
+    }
+});
+
+(function (originalFetch) {
+    if (!originalFetch) {
+        return;
+    }
+    window.fetch = function (input, options) {
+        options = options || {};
+        var method = (options.method || 'GET').toUpperCase();
+        var target = typeof input === 'string' ? input : input.url;
+        var sameOrigin = new URL(target, window.location.href).origin === window.location.origin;
+        if (sameOrigin && !/^(GET|HEAD|OPTIONS|TRACE)$/.test(method)) {
+            var headers = new Headers(options.headers || {});
+            var csrf = novelCsrfToken();
+            if (csrf) {
+                headers.set('X-XSRF-TOKEN', csrf);
+            }
+            options.headers = headers;
+        }
+        return originalFetch(input, options);
+    };
+})(window.fetch);
+
+
+function handleAnonymousSession() {
     if (needLoginPath.indexOf(window.location.pathname) != -1) {
         location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
     }
-
     // Liên kết đăng nhập/đăng ký trên giao diện mobile cũ hiện không sử dụng.
-} else {
+}
+
+function handleAuthenticatedSession() {
+    if ("/user/login.html" == window.location.pathname) {
+        var orginUrl = getSearchString("originUrl");
+        window.location.href = orginUrl == undefined || orginUrl.isBlank() ? "/" : orginUrl;
+        return;
+    }
+    isLogin = true;
+}
+
+function refreshSession() {
     $.ajax({
         type: "POST",
         url: "/user/refreshToken",
@@ -122,38 +167,46 @@ if (!token) {
         dataType: "json",
         success: function (data) {
             if (data.code == 200) {
-                // $(".user_link").html("<a href=\"/user/userinfo.html\"><i style=\"font-size: 20px;\" class=\"layui-icon \n" +
-                //     "\">&#xe66f;" +
-                //     "\n" +
-                //     "</i></a>");
-                if ("/user/login.html" == window.location.pathname) {
-                    var orginUrl = getSearchString("originUrl");
-                    window.location.href = orginUrl == undefined || orginUrl.isBlank() ? "/" : orginUrl;
-                    return;
-                }
-                isLogin = true;
-                if (localStorage.getItem("autoLogin") == 1) {
-                    $.cookie('Authorization', data.data.token, {expires: 7, path: '/'});
-                } else {
-                    $.cookie('Authorization', data.data.token, {path: '/'});
-                }
+                handleAuthenticatedSession();
             } else {
-                if (needLoginPath.indexOf(window.location.pathname) != -1) {
-                    location.href = '/user/login.html';
-                }
-                // Giữ nguyên vùng người dùng khi phiên đăng nhập hết hạn.
+                handleAnonymousSession();
             }
         },
         error: function () {
             layer.alert(novelMessage('networkError', 'Không thể kết nối mạng'));
         }
-
     });
 }
 
+function resolveSession() {
+    $.ajax({
+        type: "GET",
+        url: "/user/userInfo",
+        dataType: "json",
+        success: function (data) {
+            if (data.code == 200) {
+                handleAuthenticatedSession();
+            } else {
+                refreshSession();
+            }
+        },
+        error: function () {
+            layer.alert(novelMessage('networkError', 'Không thể kết nối mạng'));
+        }
+    });
+}
+
+var token = $.cookie('NovelSession');
+if (!token) {
+    handleAnonymousSession();
+} else {
+    resolveSession();
+}
+
 function logout() {
-    $.cookie('Authorization', null, {path: '/'});
-    location.reload();
+    $.post('/user/logout').always(function () {
+        location.reload();
+    });
 }
 
 
@@ -201,5 +254,15 @@ String.prototype.isNickName = function () {
     }
     return false;
 };
+
+function novelEscapeHtml(value) {
+    var container = document.createElement("div");
+    container.textContent = value == null ? "" : String(value);
+    return container.innerHTML;
+}
+
+function novelAlertText(value) {
+    layer.alert(novelEscapeHtml(value));
+}
 
 

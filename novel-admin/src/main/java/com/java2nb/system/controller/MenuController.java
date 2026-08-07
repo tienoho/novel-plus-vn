@@ -5,6 +5,7 @@ import com.java2nb.common.config.Constant;
 import com.java2nb.common.controller.BaseController;
 import com.java2nb.common.domain.Tree;
 import com.java2nb.common.utils.R;
+import com.java2nb.common.utils.SafeSort;
 import com.java2nb.system.domain.MenuDO;
 import com.java2nb.system.service.MenuService;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
@@ -36,6 +37,7 @@ public class MenuController extends BaseController {
 	@RequestMapping("/list")
 	@ResponseBody
 	List<MenuDO> list(@RequestParam Map<String, Object> params) {
+		SafeSort.sanitize(params);
 		List<MenuDO> menus = menuService.list(params);
 		return menus;
 	}

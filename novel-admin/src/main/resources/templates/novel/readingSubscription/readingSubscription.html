@@ -96,6 +96,56 @@
             </div>
         </div>
     </div>
+    <div class="row" shiro:hasPermission="novel:readingSubscription:review">
+        <div class="col-sm-12">
+            <div class="ibox">
+                <div class="ibox-title">
+                    <h5 th:text="#{admin.subscription.renewal.title}">Hàng đợi gia hạn tự động</h5>
+                </div>
+                <div class="ibox-content">
+                    <form id="renewalQueueFilter" class="form-inline m-b-sm">
+                        <label for="renewalQueueStatus"
+                               th:text="#{admin.subscription.status}">Trạng thái</label>
+                        <select id="renewalQueueStatus" class="form-control">
+                            <option value="PROVIDER_PENDING"
+                                    th:text="#{admin.subscription.status.providerPending}">Chờ tra soát provider</option>
+                            <option value="PROCESSING"
+                                    th:text="#{admin.subscription.status.processing}">Đang xử lý</option>
+                            <option value="RETRY_WAIT"
+                                    th:text="#{admin.subscription.status.retryWait}">Chờ thử lại</option>
+                            <option value="FAILED"
+                                    th:text="#{admin.subscription.status.failed}">Thất bại</option>
+                            <option value="GRACE_EXPIRED"
+                                    th:text="#{admin.subscription.status.graceExpired}">Hết grace period</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary"
+                                th:text="#{common.query}">Tra cứu</button>
+                    </form>
+                    <p class="help-block" th:text="#{admin.subscription.renewal.help}">
+                        Cycle chờ provider chỉ được quan sát; không retry hoặc chạy fallback khi chưa tra soát.
+                    </p>
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="renewalQueueTable">
+                            <thead><tr>
+                                <th th:text="#{admin.subscription.renewal.cycleId}">Cycle</th>
+                                <th th:text="#{admin.subscription.userId}">Người dùng</th>
+                                <th th:text="#{admin.subscription.planCode}">Gói</th>
+                                <th th:text="#{admin.subscription.status}">Trạng thái</th>
+                                <th th:text="#{admin.subscription.renewal.attempt}">Lần thử</th>
+                                <th th:text="#{admin.subscription.renewal.source}">Nguồn</th>
+                                <th th:text="#{admin.subscription.renewal.responseCode}">Mã phản hồi</th>
+                                <th th:text="#{admin.subscription.renewal.nextAttempt}">Thử tiếp</th>
+                                <th th:text="#{admin.subscription.renewal.graceEnd}">Hết grace</th>
+                                <th th:text="#{admin.subscription.actions}">Thao tác</th>
+                            </tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <pre id="renewalQueueDetail" class="m-t-md"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="row">
         <div class="col-sm-7" shiro:hasPermission="novel:readingSubscription:activate">
             <div class="ibox"><div class="ibox-title"><h5 th:text="#{admin.subscription.manualActivation}">Kích hoạt thủ công</h5></div>
@@ -153,6 +203,11 @@
         statusRetired: /*[[#{admin.subscription.status.retired}]]*/ 'Ngừng cung cấp',
         statusPaidReview: /*[[#{admin.subscription.status.paidReview}]]*/ 'Chờ xử lý',
         statusRefundPending: /*[[#{admin.subscription.status.refundPending}]]*/ 'Chờ hoàn tiền',
+        statusProcessing: /*[[#{admin.subscription.status.processing}]]*/ 'Đang xử lý',
+        statusProviderPending: /*[[#{admin.subscription.status.providerPending}]]*/ 'Chờ tra soát provider',
+        statusRetryWait: /*[[#{admin.subscription.status.retryWait}]]*/ 'Chờ thử lại',
+        statusFailed: /*[[#{admin.subscription.status.failed}]]*/ 'Thất bại',
+        statusGraceExpired: /*[[#{admin.subscription.status.graceExpired}]]*/ 'Hết grace period',
         retryActivation: /*[[#{admin.subscription.review.retry}]]*/ 'Thử kích hoạt',
         sendToRefund: /*[[#{admin.subscription.review.refund}]]*/ 'Chuyển hoàn tiền',
         reviewReasonPrompt: /*[[#{admin.subscription.review.reasonPrompt}]]*/ 'Nhập lý do xử lý (8–500 ký tự)',
@@ -164,6 +219,11 @@
         emptyReviews: /*[[#{admin.subscription.review.empty}]]*/ 'Không có giao dịch trong hàng đợi',
         payVnpay: /*[[#{admin.subscription.pay.vnpay}]]*/ 'VNPAY',
         payVietQr: /*[[#{admin.subscription.pay.vietqr}]]*/ 'VietQR',
+        renewalEmpty: /*[[#{admin.subscription.renewal.empty}]]*/ 'Không có cycle trong hàng đợi',
+        renewalDetails: /*[[#{admin.subscription.renewal.details}]]*/ 'Chi tiết',
+        renewalRetry: /*[[#{admin.subscription.renewal.retry}]]*/ 'Thử lại ngay',
+        renewalRetryReason: /*[[#{admin.subscription.renewal.retryReason}]]*/ 'Nhập lý do retry (8–500 ký tự)',
+        renewalRetryScheduled: /*[[#{admin.subscription.renewal.retryScheduled}]]*/ 'Đã đưa cycle vào lịch retry',
         requestFailed: /*[[#{common.failed}]]*/ 'Thao tác thất bại'
     };
     window.ReadingSubscriptionPermissions = {config: false, review: false};

@@ -68,12 +68,8 @@ function load() {
 									field : 'id',
 									align : 'center',
 									formatter : function(value, row, index) {
-										/*var d = '<a class="btn btn-primary btn-sm" href="#" mce_href="#" title="' + adminMessage('generatorDownloadOnline', 'Tải mã trực tuyến') + '" onclick="downloadCode(\''
-												+ row.tableName
-												+ '\')"><i class="fa fa-cloud-download"></i></a> ';*/
-										var g = '<a class="btn btn-primary btn-sm" href="#" mce_href="#" title="' + adminMessage('generatorGenerateLocal', 'Sinh mã cục bộ') + '" onclick="columnEdit(\''
-											+ row.tableName
-											+ '\')"><i class="fa fa-bug"></i></a> ';
+										var g = adminRowAction({action: 'column-edit', args: [row.tableName], variant: 'primary',
+											title: adminMessage('generatorGenerateLocal', 'Sinh mã cục bộ'), icon: 'generate'});
 
 										return g;
 									}

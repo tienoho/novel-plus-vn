@@ -14,7 +14,7 @@ class ChapterCommercialPackagingTest {
     void migrationAndComposePackagePolicyAfterDraftSchema() throws Exception {
         Path repository = Path.of("").toAbsolutePath().normalize().getParent();
         String migration = read(repository.resolve("doc/sql/20260728_chapter_commercial_policy.sql"));
-        String compose = read(repository.resolve("compose.yaml"));
+        String flywayImage = read(repository.resolve("deploy/flyway/Dockerfile"));
 
         assertThat(migration)
             .contains("CREATE TABLE IF NOT EXISTS `chapter_commercial_policy`")
@@ -22,8 +22,9 @@ class ChapterCommercialPackagingTest {
             .contains("FOREIGN KEY (`book_index_id`) REFERENCES `book_index` (`id`) ON DELETE CASCADE")
             .contains("column_name = 'book_price'", "column_name = 'free_until'")
             .doesNotContain("DROP TABLE");
-        assertThat(compose.indexOf("/migrations/20260728_author_ai.sql"))
-            .isLessThan(compose.indexOf("/migrations/20260728_chapter_commercial_policy.sql"));
+        assertThat(flywayImage.indexOf("/flyway/sql/V2026072801__author_ai.sql"))
+            .isLessThan(flywayImage.indexOf(
+                "/flyway/sql/V2026072802__chapter_commercial_policy.sql"));
     }
 
     @Test

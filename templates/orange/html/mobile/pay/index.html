@@ -69,9 +69,24 @@
             text-align: center;
             cursor: pointer;
             border: 2px solid #eee;
-            margin: 20px 0px 3px 43px;
+            margin: 0;
             padding-top: 20px;
             padding-bottom: 20px;
+            list-style: none;
+            flex: 1 1 calc(50% - 6px);
+            max-width: calc(50% - 6px);
+        }
+
+        #payAmount {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 0;
+            padding: 20px 12px 0;
+        }
+
+        .pay_way li.on {
+            border-color: #3eaf7c;
         }
 
     </style>
@@ -93,11 +108,11 @@
 <div style="height: 50px;line-height: 50px;text-align: center" class="layui-header header header-doc  layui-bg-cyan">
 
     <div style="width:10%;float: left;margin-left: 10px">
-        <a href="javascript:history.go(-1)">
+        <a href="/" id="payBack" th:attr="aria-label=#{reader.back},title=#{reader.back}">
             <i style="font-size: 20px;color: #fff;" class="layui-icon">&#xe65c;</i></a>
     </div>
     <b class="layui-icon" th:text="#{payment.title}">Nạp Xu</b>
-    <div style="width:10%;float: right;margin-right: 10px"><a href="/">
+    <div style="width:10%;float: right;margin-right: 10px"><a href="/" th:attr="aria-label=#{site.home},title=#{site.home}">
         <i style="font-size: 20px;color: #fff;" class="layui-icon">&#xe68e;</i>
     </a>
     </div>
@@ -123,9 +138,10 @@
     <p style="text-align: center;color: #ff5722" th:if="${!vnpayEnabled}" th:text="#{payment.vnpay.unavailable}">
         VNPAY chưa được cấu hình. Vui lòng liên hệ quản trị viên.
     </p>
-    <div id="payAmount" class="pay_way layui-row" style="text-align: center;padding-top: 20px;">
-        <h5 th:text="#{payment.amount}">Chọn số tiền nạp</h5>
-        <li th:each="amount : ${vnpayAllowedAmountsVnd}" th:attr="vals=${amount}"
+    <h5 style="text-align: center" th:text="#{payment.amount}">Chọn số tiền nạp</h5>
+    <ul id="payAmount" class="pay_way layui-row">
+        <li th:each="amount : ${vnpayAllowedAmountsVnd}" data-amount="" role="button" tabindex="0"
+            aria-pressed="false" th:attr="data-amount=${amount}"
             class="layui-col-xs4 layui-col-sm3 layui-col-md2">
             <div class="layui-panel">
                 <div><strong th:text="${#numbers.formatInteger(amount,1,'POINT')}+' VND'">10.000 VND</strong><br>
@@ -133,12 +149,17 @@
             </div>
         </li>
 
-    </div>
+    </ul>
 
     <form action="/pay/vnpay" method="post" id="payform" name="payform" data-enabled="false"
-          th:attr="data-enabled=${vnpayEnabled}">
+          data-network-error="" data-unavailable="" data-invalid-amount="" data-invalid-redirect=""
+          th:attr="data-enabled=${vnpayEnabled},data-network-error=#{auth.networkError},
+                   data-unavailable=#{payment.vnpay.unavailable},data-invalid-amount=#{payment.amount.invalid},
+                   data-invalid-redirect=#{payment.redirect.invalid}">
 
         <input type="hidden" id="pValue" name="payAmount"/>
+        <button type="submit" id="paySubmit" class="layui-btn layui-btn-fluid layui-bg-cyan" th:disabled="${!vnpayEnabled}"
+                th:text="#{payment.payNow}">Thanh toán ngay</button>
     </form>
 
 
@@ -147,58 +168,7 @@
 </div>
 
 <a name="buttom"></a>
-</body>
-
 <div th:replace="mobile/common/js :: js"></div>
-
-<script th:inline="javascript">
-
-    // Truy vấn thông tin người dùng.
-    $.ajax({
-        type: "get",
-        url: "/user/userInfo",
-        data: {},
-        dataType: "json",
-        success: function (data) {
-            if (data.code == 200) {
-                if (data.data.nickName) {
-                    $("#my_name").html(data.data.nickName);
-                } else {
-                    $("#my_name").html(data.data.username);
-                }
-
-                $("#accountBalance").html(data.data.accountBalance);
-
-            } else if (data.code == 1001) {
-                // Chưa đăng nhập.
-                location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
-
-            } else {
-                layer.alert(data.msg);
-            }
-
-        },
-        error: function () {
-            layer.alert(/*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng');
-        }
-    })
-
-    $("#payAmount").find("li").click(function () {
-
-        if ($("#payform").attr("data-enabled") !== "true") {
-            layer.alert(/*[[#{payment.vnpay.unavailable}]]*/ 'VNPAY chưa được cấu hình. Vui lòng liên hệ quản trị viên.');
-            return;
-        }
-
-        $("#pValue").val($(this).attr("vals"));
-
-        $("#payform").submit();
-
-
-    });
-
-
-</script>
-
-
+<script src="/javascript/pay.js"></script>
+</body>
 </html>

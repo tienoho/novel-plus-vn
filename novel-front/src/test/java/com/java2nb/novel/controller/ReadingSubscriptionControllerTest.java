@@ -10,8 +10,10 @@ import com.java2nb.novel.core.payment.PaymentAdapter;
 import com.java2nb.novel.core.payment.PaymentCreationResult;
 import com.java2nb.novel.service.OrderService;
 import com.java2nb.novel.service.ReadingSubscriptionCheckoutCreation;
+import com.java2nb.novel.service.VnpayRecurringMandateService;
 import com.java2nb.novel.dto.subscription.ReadingSubscriptionCheckoutRequest;
 import com.java2nb.novel.service.subscription.ReadingSubscriptionService;
+import com.java2nb.novel.service.subscription.ReadingSubscriptionCheckoutOptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -25,6 +27,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 
 class ReadingSubscriptionControllerTest {
     private ReadingSubscriptionService service;
@@ -40,7 +43,7 @@ class ReadingSubscriptionControllerTest {
         when(user.getId()).thenReturn(101L);
         controller = new ReadingSubscriptionController(service, properties,
             mock(OrderService.class), new PaymentAdapterFactory(List.of()),
-            new VnpayProperties(), new VietQrProperties()) {
+            new VnpayProperties(), new VietQrProperties(), mock(VnpayRecurringMandateService.class)) {
             @Override
             protected UserDetails getUserDetails(jakarta.servlet.http.HttpServletRequest request) {
                 return user;
@@ -81,14 +84,16 @@ class ReadingSubscriptionControllerTest {
         UserDetails user = mock(UserDetails.class);
         when(user.getId()).thenReturn(101L);
         controller = new ReadingSubscriptionController(service, properties, orderService,
-            new PaymentAdapterFactory(List.of(adapter)), vnpay, new VietQrProperties()) {
+            new PaymentAdapterFactory(List.of(adapter)), vnpay, new VietQrProperties(),
+            mock(VnpayRecurringMandateService.class)) {
             @Override
             protected UserDetails getUserDetails(jakarta.servlet.http.HttpServletRequest request) {
                 return user;
             }
         };
         when(orderService.createSubscriptionCheckout(
-            (byte) 4, 101L, "BASIC_MONTHLY", "checkout_0001"))
+            eq((byte) 4), eq(101L), eq("BASIC_MONTHLY"), eq("checkout_0001"),
+            any(ReadingSubscriptionCheckoutOptions.class)))
             .thenReturn(new ReadingSubscriptionCheckoutCreation(
                 123L, 49_000, new Date(), false));
 
@@ -96,7 +101,8 @@ class ReadingSubscriptionControllerTest {
             "BASIC_MONTHLY", (byte) 4, "checkout_0001"), new MockHttpServletRequest());
 
         verify(orderService).createSubscriptionCheckout(
-            (byte) 4, 101L, "BASIC_MONTHLY", "checkout_0001");
+            eq((byte) 4), eq(101L), eq("BASIC_MONTHLY"), eq("checkout_0001"),
+            any(ReadingSubscriptionCheckoutOptions.class));
         org.assertj.core.api.Assertions.assertThat(result.getData().paymentUrl())
             .isEqualTo("https://pay.example/checkout");
     }

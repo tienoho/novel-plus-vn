@@ -192,13 +192,13 @@ Nhiệm vụ hằng ngày dựa trên trả lời bình luận (`book_comment_re
 |---|---|
 | Gửi lặp cùng một yêu cầu | Khóa idempotency do máy chủ sinh, cộng ràng buộc `UNIQUE` trên sổ cái làm trọng tài cuối |
 | Hai yêu cầu đồng thời tiêu vượt số dư | Khóa hàng bằng `SELECT ... FOR UPDATE`, câu `UPDATE` có điều kiện kèm phiên bản lạc quan, và ràng buộc `CHECK` ở tầng lưu trữ |
-| Nhiều tài khoản | Ngoài phạm vi v1. Ghi nhận qua hàm băm địa chỉ IP trên bản ghi vote để phân tích sau, không tự động chặn |
+| Nhiều tài khoản | Chấm điểm theo tuổi tài khoản, velocity, số tài khoản dùng chung device/IP và số vote theo device/IP. Kết quả `REVIEW` vào hàng đợi thủ công; chỉ `BLOCK` khi rule được quản trị viên cấu hình rõ `hard_block = 1`, mọi assessment và quyết định đều được audit |
 | Giả lập hành vi đọc | Nhịp tim do máy chủ tính mốc phút, dừng đếm khi khoảng cách hai nhịp vượt hai lần chu kỳ, và trần cứng số phút mỗi ngày |
 | Spam bình luận | Đã bị chặn sẵn bởi giới hạn một bình luận cho mỗi tác phẩm và bởi hàng đợi kiểm duyệt |
 | Tự bỏ phiếu | Kiểm tra chủ sở hữu và cộng tác viên bằng `NOT EXISTS` an toàn với NULL |
 | Thông đồng đẩy hạng | Phát hiện thủ công trong giai đoạn REVIEW trước khi chốt. `auto-finalize = false` khiến mọi kỳ đều phải qua mắt người |
 
-Địa chỉ IP được lưu dưới dạng SHA-256 kèm muối, **không lưu dạng thô**.
+Địa chỉ IP và device ID ẩn danh được lưu dưới dạng SHA-256 kèm muối và domain separation, **không lưu dạng thô**. Không có rule hard-block mặc định; nếu chưa cấu hình rule, hệ thống chỉ ghi nhận và cho phép giao dịch.
 
 ---
 

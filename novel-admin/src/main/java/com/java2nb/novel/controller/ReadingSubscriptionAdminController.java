@@ -7,12 +7,14 @@ import com.java2nb.novel.config.ReadingSubscriptionAdminProperties;
 import com.java2nb.novel.service.subscription.ReadingSubscriptionActivationCommand;
 import com.java2nb.novel.service.subscription.ReadingSubscriptionPlanCommand;
 import com.java2nb.novel.service.subscription.ReadingSubscriptionService;
+import com.java2nb.novel.service.subscription.ReadingSubscriptionRenewalService;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.Date;
@@ -22,11 +24,14 @@ import java.util.Date;
 public class ReadingSubscriptionAdminController extends BaseController {
     private final ReadingSubscriptionService service;
     private final ReadingSubscriptionAdminProperties properties;
+    private final ReadingSubscriptionRenewalService renewalService;
 
     public ReadingSubscriptionAdminController(ReadingSubscriptionService service,
-                                              ReadingSubscriptionAdminProperties properties) {
+                                              ReadingSubscriptionAdminProperties properties,
+                                              ReadingSubscriptionRenewalService renewalService) {
         this.service = service;
         this.properties = properties;
+        this.renewalService = renewalService;
     }
 
     @GetMapping
@@ -82,15 +87,52 @@ public class ReadingSubscriptionAdminController extends BaseController {
     }
 
     @ResponseBody
+    @GetMapping("/renewals")
+    @RequiresPermissions("novel:readingSubscription:review")
+    public R listRenewalQueue(@RequestParam(defaultValue = "PROVIDER_PENDING") String status,
+                              @RequestParam(defaultValue = "50") int limit) {
+        return R.ok().put("data", renewalService.listRenewalQueue(status, limit));
+    }
+
+    @ResponseBody
+    @GetMapping("/renewals/{cycleId}/attempts")
+    @RequiresPermissions("novel:readingSubscription:review")
+    public R listRenewalAttempts(@PathVariable long cycleId,
+                                 @RequestParam(defaultValue = "50") int limit) {
+        return R.ok().put("data", renewalService.listRenewalAttempts(cycleId, limit));
+    }
+
+    @ResponseBody
+    @GetMapping("/renewals/{cycleId}/audits")
+    @RequiresPermissions("novel:readingSubscription:review")
+    public R listRenewalAudits(@PathVariable long cycleId,
+                               @RequestParam(defaultValue = "50") int limit) {
+        return R.ok().put("data", renewalService.listRenewalAdminAudits(cycleId, limit));
+    }
+
+    @ResponseBody
+    @PostMapping("/renewals/retry")
+    @RequiresPermissions("novel:readingSubscription:review")
+    @Log("Lên lịch thử lại cycle gia hạn thuê bao")
+    public R retryRenewal(@RequestParam long cycleId,
+                          @RequestParam long expectedVersion,
+                          @RequestParam String reason) {
+        return R.ok().put("data", renewalService.adminScheduleRetry(
+            cycleId, expectedVersion, getUserId(), reason, new Date()));
+    }
+
+    @ResponseBody
     @PostMapping("/plans/create")
     @RequiresPermissions("novel:readingSubscription:config")
     @Log("Tạo gói thuê bao Vé đọc")
     public R createPlan(@RequestParam String planCode, @RequestParam String planName,
                         @RequestParam long priceVnd,
+                        @RequestParam(required = false) Long priceXu,
                         @RequestParam long ticketsPerPeriod, @RequestParam int periodMonths,
                         @RequestParam int ticketValidityDays) {
         return R.ok().put("data", service.createPlan(new ReadingSubscriptionPlanCommand(
-            planCode, planName, priceVnd, ticketsPerPeriod, periodMonths, ticketValidityDays)));
+            planCode, planName, priceVnd, priceXu, ticketsPerPeriod, periodMonths,
+            ticketValidityDays)));
     }
 
     @ResponseBody
@@ -100,10 +142,11 @@ public class ReadingSubscriptionAdminController extends BaseController {
     public R updatePlan(@RequestParam long planId, @RequestParam long expectedVersion,
                         @RequestParam String planCode, @RequestParam String planName,
                         @RequestParam long priceVnd,
+                        @RequestParam(required = false) Long priceXu,
                         @RequestParam long ticketsPerPeriod, @RequestParam int periodMonths,
                         @RequestParam int ticketValidityDays) {
         return R.ok().put("data", service.updatePlan(planId, expectedVersion,
-            new ReadingSubscriptionPlanCommand(planCode, planName, priceVnd, ticketsPerPeriod,
+            new ReadingSubscriptionPlanCommand(planCode, planName, priceVnd, priceXu, ticketsPerPeriod,
                 periodMonths, ticketValidityDays)));
     }
 

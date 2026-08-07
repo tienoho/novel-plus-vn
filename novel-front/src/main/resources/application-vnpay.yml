@@ -19,3 +19,22 @@ vnpay:
   reconciliation-min-age-minutes: ${VNPAY_RECONCILIATION_MIN_AGE_MINUTES:20}
   reconciliation-max-age-days: ${VNPAY_RECONCILIATION_MAX_AGE_DAYS:30}
   reconciliation-batch-size: ${VNPAY_RECONCILIATION_BATCH_SIZE:50}
+  recurring:
+    enabled: ${VNPAY_RECURRING_ENABLED:false}
+    base-url: ${VNPAY_RECURRING_BASE_URL:https://sandbox.vnpayment.vn}
+    client-id: ${VNPAY_RECURRING_CLIENT_ID:disabled}
+    username: ${VNPAY_RECURRING_USERNAME:disabled}
+    password: ${VNPAY_RECURRING_PASSWORD:disabled}
+    client-secret: ${VNPAY_RECURRING_CLIENT_SECRET:disabled}
+    tmn-code: ${VNPAY_RECURRING_TMN_CODE:disabled}
+    hash-secret: ${VNPAY_RECURRING_HASH_SECRET:disabled}
+    pay-url: ${VNPAY_RECURRING_PAY_URL:https://sandbox.vnpayment.vn/recurring-payment/pay}
+    return-url: ${VNPAY_RECURRING_RETURN_URL:http://localhost:8083/payment/vnpay-recurring/return}
+    cancel-url: ${VNPAY_RECURRING_CANCEL_URL:http://localhost:8083/payment/vnpay-recurring/cancel}
+    result-redirect-url: ${VNPAY_RECURRING_RESULT_REDIRECT_URL:/pay}
+    order-type: ${VNPAY_RECURRING_ORDER_TYPE:other}
+    version: 2.1.0
+    locale: vn
+    time-zone: Asia/Ho_Chi_Minh
+    connect-timeout-seconds: ${VNPAY_RECURRING_CONNECT_TIMEOUT_SECONDS:5}
+    request-timeout-seconds: ${VNPAY_RECURRING_REQUEST_TIMEOUT_SECONDS:15}

@@ -1,6 +1,9 @@
 package com.java2nb.novel.core.schedule;
 
 import com.java2nb.novel.core.config.GamificationProperties;
+import com.java2nb.novel.core.observability.NovelBusinessMetrics;
+import com.java2nb.novel.core.observability.NovelBusinessMetrics.GamificationQueue;
+import com.java2nb.novel.core.observability.NovelBusinessMetrics.Outcome;
 import com.java2nb.novel.mapper.GamificationProgressMapper;
 import com.java2nb.novel.service.impl.GamificationEventFailureWriter;
 import com.java2nb.novel.service.impl.GamificationEventProcessor;
@@ -19,25 +22,29 @@ public class GamificationEventDrainSchedule {
     private final GamificationProgressMapper mapper;
     private final GamificationEventProcessor processor;
     private final GamificationEventFailureWriter failureWriter;
+    private final NovelBusinessMetrics metrics;
     private final Clock clock;
 
     @Autowired
     public GamificationEventDrainSchedule(GamificationProperties properties,
                                           GamificationProgressMapper mapper,
                                           GamificationEventProcessor processor,
-                                          GamificationEventFailureWriter failureWriter) {
-        this(properties, mapper, processor, failureWriter, Clock.systemUTC());
+                                          GamificationEventFailureWriter failureWriter,
+                                          NovelBusinessMetrics metrics) {
+        this(properties, mapper, processor, failureWriter, metrics, Clock.systemUTC());
     }
 
     GamificationEventDrainSchedule(GamificationProperties properties,
                                    GamificationProgressMapper mapper,
                                    GamificationEventProcessor processor,
                                    GamificationEventFailureWriter failureWriter,
+                                   NovelBusinessMetrics metrics,
                                    Clock clock) {
         this.properties = properties;
         this.mapper = mapper;
         this.processor = processor;
         this.failureWriter = failureWriter;
+        this.metrics = metrics;
         this.clock = clock;
     }
 
@@ -48,16 +55,25 @@ public class GamificationEventDrainSchedule {
             return;
         }
         int maxAttempt = properties.getEvent().getMaxAttempt();
+        metrics.setGamificationQueue(GamificationQueue.PENDING_EVENTS,
+            mapper.countPendingEvents(maxAttempt));
         for (Long eventId : mapper.selectPendingEventIds(
             properties.getEvent().getDrainBatchSize(), maxAttempt)) {
             Date now = Date.from(clock.instant());
             try {
-                processor.process(eventId, now, maxAttempt);
+                switch (processor.process(eventId, now, maxAttempt)) {
+                    case PROCESSED -> metrics.recordGamificationEvent(Outcome.SUCCESS);
+                    case SKIPPED -> metrics.recordGamificationEvent(Outcome.ALREADY_PROCESSED);
+                    case NOT_OWNER -> metrics.recordGamificationEvent(Outcome.REJECTED);
+                }
             } catch (RuntimeException exception) {
+                metrics.recordGamificationEvent(Outcome.FAILED);
                 failureWriter.record(eventId, now, exception, maxAttempt);
                 log.error("GAMIFY-ALERT-009 không thể xử lý event gamification: eventId={}",
                     eventId, exception);
             }
         }
+        metrics.setGamificationQueue(GamificationQueue.PENDING_EVENTS,
+            mapper.countPendingEvents(maxAttempt));
     }
 }

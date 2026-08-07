@@ -46,6 +46,13 @@ public interface CacheService {
      */
     void del(String key);
 
+    /**
+     * Xóa khóa chỉ khi giá trị hiện tại khớp với giá trị mong đợi.
+     *
+     * <p>Thao tác phải được implementation thực hiện nguyên tử.</p>
+     */
+    boolean compareAndDelete(String key, String expectedValue);
+
 
     /**
      * Kiểm tra khóa có tồn tại hay không

@@ -67,7 +67,7 @@
                                            placeholder="URL danh sách cập nhật truyện"></li>-->
 
 
-                                <li><input type="button" onclick="addCrawlSingleTask()" name="btnRegister" th:value="#{crawl.submit}" value="Gửi"
+                                <li><input type="button" name="btnRegister" th:value="#{crawl.submit}" value="Gửi"
                                            id="btnRegister" class="btn_red"></li>
                             </ul>
                         </div>
@@ -117,7 +117,7 @@
                     location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
 
                 } else {
-                    layer.alert(data.msg);
+                    layer.alert(crawlEscapeHtml(data.msg || ""));
                 }
 
             },
@@ -127,6 +127,8 @@
         })
     });
 
+
+    $("#btnRegister").on("click", addCrawlSingleTask);
 
     function addCrawlSingleTask() {
 
@@ -177,7 +179,7 @@
 
 
                 } else {
-                    layer.alert(data.msg);
+                    layer.alert(crawlEscapeHtml(data.msg || ""));
                 }
 
             },

@@ -164,18 +164,17 @@ class GamificationPackagingTest {
     }
 
     @Test
-    void migrationIsMountedInBothPlacesOfTheComposeFile() throws Exception {
+    void migrationIsPackagedInTheFlywayImageAndAppsWaitForIt() throws Exception {
         String compose = read("compose.yaml");
+        String flywayImage = read("deploy/flyway/Dockerfile");
 
-        // Service migrate cần cả hai: tên file trong vòng lặp, và mount trong volumes. Thiếu một
-        // trong hai thì container vẫn khởi động bình thường nhưng bảng không được tạo.
+        assertThat(flywayImage)
+            .describedAs("migration phải có version duy nhất trong image Flyway")
+            .contains("COPY --chmod=0444 doc/sql/20260729_gamification_monthly_ticket.sql "
+                + "/flyway/sql/V2026072901__gamification_monthly_ticket.sql");
         assertThat(compose)
-            .describedAs("migration phải nằm trong vòng lặp của service migrate")
-            .contains("/migrations/20260729_gamification_monthly_ticket.sql");
-        assertThat(compose)
-            .describedAs("migration phải được mount vào container")
-            .contains("./doc/sql/20260729_gamification_monthly_ticket.sql:"
-                + "/migrations/20260729_gamification_monthly_ticket.sql:ro");
+            .contains("dockerfile: deploy/flyway/Dockerfile")
+            .contains("migrate:", "condition: service_completed_successfully");
     }
 
     @Test
@@ -220,7 +219,7 @@ class GamificationPackagingTest {
         assertThat(controller)
             .contains("requireUser(request).getId()")
             .contains("@RateLimit")
-            .contains("hashIp(IpUtil.getRealIp(request))");
+            .contains("hashIdentifier(\"IP\", IpUtil.getRealIp(request))");
         assertThat(request).doesNotContain("userId", "authorId");
         assertThat(mapper)
             .contains("tryConsumeDailyQuota")
@@ -360,13 +359,16 @@ class GamificationPackagingTest {
     @Test
     void mysqlAcceptanceWorkflowIsReachableFromTheHost() throws Exception {
         String compose = read("compose.yaml");
+        String testCompose = read("compose.test.yaml");
         String script = read("scripts/verify-gamification.ps1");
         String workflow = read(".github/workflows/gamification-mysql.yml");
         String releaseWorkflow = read(".github/workflows/release.yml");
 
-        assertThat(compose).contains("127.0.0.1:${MYSQL_HOST_PORT:-3307}:3306");
+        assertThat(compose).doesNotContain("127.0.0.1:${MYSQL_HOST_PORT:-3307}:3306");
+        assertThat(testCompose).contains("127.0.0.1:${MYSQL_HOST_PORT:-3307}:3306");
         assertThat(script)
-            .contains("-FilePath 'docker' -Arguments @('compose', 'run', '--rm', 'migrate')")
+            .contains("'compose.test.yaml'")
+            .contains("$composeArguments + @('run', '--rm', 'migrate')")
             .contains("GamificationMySqlIntegrationTest,MonthlyTicketConcurrencyIT")
             .contains("MonthlySeasonConcurrencyIT")
             .contains("-Dgamification.mysql.it=true")
@@ -381,7 +383,7 @@ class GamificationPackagingTest {
             .contains("timeout-minutes: 45");
         assertThat(releaseWorkflow)
             .contains("./scripts/verify-gamification.ps1 -StopAfter")
-            .contains("mvn clean install -Pcentral-repo")
+            .contains("mvn -B -ntp clean verify -Pcentral-repo")
             .doesNotContain("-DskipTests");
     }
 }

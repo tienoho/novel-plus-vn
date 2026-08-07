@@ -151,6 +151,17 @@ class OrderServiceImplTest {
     }
 
     @Test
+    void inspectsStatusWithoutRequiringTheCallerToKnowTheOrderAmount() {
+        OrderPay settled = pendingOrder();
+        settled.setPayStatus((byte) 1);
+        when(orderPayMapper.selectOne(any(SelectStatementProvider.class))).thenReturn(Optional.of(settled));
+
+        assertThat(service.inspectPayOrder(123L, (byte) 4, 0)).isEqualTo(PayOrderState.SUCCESS);
+        verify(orderPayMapper, never()).update(any(UpdateStatementProvider.class));
+        verify(walletLedgerService, never()).creditReaderTopUp(anyLong(), anyLong(), any(), any());
+    }
+
+    @Test
     void listsAndClaimsEligiblePendingOrders() {
         OrderPay pending = pendingOrder();
         pending.setCreateTime(new Date(1_000));
@@ -172,7 +183,7 @@ class OrderServiceImplTest {
     void createsSubscriptionCheckoutFromServerPlanWithoutPromisingXu() {
         ReadingSubscriptionPlanRow plan = subscriptionPlan();
         when(readingSubscriptionMapper.selectActivePlanByCode("BASIC_MONTHLY")).thenReturn(plan);
-        when(purchaseMapper.insertPurchase(anyLong(), eq(11L), eq(plan), eq((byte) 4),
+        when(purchaseMapper.insertPurchase(anyLong(), eq(11L), eq(plan), any(), eq((byte) 4),
             eq("checkout_0001"), any(), eq("v1"), eq("Asia/Ho_Chi_Minh"), any()))
             .thenReturn(1);
 
@@ -266,8 +277,10 @@ class OrderServiceImplTest {
         ReadingSubscriptionPlanRow plan = new ReadingSubscriptionPlanRow();
         plan.setId(7L);
         plan.setPlanCode("BASIC_MONTHLY");
+        plan.setPlanVersion(1L);
         plan.setPlanName("Gói cơ bản");
         plan.setPriceVnd(49_000L);
+        plan.setPriceXu(500L);
         plan.setTicketsPerPeriod(10L);
         plan.setPeriodMonths(1);
         plan.setTicketValidityDays(45);
@@ -282,8 +295,12 @@ class OrderServiceImplTest {
         purchase.setUserId(11L);
         purchase.setPlanId(7L);
         purchase.setPlanCodeSnapshot("BASIC_MONTHLY");
+        purchase.setPlanVersionSnapshot(1L);
         purchase.setPlanNameSnapshot("Gói cơ bản");
         purchase.setPriceVndSnapshot(49_000L);
+        purchase.setPriceXuSnapshot(500L);
+        purchase.setAutoRenew(false);
+        purchase.setAcceptedPlanVersion(1L);
         purchase.setTicketsPerPeriodSnapshot(10L);
         purchase.setPeriodMonthsSnapshot(1);
         purchase.setTicketValidityDaysSnapshot(45);

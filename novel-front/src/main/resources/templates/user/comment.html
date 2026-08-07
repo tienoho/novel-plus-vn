@@ -5,14 +5,13 @@
     <title th:text="#{user.comments}+'_'+${application.website.name}"></title>
     <link rel="stylesheet" href="/css/user.css"/>
 </head>
-<body class="">
+<body id="userCommentPage"
+      th:attr="data-comment-trainee=#{comment.trainee},data-network-error=#{auth.networkError}">
 
-<div th:replace="common/top :: top('')">
-</div>
+<div th:replace="common/top :: top('')"></div>
 <div class="main box_center cf">
     <div class="userBox cf">
         <div class="my_l">
-
             <ul class="log_list">
                 <li><a class="link_1" href="/user/userinfo.html" th:text="#{user.center}">Tài khoản của tôi</a></li>
                 <li><a class="link_4" href="/user/favorites.html" th:text="#{user.bookshelf}">Tủ sách</a></li>
@@ -20,7 +19,6 @@
                 <li><a class="link_7" href="/user/feedback_list.html" th:text="#{user.feedback}">Phản hồi của tôi</a></li>
                 <li><a class="link_8" href="/user/setup.html" th:text="#{user.settings}">Cài đặt tài khoản</a></li>
             </ul>
-
         </div>
         <div class="my_r">
             <div class="my_bookshelf">
@@ -32,101 +30,16 @@
                     <div class="no_contet no_comment" style="display:none">
                         <span th:text="#{user.comments.empty}">Bạn chưa đăng bình luận nào.</span>
                     </div>
-                    <div class="commentBar" id="commentBar">
-
-
-                    </div>
+                    <div class="commentBar" id="commentBar"></div>
                 </div>
-                <div class="pageBox cf" id="commentPage">
-                </div>
+                <div class="pageBox cf" id="commentPage"></div>
             </div>
         </div>
     </div>
 </div>
 
-<div th:replace="common/footer :: footer">
-</div>
+<div th:replace="common/footer :: footer"></div>
 <div th:replace="common/js :: js"></div>
-<script language="javascript" type="text/javascript" th:inline="javascript">
-    const itemUnitText = /*[[#{comment.itemUnit}]]*/ 'bình luận';
-    const traineeText = /*[[#{comment.trainee}]]*/ 'Thực tập';
-    const likeText = /*[[#{comment.like}]]*/ 'Thích';
-    const networkErrorText = /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng';
-    search(1, 5);
-
-    function search(curr, limit) {
-
-        $.ajax({
-            type: "get",
-            url: "/user/listCommentByPage",
-            data: {'curr': curr, 'limit': limit},
-            dataType: "json",
-            success: function (data) {
-                if (data.code == 200) {
-                    var commentList = data.data.list;
-                    if (commentList.length > 0) {
-                        $("#bookCommentTotal").html("(" + data.data.total + " " + itemUnitText + ")");
-                        var commentListHtml = "";
-                        for (var i = 0; i < commentList.length; i++) {
-                            var comment = commentList[i];
-                            commentListHtml += ("<div class=\"comment_list cf\">" +
-                                "<div class=\"user_heads fl\" vals=\"389\">" +
-                                "<img src=\"" + (comment.createUserPhoto ? comment.createUserPhoto : '/images/man.png') + "\" class=\"user_head\" alt=\"\">" +
-                                "<span class=\"user_level1\" style=\"display: none;\">" + traineeText + "</span></div>" +
-                                "<ul class=\"pl_bar fr\">\t\t\t<li class=\"name\">" + (comment.createUserName.substr(0, 4) + "****" + comment.createUserName.substr(comment.createUserName.length - 3, 3)) + "</li><li class=\"dec\">" +
-                                comment.commentContent +
-                                "</li><li class=\"other cf\">" +
-                                "<span class=\"time fl\">" + comment.createTime + "</span>" +
-                                "<span class=\"fr\"><a href=\"javascript:void(0);\" onclick=\"javascript:BookDetail.AddAgreeTotal(77,this);\" class=\"zan\" style=\"display: none;\">" + likeText + "<i class=\"num\">(0)</i></a>" +
-                                "</span></li>\t\t</ul>\t</div>");
-                        }
-                        $("#commentBar").html(commentListHtml);
-
-                        layui.use('laypage', function () {
-                            var laypage = layui.laypage;
-
-                            // Khởi tạo phân trang Layui.
-                            laypage.render({
-                                elem: 'commentPage' // ID phần tử, không thêm dấu #.
-                                , count: data.data.total // Tổng số bản ghi từ máy chủ.
-                                , curr: data.data.pageNum
-                                , limit: data.data.pageSize
-                                , jump: function (obj, first) {
-
-
-                                    // obj chứa các tham số phân trang hiện tại.
-                                    console.log(obj.curr); // Trang hiện tại.
-                                    console.log(obj.limit); // Số bản ghi mỗi trang.
-
-
-                                    // Không gọi lại trong lần khởi tạo đầu tiên.
-                                    if (!first) {
-                                        search(obj.curr, obj.limit);
-                                    } else {
-
-                                    }
-                                }
-                            });
-                        });
-
-                    }
-
-
-                } else if (data.code == 1001) {
-                    // Phiên đăng nhập đã hết hạn.
-                    location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
-
-                } else {
-                    layer.alert(data.msg);
-                }
-
-            },
-            error: function () {
-                layer.alert(networkErrorText);
-            }
-        })
-
-    }
-</script>
+<script src="/javascript/user-comment-page.js" type="text/javascript"></script>
 </body>
 </html>

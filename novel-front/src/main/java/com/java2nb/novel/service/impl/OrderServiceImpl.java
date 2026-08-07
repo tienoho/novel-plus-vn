@@ -15,6 +15,7 @@ import com.java2nb.novel.service.ReadingSubscriptionCheckoutCreation;
 import com.java2nb.novel.service.wallet.WalletLedgerService;
 import com.java2nb.novel.service.gamification.GamificationEventService;
 import com.java2nb.novel.service.subscription.ReadingSubscriptionPlanRow;
+import com.java2nb.novel.service.subscription.ReadingSubscriptionCheckoutOptions;
 import com.java2nb.novel.service.subscription.ReadingSubscriptionPurchaseActivationCommand;
 import com.java2nb.novel.service.subscription.ReadingSubscriptionPurchaseRow;
 import com.java2nb.novel.service.subscription.ReadingSubscriptionRow;
@@ -101,14 +102,15 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ReadingSubscriptionCheckoutCreation createSubscriptionCheckout(
-        byte payChannel, long userId, String planCode, String clientRequestId) {
+        byte payChannel, long userId, String planCode, String clientRequestId,
+        ReadingSubscriptionCheckoutOptions options) {
         String normalizedPlanCode = planCode == null ? ""
             : planCode.trim().toUpperCase(Locale.ROOT);
         String normalizedRequestId = clientRequestId == null ? "" : clientRequestId.trim();
         if ((payChannel != 4 && payChannel != 5) || userId <= 0
             || !normalizedPlanCode.matches("[A-Z0-9_]{3,32}")
             || !normalizedRequestId.matches("[A-Za-z0-9_-]{8,64}")
-            || !entitlementProperties.isConfigured()) {
+            || options == null || !entitlementProperties.isConfigured()) {
             throw new IllegalArgumentException("Yêu cầu mua thuê bao không hợp lệ");
         }
         ReadingSubscriptionPlanRow plan = readingSubscriptionMapper
@@ -117,11 +119,24 @@ public class OrderServiceImpl implements OrderService {
             || plan.getPriceVnd() > 100_000_000) {
             throw new IllegalStateException("Gói thuê bao không mở bán hoặc chưa có giá hợp lệ");
         }
-        String requestHash = checkoutRequestHash(userId, payChannel, normalizedRequestId, plan);
+        if (!Objects.equals(plan.getPlanVersion(), options.acceptedPlanVersion())
+            || (options.autoRenew() && "WALLET_XU".equals(options.primaryFundingSource())
+                && plan.getPriceXu() == null)
+            || (options.autoRenew() && "WALLET_XU".equals(options.fallbackFundingSource())
+                && plan.getPriceXu() == null)) {
+            throw new IllegalStateException("Phiên bản hoặc giá tự gia hạn của gói không hợp lệ");
+        }
+        if (options.autoRenew()
+            && ("VNPAY_RECURRING".equals(options.primaryFundingSource())
+                || "VNPAY_RECURRING".equals(options.fallbackFundingSource()))
+            && readingSubscriptionMapper.countActiveMandates(userId) != 1) {
+            throw new IllegalStateException("Chưa có ủy quyền VNPAY Recurring đang hoạt động");
+        }
+        String requestHash = checkoutRequestHash(userId, payChannel, normalizedRequestId, plan, options);
         ReadingSubscriptionPurchaseRow existing = purchaseMapper.selectByUserRequest(
             userId, normalizedRequestId);
         if (existing != null) {
-            validateCheckoutReplay(existing, payChannel, plan, requestHash);
+            validateCheckoutReplay(existing, payChannel, plan, options, requestHash);
             return checkoutResult(existing, true);
         }
         if (readingSubscriptionMapper.selectCurrentSubscriptionByUserId(userId) != null) {
@@ -136,7 +151,7 @@ public class OrderServiceImpl implements OrderService {
         for (int attempt = 0; attempt < ORDER_NUMBER_RETRY_LIMIT; attempt++) {
             long outTradeNo = nextOrderNumber();
             try {
-                if (purchaseMapper.insertPurchase(outTradeNo, userId, plan, payChannel,
+                if (purchaseMapper.insertPurchase(outTradeNo, userId, plan, options, payChannel,
                     normalizedRequestId, requestHash, entitlementProperties.getPolicyVersion(),
                     entitlementProperties.getSubscriptionZoneId(), createdAt) != 1) {
                     throw new IllegalStateException("Không thể tạo đơn mua thuê bao");
@@ -144,7 +159,7 @@ public class OrderServiceImpl implements OrderService {
             } catch (DuplicateKeyException exception) {
                 existing = purchaseMapper.selectByUserRequest(userId, normalizedRequestId);
                 if (existing != null) {
-                    validateCheckoutReplay(existing, payChannel, plan, requestHash);
+                    validateCheckoutReplay(existing, payChannel, plan, options, requestHash);
                     return checkoutResult(existing, true);
                 }
                 open = purchaseMapper.selectOpenByUser(userId);
@@ -177,7 +192,7 @@ public class OrderServiceImpl implements OrderService {
         if (orderPay.getPayChannel() == null || orderPay.getPayChannel() != payChannel) {
             return PayOrderState.INVALID_CHANNEL;
         }
-        if (orderPay.getTotalAmount() == null || orderPay.getTotalAmount() != totalAmount) {
+        if (totalAmount > 0 && (orderPay.getTotalAmount() == null || orderPay.getTotalAmount() != totalAmount)) {
             return PayOrderState.INVALID_AMOUNT;
         }
         if (orderPay.getPayStatus() == null || orderPay.getPayStatus() == 2) {
@@ -303,7 +318,11 @@ public class OrderServiceImpl implements OrderService {
                 purchase.getUserId(), purchase.getPlanId(), purchase.getPlanCodeSnapshot(),
                 purchase.getTicketsPerPeriodSnapshot(), purchase.getPeriodMonthsSnapshot(),
                 purchase.getTicketValidityDaysSnapshot(), settledAt, endAt,
-                Long.toString(purchase.getOutTradeNo()), purchase.getPolicyVersion()));
+                Long.toString(purchase.getOutTradeNo()), purchase.getPolicyVersion(),
+                purchase.getPlanVersionSnapshot(), purchase.getPriceVndSnapshot(),
+                purchase.getPriceXuSnapshot(), Boolean.TRUE.equals(purchase.getAutoRenew()),
+                purchase.getPrimaryFundingSource(), purchase.getFallbackFundingSource(),
+                purchase.getAcceptedPlanVersion()));
         int updated = activated == null
             ? purchaseMapper.markPaidReview(purchase.getId(), purchase.getVersion(), settledAt)
             : purchaseMapper.markActivated(purchase.getId(), purchase.getVersion(),
@@ -341,20 +360,32 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private void validateCheckoutReplay(ReadingSubscriptionPurchaseRow purchase, byte payChannel,
-                                        ReadingSubscriptionPlanRow plan, String requestHash) {
+                                        ReadingSubscriptionPlanRow plan,
+                                        ReadingSubscriptionCheckoutOptions options,
+                                        String requestHash) {
         if (!Objects.equals(purchase.getPlanId(), plan.getId())
             || !Objects.equals(purchase.getPayChannel(), payChannel)
+            || !Objects.equals(purchase.getPlanVersionSnapshot(), plan.getPlanVersion())
             || !Objects.equals(purchase.getPriceVndSnapshot(), plan.getPriceVnd())
+            || !Objects.equals(purchase.getPriceXuSnapshot(), plan.getPriceXu())
+            || !Objects.equals(purchase.getAutoRenew(), options.autoRenew())
+            || !Objects.equals(purchase.getPrimaryFundingSource(), options.primaryFundingSource())
+            || !Objects.equals(purchase.getFallbackFundingSource(), options.fallbackFundingSource())
+            || !Objects.equals(purchase.getAcceptedPlanVersion(), options.acceptedPlanVersion())
             || !Objects.equals(purchase.getRequestHash(), requestHash)) {
             throw new IllegalStateException("Mã yêu cầu mua thuê bao đã dùng cho nội dung khác");
         }
     }
 
     private String checkoutRequestHash(long userId, byte payChannel, String clientRequestId,
-                                       ReadingSubscriptionPlanRow plan) {
+                                       ReadingSubscriptionPlanRow plan,
+                                       ReadingSubscriptionCheckoutOptions options) {
         return sha256("SUBSCRIPTION_CHECKOUT|" + userId + '|' + payChannel + '|'
             + clientRequestId + '|' + plan.getId() + '|' + plan.getPlanCode() + '|'
-            + plan.getPlanName() + '|' + plan.getPriceVnd() + '|'
+            + plan.getPlanName() + '|' + plan.getPlanVersion() + '|' + plan.getPriceVnd()
+            + '|' + plan.getPriceXu() + '|' + options.autoRenew() + '|'
+            + options.primaryFundingSource() + '|' + options.fallbackFundingSource() + '|'
+            + options.acceptedPlanVersion() + '|'
             + plan.getTicketsPerPeriod() + '|' + plan.getPeriodMonths() + '|'
             + plan.getTicketValidityDays() + '|' + entitlementProperties.getPolicyVersion()
             + '|' + entitlementProperties.getSubscriptionZoneId());

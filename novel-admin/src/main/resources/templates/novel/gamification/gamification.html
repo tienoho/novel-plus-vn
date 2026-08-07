@@ -55,11 +55,17 @@
                                th:text="#{admin.gamification.questCampaigns}">Campaign nhiệm vụ</a></li>
                         <li><a data-toggle="tab" href="#rewardsPanel"
                                th:text="#{admin.gamification.rewards}">Quỹ thưởng</a></li>
+                        <li><a data-toggle="tab" href="#tickerPanel"
+                               th:text="#{admin.gamification.tickerNicknames}">Bảng chạy</a></li>
+                        <li><a data-toggle="tab" href="#riskReviewPanel"
+                               th:text="#{admin.gamification.riskReviews}">Cảnh báo gian lận</a></li>
+                        <li shiro:hasPermission="novel:gamification:config"><a data-toggle="tab"
+                               href="#publicPolicyPanel"
+                               th:text="#{admin.gamification.publicPolicies}">Luật chơi công khai</a></li>
                     </ul>
                     <div class="tab-content m-t-md">
                         <div id="accountsPanel" class="tab-pane active">
-                            <form id="accountSearchForm" class="form-inline"
-                                  onsubmit="reloadGamificationAccounts(); return false;">
+                            <form id="accountSearchForm" class="form-inline">
                                 <input name="userId" type="number" min="1" class="form-control"
                                        th:placeholder="#{admin.gamification.userId}">
                                 <select name="status" class="form-control">
@@ -72,8 +78,7 @@
                             <table id="accountTable" data-mobile-responsive="true"></table>
                         </div>
                         <div id="ledgerPanel" class="tab-pane">
-                            <form id="ledgerSearchForm" class="form-inline"
-                                  onsubmit="reloadGamificationLedger(); return false;">
+                            <form id="ledgerSearchForm" class="form-inline">
                                 <input name="userId" type="number" min="1" class="form-control"
                                        th:placeholder="#{admin.gamification.userId}">
                                 <select name="entryType" class="form-control">
@@ -90,8 +95,7 @@
                             <table id="ledgerTable" data-mobile-responsive="true"></table>
                         </div>
                         <div id="jobsPanel" class="tab-pane">
-                            <form id="jobSearchForm" class="form-inline"
-                                  onsubmit="reloadGamificationJobs(); return false;">
+                            <form id="jobSearchForm" class="form-inline">
                                 <input name="jobType" type="text" class="form-control"
                                        th:placeholder="#{admin.gamification.jobType}">
                                 <select name="status" class="form-control">
@@ -106,8 +110,29 @@
                             <table id="jobTable" data-mobile-responsive="true"></table>
                         </div>
                         <div id="seasonsPanel" class="tab-pane">
-                            <form id="seasonSearchForm" class="form-inline"
-                                  onsubmit="reloadGamificationSeasons(); return false;">
+                            <form id="specialSeasonForm" class="form-inline"
+                                  shiro:hasPermission="novel:gamification:finalize">
+                                <input name="periodCode" required maxlength="32"
+                                       pattern="[a-z0-9][a-z0-9-]{0,31}" class="form-control"
+                                       th:placeholder="#{admin.gamification.specialPeriodCode}">
+                                <input name="seasonType" required pattern="[A-Z][A-Z0-9_]{1,23}"
+                                       class="form-control"
+                                       th:placeholder="#{admin.gamification.seasonType}">
+                                <input name="startAt" type="datetime-local" required class="form-control"
+                                       th:title="#{admin.gamification.startAt}">
+                                <input name="voteCutoffAt" type="datetime-local" required class="form-control"
+                                       th:title="#{admin.gamification.cutoffAt}">
+                                <input name="endAt" type="datetime-local" required class="form-control"
+                                       th:title="#{admin.gamification.endAt}">
+                                <button type="submit" class="btn btn-primary"
+                                        th:text="#{admin.gamification.createSpecialSeason}">Tạo kỳ đặc biệt</button>
+                            </form>
+                            <p class="help-block" shiro:hasPermission="novel:gamification:finalize"
+                               th:text="#{admin.gamification.specialSeasonHelp}">
+                                Kỳ đặc biệt không bị bộ lịch tự động đóng/gộp; admin tự vận hành thủ công.
+                            </p>
+                            <hr shiro:hasPermission="novel:gamification:finalize">
+                            <form id="seasonSearchForm" class="form-inline">
                                 <input name="periodCode" type="text" pattern="[0-9]{4}-(0[1-9]|1[0-2])"
                                        class="form-control" th:placeholder="#{admin.gamification.periodCode}">
                                 <select name="status" class="form-control">
@@ -137,8 +162,7 @@
                                         th:text="#{admin.gamification.calculateReward}">Tính phân bổ</button>
                             </form>
                             <hr>
-                            <form id="campaignSearchForm" class="form-inline"
-                                  onsubmit="reloadRewardCampaigns(); return false;">
+                            <form id="campaignSearchForm" class="form-inline">
                                 <input name="periodCode" type="text" class="form-control"
                                        th:placeholder="#{admin.gamification.periodCode}">
                                 <input name="status" type="text" class="form-control"
@@ -147,8 +171,7 @@
                             </form>
                             <table id="campaignTable" data-mobile-responsive="true"></table>
                             <h4 th:text="#{admin.gamification.allocations}">Phân bổ thưởng</h4>
-                            <form id="allocationSearchForm" class="form-inline"
-                                  onsubmit="reloadRewardAllocations(); return false;">
+                            <form id="allocationSearchForm" class="form-inline">
                                 <input name="campaignId" type="number" min="1" class="form-control"
                                        th:placeholder="#{admin.gamification.campaignId}">
                                 <input name="authorId" type="number" min="1" class="form-control"
@@ -158,6 +181,86 @@
                                 <button type="submit" class="btn btn-success" th:text="#{common.query}">Tra cứu</button>
                             </form>
                             <table id="allocationTable" data-mobile-responsive="true"></table>
+                        </div>
+                        <div id="tickerPanel" class="tab-pane">
+                            <form id="tickerSearchForm" class="form-inline">
+                                <input name="userId" type="number" min="1" class="form-control"
+                                       th:placeholder="#{admin.gamification.userId}">
+                                <input name="nickname" type="text" class="form-control"
+                                       th:placeholder="#{admin.gamification.nickName}">
+                                <label>
+                                    <input name="optedIn" type="checkbox" value="1">
+                                    <span th:text="#{admin.gamification.tickerOptedInOnly}">Chỉ đang hiển thị</span>
+                                </label>
+                                <button type="submit" class="btn btn-success" th:text="#{common.query}">Tra cứu</button>
+                            </form>
+                            <p class="help-block" th:text="#{admin.gamification.tickerHelp}">
+                                Danh sách người dùng đang bật/tắt hiển thị trên bảng chạy Ngọn Đuốc công khai.
+                            </p>
+                            <table id="tickerTable" data-mobile-responsive="true"></table>
+                        </div>
+                        <div id="riskReviewPanel" class="tab-pane">
+                            <form id="riskReviewSearchForm" class="form-inline">
+                                <input name="userId" type="number" min="1" class="form-control"
+                                       th:placeholder="#{admin.gamification.userId}">
+                                <select name="status" class="form-control">
+                                    <option value="PENDING" th:text="#{admin.gamification.riskPending}">Chờ xử lý</option>
+                                    <option value="APPROVED" th:text="#{admin.gamification.riskApproved}">Hợp lệ</option>
+                                    <option value="REJECTED" th:text="#{admin.gamification.riskRejected}">Vi phạm</option>
+                                </select>
+                                <select name="action" class="form-control">
+                                    <option value="" th:text="#{admin.gamification.allStatuses}">Tất cả</option>
+                                    <option value="REVIEW">REVIEW</option>
+                                    <option value="BLOCK">BLOCK</option>
+                                </select>
+                                <button type="submit" class="btn btn-success" th:text="#{common.query}">Tra cứu</button>
+                            </form>
+                            <p class="help-block" th:text="#{admin.gamification.riskHelp}">
+                                Chỉ hiển thị prefix hash, không hiển thị IP hoặc device ID thô.
+                            </p>
+                            <table id="riskReviewTable" data-mobile-responsive="true"></table>
+                        </div>
+                        <div id="publicPolicyPanel" class="tab-pane"
+                             shiro:hasPermission="novel:gamification:config">
+                            <form id="publicPolicyCreateForm">
+                                <div class="form-group">
+                                    <label for="publicPolicyVersion"
+                                           th:text="#{admin.gamification.policyVersion}">Phiên bản chính sách</label>
+                                    <input id="publicPolicyVersion" name="policyVersion" required maxlength="32"
+                                           pattern="[a-z0-9][a-z0-9._-]{0,31}" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="publicPolicyTitle"
+                                           th:text="#{admin.gamification.publicPolicyTitle}">Tiêu đề</label>
+                                    <input id="publicPolicyTitle" name="title" required minlength="5"
+                                           maxlength="160" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="publicPolicyContent"
+                                           th:text="#{admin.gamification.publicPolicyContent}">Nội dung plain text</label>
+                                    <textarea id="publicPolicyContent" name="contentText" required minlength="100"
+                                              maxlength="20000" rows="8" class="form-control"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary"
+                                        th:text="#{admin.gamification.createPolicyDraft}">Tạo bản nháp</button>
+                            </form>
+                            <p class="help-block" th:text="#{admin.gamification.publicPolicyHelp}">
+                                Nội dung được hiển thị dưới dạng plain text. Phát hành sẽ lưu trữ phiên bản cũ.
+                            </p>
+                            <hr>
+                            <form id="publicPolicySearchForm" class="form-inline">
+                                <input name="policyVersion" maxlength="32" class="form-control"
+                                       th:placeholder="#{admin.gamification.policyVersion}">
+                                <select name="status" class="form-control">
+                                    <option value="" th:text="#{admin.gamification.allStatuses}">Tất cả</option>
+                                    <option value="DRAFT" th:text="#{admin.gamification.policyDraft}">Bản nháp</option>
+                                    <option value="PUBLISHED" th:text="#{admin.gamification.policyPublished}">Đang phát hành</option>
+                                    <option value="ARCHIVED" th:text="#{admin.gamification.policyArchived}">Đã lưu trữ</option>
+                                </select>
+                                <button type="submit" class="btn btn-success"
+                                        th:text="#{common.query}">Tra cứu</button>
+                            </form>
+                            <table id="publicPolicyTable" data-mobile-responsive="true"></table>
                         </div>
                         <div id="questCampaignsPanel" class="tab-pane">
                             <div shiro:hasPermission="novel:gamification:config">
@@ -190,8 +293,7 @@
                                 </p>
                                 <hr>
                             </div>
-                            <form id="questCampaignSearchForm" class="form-inline"
-                                  onsubmit="reloadQuestCampaigns(); return false;">
+                            <form id="questCampaignSearchForm" class="form-inline">
                                 <input name="campaignCode" class="form-control"
                                        th:placeholder="#{admin.gamification.questCampaignCode}">
                                 <select name="status" class="form-control">
@@ -204,8 +306,7 @@
                             </form>
                             <table id="questCampaignTable" data-mobile-responsive="true"></table>
                             <h4 th:text="#{admin.gamification.questRewards}">Reward nhiệm vụ</h4>
-                            <form id="questRewardSearchForm" class="form-inline"
-                                  onsubmit="reloadQuestRewards(); return false;">
+                            <form id="questRewardSearchForm" class="form-inline">
                                 <input name="campaignCode" class="form-control"
                                        th:placeholder="#{admin.gamification.questCampaignCode}">
                                 <input name="questCode" class="form-control"
@@ -286,12 +387,33 @@
         ,rewardType: /*[[#{admin.gamification.rewardType}]]*/ 'Loại thưởng'
         ,activateCampaign: /*[[#{admin.gamification.activateCampaign}]]*/ 'Kích hoạt'
         ,closeCampaign: /*[[#{admin.gamification.closeCampaign}]]*/ 'Đóng'
+        ,createSpecialSeason: /*[[#{admin.gamification.createSpecialSeason}]]*/ 'Tạo kỳ đặc biệt'
+        ,tickerOptOut: /*[[#{admin.gamification.tickerOptOut}]]*/ 'Ẩn khỏi bảng chạy'
+        ,tickerVisible: /*[[#{admin.gamification.tickerVisible}]]*/ 'Đang hiển thị'
+        ,tickerHidden: /*[[#{admin.gamification.tickerHidden}]]*/ 'Đã ẩn'
+        ,tickerHide: /*[[#{admin.gamification.tickerHide}]]*/ 'Ẩn'
+        ,tickerShow: /*[[#{admin.gamification.tickerShow}]]*/ 'Hiện lại'
+        ,tickerModerateReason: /*[[#{admin.gamification.tickerModerateReason}]]*/ 'Nhập lý do kiểm duyệt (ít nhất 10 ký tự)'
+        ,riskScore: /*[[#{admin.gamification.riskScore}]]*/ 'Điểm rủi ro'
+        ,matchedRules: /*[[#{admin.gamification.matchedRules}]]*/ 'Rule khớp'
+        ,deviceHash: /*[[#{admin.gamification.deviceHash}]]*/ 'Device hash'
+        ,ipHash: /*[[#{admin.gamification.ipHash}]]*/ 'IP hash'
+        ,riskApprove: /*[[#{admin.gamification.riskApprove}]]*/ 'Đánh dấu hợp lệ'
+        ,riskReject: /*[[#{admin.gamification.riskReject}]]*/ 'Xác nhận vi phạm'
+        ,riskReviewReason: /*[[#{admin.gamification.riskReviewReason}]]*/ 'Nhập lý do review (ít nhất 10 ký tự)'
+        ,publicPolicyTitle: /*[[#{admin.gamification.publicPolicyTitle}]]*/ 'Tiêu đề'
+        ,policyStatus: /*[[#{admin.gamification.policyStatus}]]*/ 'Trạng thái chính sách'
+        ,publishedBy: /*[[#{admin.gamification.publishedBy}]]*/ 'Người phát hành'
+        ,publishedAt: /*[[#{admin.gamification.publishedAt}]]*/ 'Thời điểm phát hành'
+        ,publishPolicy: /*[[#{admin.gamification.publishPolicy}]]*/ 'Phát hành'
+        ,publishPolicyConfirm: /*[[#{admin.gamification.publishPolicyConfirm}]]*/ 'Phát hành bản này và lưu trữ bản đang dùng?'
     };
-    window.GamificationPermissions = {finalize: false, reward: false, adjust: false, config: false};
+    window.GamificationPermissions = {finalize: false, reward: false, adjust: false, config: false, review: false};
 </script>
 <script shiro:hasPermission="novel:gamification:config">window.GamificationPermissions.config = true;</script>
 <script shiro:hasPermission="novel:gamification:reward">window.GamificationPermissions.reward = true;</script>
 <script shiro:hasPermission="novel:gamification:adjust">window.GamificationPermissions.adjust = true;</script>
+<script shiro:hasPermission="novel:gamification:review">window.GamificationPermissions.review = true;</script>
 <script shiro:hasPermission="novel:gamification:finalize">
     window.GamificationPermissions.finalize = true;
 </script>

@@ -110,30 +110,10 @@
                 if (data.code == 200) {
                     var crawlSourceList = data.data.list;
                     if (crawlSourceList.length > 0) {
-                        var crawlSourceListHtml = "";
+                        $("#crawlSourceList").empty();
                         for (var i = 0; i < crawlSourceList.length; i++) {
-                            var crawlSource = crawlSourceList[i];
-                            crawlSourceListHtml += (" <tr class=\"book_list\" vals=\"291\">\n" +
-                                "                            <td class=\"style bookclass\">\n" +
-                                "                                [" + (i + 1) + "]\n" +
-                                "                            </td>\n" +
-                                "                            <td class=\"name\">\n" +
-                                "                                " + crawlSource.sourceName + "</td>\n" +
-                                "                            <td class=\"name\" valsc=\"291|2037554|1\">"
-                                + crawlSource.createTime + "</td>\n" +
-                                "                            <td class=\"name\">\n" +
-                                "                                " + crawlSource.updateTime + "\n" +
-                                "                            </td>\n" +
-                                "                            <td class=\"goread\">\n" +
-                                "                                " + crawlSource.chapterCount + " " + crawlMessages.chapter + "</td>\n" +
-                                "                            <td class=\"goread\" id='sourceStatus" + crawlSource.id + "'>" + (crawlSource.sourceStatus == 0 ? crawlMessages.stopped : crawlMessages.running) +
-                                "                            </td>\n" +
-
-                                " <td class=\"goread\" id='opt" + crawlSource.id + "'><a href='javascript:openOrStopCrawl(" + crawlSource.id + "," + crawlSource.sourceStatus + ")'>" + (crawlSource.sourceStatus == 0 ? crawlMessages.open : crawlMessages.close) + "  </a>" +
-                                "<a href='javascript:updateCrawlSource(" + crawlSource.id + ")'>" + crawlMessages.edit + "  </a>" +
-                                "</td>                     </tr>");
+                            renderCrawlSourceRow(crawlSourceList[i], i);
                         }
-                        $("#crawlSourceList").html(crawlSourceListHtml);
 
                         layui.use('laypage', function () {
                             var laypage = layui.laypage;
@@ -173,7 +153,7 @@
                     location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
 
                 } else if (!isUpdate) {
-                    layer.alert(data.msg);
+                    layer.alert(crawlEscapeHtml(data.msg || ""));
                 }
                 isUpdate = true;
 
@@ -186,6 +166,51 @@
             }
         })
 
+    }
+
+    function appendTextCell(row, className, value, id) {
+        var cell = $("<td>", {"class": className}).text(value == null ? "" : String(value));
+        if (id) {
+            cell.attr("id", id);
+        }
+        cell.appendTo(row);
+        return cell;
+    }
+
+    function renderCrawlSourceRow(crawlSource, index) {
+        var sourceId = Number(crawlSource.id);
+        if (!Number.isInteger(sourceId) || sourceId <= 0) {
+            return;
+        }
+        var sourceStatus = Number(crawlSource.sourceStatus) === 0 ? 0 : 1;
+        var row = $("<tr>", {"class": "book_list"});
+        appendTextCell(row, "style bookclass", "[" + (index + 1) + "]");
+        appendTextCell(row, "name", crawlSource.sourceName);
+        appendTextCell(row, "name", crawlSource.createTime);
+        appendTextCell(row, "name", crawlSource.updateTime);
+        appendTextCell(row, "goread", String(crawlSource.chapterCount == null ? "" : crawlSource.chapterCount) + " " + crawlMessages.chapter);
+        appendTextCell(row, "goread", sourceStatus === 0 ? crawlMessages.stopped : crawlMessages.running, "sourceStatus" + sourceId);
+        $("<td>", {"class": "goread", "id": "opt" + sourceId}).appendTo(row);
+        row.appendTo("#crawlSourceList");
+        renderSourceActions(sourceId, sourceStatus);
+    }
+
+    function renderSourceActions(sourceId, status) {
+        var actions = $("#opt" + sourceId).empty();
+        $("<a>", {"href": "#"})
+            .text((status === 0 ? crawlMessages.open : crawlMessages.close) + "  ")
+            .on("click", function (event) {
+                event.preventDefault();
+                openOrStopCrawl(sourceId, status);
+            })
+            .appendTo(actions);
+        $("<a>", {"href": "#"})
+            .text(crawlMessages.edit + "  ")
+            .on("click", function (event) {
+                event.preventDefault();
+                updateCrawlSource(sourceId);
+            })
+            .appendTo(actions);
     }
 
     function updateCrawlSource(crawlSourceId) {
@@ -207,12 +232,12 @@
 
                     if (status == 0) {
                         // Bật nguồn thu thập.
-                        $("#sourceStatus" + sourceId).html(crawlMessages.running);
-                        $("#opt" + sourceId).html("<a href='javascript:openOrStopCrawl(" + sourceId + "," + 1 + ")'>" + crawlMessages.close + " </a>" + "<a href='javascript:updateCrawlSource(" + sourceId + ")'>" + crawlMessages.edit + "  </a>");
+                        $("#sourceStatus" + sourceId).text(crawlMessages.running);
+                        renderSourceActions(sourceId, 1);
                     } else {
                         // Tắt nguồn thu thập.
-                        $("#sourceStatus" + sourceId).html(crawlMessages.stopped);
-                        $("#opt" + sourceId).html("<a href='javascript:openOrStopCrawl(" + sourceId + "," + 0 + ")'>" + crawlMessages.open + " </a>" + "<a href='javascript:updateCrawlSource(" + sourceId + ")'>" + crawlMessages.edit + "  </a>");
+                        $("#sourceStatus" + sourceId).text(crawlMessages.stopped);
+                        renderSourceActions(sourceId, 0);
                     }
 
 
@@ -221,7 +246,7 @@
                     location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
 
                 } else {
-                    layer.alert(data.msg);
+                    layer.alert(crawlEscapeHtml(data.msg || ""));
                 }
 
             },

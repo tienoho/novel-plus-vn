@@ -8,7 +8,7 @@
         select id,crawl_source_id,crawl_book_id,crawl_last_time,pic_url,word_count
         from book where last_index_update_time > #{startDate} and crawl_source_id is not null
         order by crawl_last_time
-        limit ${limit}
+        limit #{limit}
 
 
     </select>

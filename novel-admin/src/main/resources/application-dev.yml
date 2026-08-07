@@ -1,17 +1,21 @@
 java2nb:
-  uploadPath: /var/pic/
-  username: admin
-  password: 111111
+  uploadPath: ${JAVA2NB_UPLOAD_PATH:/var/pic/}
 logging:
   level:
     root: info
     com.java2nb: debug
 spring:
   redis:
-    host: 127.0.0.1
-    port: 6379
-    password: test123456
+    host: ${SPRING_REDIS_HOST:127.0.0.1}
+    port: ${SPRING_REDIS_PORT:6379}
+    password: ${SPRING_REDIS_PASSWORD:}
     # Thời gian chờ kết nối (mili giây)
     timeout: 10000
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:127.0.0.1}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      password: ${SPRING_DATA_REDIS_PASSWORD:}
+      timeout: 10s
 
 

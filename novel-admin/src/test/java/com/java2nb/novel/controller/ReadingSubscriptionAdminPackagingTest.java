@@ -16,6 +16,8 @@ class ReadingSubscriptionAdminPackagingTest {
         String compose = read(repository.resolve("compose.yaml"));
         String env = read(repository.resolve(".env.example"));
         String runtime = read(repository.resolve("novel-admin/src/main/resources/application.yml"));
+        String flywayImage = read(repository.resolve("deploy/flyway/Dockerfile"));
+        String flywayEntrypoint = read(repository.resolve("deploy/flyway/entrypoint.sh"));
         String migration = read(repository.resolve(
             "doc/sql/20260801_reader_subscription_admin.sql"));
         String reviewMigration = read(repository.resolve(
@@ -26,12 +28,19 @@ class ReadingSubscriptionAdminPackagingTest {
             "novel-admin/src/main/resources/static/js/appjs/novel/readingSubscription/readingSubscription.js"));
 
         assertThat(compose)
-            .contains("/migrations/20260801_reader_subscription_admin.sql")
-            .contains("./doc/sql/20260801_reader_subscription_admin.sql:")
-            .contains("/migrations/20260805_reader_subscription_paid_review.sql")
-            .contains("./doc/sql/20260805_reader_subscription_paid_review.sql:")
+            .contains("dockerfile: deploy/flyway/Dockerfile")
+            .contains("image: novel-plus/migrations:${IMAGE_TAG:-local}")
+            .contains("condition: service_completed_successfully")
             .contains("READING_SUBSCRIPTION_ADMIN_ACTIVATION_ENABLED: "
                 + "${READING_SUBSCRIPTION_ADMIN_ACTIVATION_ENABLED:-false}");
+        assertThat(flywayImage)
+            .contains("doc/sql/20260801_reader_subscription_admin.sql "
+                + "/flyway/sql/V2026080101__reader_subscription_admin.sql")
+            .contains("doc/sql/20260805_reader_subscription_paid_review.sql "
+                + "/flyway/sql/V2026080501__reader_subscription_paid_review.sql");
+        assertThat(flywayEntrypoint)
+            .contains("flyway migrate")
+            .contains("flyway validate");
         assertThat(env).contains("READING_SUBSCRIPTION_ADMIN_ACTIVATION_ENABLED=false");
         assertThat(runtime).contains(
             "activation-enabled: ${READING_SUBSCRIPTION_ADMIN_ACTIVATION_ENABLED:false}");

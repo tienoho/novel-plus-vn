@@ -30,6 +30,29 @@ public interface ReadingSubscriptionMapper {
                          @Param("expectedVersion") long expectedVersion,
                          @Param("status") String status);
     ReadingSubscriptionRow selectCurrentSubscriptionByUserId(@Param("userId") long userId);
+    ReadingSubscriptionRow selectSubscriptionForUserForUpdate(
+        @Param("subscriptionId") long subscriptionId, @Param("userId") long userId);
+    long countActiveMandates(@Param("userId") long userId);
+    int updateRenewalSettings(@Param("subscriptionId") long subscriptionId,
+                              @Param("userId") long userId,
+                              @Param("expectedVersion") long expectedVersion,
+                              @Param("autoRenew") boolean autoRenew,
+                              @Param("primaryFundingSource") String primaryFundingSource,
+                              @Param("fallbackFundingSource") String fallbackFundingSource,
+                              @Param("updatedAt") Date updatedAt);
+    int insertPriceConsent(@Param("subscription") ReadingSubscriptionRow subscription,
+                           @Param("plan") ReadingSubscriptionPlanRow plan,
+                           @Param("clientRequestId") String clientRequestId,
+                           @Param("consentedAt") Date consentedAt);
+    int applyPriceConsent(@Param("subscriptionId") long subscriptionId,
+                          @Param("userId") long userId,
+                          @Param("expectedVersion") long expectedVersion,
+                          @Param("plan") ReadingSubscriptionPlanRow plan,
+                          @Param("consentedAt") Date consentedAt);
+    int cancelAtPeriodEnd(@Param("subscriptionId") long subscriptionId,
+                          @Param("userId") long userId,
+                          @Param("expectedVersion") long expectedVersion,
+                          @Param("cancelledAt") Date cancelledAt);
     List<ReadingSubscriptionPeriodGrantRow> selectPeriodGrantsByUser(
         @Param("userId") long userId, @Param("subscriptionId") long subscriptionId,
         @Param("limit") int limit);

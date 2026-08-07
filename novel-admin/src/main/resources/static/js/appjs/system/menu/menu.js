@@ -81,21 +81,9 @@ var load = function () {
                         align: 'center',
                         valign: 'center',
                         formatter: function (item, index) {
-                            var e = '<a class="btn btn-primary btn-sm '
-                                + s_edit_h
-                                + '" href="#" mce_href="#" title="' + adminMessage('edit', 'Sửa') + '" onclick="edit(\''
-                                + item.menuId
-                                + '\')"><i class="fa fa-edit"></i></a> ';
-                            var p = '<a class="btn btn-primary btn-sm '
-                                + s_add_h
-                                + '" href="#" mce_href="#" title="' + adminMessage('menuAddChild', 'Thêm menu con') + '" onclick="add(\''
-                                + item.menuId
-                                + '\')"><i class="fa fa-plus"></i></a> ';
-                            var d = '<a class="btn btn-warning btn-sm '
-                                + s_remove_h
-                                + '" href="#" title="' + adminMessage('deleteLabel', 'Xóa') + '"  mce_href="#" onclick="remove(\''
-                                + item.menuId
-                                + '\')"><i class="fa fa-remove"></i></a> ';
+                            var e = adminRowAction({action: 'edit', args: [item.menuId], variant: 'primary', visibility: s_edit_h, title: adminMessage('edit', 'Sửa'), icon: 'edit'});
+                            var p = adminRowAction({action: 'add', args: [item.menuId], variant: 'primary', visibility: s_add_h, title: adminMessage('menuAddChild', 'Thêm menu con'), icon: 'add'});
+                            var d = adminRowAction({action: 'remove', args: [item.menuId], variant: 'warning', visibility: s_remove_h, title: adminMessage('deleteLabel', 'Xóa'), icon: 'remove'});
                             return e + d + p;
                         }
                     }]
@@ -132,7 +120,7 @@ function remove(id) {
                     layer.msg(adminMessage('deleteSuccess', 'Xóa thành công'));
                     reLoad();
                 } else {
-                    layer.msg(data.msg);
+                    layer.msg(HtmlUtil.htmlEncode(data.msg || ""));
                 }
             }
         });

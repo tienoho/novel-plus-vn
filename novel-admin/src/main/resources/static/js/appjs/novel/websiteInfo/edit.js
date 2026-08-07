@@ -81,7 +81,7 @@ function update() {
             if (data.code == 0) {
                 layer.msg(adminMessage('websiteSavedRestart', 'Thao tác thành công; khởi động lại novel-front để áp dụng.'));
             } else {
-                layer.alert(data.msg)
+                layer.alert(HtmlUtil.htmlEncode(data.msg || ""))
             }
 
         }

@@ -58,6 +58,7 @@ public enum ResponseStatus implements IResultCode {
     AGE_RESTRICTED(5002, "book.ageRestricted"),
     COPYRIGHT_TAKEDOWN(5003, "book.copyrightTakedown"),
     BOOK_NOT_AVAILABLE(5004, "book.notAvailable"),
+    BOOK_CATEGORY_INVALID(5005, "book.category.invalid"),
 
     /**
      * Lỗi liên quan đến trạng thái đọc riêng tư
@@ -86,12 +87,15 @@ public enum ResponseStatus implements IResultCode {
     GAMIFICATION_QUEST_NOT_COMPLETED(7014, "gamification.quest.notCompleted"),
     GAMIFICATION_QUEST_REWARD_UNAVAILABLE(7015, "gamification.quest.rewardUnavailable"),
     GAMIFICATION_READING_HEARTBEAT_INVALID(7016, "gamification.reading.heartbeatInvalid"),
+    GAMIFICATION_VOTE_RISK_BLOCKED(7017, "gamification.vote.riskBlocked"),
 
     /** Lỗi Vé đọc và quyền đọc chương. */
     READING_TICKET_DISABLED(7101, "reader.ticket.disabled"),
     READING_TICKET_INSUFFICIENT(7102, "reader.ticket.insufficient"),
     READING_SUBSCRIPTION_CHECKOUT_UNAVAILABLE(7110, "reader.subscription.checkout.unavailable"),
     READING_SUBSCRIPTION_PURCHASE_CONFLICT(7111, "reader.subscription.checkout.conflict"),
+    READING_SUBSCRIPTION_MANDATE_UNAVAILABLE(7112, "reader.subscription.mandate.unavailable"),
+    READING_SUBSCRIPTION_MANDATE_CONFLICT(7113, "reader.subscription.mandate.conflict"),
 
     /** Lỗi mã quà. */
     GIFT_CODE_DISABLED(7201, "gift.code.disabled"),

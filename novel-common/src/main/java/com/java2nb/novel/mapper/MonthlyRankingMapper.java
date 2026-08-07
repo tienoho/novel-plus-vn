@@ -22,11 +22,21 @@ public interface MonthlyRankingMapper {
                                   @Param("voteCutoffAt") Date voteCutoffAt,
                                   @Param("policyVersion") String policyVersion);
 
+    int insertSpecialSeasonIgnore(@Param("periodCode") String periodCode,
+                                  @Param("seasonType") String seasonType,
+                                  @Param("zoneId") String zoneId,
+                                  @Param("startAt") Date startAt,
+                                  @Param("endAt") Date endAt,
+                                  @Param("voteCutoffAt") Date voteCutoffAt,
+                                  @Param("policyVersion") String policyVersion);
+
     MonthlySeasonRow selectSeasonByPeriod(@Param("periodCode") String periodCode);
 
     MonthlySeasonRow selectSeasonAt(@Param("at") Date at);
 
     MonthlySeasonRow selectLatestSeason();
+
+    List<MonthlySeasonRow> selectOpenSeasons(@Param("at") Date at);
 
     List<MonthlySeasonRow> selectSeasonsReadyToClose(@Param("at") Date at,
                                                      @Param("limit") int limit);

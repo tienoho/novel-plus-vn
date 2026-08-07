@@ -23,13 +23,15 @@ class GamificationEventProcessorTest {
 
     private GamificationProgressMapper mapper;
     private GamificationProgressService progressService;
+    private LevelRewardService levelRewardService;
     private GamificationEventProcessor processor;
 
     @BeforeEach
     void setUp() {
         mapper = mock(GamificationProgressMapper.class);
         progressService = mock(GamificationProgressService.class);
-        processor = new GamificationEventProcessor(mapper, progressService);
+        levelRewardService = mock(LevelRewardService.class);
+        processor = new GamificationEventProcessor(mapper, progressService, levelRewardService);
     }
 
     @Test
@@ -57,6 +59,19 @@ class GamificationEventProcessorTest {
     }
 
     @Test
+    void completesLevelEventAsProcessedWhenRewardConsumerMatches() {
+        GamificationEventRow event = pendingEvent();
+        event.setEventType("LEVEL_REACHED");
+        when(mapper.selectEventById(EVENT_ID)).thenReturn(event);
+        when(mapper.claimEvent(EVENT_ID, 3L, PROCESSED_AT, 10)).thenReturn(1);
+        when(levelRewardService.apply(event)).thenReturn(1);
+        when(mapper.completeEvent(EVENT_ID, 4L, "PROCESSED", PROCESSED_AT)).thenReturn(1);
+
+        assertThat(processor.process(EVENT_ID, PROCESSED_AT, 10))
+            .isEqualTo(EventProcessResult.PROCESSED);
+    }
+
+    @Test
     void returnsNotOwnerWithoutApplyingEventWhenClaimFails() {
         GamificationEventRow event = pendingEvent();
         when(mapper.selectEventById(EVENT_ID)).thenReturn(event);
@@ -66,6 +81,7 @@ class GamificationEventProcessorTest {
             .isEqualTo(EventProcessResult.NOT_OWNER);
 
         verifyNoInteractions(progressService);
+        verifyNoInteractions(levelRewardService);
         verify(mapper, never()).completeEvent(EVENT_ID, 4L, "PROCESSED", PROCESSED_AT);
     }
 

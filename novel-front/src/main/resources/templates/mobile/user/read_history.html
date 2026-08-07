@@ -79,7 +79,7 @@
 <div style="height: 50px;line-height: 50px;text-align: center" class="layui-header header header-doc  layui-bg-cyan">
 
     <div style="width:10%;float: left;margin-left: 10px">
-        <a href="javascript:history.go(-1)">
+        <a href="#" data-csp-action="history-back">
             <i style="font-size: 20px;color: #fff;" class="layui-icon">&#xe65c;</i></a>
     </div>
     <b class="layui-icon" th:text="#{user.history}">Lịch sử đọc</b>
@@ -199,7 +199,7 @@
                         });
                     });
                 } else {
-                    layer.alert(data.msg);
+                    novelAlertText(data.msg);
                 }
 
             },
@@ -216,10 +216,6 @@
         var ids = $("#ids").val();
         if (ids) {
             toUrl += ("&historyBookIds=" + ids);
-        }
-        var token = $("#token").val();
-        if (token) {
-            toUrl += ("&token=" + token);
         }
         var keyword = $("#keyword").val();
         if (newKeyword) {
@@ -260,12 +256,7 @@
 
 
     function toMyCollect() {
-        var token = localStorage.getItem("token");
-        if (token) {
-            window.location.href = "/book/search?token=" + token;
-        } else {
-            window.location.href = "/user/login.html";
-        }
+        window.location.href = "/user/favorites.html";
     }
 </script>
 

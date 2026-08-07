@@ -96,7 +96,8 @@
                             </li>
                         </ul>
                     </li>-->
-                    <li class="hidden-xs"><a @click="personal" href="#"><i class="fa fa-id-card"></i> <span th:text="#{admin.personal}">Cá nhân</span></a></li>
+                    <li class="hidden-xs"><a href="#personal" data-admin-personal
+                                               th:data-personal-title="#{admin.personal.settings}"><i class="fa fa-id-card"></i> <span th:text="#{admin.personal}">Cá nhân</span></a></li>
                    <!-- <li class="dropdown hidden-xs"><a
                             class="right-sidebar-toggle" aria-expanded="false"> <i
                             class="fa fa-tasks"></i> Giao diện
@@ -114,7 +115,7 @@
             </button>
             <nav class="page-tabs J_menuTabs">
                 <div class="page-tabs-content">
-                    <a href="javascript:;" class="active J_menuTab"
+                    <a href="#dashboard" class="active J_menuTab"
                        data-id="index_v1.html" th:text="#{admin.dashboard}">Tổng quan</a>
                 </div>
             </nav>
@@ -259,44 +260,8 @@
 <script type="text/javascript" src="/js/contabs.js"></script>
 <!-- Plugin bên thứ ba. -->
 <script src="/js/plugins/pace/pace.min.js"></script>
-<!-- vue -->
-<script type="text/javascript"
-        src="/js/vue.min.js">
-
-</script>
 <!-- Toastr script -->
 <script src="/js/plugins/toastr/toastr.min.js"></script>
-<script type="text/javascript" th:inline="javascript">
-    var dictList = [];// Danh sách từ điển dùng chung trên trang.
-    $.ajax({
-        url : '/common/dict/list',
-        data: {'limit':1000,'offset':0},
-        success : function(data) {
-            dictList = data.rows;
-        }
-    });
-
-    var wrapper = new Vue({
-        el: '#wrapper',
-        data: {
-            total: '',
-            rows: '',
-        },
-        methods: {
-            personal: function () {
-                layer.open({
-                    type: 2,
-                    title: /*[[#{admin.personal.settings}]]*/ 'Cài đặt cá nhân',
-                    maxmin: true,
-                    shadeClose: false,
-                    area: ['800px', '600px'],
-                    content: '/sys/user/personal'
-                });
-            }
-        },
-        created: function () {
-        }
-    })
-</script>
+<script src="/js/index-page.js"></script>
 </body>
 </html>

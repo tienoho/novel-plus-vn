@@ -1,6 +1,7 @@
 package com.java2nb.novel.core.config;
 
 import com.java2nb.novel.core.filter.NovelFilter;
+import com.java2nb.novel.core.filter.CsrfFilter;
 import com.java2nb.novel.core.filter.XssFilter;
 import jakarta.servlet.DispatcherType;
 import org.apache.commons.lang3.StringUtils;
@@ -59,6 +60,16 @@ public class FilterConfig{
         initParameters.put("enabled", enabled);
         //Tham số khởi tạo Filter
         registration.setInitParameters(initParameters);
+        return registration;
+    }
+
+    @Bean
+    public FilterRegistrationBean<CsrfFilter> csrfFilterRegistration() {
+        FilterRegistrationBean<CsrfFilter> registration = new FilterRegistrationBean<>();
+        registration.setFilter(new CsrfFilter());
+        registration.addUrlPatterns("/*");
+        registration.setName("csrfFilter");
+        registration.setOrder(10);
         return registration;
     }
 

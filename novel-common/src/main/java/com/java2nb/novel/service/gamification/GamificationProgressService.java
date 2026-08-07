@@ -30,4 +30,12 @@ public interface GamificationProgressService {
      */
     GamificationProfileRow updateTickerOptOut(long userId, boolean optOut, long expectedVersion,
                                               String ruleVersion);
+
+    /**
+     * Kiểm duyệt admin: ẩn/hiện một người dùng khỏi bảng chạy công khai (ví dụ nickname vi phạm
+     * vượt qua bộ lọc từ nhạy cảm tự động), bỏ qua {@code expectedVersion} phía client vì admin
+     * khoá và đọc version mới nhất ngay trong giao dịch. Ghi audit với operatorType 'ADMIN'.
+     */
+    GamificationProfileRow adminSetTickerOptOut(long userId, boolean optOut, long operatorId,
+                                                String reason, String ruleVersion);
 }

@@ -16,6 +16,8 @@ public class TicketVoteRow {
     private String idempotencyKey;
     private String requestHash;
     private String clientRequestId;
+    private String sourceIpHash;
+    private String sourceDeviceHash;
     private String status;
     private Date createTime;
 }

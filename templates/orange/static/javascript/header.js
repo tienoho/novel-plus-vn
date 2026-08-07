@@ -59,8 +59,19 @@ $(function () {
     $("#headerUserHistoryBtn").mouseover(function () {
         HeaderShowUtil.headerShowHistory();
     });
+    $("#headerUserHistoryBtn").click(function (event) {
+        event.preventDefault();
+    });
     $("#headerUserHistory").mouseleave(function () {
         HeaderShowUtil.headerHideHistory();
+    });
+    $("#headerUserHistory").on("click", "[data-header-history-action]", function (event) {
+        event.preventDefault();
+        if ($(this).attr("data-header-history-action") === "favorites") {
+            HeaderShowUtil.headerShowFavLog(this);
+        } else {
+            HeaderShowUtil.headerShowHistoryLog(this);
+        }
     });
 });
 function getNote() {
@@ -84,7 +95,7 @@ var HeaderShowUtil = {
     headerShowHistory: function (obj) {
         if ($("#headerUserHistory").html().length < 10) {
             var rStr = '<div class="record_box">';
-            rStr += '					<div class="record_title" id="hdShowTitle"><a href="javascript:void(0);" class="record_tit1 on" onclick="javascript:HeaderShowUtil.headerShowHistoryLog(this);">' + headerMessage('recentReading', 'Đọc gần đây') + '</a><a href="javascript:void(0);" class="record_tit2" onclick="javascript:HeaderShowUtil.headerShowFavLog(this);">' + headerMessage('bookshelf', 'Tủ sách') + '</a></div>';
+            rStr += '					<div class="record_title" id="hdShowTitle"><a href="#recent-reading" class="record_tit1 on" data-header-history-action="history">' + headerMessage('recentReading', 'Đọc gần đây') + '</a><a href="#bookshelf" class="record_tit2" data-header-history-action="favorites">' + headerMessage('bookshelf', 'Tủ sách') + '</a></div>';
             rStr += '					<div class="record_list record_list1" id="hdShowHistory">';
             rStr += '						<ul>';
             rStr += '						</ul>';

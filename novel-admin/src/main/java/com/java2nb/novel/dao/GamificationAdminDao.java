@@ -33,4 +33,13 @@ public interface GamificationAdminDao {
 
     List<Map<String, Object>> listQuestRewards(@SanitizeMap Map<String, Object> params);
     int countQuestRewards(Map<String, Object> params);
+
+    List<Map<String, Object>> listTickerNicknames(@SanitizeMap Map<String, Object> params);
+    int countTickerNicknames(Map<String, Object> params);
+
+    List<Map<String, Object>> listRiskReviews(@SanitizeMap Map<String, Object> params);
+    int countRiskReviews(Map<String, Object> params);
+
+    List<Map<String, Object>> listPublicPolicies(@SanitizeMap Map<String, Object> params);
+    int countPublicPolicies(Map<String, Object> params);
 }

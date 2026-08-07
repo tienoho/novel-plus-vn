@@ -214,7 +214,7 @@ public class MonthlyTicketServiceImpl implements MonthlyTicketService {
     public TicketVoteResult castVote(TicketVoteCommand command, TicketPolicy policy) {
         Objects.requireNonNull(command, "Thiếu yêu cầu thắp đuốc");
         Objects.requireNonNull(policy, "Thiếu chính sách thắp đuốc");
-        if (command.count() > policy.maxTicketsPerRequest()) {
+        if (command.amount() > policy.maxTicketsPerRequest()) {
             throw new BusinessException(ResponseStatus.GAMIFICATION_VOTE_DAILY_LIMIT);
         }
 
@@ -225,7 +225,8 @@ public class MonthlyTicketServiceImpl implements MonthlyTicketService {
             return replayResult(replay);
         }
 
-        TicketSeasonRow season = monthlyTicketMapper.selectOpenSeason(command.occurredAt());
+        TicketSeasonRow season = monthlyTicketMapper.selectOpenSeasonById(
+            command.seasonId(), command.occurredAt());
         if (season == null || !Objects.equals(season.getPolicyVersion(), policy.policyVersion())) {
             throw new BusinessException(ResponseStatus.GAMIFICATION_SEASON_UNAVAILABLE);
         }
@@ -242,7 +243,7 @@ public class MonthlyTicketServiceImpl implements MonthlyTicketService {
         if (!"ACTIVE".equals(account.getStatus())) {
             throw new BusinessException(ResponseStatus.GAMIFICATION_ACCOUNT_UNAVAILABLE);
         }
-        if (account.getAvailableBalance() < command.count()) {
+        if (account.getAvailableBalance() < command.amount()) {
             throw new BusinessException(ResponseStatus.GAMIFICATION_TICKET_INSUFFICIENT);
         }
 
@@ -254,24 +255,24 @@ public class MonthlyTicketServiceImpl implements MonthlyTicketService {
         }
 
         monthlyTicketMapper.insertDailyCounterIgnore(command.userId(), command.localDate());
-        if (monthlyTicketMapper.tryConsumeDailyQuota(command.userId(), command.localDate(), command.count(),
+        if (monthlyTicketMapper.tryConsumeDailyQuota(command.userId(), command.localDate(), command.amount(),
             policy.maxVotesPerDay(), policy.maxTicketsPerDay()) != 1) {
             throw new BusinessException(ResponseStatus.GAMIFICATION_VOTE_DAILY_LIMIT);
         }
 
         monthlyTicketMapper.insertBookQuotaIgnore(command.userId(), season.getId(), command.bookId());
         if (monthlyTicketMapper.tryConsumeBookQuota(command.userId(), season.getId(), command.bookId(),
-            command.count(), policy.maxTicketsPerBookPerSeason()) != 1) {
+            command.amount(), policy.maxTicketsPerBookPerSeason()) != 1) {
             throw new BusinessException(ResponseStatus.GAMIFICATION_VOTE_BOOK_LIMIT);
         }
 
         String idempotencyKey = voteIdempotencyKey(command, season.getId());
         String requestHash = voteRequestHash(command, season.getId(), policy.policyVersion());
-        long balanceAfter = Math.subtractExact(account.getAvailableBalance(), command.count());
+        long balanceAfter = Math.subtractExact(account.getAvailableBalance(), command.amount());
         String businessId = season.getId() + ":" + command.bookId() + ":" + command.clientRequestId();
         try {
             monthlyTicketMapper.insertLedger("MT-" + UUID.randomUUID().toString().replace("-", ""),
-                command.userId(), "SPEND", -command.count(), balanceAfter, "BOOK_VOTE", businessId,
+                command.userId(), "SPEND", -command.amount(), balanceAfter, "BOOK_VOTE", businessId,
                 idempotencyKey, requestHash, season.getId(), command.bookId(), null, "USER",
                 command.userId(), null, policy.policyVersion());
         } catch (DuplicateKeyException exception) {
@@ -286,7 +287,7 @@ public class MonthlyTicketServiceImpl implements MonthlyTicketService {
             throw new IllegalStateException("Không đọc được bút toán thắp đuốc vừa tạo");
         }
 
-        long need = command.count();
+        long need = command.amount();
         List<TicketLotRow> lots = monthlyTicketMapper.lockSpendableLots(
             command.userId(), command.occurredAt(), policy.maxLotsPerSpend());
         for (TicketLotRow lot : lots) {
@@ -311,18 +312,19 @@ public class MonthlyTicketServiceImpl implements MonthlyTicketService {
             throw new IllegalStateException("Số dư Ngọn Đuốc không khớp với các lô còn hiệu lực");
         }
 
-        if (monthlyTicketMapper.debitAccount(account.getId(), account.getVersion(), command.count()) != 1) {
+        if (monthlyTicketMapper.debitAccount(account.getId(), account.getVersion(), command.amount()) != 1) {
             throw new IllegalStateException("Tài khoản Ngọn Đuốc đã được cập nhật đồng thời");
         }
         if (monthlyTicketMapper.insertVote(season.getId(), command.bookId(), book.getAuthorId(),
-            command.userId(), command.count(), ledger.getId(), idempotencyKey, requestHash,
-            command.clientRequestId(), command.sourceIpHash(), policy.policyVersion()) != 1) {
+            command.userId(), command.amount(), ledger.getId(), idempotencyKey, requestHash,
+            command.clientRequestId(), command.sourceIpHash(), command.sourceDeviceHash(),
+            policy.policyVersion()) != 1) {
             throw new IllegalStateException("Không thể ghi lượt thắp đuốc");
         }
 
         int newDistinctVoter = monthlyTicketMapper.insertRankVoterIgnore(
             season.getId(), command.bookId(), command.userId());
-        if (monthlyTicketMapper.upsertRankCounter(season.getId(), command.bookId(), command.count(),
+        if (monthlyTicketMapper.upsertRankCounter(season.getId(), command.bookId(), command.amount(),
             newDistinctVoter, command.occurredAt()) <= 0) {
             throw new IllegalStateException("Không thể cập nhật bộ đếm xếp hạng Ngọn Đuốc");
         }
@@ -340,10 +342,11 @@ public class MonthlyTicketServiceImpl implements MonthlyTicketService {
     }
 
     @Override
-    public TicketBookSummary getBookSummary(long userId, long bookId, Date now, TicketPolicy policy) {
+    public TicketBookSummary getBookSummary(long userId, long bookId, long seasonId, Date now,
+                                            TicketPolicy policy) {
         Objects.requireNonNull(now, "Thiếu mốc thời gian tra cứu Ngọn Đuốc");
         Objects.requireNonNull(policy, "Thiếu chính sách thắp đuốc");
-        TicketSeasonRow season = monthlyTicketMapper.selectOpenSeason(now);
+        TicketSeasonRow season = monthlyTicketMapper.selectOpenSeasonById(seasonId, now);
         if (season == null) {
             return new TicketBookSummary(null, null, "CLOSED", 0, false, "NO_OPEN_SEASON");
         }
@@ -447,7 +450,8 @@ public class MonthlyTicketServiceImpl implements MonthlyTicketService {
     private void validateExistingVote(TicketVoteRow existing, TicketVoteCommand command) {
         if (!Objects.equals(existing.getUserId(), command.userId())
             || !Objects.equals(existing.getBookId(), command.bookId())
-            || !Objects.equals(existing.getTicketCount(), (long) command.count())
+            || !Objects.equals(existing.getSeasonId(), command.seasonId())
+            || !Objects.equals(existing.getTicketCount(), (long) command.amount())
             || !Objects.equals(existing.getClientRequestId(), command.clientRequestId())) {
             throw new BusinessException(ResponseStatus.GAMIFICATION_IDEMPOTENCY_CONFLICT);
         }
@@ -460,7 +464,7 @@ public class MonthlyTicketServiceImpl implements MonthlyTicketService {
 
     private String voteRequestHash(TicketVoteCommand command, long seasonId, String policyVersion) {
         String canonical = "SPEND|" + command.userId() + '|' + seasonId + '|' + command.bookId()
-            + '|' + command.count() + '|' + command.clientRequestId() + '|' + policyVersion;
+            + '|' + command.amount() + '|' + command.clientRequestId() + '|' + policyVersion;
         return sha256(canonical);
     }
 

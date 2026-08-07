@@ -10,9 +10,21 @@ public interface MonthlyRankingService {
     /** Tạo lười kỳ thường chứa thời điểm {@code at}; mọi biên tháng được tính ở Java. */
     MonthlySeasonRow ensureRegularSeason(Date at, ZoneId zoneId, String policyVersion);
 
+    /**
+     * Tạo kỳ đặc biệt (lễ hội, kỷ niệm...) do admin định nghĩa thủ công. {@code seasonType}
+     * khác 'REGULAR' để không bị bộ lịch tự động ({@link #ensureRegularSeason}) ghi đè hay
+     * gộp vào kỳ thường — mọi truy vấn chọn kỳ đang hoạt động chỉ xét {@code season_type = 'REGULAR'}.
+     */
+    MonthlySeasonRow createSpecialSeason(String periodCode, String seasonType, Date startAt,
+                                         Date endAt, Date voteCutoffAt, ZoneId zoneId,
+                                         String policyVersion);
+
     List<MonthlySeasonRow> listSeasonsReadyToClose(Date at, int limit);
 
     List<MonthlySeasonRow> listClosingSeasons(int limit);
+
+    /** Các kỳ đang mở tại thời điểm đọc để người dùng chọn rõ {@code seasonId}. */
+    List<MonthlySeasonRow> listOpenSeasons(Date at);
 
     /** Claim duy nhất chuyển kỳ từ OPEN sang CLOSING. */
     SeasonPhaseResult closeSeason(long seasonId, Date closingAt);
@@ -28,7 +40,7 @@ public interface MonthlyRankingService {
     SeasonPhaseResult buildSnapshot(long seasonId, String ownerInstance, Date runAt,
                                     int closeDrainSeconds, int leaseSeconds, int batchSize);
 
-    MonthlyRankingPage getRanking(String periodCode, int page, int pageSize, Date at);
+    MonthlyRankingPage getRanking(Long seasonId, String periodCode, int page, int pageSize, Date at);
 
     SeasonPhaseResult pauseSnapshot(long seasonId, long operatorId, String reason, Date at);
 

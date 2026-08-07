@@ -1,7 +1,7 @@
 <div th:fragment="footer"  style="height: 60px;line-height: 60px;text-align: center" class="layui-footer footer footer-demo layui-bg-cyan">
     <a href="/book" style="font-size: 14px;color: #92B8B1;" th:text="#{site.moreBooks}">Xem thêm truyện</a>
-    <a href="javascript:readHistory()" style="font-size: 14px;color: #92B8B1;margin-left: 8px" th:text="#{reader.history}">Lịch sử đọc</a>
-    <a href="javascript:toMyCollect()" style="font-size: 14px;color: #92B8B1;margin-left: 8px" th:text="#{user.bookshelf}">Tủ sách</a>
+    <a href="#" data-csp-action="read-history" style="font-size: 14px;color: #92B8B1;margin-left: 8px" th:text="#{reader.history}">Lịch sử đọc</a>
+    <a href="#" data-csp-action="open-bookshelf" style="font-size: 14px;color: #92B8B1;margin-left: 8px" th:text="#{user.bookshelf}">Tủ sách</a>
     <a href="/mobile/HotBook.apk" style="font-size: 14px;color: #92B8B1;margin-left: 8px" th:text="#{site.client}">Tải ứng dụng</a>
 
 
@@ -9,10 +9,4 @@
                                                 style="margin-right:15px;font-size: 30px;color:#92B8B1 ">&#xe604;</i></a>
     </div>
 
-    <script>
-        (function(){
-            var src = (document.location.protocol == "http:") ? "http://js.passport.qihucdn.com/11.0.1.js?0acfeb0f37ba0d8942c2bbf459016f21":"https://jspassport.ssl.qhimg.com/11.0.1.js?0acfeb0f37ba0d8942c2bbf459016f21";
-            document.write('<script src="' + src + '" id="sozz"><\/script>');
-        })();
-    </script>
 </div>

@@ -99,7 +99,7 @@ function save() {
 				parent.layer.close(index);
 
 			} else {
-				parent.layer.msg(data.msg);
+				parent.layer.msg(HtmlUtil.htmlEncode(data.msg || ""));
 			}
 		}
 	});

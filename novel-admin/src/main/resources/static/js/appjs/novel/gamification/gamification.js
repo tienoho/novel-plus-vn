@@ -15,11 +15,44 @@
         loadRewardAllocations();
         loadQuestCampaigns();
         loadQuestRewards();
+        loadTickerNicknames();
+        loadRiskReviews();
+        loadPublicPolicies();
         $('#grantForm').on('submit', submitGrant);
         $('#rewardCalculateForm').on('submit', submitRewardCalculation);
         $('#questCampaignCreateForm').on('submit', submitQuestCampaignCreate);
         $('#questRewardForm').on('submit', submitQuestReward);
+        $('#specialSeasonForm').on('submit', submitCreateSpecialSeason);
+        $('#publicPolicyCreateForm').on('submit', submitPublicPolicyCreate);
+        $('#publicPolicySearchForm').on('submit', function (event) {
+            event.preventDefault();
+            window.reloadGamificationPublicPolicies();
+        });
+        bindReloadForm('#accountSearchForm', window.reloadGamificationAccounts);
+        bindReloadForm('#ledgerSearchForm', window.reloadGamificationLedger);
+        bindReloadForm('#jobSearchForm', window.reloadGamificationJobs);
+        bindReloadForm('#seasonSearchForm', window.reloadGamificationSeasons);
+        bindReloadForm('#campaignSearchForm', window.reloadRewardCampaigns);
+        bindReloadForm('#allocationSearchForm', window.reloadRewardAllocations);
+        bindReloadForm('#tickerSearchForm', window.reloadTickerNicknames);
+        bindReloadForm('#riskReviewSearchForm', window.reloadGamificationRiskReviews);
+        bindReloadForm('#questCampaignSearchForm', window.reloadQuestCampaigns);
+        bindReloadForm('#questRewardSearchForm', window.reloadQuestRewards);
+        $(document).on('click', '.js-publish-policy', publishPublicPolicy);
+        $(document).on('click', '.js-risk-review', riskReviewFromButton);
+        $(document).on('click', '.js-ticker-moderate', tickerModerationFromButton);
+        $(document).on('click', '.js-quest-campaign-action', questCampaignActionFromButton);
+        $(document).on('click', '.js-reward-action', rewardActionFromButton);
+        $(document).on('click', '.js-season-action', seasonActionFromButton);
+        $(document).on('click', '.js-season-reconcile', reconcileSeasonFromButton);
     });
+
+    function bindReloadForm(selector, reload) {
+        $(selector).on('submit', function (event) {
+            event.preventDefault();
+            reload();
+        });
+    }
 
     function tableOptions(url, formId, columns) {
         return {
@@ -143,6 +176,152 @@
             ]));
     }
 
+    function loadTickerNicknames() {
+        $('#tickerTable').bootstrapTable(tableOptions(prefix + '/ticker/nicknames/list',
+            'tickerSearchForm', [
+                {field: 'userId', title: text.userId},
+                {field: 'username', title: text.username, formatter: escapeHtml},
+                {field: 'nickName', title: text.nickName, formatter: escapeHtml},
+                {field: 'tickerOptOut', title: text.status, formatter: tickerStatusFormatter},
+                {field: 'updateTime', title: text.updatedAt, formatter: formatDateTime},
+                {field: 'userId', title: text.actions, formatter: tickerActionFormatter}
+            ]));
+    }
+
+    function loadRiskReviews() {
+        $('#riskReviewTable').bootstrapTable(tableOptions(prefix + '/risk-reviews/list',
+            'riskReviewSearchForm', [
+                {field: 'id', title: 'ID', formatter: formatNumber},
+                {field: 'userId', title: text.userId, formatter: formatNumber},
+                {field: 'nickName', title: text.nickName, formatter: escapeHtml},
+                {field: 'riskScore', title: text.riskScore, formatter: formatNumber},
+                {field: 'action', title: text.status, formatter: escapeHtml},
+                {field: 'matchedRules', title: text.matchedRules, formatter: escapeHtml},
+                {field: 'deviceHashPrefix', title: text.deviceHash, formatter: escapeHtml},
+                {field: 'ipHashPrefix', title: text.ipHash, formatter: escapeHtml},
+                {field: 'assessedAt', title: text.createdAt, formatter: formatDateTime},
+                {field: 'id', title: text.actions, formatter: riskReviewActionFormatter}
+            ]));
+    }
+
+    function loadPublicPolicies() {
+        if (!document.getElementById('publicPolicyTable')) { return; }
+        $('#publicPolicyTable').bootstrapTable(tableOptions(prefix + '/public-policies/list',
+            'publicPolicySearchForm', [
+                {field: 'id', title: 'ID', formatter: formatNumber},
+                {field: 'policyVersion', title: text.policyVersion, formatter: escapeHtml},
+                {field: 'title', title: text.publicPolicyTitle, formatter: escapeHtml},
+                {field: 'status', title: text.policyStatus, formatter: escapeHtml},
+                {field: 'publishedBy', title: text.publishedBy, formatter: formatOptionalNumber},
+                {field: 'publishedAt', title: text.publishedAt, formatter: formatDateTime},
+                {field: 'id', title: text.actions, formatter: publicPolicyActionFormatter}
+            ]));
+    }
+
+    function publicPolicyActionFormatter(value, row) {
+        if (!permissions.config || row.status !== 'DRAFT') { return '-'; }
+        var policyId = Number(value);
+        var version = Number(row.version);
+        if (!Number.isSafeInteger(policyId) || policyId <= 0
+            || !Number.isSafeInteger(version) || version < 0) {
+            return '-';
+        }
+        return '<button type="button" class="btn btn-xs btn-primary js-publish-policy"' +
+            ' data-policy-id="' + policyId + '" data-policy-version="' + version + '">' +
+            escapeHtml(text.publishPolicy) + '</button>';
+    }
+
+    function submitPublicPolicyCreate(event) {
+        event.preventDefault();
+        $.post(prefix + '/public-policies/create', getFormJson('publicPolicyCreateForm'))
+            .done(function (response) {
+                if (response && response.code === 0) {
+                    layer.msg(text.operationSuccess);
+                    document.getElementById('publicPolicyCreateForm').reset();
+                    window.reloadGamificationPublicPolicies();
+                } else {
+                    layer.alert(response && response.msg ? response.msg : text.connectionError);
+                }
+            }).fail(function () { layer.alert(text.connectionError); });
+    }
+
+    function publishPublicPolicy(event) {
+        var button = event.currentTarget;
+        var policyId = Number(button.getAttribute('data-policy-id'));
+        var expectedVersion = Number(button.getAttribute('data-policy-version'));
+        if (!Number.isSafeInteger(policyId) || policyId <= 0
+            || !Number.isSafeInteger(expectedVersion) || expectedVersion < 0) {
+            return;
+        }
+        layer.confirm(text.publishPolicyConfirm, function (index) {
+            layer.close(index);
+            $.post(prefix + '/public-policies/publish', {
+                policyId: policyId,
+                expectedVersion: expectedVersion
+            }).done(function (response) {
+                if (response && response.code === 0) {
+                    layer.msg(text.operationSuccess);
+                    window.reloadGamificationPublicPolicies();
+                } else {
+                    layer.alert(response && response.msg ? response.msg : text.connectionError);
+                }
+            }).fail(function () { layer.alert(text.connectionError); });
+        });
+    }
+
+    function riskReviewActionFormatter(value, row) {
+        if (!permissions.review || row.reviewStatus !== 'PENDING') { return '-'; }
+        var id = Number(value);
+        var version = Number(row.version);
+        if (!Number.isSafeInteger(id) || id <= 0 || !Number.isSafeInteger(version) || version < 0) {
+            return '-';
+        }
+        return '<button type="button" class="btn btn-xs btn-success js-risk-review"' +
+            ' data-assessment-id="' + id + '" data-version="' + version + '" data-decision="APPROVED">' +
+            escapeHtml(text.riskApprove) + '</button> ' +
+            '<button type="button" class="btn btn-xs btn-danger js-risk-review"' +
+            ' data-assessment-id="' + id + '" data-version="' + version + '" data-decision="REJECTED">' +
+            escapeHtml(text.riskReject) + '</button>';
+    }
+
+    function tickerStatusFormatter(value) {
+        var optOut = value === true || value === 1 || value === '1';
+        return escapeHtml(optOut ? text.tickerHidden : text.tickerVisible);
+    }
+
+    function tickerActionFormatter(value, row) {
+        if (!permissions.review) { return '-'; }
+        var optOut = row.tickerOptOut === true || row.tickerOptOut === 1 || row.tickerOptOut === '1';
+        var userId = Number(value);
+        if (!Number.isSafeInteger(userId) || userId <= 0) { return '-'; }
+        if (optOut) {
+            return '<button type="button" class="btn btn-xs btn-success js-ticker-moderate"' +
+                ' data-user-id="' + userId + '" data-hide="false">' + escapeHtml(text.tickerShow) + '</button>';
+        }
+        return '<button type="button" class="btn btn-xs btn-danger js-ticker-moderate"' +
+            ' data-user-id="' + userId + '" data-hide="true">' + escapeHtml(text.tickerHide) + '</button>';
+    }
+
+    function submitCreateSpecialSeason(event) {
+        event.preventDefault();
+        var data = getFormJson('specialSeasonForm');
+        data.startAtMillis = new Date(data.startAt).getTime();
+        data.endAtMillis = new Date(data.endAt).getTime();
+        data.voteCutoffAtMillis = new Date(data.voteCutoffAt).getTime();
+        delete data.startAt;
+        delete data.endAt;
+        delete data.voteCutoffAt;
+        $.post(prefix + '/seasons/create-special', data).done(function (response) {
+            if (response && response.code === 0) {
+                layer.msg(text.operationSuccess);
+                $('#specialSeasonForm')[0].reset();
+                window.reloadGamificationSeasons();
+            } else {
+                layer.alert(response && response.msg ? response.msg : text.connectionError);
+            }
+        }).fail(function () { layer.alert(text.connectionError); });
+    }
+
     function loadQuestRewards() {
         $('#questRewardTable').bootstrapTable(tableOptions(prefix + '/quests/rewards/list',
             'questRewardSearchForm', [
@@ -165,8 +344,10 @@
     }
 
     function questCampaignButton(action, id, label, style) {
-        return '<button class="btn btn-xs btn-' + style + '" onclick="gamificationQuestCampaignAction(\'' +
-            action + '\',' + Number(id) + ')">' + escapeHtml(label) + '</button>';
+        var campaignId = Number(id);
+        if (!Number.isSafeInteger(campaignId) || campaignId <= 0) { return '-'; }
+        return '<button type="button" class="btn btn-xs btn-' + style + ' js-quest-campaign-action"' +
+            ' data-action="' + action + '" data-campaign-id="' + campaignId + '">' + escapeHtml(label) + '</button>';
     }
 
     function submitQuestCampaignCreate(event) {
@@ -218,8 +399,10 @@
     }
 
     function actionButton(action, id, label, style) {
-        return '<button class="btn btn-xs btn-' + style + '" onclick="gamificationRewardAction(\'' +
-            action + '\',' + id + ')">' + escapeHtml(label) + '</button>';
+        var rewardId = Number(id);
+        if (!Number.isSafeInteger(rewardId) || rewardId <= 0) { return '-'; }
+        return '<button type="button" class="btn btn-xs btn-' + style + ' js-reward-action"' +
+            ' data-action="' + action + '" data-reward-id="' + rewardId + '">' + escapeHtml(label) + '</button>';
     }
 
     function submitRewardCalculation(event) {
@@ -244,8 +427,8 @@
         if (!isFinite(seasonId) || seasonId <= 0) {
             return '-';
         }
-        var buttons = ['<button class="btn btn-xs btn-info" onclick="gamificationReconcileSeason(' +
-            seasonId + ')">' + escapeHtml(text.reconcileSeason) + '</button>'];
+        var buttons = ['<button type="button" class="btn btn-xs btn-info js-season-reconcile"' +
+            ' data-season-id="' + seasonId + '">' + escapeHtml(text.reconcileSeason) + '</button>'];
         if (!permissions.finalize) {
             return buttons.join(' ');
         }
@@ -263,8 +446,53 @@
     }
 
     function seasonButton(action, seasonId, label, style) {
-        return '<button class="btn btn-xs btn-' + style + '" onclick="gamificationSeasonAction(\'' +
-            action + '\',' + seasonId + ')">' + escapeHtml(label) + '</button>';
+        return '<button type="button" class="btn btn-xs btn-' + style + ' js-season-action"' +
+            ' data-action="' + action + '" data-season-id="' + seasonId + '">' + escapeHtml(label) + '</button>';
+    }
+
+    function riskReviewFromButton(event) {
+        var button = event.currentTarget;
+        window.gamificationRiskReview(
+            Number(button.getAttribute('data-assessment-id')),
+            Number(button.getAttribute('data-version')),
+            button.getAttribute('data-decision')
+        );
+    }
+
+    function tickerModerationFromButton(event) {
+        var button = event.currentTarget;
+        window.gamificationTickerModerate(
+            Number(button.getAttribute('data-user-id')),
+            button.getAttribute('data-hide') === 'true'
+        );
+    }
+
+    function questCampaignActionFromButton(event) {
+        var button = event.currentTarget;
+        window.gamificationQuestCampaignAction(
+            button.getAttribute('data-action'),
+            Number(button.getAttribute('data-campaign-id'))
+        );
+    }
+
+    function rewardActionFromButton(event) {
+        var button = event.currentTarget;
+        window.gamificationRewardAction(
+            button.getAttribute('data-action'),
+            Number(button.getAttribute('data-reward-id'))
+        );
+    }
+
+    function seasonActionFromButton(event) {
+        var button = event.currentTarget;
+        window.gamificationSeasonAction(
+            button.getAttribute('data-action'),
+            Number(button.getAttribute('data-season-id'))
+        );
+    }
+
+    function reconcileSeasonFromButton(event) {
+        window.gamificationReconcileSeason(Number(event.currentTarget.getAttribute('data-season-id')));
     }
 
     function postSeasonAction(action, seasonId, extra) {
@@ -390,6 +618,52 @@
     };
     window.reloadQuestRewards = function () {
         $('#questRewardTable').bootstrapTable('refresh', {pageNumber: 1});
+    };
+    window.reloadTickerNicknames = function () {
+        $('#tickerTable').bootstrapTable('refresh', {pageNumber: 1});
+    };
+    window.reloadGamificationRiskReviews = function () {
+        $('#riskReviewTable').bootstrapTable('refresh', {pageNumber: 1});
+    };
+    window.reloadGamificationPublicPolicies = function () {
+        $('#publicPolicyTable').bootstrapTable('refresh', {pageNumber: 1});
+    };
+    window.gamificationRiskReview = function (assessmentId, expectedVersion, decision) {
+        layer.prompt({title: text.riskReviewReason, formType: 2}, function (reason, index) {
+            if (String(reason || '').trim().length < 10) { return; }
+            layer.close(index);
+            $.post(prefix + '/risk-reviews/review', {
+                assessmentId: assessmentId,
+                expectedVersion: expectedVersion,
+                decision: decision,
+                reason: String(reason).trim()
+            }).done(function (response) {
+                if (response && response.code === 0) {
+                    layer.msg(text.operationSuccess);
+                    window.reloadGamificationRiskReviews();
+                } else {
+                    layer.alert(response && response.msg ? response.msg : text.connectionError);
+                }
+            }).fail(function () { layer.alert(text.connectionError); });
+        });
+    };
+    window.gamificationTickerModerate = function (userId, hide) {
+        layer.prompt({title: text.tickerModerateReason, formType: 2}, function (reason, index) {
+            if (String(reason || '').trim().length < 10) {
+                return;
+            }
+            layer.close(index);
+            $.post(prefix + '/ticker/moderate',
+                {userId: userId, hide: hide, reason: String(reason).trim()})
+                .done(function (response) {
+                    if (response && response.code === 0) {
+                        layer.msg(text.operationSuccess);
+                        window.reloadTickerNicknames();
+                    } else {
+                        layer.alert(response && response.msg ? response.msg : text.connectionError);
+                    }
+                }).fail(function () { layer.alert(text.connectionError); });
+        });
     };
     window.gamificationQuestCampaignAction = function (action, campaignId) {
         postQuestConfig('/quests/campaigns/' + action, {campaignId: campaignId});

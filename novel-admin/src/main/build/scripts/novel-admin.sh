@@ -31,11 +31,11 @@ start(){
   if [ $? -eq "0" ]; then 
     echo ">>> Trang quản trị Novel Plus đang chạy PID = ${pid} <<<"
   else 
-    echo ">>> Đang khởi động trang quản trị Novel Plus <<<"
+    echo ">>> �?ang khởi động trang quản trị Novel Plus <<<"
     nohup java -jar -Dspring.profiles.active=prod $JAR_NAME >/dev/null 2>&1 &
     sleep 20
     echo $! > $PID
-    echo ">>> Đã khởi động trang quản trị Novel Plus PID = $! <<<"
+    echo ">>> �?ã khởi động trang quản trị Novel Plus PID = $! <<<"
     status
    fi
   }
@@ -76,7 +76,7 @@ restart(){
   start
 }
 
-#Chọn hàm theo tham số đầu vào; nếu không có thì hiển thị hướng dẫn
+#Ch�?n hàm theo tham số đầu vào; nếu không có thì hiển thị hướng dẫn
 case "$1" in
   "start")
     start

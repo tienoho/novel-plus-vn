@@ -1,0 +1,23 @@
+title = "Novel Plus Gitleaks configuration"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Artifact sinh tự động và thư mục đã bị loại khỏi Git"
+paths = [
+  '''(^|/)(target|node_modules|logs|playwright-report|test-results|\.auth)(/|$)''',
+]
+
+[[allowlists]]
+description = "Bộ .agents là toolkit third-party có fixture kiểm thử riêng"
+paths = [
+  '''(^|/)\.agents/''',
+]
+
+[[allowlists]]
+description = "Secret giả có chủ đích trong đúng hai fixture kiểm thử"
+paths = [
+  '''(^|/)novel-common/src/test/java/com/java2nb/novel/service/gift/GiftCodeServiceImplTest\.java$''',
+  '''(^|/)novel-front/src/test/java/com/java2nb/novel/service/payment/VietQrPaymentAdapterTest\.java$''',
+]

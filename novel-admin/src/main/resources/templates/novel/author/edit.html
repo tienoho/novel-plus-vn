@@ -84,7 +84,7 @@
                                                    id="createTime"
                                                    name="createTime"
                                                    th:value="${author.createTime}==null?null:${#dates.format(author.createTime,'yyyy-MM-dd HH:mm:ss')}"
-                                                   onclick="laydate({istime: true, format: 'YYYY-MM-DD hh:mm:ss'})"
+                                                   data-admin-laydate="datetime"
                                                    style="background-color: #fff;" readonly="readonly"/>
                                                                             </div>
                                 </div>

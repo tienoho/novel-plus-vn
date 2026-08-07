@@ -10,6 +10,7 @@ import java.util.Map;
 import com.java2nb.novel.dao.NewsDao;
 import com.java2nb.novel.domain.NewsDO;
 import com.java2nb.novel.service.NewsService;
+import com.java2nb.novel.core.security.RichTextSanitizer;
 
 
 
@@ -17,6 +18,8 @@ import com.java2nb.novel.service.NewsService;
 public class NewsServiceImpl implements NewsService {
 	@Autowired
 	private NewsDao newsDao;
+	@Autowired
+	private RichTextSanitizer richTextSanitizer;
 	
 	@Override
 	public NewsDO get(Long id){
@@ -35,12 +38,16 @@ public class NewsServiceImpl implements NewsService {
 	
 	@Override
 	public int save(NewsDO news){
+		news.setTitle(richTextSanitizer.sanitizeText(news.getTitle()));
+		news.setContent(richTextSanitizer.sanitize(news.getContent()));
 		news.setCreateTime(new Date());
 		return newsDao.save(news);
 	}
 	
 	@Override
 	public int update(NewsDO news){
+		news.setTitle(richTextSanitizer.sanitizeText(news.getTitle()));
+		news.setContent(richTextSanitizer.sanitize(news.getContent()));
 		news.setUpdateTime(new Date());
 		return newsDao.update(news);
 	}

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.java2nb.novel.mapper.ReadingSubscriptionMandateMapper">
+    <sql id="columns">
+        id, user_id AS userId, provider, merchant_reference AS merchantReference,
+        provider_recurring_id AS providerRecurringId,
+        provider_token_ciphertext AS providerTokenCiphertext,
+        token_expire_at AS tokenExpireAt, status, consented_at AS consentedAt,
+        revoked_at AS revokedAt, version
+    </sql>
+    <insert id="insertPending">
+        INSERT INTO reading_subscription_mandate
+            (user_id, provider, merchant_reference, status)
+        VALUES (#{userId}, 'VNPAY_RECURRING', #{merchantReference}, 'PENDING')
+    </insert>
+    <select id="selectByMerchantReferenceForUpdate"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionMandateRow">
+        SELECT <include refid="columns"/> FROM reading_subscription_mandate
+        WHERE merchant_reference=#{merchantReference} LIMIT 1 FOR UPDATE
+    </select>
+    <select id="selectByMerchantReference"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionMandateRow">
+        SELECT <include refid="columns"/> FROM reading_subscription_mandate
+        WHERE merchant_reference=#{merchantReference} LIMIT 1
+    </select>
+    <select id="selectActiveByUser"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionMandateRow">
+        SELECT <include refid="columns"/> FROM reading_subscription_mandate
+        WHERE user_id=#{userId} AND provider='VNPAY_RECURRING' AND status='ACTIVE'
+        LIMIT 1
+    </select>
+    <update id="registerProviderTransaction">
+        UPDATE reading_subscription_mandate
+        SET provider_recurring_id=#{providerRecurringId}, version=version+1
+        WHERE merchant_reference=#{merchantReference} AND status='PENDING'
+          AND provider_recurring_id IS NULL
+    </update>
+    <update id="activate">
+        UPDATE reading_subscription_mandate
+        SET provider_token_ciphertext=#{providerTokenCiphertext},
+            token_expire_at=#{tokenExpireAt}, status='ACTIVE', consented_at=#{consentedAt},
+            version=version+1
+        WHERE id=#{id} AND version=#{expectedVersion} AND status='PENDING'
+          AND provider_recurring_id IS NOT NULL
+    </update>
+    <update id="fail">
+        UPDATE reading_subscription_mandate
+        SET status='FAILED', version=version+1
+        WHERE id=#{id} AND version=#{expectedVersion} AND status='PENDING'
+    </update>
+</mapper>

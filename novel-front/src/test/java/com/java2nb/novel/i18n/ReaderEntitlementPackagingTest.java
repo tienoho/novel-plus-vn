@@ -15,21 +15,21 @@ class ReaderEntitlementPackagingTest {
     @Test
     void migrationIsMountedAndRuntimeDefaultsStayDisabled() throws Exception {
         String compose = read(repository.resolve("compose.yaml"));
+        String flywayImage = read(repository.resolve("deploy/flyway/Dockerfile"));
         String runtime = read(repository.resolve("novel-front/src/main/resources/application.yml"));
         String distribution = read(
             repository.resolve("novel-front/src/main/build/config/application.yml"));
         String envExample = read(repository.resolve(".env.example"));
 
+        assertThat(flywayImage)
+            .contains("COPY --chmod=0444 doc/sql/20260730_reader_entitlements.sql "
+                + "/flyway/sql/V2026073001__reader_entitlements.sql")
+            .contains("COPY --chmod=0444 doc/sql/20260731_reader_subscriptions.sql "
+                + "/flyway/sql/V2026073101__reader_subscriptions.sql")
+            .contains("COPY --chmod=0444 doc/sql/20260804_reader_subscription_checkout.sql "
+                + "/flyway/sql/V2026080401__reader_subscription_checkout.sql");
         assertThat(compose)
-            .contains("/migrations/20260730_reader_entitlements.sql")
-            .contains("/migrations/20260731_reader_subscriptions.sql")
-            .contains("/migrations/20260804_reader_subscription_checkout.sql")
-            .contains("./doc/sql/20260730_reader_entitlements.sql:"
-                + "/migrations/20260730_reader_entitlements.sql:ro")
-            .contains("./doc/sql/20260731_reader_subscriptions.sql:"
-                + "/migrations/20260731_reader_subscriptions.sql:ro")
-            .contains("./doc/sql/20260804_reader_subscription_checkout.sql:"
-                + "/migrations/20260804_reader_subscription_checkout.sql:ro")
+            .contains("dockerfile: deploy/flyway/Dockerfile")
             .contains("READING_TICKET_ENABLED: ${READING_TICKET_ENABLED:-false}");
         assertThat(runtime)
             .contains("enabled: ${READING_TICKET_ENABLED:false}")

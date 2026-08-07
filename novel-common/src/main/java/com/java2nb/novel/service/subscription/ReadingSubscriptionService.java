@@ -16,6 +16,14 @@ public interface ReadingSubscriptionService {
                                           ReadingSubscriptionPlanCommand command);
     ReadingSubscriptionPlanRow changePlanStatus(long planId, long expectedVersion, String status);
     ReadingSubscriptionRow getCurrentSubscription(long userId);
+    ReadingSubscriptionRow updateRenewalSettings(long userId, long subscriptionId,
+                                                  long expectedVersion,
+                                                  ReadingSubscriptionCheckoutOptions options);
+    ReadingSubscriptionRow consentPrice(long userId, long subscriptionId,
+                                        long expectedVersion, long acceptedPlanVersion,
+                                        String clientRequestId);
+    ReadingSubscriptionRow cancelAtPeriodEnd(long userId, long subscriptionId,
+                                             long expectedVersion);
     List<ReadingSubscriptionPeriodGrantRow> listPeriodGrants(long userId, long subscriptionId,
                                                              int limit);
     ReadingSubscriptionPurchasePage listPurchaseReviews(String status, int page, int pageSize);

@@ -1,104 +1,55 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-    <html xmlns="http://www.w3.org/1999/xhtml" lang="vi">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="vi">
 <head>
-    <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
-        <title th:text="#{author.system}">Hệ thống quản lý tác giả</title>
-        <link rel="stylesheet" href="/css/base.css?v=1"/>
-        <link rel="stylesheet" href="/css/user.css"/>
-        <style type="text/css">
-            .redBtn {
-                padding: 5px;
-                border-radius: 20px;
-                border: 1px solid #3eaf7c;
-                background: #3eaf7c;
-                color: #fff;
-            }
-
-            a.redBtn:hover {
-
-                color: #fff;
-            }
-
-            button.redBtn {
-                cursor: pointer;
-                font: inherit;
-            }
-
-            .book-transfer {
-                display: flex;
-                align-items: center;
-                flex-wrap: wrap;
-                gap: 8px;
-                margin-bottom: 16px;
-                padding: 12px;
-                border: 1px solid #e5e5e5;
-                background: #fafafa;
-            }
-
-            .book-transfer label {
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-            }
-
-            .book-transfer select {
-                height: 32px;
-                min-width: 92px;
-                border: 1px solid #ccc;
-                background: #fff;
-            }
-
-            .book-transfer .transfer-help {
-                flex: 1 1 260px;
-                color: #777;
-                line-height: 1.5;
-            }
-
-            @media (max-width: 760px) {
-                .book-transfer {
-                    align-items: stretch;
-                }
-
-                .book-transfer label,
-                .book-transfer button {
-                    min-height: 36px;
-                }
-            }
-        </style>
-    </head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <title th:text="#{author.system}">Hệ thống quản lý tác giả</title>
+    <link rel="stylesheet" href="/css/base.css?v=1"/>
+    <link rel="stylesheet" href="/css/user.css"/>
+    <link rel="stylesheet" href="/css/author-index-list-page.css"/>
 </head>
-<body class="">
+<body id="authorIndexListPage"
+      th:attr="data-updated-text=#{reader.updated},
+               data-charge-text=#{author.chapter.charge},
+               data-free-text=#{author.chapter.free},
+               data-edit-text=#{author.chapter.edit},
+               data-delete-text=#{author.chapter.delete},
+               data-delete-confirm-text=#{author.chapter.deleteConfirm},
+               data-confirm-text=#{common.confirm},
+               data-cancel-text=#{common.cancel},
+               data-network-error=#{auth.networkError},
+               data-transfer-file-required=#{author.transfer.file.required},
+               data-transfer-file-too-large=#{author.transfer.file.tooLarge},
+               data-transfer-importing=#{author.transfer.importing},
+               data-transfer-import-success=#{author.transfer.import.success},
+               data-transfer-import-label=#{author.transfer.import},
+               data-transfer-exporting=#{author.transfer.exporting},
+               data-transfer-failed=#{author.transfer.failed}">
 
-<div class="header">
+<header class="header">
     <div class="mainNav" id="mainNav">
-        <div class="box_center cf"
-             style="text-align: center;height: 44px;line-height: 48px;color: #fff;font-size: 16px;">
-
+        <div class="box_center cf author-page-title">
             <span th:text="#{author.system}">Hệ thống quản lý tác giả</span>
-
         </div>
     </div>
-</div>
+</header>
 
-<div class="main box_center cf">
+<main class="main box_center cf">
     <div class="userBox cf">
-        <div class="my_l">
-
+        <nav class="my_l">
             <ul class="log_list">
                 <li><a class="link_4 on" href="/author/index.html" th:text="#{author.management}">Quản lý truyện</a></li>
                 <li><a class="link_4" href="/author/draft_list.html" th:text="#{author.draft.management}">Quản lý bản nháp</a></li>
                 <li><a class="link_2" href="/author/author_income_detail.html" th:text="#{author.income}">Thu nhập nhuận bút</a></li>
             </ul>
-
-        </div>
-        <div class="my_r">
+        </nav>
+        <section class="my_r">
             <div class="book-transfer">
                 <input id="bookImportFile" type="file" hidden
                        accept=".txt,text/plain,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.epub,application/epub+zip"/>
-                <button id="bookImportButton" type="button" class="redBtn" onclick="chooseBookImport()"
+                <button id="bookImportButton" type="button" class="redBtn"
+                        data-author-chapter-action="choose-import"
                         th:text="#{author.transfer.import}">Nhập bản thảo</button>
                 <label for="bookExportFormat">
                     <span th:text="#{author.transfer.format}">Định dạng xuất</span>
@@ -108,387 +59,51 @@
                         <option value="EPUB">EPUB</option>
                     </select>
                 </label>
-                <button id="bookExportButton" type="button" class="redBtn" onclick="exportBook()"
+                <button id="bookExportButton" type="button" class="redBtn"
+                        data-author-chapter-action="export"
                         th:text="#{author.transfer.export}">Xuất tác phẩm</button>
                 <span class="transfer-help" th:text="#{author.transfer.help}">Tệp nhập tối đa 20 MB và chỉ tạo bản nháp riêng tư.</span>
             </div>
-            <div id="noContentDiv">
-                <div class="tc" style="margin-top: 200px"><a href="javascript:addContent()" class="btn_red" th:text="#{author.chapter.new}">Tạo chương mới</a>
-                </div>
 
+            <div id="noContentDiv">
+                <div class="tc author-empty-chapters">
+                    <a href="#add-chapter" class="btn_red" data-author-chapter-action="add"
+                       th:text="#{author.chapter.new}">Tạo chương mới</a>
+                </div>
             </div>
             <div class="my_bookshelf" id="hasContentDiv" style="display: none">
                 <div class="title cf">
                     <h2 class="fl" th:text="#{author.chapterList}">Danh sách chương</h2>
-                    <div class="fr"><a href="javascript:addContent()" class="btn_red" th:text="#{author.chapter.new}">Tạo chương mới</a></div>
+                    <div class="fr">
+                        <a href="#add-chapter" class="btn_red" data-author-chapter-action="add"
+                           th:text="#{author.chapter.new}">Tạo chương mới</a>
+                    </div>
                 </div>
-
                 <div id="divData" class="updateTable">
                     <table cellpadding="0" cellspacing="0">
                         <thead>
                         <tr>
-                            <!-- <th class="style">
-                                 <span th:text="#{book.sequence}">STT</span>
-                             </th>-->
-                            <th class="name">
-                                <span th:text="#{author.chapter.name}">Tên chương</span>
-                            </th>
-                            <th class="goread">
-                                <span th:text="#{reader.updated}">Cập nhật</span>
-                            </th>
-                            <th class="goread">
-                                <span th:text="#{author.chapter.paid}">Có thu phí</span>
-                            </th>
-                            <th class="goread">
-                                <span th:text="#{common.actions}">Thao tác</span>
-                            </th>
+                            <th class="name"><span th:text="#{author.chapter.name}">Tên chương</span></th>
+                            <th class="goread"><span th:text="#{reader.updated}">Cập nhật</span></th>
+                            <th class="goread"><span th:text="#{author.chapter.paid}">Có thu phí</span></th>
+                            <th class="goread"><span th:text="#{common.actions}">Thao tác</span></th>
                         </tr>
                         </thead>
-                        <tbody id="bookList">
-
-
-                        </tbody>
+                        <tbody id="bookList"></tbody>
                     </table>
-                    <div class="pageBox cf" id="shellPage">
-                    </div>
+                    <div class="pageBox cf" id="shellPage"></div>
                 </div>
-                <!--<div id="divData" class="updateTable">
-                    <table cellpadding="0" cellspacing="0">
-                        <thead>
-                        <tr>
-
-                            <th class="name">
-                                Nguồn crawler đang bật
-                            </th>
-                            <th class="chapter">
-                                Số lượng thu thập thành công qua WebSocket
-                            </th>
-                            <th class="time">
-                            Số lượng mục tiêu
-                            </th>
-                            <th class="goread">
-                                Trạng thái (mỗi lần chỉ chạy một nguồn crawler)
-                            </th>
-                            <th class="goread">
-                                Thao tác bắt đầu/dừng
-                            </th>
-                        </tr>
-                        </thead>
-                        <tbody id="bookShelfList">
-
-
-
-                        </tbody>
-                    </table>
-                    <div class="pageBox cf" id="shellPage">
-                    </div>
-                </div>-->
             </div>
-        </div>
+        </section>
     </div>
-</div>
+</main>
 
-
-</body>
 <script src="/javascript/jquery-1.8.0.min.js" type="text/javascript"></script>
 <script src="/layui/layui.all.js" type="text/javascript"></script>
 <script src="/javascript/header.js" type="text/javascript"></script>
 <script src="/javascript/user.js" type="text/javascript"></script>
 <script src="/javascript/date.js" type="text/javascript"></script>
 <script src="/javascript/common.js?v=5" type="text/javascript"></script>
-
-<script language="javascript" type="text/javascript" th:inline="javascript">
-    const updatedText = /*[[#{reader.updated}]]*/ 'Cập nhật';
-    const chargeText = /*[[#{author.chapter.charge}]]*/ 'Thu phí';
-    const freeText = /*[[#{author.chapter.free}]]*/ 'Miễn phí';
-    const editText = /*[[#{author.chapter.edit}]]*/ 'Sửa';
-    const deleteText = /*[[#{author.chapter.delete}]]*/ 'Xóa';
-    const deleteConfirmText = /*[[#{author.chapter.deleteConfirm}]]*/ 'Bạn có chắc muốn xóa? Dữ liệu đã xóa không thể khôi phục.';
-    const confirmText = /*[[#{common.confirm}]]*/ 'Đồng ý';
-    const cancelText = /*[[#{common.cancel}]]*/ 'Hủy';
-    const networkErrorText = /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng';
-    const transferFileRequiredText = /*[[#{author.transfer.file.required}]]*/ 'Vui lòng chọn tệp TXT, DOCX hoặc EPUB.';
-    const transferFileTooLargeText = /*[[#{author.transfer.file.tooLarge}]]*/ 'Tệp nhập không được vượt quá 20 MB.';
-    const transferImportingText = /*[[#{author.transfer.importing}]]*/ 'Đang nhập bản thảo...';
-    const transferImportSuccessText = /*[[#{author.transfer.import.success}]]*/ 'Đã tạo {count} bản nháp. Bạn có thể kiểm tra trước khi xuất bản.';
-    const transferExportingText = /*[[#{author.transfer.exporting}]]*/ 'Đang tạo tệp xuất...';
-    const transferFailedText = /*[[#{author.transfer.failed}]]*/ 'Không thể xử lý tệp. Vui lòng thử lại.';
-
-    var bookId = getSearchString("bookId");
-
-    var indexCount = 0;
-
-    search(1, 5);
-
-    $("#bookImportFile").on("change", function () {
-        var file = this.files && this.files[0];
-        if (!file) {
-            layer.alert(transferFileRequiredText);
-            return;
-        }
-        if (file.size > 20 * 1024 * 1024) {
-            this.value = "";
-            layer.alert(transferFileTooLargeText);
-            return;
-        }
-        var form = new FormData();
-        form.append("file", file);
-        var button = document.getElementById("bookImportButton");
-        button.disabled = true;
-        button.textContent = transferImportingText;
-        $.ajax({
-            type: "post",
-            url: "/author/books/" + encodeURIComponent(bookId) + "/import",
-            data: form,
-            processData: false,
-            contentType: false,
-            dataType: "json",
-            success: function (data) {
-                if (data.code == 200) {
-                    var message = transferImportSuccessText.replace("{count}", data.data.chapterCount);
-                    layer.alert(message, function () {
-                        location.href = "/author/draft_list.html";
-                    });
-                } else if (data.code == 1001) {
-                    location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
-                } else {
-                    layer.alert(data.msg || transferFailedText);
-                }
-            },
-            error: function () {
-                layer.alert(networkErrorText);
-            },
-            complete: function () {
-                button.disabled = false;
-                button.textContent = /*[[#{author.transfer.import}]]*/ 'Nhập bản thảo';
-                document.getElementById("bookImportFile").value = "";
-            }
-        });
-    });
-
-    function chooseBookImport() {
-        document.getElementById("bookImportFile").click();
-    }
-
-    async function exportBook() {
-        var button = document.getElementById("bookExportButton");
-        var originalText = button.textContent;
-        button.disabled = true;
-        button.textContent = transferExportingText;
-        try {
-            var format = document.getElementById("bookExportFormat").value;
-            var response = await fetch("/author/books/" + encodeURIComponent(bookId)
-                + "/export?format=" + encodeURIComponent(format), {credentials: "same-origin"});
-            var contentType = response.headers.get("Content-Type") || "";
-            if (!response.ok || contentType.indexOf("application/json") >= 0) {
-                var payload = contentType.indexOf("application/json") >= 0 ? await response.json() : null;
-                throw new Error(payload && payload.msg ? payload.msg : transferFailedText);
-            }
-            var blob = await response.blob();
-            var disposition = response.headers.get("Content-Disposition") || "";
-            var encodedName = /filename\*=UTF-8''([^;]+)/i.exec(disposition);
-            var filename = encodedName ? decodeURIComponent(encodedName[1].replace(/\"/g, ""))
-                : "tac-pham." + format.toLowerCase();
-            var url = URL.createObjectURL(blob);
-            var link = document.createElement("a");
-            link.href = url;
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        } catch (error) {
-            layer.alert(error && error.message ? error.message : transferFailedText);
-        } finally {
-            button.disabled = false;
-            button.textContent = originalText;
-        }
-    }
-
-    function search(curr, limit) {
-
-        $.ajax({
-            type: "get",
-            url: "/book/queryIndexList",
-            data: {'bookId': bookId, 'curr': curr, 'limit': limit, 'orderBy': 'index_num desc'},
-            dataType: "json",
-            success: function (data) {
-                if (data.code == 200) {
-                    var bookList = data.data.list;
-                    if (bookList.length > 0) {
-                        indexCount = bookList.length;
-                        $("#hasContentDiv").css("display", "block");
-                        $("#noContentDiv").css("display", "none");
-                        var bookListHtml = "";
-                        for (var i = 0; i < bookList.length; i++) {
-                            var book = bookList[i];
-                            bookListHtml += (" <tr class=\"book_list\" vals=\"291\">\n" +
-                                /*  "                            <td class=\"style bookclass\">\n" +
-                                  "                                ["+(i+1)+"]\n" +
-                                  "                            </td>\n" +*/
-
-                                "                            <td id='name" + book.id + "' class=\"name\">\n" +
-                                "                                " + book.indexName + "</td>\n" +
-
-
-                                "                            <td class=\"goread\">\n" +
-                                "                                " + new Date(Date.parse(book.updateTime)).Format("dd/MM/yyyy hh:mm") + "<br/>" + updatedText + "\n" +
-                                "                            </td>\n" +
-
-                                "                            <td class=\"goread\" valsc=\"291|2037554|1\">"
-                                + (book.isVip == 1 ? chargeText : freeText) + "</td>\n" +
-
-                                " <td class=\"goread\" id='opt" + book.id + "'>" +
-                                "<a  class='redBtn' href='javascript:updateIndex(\"" + book.id + "\"," + book.isVip + ")'>" + editText + "</a><br/>" +
-                                "<a  href='javascript:deleteIndex(\"" + book.id + "\")'>" + deleteText + "</a><br/>" +
-                                "</td>                     </tr>");
-                        }
-                        $("#bookList").html(bookListHtml);
-
-                        layui.use('laypage', function () {
-                            var laypage = layui.laypage;
-
-                            // Khởi tạo phân trang Layui.
-                            laypage.render({
-                                elem: 'shellPage' // ID phần tử, không thêm dấu #.
-                                , count: data.data.total // Tổng số bản ghi từ máy chủ.
-                                , curr: data.data.pageNum
-                                , limit: data.data.pageSize
-                                , jump: function (obj, first) {
-
-
-                                    // obj chứa các tham số phân trang hiện tại.
-                                    console.log(obj.curr); // Trang hiện tại.
-                                    console.log(obj.limit); // Số bản ghi mỗi trang.
-
-
-                                    // Không gọi lại trong lần khởi tạo đầu tiên.
-                                    if (!first) {
-                                        search(obj.curr, obj.limit);
-                                    } else {
-
-                                    }
-                                }
-                            });
-                        });
-
-                    }
-
-
-                } else if (data.code == 1001) {
-                    // Phiên đăng nhập đã hết hạn.
-                    location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
-
-                } else {
-                    layer.alert(data.msg);
-                }
-
-            },
-            error: function () {
-                layer.alert(networkErrorText);
-            }
-        })
-
-    }
-
-    function addContent() {
-        location.href = "/author/content_add.html?indexCount=" + indexCount + "&bookId=" + bookId;
-
-    }
-
-    function updateIndex(indexId, isVip) {
-
-        var indexName = $.trim($("#name" + indexId).text());
-
-
-        location.href = "/author/content_update.html?bookId=" + bookId
-            + "&indexId=" + indexId
-            + "&indexName=" + encodeURI(encodeURI(indexName))
-            + "&isVip=" + isVip;
-
-
-        /*
-                var indexName = $("#name"+indexId).text();
-
-                var htmlStr = "<input type=\"text\" value=\""+$.trim(indexName)+"\">";
-
-                $("#name"+indexId).html(htmlStr);
-                $("#name"+indexId).find("input").focus();
-                $("#name"+indexId).find("input").select();
-
-                $("#name"+indexId).find("input").keyup(function(event){
-                    if(event.keyCode ==13){
-                        $(this).blur();
-                    }
-                });
-
-                $("#name"+indexId).find("input").blur(function () {
-                    var indexName = $(this).val();
-                    $.ajax({
-                        type: "POST",
-                        url: "/author/updateIndexName",
-                        data: {'indexId':indexId,'indexName':indexName},
-                        dataType: "json",
-                        success: function (data) {
-                            if (data.code == 200) {
-
-                                $("#name"+indexId).html(indexName);
-
-
-                            } else if (data.code == 1001) {
-                                // Phiên đăng nhập đã hết hạn.
-                                location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
-
-                            }else {
-                                layer.alert(data.msg);
-                            }
-
-                        },
-                        error: function () {
-                            layer.alert(networkErrorText);
-                        }
-                    })
-
-                });*/
-
-
-    }
-
-
-    function deleteIndex(indexId) {
-
-        layer.confirm(deleteConfirmText, {
-            btn: [confirmText, cancelText]// Nút xác nhận và hủy.
-        }, function (index) {
-
-            layer.close(index);
-            $.ajax({
-                type: "delete",
-                url: "/author/deleteIndex/" + indexId,
-                data: {},
-                dataType: "json",
-                success: function (data) {
-                    if (data.code == 200) {
-
-                        location.reload();
-
-
-                    } else if (data.code == 1001) {
-                        // Phiên đăng nhập đã hết hạn.
-                        location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
-
-                    } else {
-                        layer.alert(data.msg);
-                    }
-
-                },
-                error: function () {
-                    layer.alert(networkErrorText);
-                }
-            })
-        });
-
-
-    }
-</script>
+<script src="/javascript/author-index-list-page.js" type="text/javascript"></script>
+</body>
 </html>

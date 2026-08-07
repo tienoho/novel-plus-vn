@@ -24,10 +24,20 @@ class GamificationAdminControllerTest {
         assertPermission("pauseSeason", "novel:gamification:finalize", long.class, String.class);
         assertPermission("retrySeason", "novel:gamification:finalize", long.class);
         assertPermission("finalizeSeason", "novel:gamification:finalize", long.class);
+        assertPermission("createSpecialSeason", "novel:gamification:finalize", String.class,
+            String.class, long.class, long.class, long.class);
+        assertPermission("listTickerNicknames", "novel:gamification:view", Map.class);
+        assertPermission("moderateTicker", "novel:gamification:review", long.class, boolean.class,
+            String.class);
         assertPermission("listRewardCampaigns", "novel:gamification:view", Map.class);
         assertPermission("listRewardAllocations", "novel:gamification:view", Map.class);
         assertPermission("listQuestCampaigns", "novel:gamification:view", Map.class);
         assertPermission("listQuestRewards", "novel:gamification:view", Map.class);
+        assertPermission("listPublicPolicies", "novel:gamification:config", Map.class);
+        assertPermission("createPublicPolicy", "novel:gamification:config",
+            String.class, String.class, String.class);
+        assertPermission("publishPublicPolicy", "novel:gamification:config",
+            long.class, long.class);
         assertPermission("createQuestCampaign", "novel:gamification:config",
             String.class, long.class, long.class);
         assertPermission("saveQuestReward", "novel:gamification:config",

@@ -158,15 +158,12 @@ function load() {
 						field : 'id',
 						align : 'center',
 						formatter : function(value, row, index) {
-							var e = '<a class="btn btn-primary btn-sm ' + s_edit_h + '" href="#" mce_href="#" title="' + adminMessage('edit', 'Sửa') + '" onclick="edit(\''
-								+ row.id
-								+ '\')"><i class="fa fa-edit"></i></a> ';
-							var d = '<a class="btn btn-warning btn-sm ' + s_remove_h + '" href="#" title="' + adminMessage('deleteLabel', 'Xóa') + '"  mce_href="#" onclick="remove(\''
-								+ row.id
-								+ '\')"><i class="fa fa-remove"></i></a> ';
-							var f = '<a class="btn btn-success btn-sm ' + s_add_h + '" href="#" title="' + adminMessage('add', 'Thêm') + '"  mce_href="#" onclick="addD(\''
-								+ row.type +'\',\''+row.description
-								+ '\')"><i class="fa fa-plus"></i></a> ';
+							var e = adminRowAction({action: 'edit', args: [row.id], variant: 'primary',
+								visibility: s_edit_h, title: adminMessage('edit', 'Sửa'), icon: 'edit'});
+							var d = adminRowAction({action: 'remove', args: [row.id], variant: 'warning',
+								visibility: s_remove_h, title: adminMessage('deleteLabel', 'Xóa'), icon: 'remove'});
+							var f = adminRowAction({action: 'add-dictionary', args: [row.type, row.description], variant: 'success',
+								visibility: s_add_h, title: adminMessage('add', 'Thêm'), icon: 'add'});
 							return e + d +f;
 						}
 					} ]

@@ -12,6 +12,9 @@
                       data-load-error=#{gamification.ticket.loadError},
                       data-login-required=#{gamification.ticket.loginRequired},
                       data-period-unavailable=#{gamification.ticket.periodUnavailable},
+                      data-choose-season=#{gamification.ticket.chooseSeason},
+                      data-regular-season=#{gamification.ticket.regularSeason},
+                      data-special-season=#{gamification.ticket.specialSeason},
                       data-expiry-value=#{gamification.ticket.expiryValue},
                       data-no-expiry=#{gamification.ticket.noExpiry},
                       data-not-eligible=#{gamification.ticket.notEligible},
@@ -32,6 +35,10 @@
         </header>
 
         <div id="monthlyTicketBookContent" hidden>
+            <div class="monthly-ticket-season-picker">
+                <label for="monthlyTicketSeason" th:text="#{gamification.ticket.chooseSeason}">Chọn kỳ để thắp Đuốc</label>
+                <select id="monthlyTicketSeason" required></select>
+            </div>
             <dl class="monthly-ticket-metrics">
                 <div>
                     <dt th:text="#{gamification.ticket.period}">Kỳ xếp hạng</dt>
@@ -66,8 +73,8 @@
         <p id="monthlyTicketBookStatus" class="monthly-ticket-status" role="status"
            aria-live="polite" aria-atomic="true"></p>
     </section>
-    <script src="/javascript/gamification-api.js?v=3" type="text/javascript"></script>
-    <script src="/javascript/monthly-ticket.js?v=3" type="text/javascript"></script>
+    <script src="/javascript/gamification-api.js?v=4" type="text/javascript"></script>
+    <script src="/javascript/monthly-ticket.js?v=4" type="text/javascript"></script>
 </th:block>
 
 <th:block th:fragment="ranking_widget">
@@ -86,7 +93,10 @@
                       data-season-closing=#{gamification.ticket.season.closing},
                       data-season-review=#{gamification.ticket.season.review},
                       data-season-finalized=#{gamification.ticket.season.finalized},
-                      data-season-closed=#{gamification.ticket.season.closed}">
+                      data-season-closed=#{gamification.ticket.season.closed},
+                      data-choose-season=#{gamification.ticket.chooseSeason},
+                      data-regular-season=#{gamification.ticket.regularSeason},
+                      data-special-season=#{gamification.ticket.specialSeason}">
         <header class="monthly-ticket-heading" id="monthly-ticket-ranking">
             <div>
                 <h2 id="monthlyTicketRankingTitle" th:text="#{gamification.ticket.ranking.title}">Bảng Đuốc tháng</h2>
@@ -94,8 +104,8 @@
             </div>
         </header>
         <div class="monthly-ticket-ranking-toolbar">
-            <label for="monthlyTicketRankingPeriod" th:text="#{gamification.ticket.ranking.period}">Tháng xếp hạng</label>
-            <input id="monthlyTicketRankingPeriod" type="month"/>
+            <label for="monthlyTicketRankingSeason" th:text="#{gamification.ticket.ranking.period}">Kỳ xếp hạng</label>
+            <select id="monthlyTicketRankingSeason"></select>
             <button id="monthlyTicketRankingLoad" type="button" class="monthly-ticket-primary"
                     th:text="#{gamification.ticket.ranking.load}">Xem kỳ</button>
         </div>
@@ -110,9 +120,15 @@
             <button id="monthlyTicketRankingNext" type="button"
                     th:text="#{gamification.ticket.ranking.next}">Trang sau</button>
         </nav>
+        <details id="gamificationPublicPolicy" class="gamification-public-policy" hidden>
+            <summary th:text="#{gamification.policy.open}">Xem luật chơi và chính sách thưởng</summary>
+            <h3 id="gamificationPublicPolicyTitle"></h3>
+            <p id="gamificationPublicPolicyVersion"></p>
+            <pre id="gamificationPublicPolicyContent"></pre>
+        </details>
     </section>
-    <script src="/javascript/gamification-api.js?v=3" type="text/javascript"></script>
-    <script src="/javascript/monthly-ticket.js?v=3" type="text/javascript"></script>
+    <script src="/javascript/gamification-api.js?v=4" type="text/javascript"></script>
+    <script src="/javascript/monthly-ticket.js?v=4" type="text/javascript"></script>
 </th:block>
 
 <th:block th:fragment="home_widget">

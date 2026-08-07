@@ -16,7 +16,7 @@ class ReaderStatePackagingTest {
         String migration = read(repository.resolve("doc/sql/20260727_reader_annotations.sql"));
         String mapper = read(repository.resolve(
             "novel-front/src/main/resources/mybatis/mapping/ReaderStateMapper.xml"));
-        String compose = read(repository.resolve("compose.yaml"));
+        String flywayImage = read(repository.resolve("deploy/flyway/Dockerfile"));
 
         assertThat(migration)
             .contains("CREATE TABLE IF NOT EXISTS `reader_progress`")
@@ -28,7 +28,9 @@ class ReaderStatePackagingTest {
             .contains("WHERE id = #{annotationId} AND user_id = #{userId}")
             .contains("version = #{expectedVersion}")
             .contains("ON DUPLICATE KEY UPDATE");
-        assertThat(compose).contains("/migrations/20260727_reader_annotations.sql");
+        assertThat(flywayImage).contains(
+            "COPY --chmod=0444 doc/sql/20260727_reader_annotations.sql "
+                + "/flyway/sql/V2026072704__reader_annotations.sql");
     }
 
     @Test

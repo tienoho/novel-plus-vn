@@ -11,6 +11,8 @@ import com.java2nb.novel.service.gamification.QuestProgressRow;
 import com.java2nb.novel.service.gamification.QuestRewardSummary;
 import com.java2nb.novel.service.gamification.QuestClaimRow;
 import com.java2nb.novel.service.gamification.UserExpLedgerRow;
+import com.java2nb.novel.service.gamification.LevelRewardGrantRow;
+import com.java2nb.novel.service.gamification.LevelRewardPolicyRow;
 
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
@@ -29,6 +31,8 @@ public interface GamificationProgressMapper {
 
     List<Long> selectPendingEventIds(@Param("limit") int limit,
                                      @Param("maxAttempt") int maxAttempt);
+
+    long countPendingEvents(@Param("maxAttempt") int maxAttempt);
 
     GamificationEventRow selectEventById(@Param("eventId") long eventId);
 
@@ -92,6 +96,25 @@ public interface GamificationProgressMapper {
 
     LevelRuleRow selectLevelRuleForExp(@Param("ruleVersion") String ruleVersion,
                                        @Param("totalExp") long totalExp);
+
+    List<LevelRuleRow> selectLevelRulesBetween(@Param("ruleVersion") String ruleVersion,
+                                               @Param("fromLevel") int fromLevel,
+                                               @Param("toLevel") int toLevel);
+
+    LevelRewardPolicyRow selectLevelRewardPolicy(@Param("policyVersion") String policyVersion,
+                                                 @Param("level") int level);
+
+    LevelRewardGrantRow selectLevelRewardGrant(@Param("userId") long userId,
+                                               @Param("level") int level,
+                                               @Param("policyVersion") String policyVersion);
+
+    int insertLevelRewardGrantIgnore(@Param("eventId") long eventId,
+                                     @Param("userId") long userId,
+                                     @Param("level") int level,
+                                     @Param("policyVersion") String policyVersion,
+                                     @Param("ticketAmount") long ticketAmount,
+                                     @Param("ticketLedgerId") long ticketLedgerId,
+                                     @Param("idempotencyKey") String idempotencyKey);
 
     int updateProfileExp(@Param("userId") long userId,
                          @Param("expectedVersion") long expectedVersion,

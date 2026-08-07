@@ -40,7 +40,8 @@ public interface MonthlyTicketService {
     /** Tiêu lot theo FIFO và ghi vote/rank projection trong một transaction. */
     TicketVoteResult castVote(TicketVoteCommand command, TicketPolicy policy);
 
-    TicketBookSummary getBookSummary(long userId, long bookId, Date now, TicketPolicy policy);
+    TicketBookSummary getBookSummary(long userId, long bookId, long seasonId, Date now,
+                                     TicketPolicy policy);
 
     /**
      * Danh sách vote gần nhất cho bảng chạy công khai. Chỉ trả về vote của người dùng đã bật

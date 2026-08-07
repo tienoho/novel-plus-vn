@@ -190,6 +190,83 @@ public class GamificationAdminController extends BaseController {
     }
 
     @ResponseBody
+    @PostMapping("/seasons/create-special")
+    @RequiresPermissions("novel:gamification:finalize")
+    @Log("Tạo kỳ đặc biệt Ngọn Đuốc")
+    public R createSpecialSeason(@RequestParam String periodCode, @RequestParam String seasonType,
+                                 @RequestParam long startAtMillis, @RequestParam long endAtMillis,
+                                 @RequestParam long voteCutoffAtMillis) {
+        return R.ok().put("data", service.createSpecialSeason(periodCode, seasonType,
+            startAtMillis, endAtMillis, voteCutoffAtMillis, getUserId()));
+    }
+
+    @ResponseBody
+    @GetMapping("/ticker/nicknames/list")
+    @RequiresPermissions("novel:gamification:view")
+    public R listTickerNicknames(@RequestParam Map<String, Object> params) {
+        Query query = new Query(params);
+        return R.ok().put("data", new PageBean(service.listTickerNicknames(query),
+            service.countTickerNicknames(query)));
+    }
+
+    @ResponseBody
+    @PostMapping("/ticker/moderate")
+    @RequiresPermissions("novel:gamification:review")
+    @Log("Kiểm duyệt hiển thị bảng chạy Ngọn Đuốc")
+    public R moderateTicker(@RequestParam long userId, @RequestParam boolean hide,
+                            @RequestParam String reason) {
+        return R.ok().put("data", service.moderateTickerVisibility(userId, hide, reason, getUserId()));
+    }
+
+    @ResponseBody
+    @GetMapping("/risk-reviews/list")
+    @RequiresPermissions("novel:gamification:review")
+    public R listRiskReviews(@RequestParam Map<String, Object> params) {
+        Query query = new Query(params);
+        return R.ok().put("data", new PageBean(service.listRiskReviews(query),
+            service.countRiskReviews(query)));
+    }
+
+    @ResponseBody
+    @PostMapping("/risk-reviews/review")
+    @RequiresPermissions("novel:gamification:review")
+    @Log("Duyệt cảnh báo gian lận gamification")
+    public R reviewRisk(@RequestParam long assessmentId, @RequestParam long expectedVersion,
+                        @RequestParam String decision, @RequestParam String reason) {
+        return R.ok().put("data", service.reviewRisk(assessmentId, expectedVersion,
+            decision, reason, getUserId()));
+    }
+
+    @ResponseBody
+    @GetMapping("/public-policies/list")
+    @RequiresPermissions("novel:gamification:config")
+    public R listPublicPolicies(@RequestParam Map<String, Object> params) {
+        Query query = new Query(params);
+        return R.ok().put("data", new PageBean(service.listPublicPolicies(query),
+            service.countPublicPolicies(query)));
+    }
+
+    @ResponseBody
+    @PostMapping("/public-policies/create")
+    @RequiresPermissions("novel:gamification:config")
+    @Log("Tạo bản nháp luật chơi gamification")
+    public R createPublicPolicy(@RequestParam String policyVersion, @RequestParam String title,
+                                @RequestParam String contentText) {
+        return R.ok().put("data", service.createPublicPolicy(policyVersion, title,
+            contentText, getUserId()));
+    }
+
+    @ResponseBody
+    @PostMapping("/public-policies/publish")
+    @RequiresPermissions("novel:gamification:config")
+    @Log("Phát hành luật chơi gamification")
+    public R publishPublicPolicy(@RequestParam long policyId,
+                                 @RequestParam long expectedVersion) {
+        return R.ok().put("data", service.publishPublicPolicy(policyId,
+            expectedVersion, getUserId()));
+    }
+
+    @ResponseBody
     @PostMapping("/rewards/calculate")
     @RequiresPermissions("novel:gamification:reward")
     @Log("Tính phân bổ quỹ thưởng Ngọn Đuốc")

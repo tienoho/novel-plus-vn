@@ -92,13 +92,13 @@ class GiftCodePackagingTest {
     void revokePermissionUsesASeparateIdempotentMigration() throws Exception {
         String migration = read(repository.resolve(
             "doc/sql/20260803_gift_code_revoke.sql"));
-        String compose = read(repository.resolve("compose.yaml"));
+        String flywayImage = read(repository.resolve("deploy/flyway/Dockerfile"));
 
         assertThat(migration).contains(
             "novel:giftCode:revoke", "WHERE NOT EXISTS", "role.role_sign = 'admin'");
-        assertThat(compose).contains(
-            "/migrations/20260803_gift_code_revoke.sql",
-            "./doc/sql/20260803_gift_code_revoke.sql:");
+        assertThat(flywayImage).contains(
+            "COPY --chmod=0444 doc/sql/20260803_gift_code_revoke.sql "
+                + "/flyway/sql/V2026080301__gift_code_revoke.sql");
     }
 
     @Test
@@ -106,6 +106,7 @@ class GiftCodePackagingTest {
         String migration = read(repository.resolve(
             "doc/sql/20260806_gift_code_hmac_rotation.sql"));
         String compose = read(repository.resolve("compose.yaml"));
+        String flywayImage = read(repository.resolve("deploy/flyway/Dockerfile"));
         String runtime = read(module.resolve("src/main/resources/application.yml"));
 
         assertThat(migration)
@@ -113,9 +114,10 @@ class GiftCodePackagingTest {
             .contains("DEFAULT ''legacy-v1''")
             .contains("uk_gift_code_key_hash")
             .contains("trg_gift_code_hash_identity_no_update");
+        assertThat(flywayImage).contains(
+            "COPY --chmod=0444 doc/sql/20260806_gift_code_hmac_rotation.sql "
+                + "/flyway/sql/V2026080601__gift_code_hmac_rotation.sql");
         assertThat(compose)
-            .contains("/migrations/20260806_gift_code_hmac_rotation.sql")
-            .contains("./doc/sql/20260806_gift_code_hmac_rotation.sql:")
             .contains("GIFT_CODE_HMAC_KEY_ID")
             .contains("GIFT_CODE_HMAC_VERIFICATION_KEYS");
         assertThat(runtime)

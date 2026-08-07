@@ -48,6 +48,8 @@ class MonthlyTicketConcurrencyIT {
         long bookId = 99_742_000_000L + suffix;
         Date voteAt = new Date(4_098_614_400_000L); // 2099-11-15T00:00:00Z
         seedFixture(userId, authorId, bookId);
+        long seasonId = jdbcTemplate.queryForObject(
+            "SELECT id FROM monthly_ticket_season WHERE period_code='2099-11'", Long.class);
         service.grant(new TicketGrantCommand(userId, 1, "ADMIN_GRANT", "concurrency-" + suffix,
             "ADMIN_GRANT:concurrency:" + userId, new Date(voteAt.getTime() - 60_000),
             new Date(voteAt.getTime() + 86_400_000), "ADMIN", 1L, "concurrency IT", "v1"));
@@ -62,8 +64,8 @@ class MonthlyTicketConcurrencyIT {
                 futures.add(executor.submit(() -> {
                     startGate.await();
                     try {
-                        return service.castVote(new TicketVoteCommand(userId, bookId, 1,
-                            clientRequestId, "c".repeat(64), voteAt,
+                        return service.castVote(new TicketVoteCommand(userId, bookId, seasonId, 1,
+                            clientRequestId, "c".repeat(64), "d".repeat(64), voteAt,
                             LocalDate.of(2099, 11, 15)), policy).status().name();
                     } catch (RuntimeException exception) {
                         return exception.getClass().getSimpleName();

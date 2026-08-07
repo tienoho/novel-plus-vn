@@ -194,7 +194,7 @@
           AND available_balance &gt;= #{amount}
     </update>
 
-    <select id="selectOpenSeason" resultType="com.java2nb.novel.service.gamification.TicketSeasonRow">
+    <select id="selectOpenSeasonById" resultType="com.java2nb.novel.service.gamification.TicketSeasonRow">
         SELECT id,
                period_code    AS periodCode,
                status,
@@ -204,10 +204,10 @@
                policy_version AS policyVersion,
                version
         FROM monthly_ticket_season
-        WHERE status = 'OPEN'
+        WHERE id = #{seasonId}
+          AND status = 'OPEN'
           AND start_at &lt;= #{at}
           AND vote_cutoff_at &gt; #{at}
-        ORDER BY start_at DESC, id DESC
         LIMIT 1
     </select>
 
@@ -255,6 +255,8 @@
         idempotency_key  AS idempotencyKey,
         request_hash     AS requestHash,
         client_request_id AS clientRequestId,
+        source_ip_hash AS sourceIpHash,
+        source_device_hash AS sourceDeviceHash,
         status,
         create_time      AS createTime
     </sql>
@@ -364,10 +366,10 @@
         INSERT INTO monthly_ticket_vote
             (season_id, book_id, author_id, user_id, ticket_count, ledger_id,
              idempotency_key, request_hash, client_request_id, status,
-             source_ip_hash, policy_version)
+             source_ip_hash, source_device_hash, policy_version)
         VALUES (#{seasonId}, #{bookId}, #{authorId}, #{userId}, #{ticketCount}, #{ledgerId},
                 #{idempotencyKey}, #{requestHash}, #{clientRequestId}, 'VALID',
-                #{sourceIpHash}, #{policyVersion})
+                #{sourceIpHash}, #{sourceDeviceHash}, #{policyVersion})
     </insert>
 
     <insert id="insertRankVoterIgnore">

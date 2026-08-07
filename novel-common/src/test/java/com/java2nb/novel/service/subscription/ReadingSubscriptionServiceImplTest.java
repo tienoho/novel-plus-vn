@@ -155,7 +155,8 @@ class ReadingSubscriptionServiceImplTest {
         ReadingSubscriptionPurchaseActivationCommand command =
             new ReadingSubscriptionPurchaseActivationCommand(
                 11L, 7L, "BASIC_MONTHLY", 10L, 1, 45,
-                start, end, "123456", "v1");
+                start, end, "123456", "v1", 1, 49_000L, 500L,
+                false, null, null, 1);
         ReadingSubscriptionRow created = subscription();
         created.setSourceType("PAYMENT");
         created.setSourceRef("123456");
@@ -172,7 +173,8 @@ class ReadingSubscriptionServiceImplTest {
         ReadingSubscriptionPurchaseActivationCommand command =
             new ReadingSubscriptionPurchaseActivationCommand(
                 11L, 7L, "BASIC_MONTHLY", 10L, 1, 45,
-                start, end, "123456", "v1");
+                start, end, "123456", "v1", 1, 49_000L, 500L,
+                false, null, null, 1);
         when(mapper.insertPurchasedSubscription(command)).thenReturn(0);
 
         assertThat(service.activatePurchase(command)).isNull();
@@ -239,7 +241,9 @@ class ReadingSubscriptionServiceImplTest {
         ReadingSubscriptionPlanRow row = new ReadingSubscriptionPlanRow();
         row.setId(7L);
         row.setPlanCode("BASIC_MONTHLY");
+        row.setPlanVersion(1L);
         row.setPriceVnd(49_000L);
+        row.setPriceXu(500L);
         row.setTicketsPerPeriod(10L);
         row.setPeriodMonths(1);
         row.setTicketValidityDays(45);
@@ -254,12 +258,17 @@ class ReadingSubscriptionServiceImplTest {
         row.setUserId(11L);
         row.setPlanId(7L);
         row.setPlanCodeSnapshot("BASIC_MONTHLY");
+        row.setPlanVersionSnapshot(1L);
+        row.setPriceVndSnapshot(49_000L);
+        row.setPriceXuSnapshot(500L);
+        row.setAcceptedPlanVersion(1L);
         row.setTicketsPerPeriodSnapshot(10L);
         row.setPeriodMonthsSnapshot(1);
         row.setTicketValidityDaysSnapshot(45);
         row.setStartAt(start);
         row.setNextGrantAt(start);
         row.setEndAt(end);
+        row.setAutoRenew(false);
         row.setStatus("ACTIVE");
         row.setSourceType("ADMIN");
         row.setSourceRef("activation-001");
@@ -275,8 +284,12 @@ class ReadingSubscriptionServiceImplTest {
         row.setUserId(11L);
         row.setPlanId(7L);
         row.setPlanCodeSnapshot("BASIC_MONTHLY");
+        row.setPlanVersionSnapshot(1L);
         row.setPlanNameSnapshot("Gói cơ bản");
         row.setPriceVndSnapshot(49_000L);
+        row.setPriceXuSnapshot(500L);
+        row.setAutoRenew(false);
+        row.setAcceptedPlanVersion(1L);
         row.setTicketsPerPeriodSnapshot(10L);
         row.setPeriodMonthsSnapshot(1);
         row.setTicketValidityDaysSnapshot(45);

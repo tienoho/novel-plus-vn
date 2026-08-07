@@ -8,6 +8,17 @@
     $(function () {
         loadKycTable();
         loadWithdrawalTable();
+        $('#kycSearchForm').on('submit', function (event) {
+            event.preventDefault();
+            window.reloadKyc();
+        });
+        $('#withdrawalSearchForm').on('submit', function (event) {
+            event.preventDefault();
+            window.reloadWithdrawals();
+        });
+        $(document).on('click', '[data-author-finance-action]', function () {
+            dispatchAction(this);
+        });
     });
 
     function responseHandler(response) {
@@ -120,46 +131,152 @@
     function kycActions(value, row) {
         var buttons = [];
         if (permissions.pii) {
-            buttons.push(actionButton('btn-info', text.viewPii, 'viewKyc(' + row.id + ')'));
+            buttons.push(actionButton('btn-info', text.viewPii, 'view-kyc', {id: row.id}));
         }
         if (permissions.kyc && row.status === 'PENDING') {
-            buttons.push(actionButton('btn-primary', text.approve,
-                'approveKyc(' + row.id + ',' + row.submissionVersion + ')'));
-            buttons.push(actionButton('btn-danger', text.reject,
-                'rejectKyc(' + row.id + ',' + row.submissionVersion + ')'));
+            buttons.push(actionButton('btn-primary', text.approve, 'approve-kyc', {
+                id: row.id,
+                version: row.submissionVersion
+            }));
+            buttons.push(actionButton('btn-danger', text.reject, 'reject-kyc', {
+                id: row.id,
+                version: row.submissionVersion
+            }));
         }
-        return buttons.length ? buttons.join(' ') : '-';
+        return compactButtons(buttons);
     }
 
     function withdrawalActions(value, row) {
         var buttons = [];
         if (permissions.pii) {
-            buttons.push(actionButton('btn-info', text.viewPayoutDetails, 'viewPayoutDetails(' + row.id + ')'));
+            buttons.push(actionButton('btn-info', text.viewPayoutDetails, 'view-payout', {id: row.id}));
         }
         if (permissions.payout) {
             if (row.status === 'PENDING_REVIEW') {
-                buttons.push(actionButton('btn-primary', text.approveWithdrawal,
-                    'approveWithdrawal(' + row.id + ',' + row.version + ',' + row.grossAmountVnd + ')'));
-                buttons.push(actionButton('btn-danger', text.reject,
-                    'rejectWithdrawal(' + row.id + ',' + row.version + ')'));
+                buttons.push(actionButton('btn-primary', text.approveWithdrawal, 'approve-withdrawal', {
+                    id: row.id,
+                    version: row.version,
+                    grossAmountVnd: row.grossAmountVnd
+                }));
+                buttons.push(actionButton('btn-danger', text.reject, 'reject-withdrawal', {
+                    id: row.id,
+                    version: row.version
+                }));
             } else if (row.status === 'APPROVED') {
-                buttons.push(actionButton('btn-primary', text.startProcessing,
-                    'startProcessing(' + row.id + ',' + row.version + ')'));
-                buttons.push(actionButton('btn-danger', text.reject,
-                    'rejectWithdrawal(' + row.id + ',' + row.version + ')'));
+                buttons.push(actionButton('btn-primary', text.startProcessing, 'start-processing', {
+                    id: row.id,
+                    version: row.version
+                }));
+                buttons.push(actionButton('btn-danger', text.reject, 'reject-withdrawal', {
+                    id: row.id,
+                    version: row.version
+                }));
             } else if (row.status === 'PROCESSING') {
-                buttons.push(actionButton('btn-success', text.markPaid,
-                    'markPaid(' + row.id + ',' + row.version + ')'));
-                buttons.push(actionButton('btn-danger', text.markFailed,
-                    'markFailed(' + row.id + ',' + row.version + ')'));
+                buttons.push(actionButton('btn-success', text.markPaid, 'mark-paid', {
+                    id: row.id,
+                    version: row.version
+                }));
+                buttons.push(actionButton('btn-danger', text.markFailed, 'mark-failed', {
+                    id: row.id,
+                    version: row.version
+                }));
             }
         }
-        return buttons.length ? buttons.join(' ') : '-';
+        return compactButtons(buttons);
     }
 
-    function actionButton(cssClass, label, action) {
-        return '<button type="button" class="btn btn-sm ' + cssClass + '" onclick="' + action + '">' +
-            escapeHtml(label) + '</button>';
+    function compactButtons(buttons) {
+        var validButtons = buttons.filter(function (button) {
+            return button !== '';
+        });
+        return validButtons.length ? validButtons.join(' ') : '-';
+    }
+
+    function actionButton(cssClass, label, action, attributes) {
+        var allowedClasses = {'btn-info': true, 'btn-primary': true, 'btn-danger': true, 'btn-success': true};
+        var allowedActions = {
+            'view-kyc': true,
+            'approve-kyc': true,
+            'reject-kyc': true,
+            'view-payout': true,
+            'approve-withdrawal': true,
+            'reject-withdrawal': true,
+            'start-processing': true,
+            'mark-paid': true,
+            'mark-failed': true
+        };
+        var attributeNames = {id: 'data-id', version: 'data-version', grossAmountVnd: 'data-gross-amount-vnd'};
+        if (!allowedClasses[cssClass] || !allowedActions[action]) {
+            return '';
+        }
+        var html = '<button type="button" class="btn btn-sm ' + cssClass
+            + '" data-author-finance-action="' + action + '"';
+        for (var name in attributes) {
+            if (!Object.prototype.hasOwnProperty.call(attributes, name) || !attributeNames[name]) {
+                return '';
+            }
+            var value = normalizeInteger(attributes[name]);
+            if (value === null) {
+                return '';
+            }
+            html += ' ' + attributeNames[name] + '="' + value + '"';
+        }
+        return html + '>' + escapeHtml(label) + '</button>';
+    }
+
+    function normalizeInteger(value) {
+        var normalized = String(value == null ? '' : value);
+        return /^\d+$/.test(normalized) ? normalized : null;
+    }
+
+    function readInteger(element, attribute) {
+        var normalized = normalizeInteger(element.getAttribute(attribute));
+        if (normalized === null) {
+            return null;
+        }
+        var value = Number(normalized);
+        return isFinite(value) && value <= 9007199254740991 ? value : null;
+    }
+
+    function dispatchAction(element) {
+        var action = element.getAttribute('data-author-finance-action');
+        var id = readInteger(element, 'data-id');
+        var version = readInteger(element, 'data-version');
+        if (id === null) {
+            return;
+        }
+        switch (action) {
+            case 'view-kyc':
+                window.viewKyc(id);
+                break;
+            case 'approve-kyc':
+                if (version !== null) window.approveKyc(id, version);
+                break;
+            case 'reject-kyc':
+                if (version !== null) window.rejectKyc(id, version);
+                break;
+            case 'view-payout':
+                window.viewPayoutDetails(id);
+                break;
+            case 'approve-withdrawal':
+                var grossAmountVnd = readInteger(element, 'data-gross-amount-vnd');
+                if (version !== null && grossAmountVnd !== null) {
+                    window.approveWithdrawal(id, version, grossAmountVnd);
+                }
+                break;
+            case 'reject-withdrawal':
+                if (version !== null) window.rejectWithdrawal(id, version);
+                break;
+            case 'start-processing':
+                if (version !== null) window.startProcessing(id, version);
+                break;
+            case 'mark-paid':
+                if (version !== null) window.markPaid(id, version);
+                break;
+            case 'mark-failed':
+                if (version !== null) window.markFailed(id, version);
+                break;
+        }
     }
 
     function statusLabel(value) {

@@ -107,4 +107,8 @@ mvn -Dp0.mysql.it=true -Dtest=RefundMySqlIntegrationTest `
 - Tham vấn pháp lý tại Việt Nam về bản quyền, dữ liệu cá nhân, trung gian thanh toán, thuế và chứng từ/hóa đơn điện tử.
 - MoMo và ZaloPay được hoãn sang giai đoạn tích hợp sau; đây không phải tiêu chí chặn P0 đã chốt.
 
+Biên bản này ghi nhận P0 tại thời điểm 27/07/2026. Trạng thái tổng thể mới nhất, gồm recurring,
+gamification, E2E bốn theme, load 500 VU và các blocker production, nằm tại
+[biên bản sẵn sàng production](production-readiness-acceptance.md).
+
 Xem thêm [ví và sổ cái](wallet-ledger.md), [VNPAY](vnpay.md), [tài chính tác giả](author-finance.md) và [runbook triển khai](deployment.md).

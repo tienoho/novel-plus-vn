@@ -14,11 +14,11 @@
 <div class="main box_center cf">
     <div class="newsMain cf">
         <div class="nav_sub">
-            <span th:text="#{news.currentLocation}+': '">Vị trí hiện tại: </span><a href="/" th:text="#{site.home}">Trang chủ</a> &gt; <a href="/about/news.html" th:text="#{news.title}">Tin tức và thông báo</a> &gt; <span th:utext="${news.title}"></span>
+            <span th:text="#{news.currentLocation}+': '">Vị trí hiện tại: </span><a href="/" th:text="#{site.home}">Trang chủ</a> &gt; <a href="/about/news.html" th:text="#{news.title}">Tin tức và thông báo</a> &gt; <span th:text="${news.title}"></span>
         </div>
         <div class="channelWrap channelNews cf">
             <div class="news_title">
-                <h2 th:utext="${news.title}"></h2>
+                <h2 th:text="${news.title}"></h2>
                 <!--while [[...]] corresponds to th:text (i.e. result will be HTML-escaped), [(...)] corresponds to th:utext-->
                 <p class="from"><span th:text="#{news.source}+': '">Nguồn: </span>[[${news.sourceName}]] <span class="time" th:text="#{news.time}+': '+${#dates.format(news.createTime, 'dd/MM/yy')}"></span> <span class="time" th:text="#{news.views}+': '+${news.readCount}"></span></p>
             </div>

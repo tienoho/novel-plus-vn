@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.0</version>
+        <version>3.5.16</version>
         <relativePath/>
     </parent>
 
@@ -29,7 +29,6 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>17</java.version>
         <maven.test.skip>false</maven.test.skip>
-        <mysql.version>8.0.29</mysql.version>
         <mybatis.version>3.0.4</mybatis.version>
         <mybatis-generator.version>1.4.0</mybatis-generator.version>
         <mybatis-dynamic-sql.version>1.5.0</mybatis-dynamic-sql.version>
@@ -37,14 +36,18 @@
         <commons-lang3.version>3.4</commons-lang3.version>
         <jjwt.version>0.9.1</jjwt.version>
         <jest.version>6.3.1</jest.version>
-        <redis.version>1.4.1.RELEASE</redis.version>
         <redisson.version>3.12.5</redisson.version>
         <shardingsphere-jdbc.version>5.5.1</shardingsphere-jdbc.version>
         <aliyun-sdk-oss.version>3.16.3</aliyun-sdk-oss.version>
-        <commons-fileupload.version>1.5</commons-fileupload.version>
+        <commons-fileupload.version>1.6.0</commons-fileupload.version>
+        <commons-io.version>2.19.0</commons-io.version>
+        <thymeleaf.version>3.1.5.RELEASE</thymeleaf.version>
         <xxyopen.version>1.0.0</xxyopen.version>
         <pdfbox.version>3.0.8</pdfbox.version>
         <open-sans-font.version>6.1.0</open-sans-font.version>
+        <owasp-html-sanitizer.version>20260313.1</owasp-html-sanitizer.version>
+        <netty.version>4.1.136.Final</netty.version>
+        <protobuf.version>3.25.5</protobuf.version>
     </properties>
 
     <dependencyManagement>
@@ -62,9 +65,19 @@
             <dependency>
                 <groupId>org.springframework.ai</groupId>
                 <artifactId>spring-ai-bom</artifactId>
-                <version>1.0.0</version>
+                <version>1.0.7</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+                <version>${protobuf.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>${commons-io.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

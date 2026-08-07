@@ -37,26 +37,39 @@
         getMonthlyTicketAccount: function () {
             return request('/user/monthly-tickets');
         },
-        getBookMonthlyTicketSummary: function (bookId) {
-            return request('/book/' + encodeURIComponent(bookId) + '/monthly-ticket-summary');
+        getMonthlyTicketSeasons: function () {
+            return request('/book/monthly-ticket-seasons');
         },
-        castMonthlyTicketVote: function (bookId, count, clientRequestId) {
+        getBookMonthlyTicketSummary: function (bookId, seasonId) {
+            return request('/book/' + encodeURIComponent(bookId) + '/monthly-ticket-summary?seasonId=' +
+                encodeURIComponent(seasonId));
+        },
+        castMonthlyTicketVote: function (bookId, seasonId, amount, clientRequestId) {
             return request('/book/' + encodeURIComponent(bookId) + '/monthly-ticket-votes', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json;charset=UTF-8'},
-                body: JSON.stringify({count: count, clientRequestId: clientRequestId})
+                body: JSON.stringify({
+                    seasonId: seasonId,
+                    amount: amount,
+                    clientRequestId: clientRequestId
+                })
             });
         },
-        getMonthlyTicketRanking: function (period, page, limit) {
+        getMonthlyTicketRanking: function (seasonId, period, page, limit) {
             var query = '?page=' + encodeURIComponent(page || 1) +
                 '&limit=' + encodeURIComponent(limit || 20);
-            if (period) {
+            if (seasonId) {
+                query += '&seasonId=' + encodeURIComponent(seasonId);
+            } else if (period) {
                 query += '&period=' + encodeURIComponent(period);
             }
             return request('/book/monthly-ticket-ranking' + query);
         },
         getTicker: function (limit) {
             return request('/gamification/ticker?limit=' + encodeURIComponent(limit || 20));
+        },
+        getPublicPolicy: function () {
+            return request('/gamification/policy');
         },
         updateTickerPreference: function (optOut, expectedVersion) {
             return request('/user/gamification/ticker-preference', {

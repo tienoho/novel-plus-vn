@@ -2,7 +2,7 @@
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html lang="vi" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.w3.org/1999/xhtml">
 <head th:replace="common/header :: common_head(~{::title},~{::meta},~{::link},~{})">
-    <title th:utext="${book.bookName}+'_'+${bookIndex.indexName}+'_'+${application.website.name}"></title>
+    <title th:text="${book.bookName}+'_'+${bookIndex.indexName}+'_'+${application.website.name}"></title>
     <meta name="keywords"
           th:content="${book.bookName}+','+#{book.latest}+','+#{book.read}"/>
     <meta name="description"
@@ -55,9 +55,7 @@
 
 
 </script>
-<body class="read_style_1" oncontextmenu="return false"
-      ondragstart="return false" onbeforecopy="return false" oncopy="document.selection.empty()"
-      onselect="document.selection.empty()">
+<body class="read_style_1" data-reader-restrict-selection>
 
 <input type="hidden" id="bookId" th:value="${book.id}"/>
 <input type="hidden" id="bookName" th:value="${book.bookName}"/>
@@ -87,24 +85,23 @@
                         <li><a class="ico_catalog" th:href="'/book/indexList-'+${book.id}+'.html'" th:title="#{book.catalog}">
                             <b th:text="#{book.catalog}">Mục lục</b></a></li>
                         <li><a class="ico_page" th:href="'/book/'+${book.id}+'.html'" th:title="#{book.page}"><b th:text="#{book.page}">Trang truyện</b></a></li>
-                        <li class="li_shelf" id="cFavs"><a class="ico_shelf" href="javascript:void(0);" th:title="#{book.addShelf}"
-                                                           onclick="javascript:BookDetail.AddFavorites(37,1959973,1);"><b th:text="#{book.addShelf}">Thêm vào tủ sách</b></a>
+                        <li class="li_shelf" id="cFavs"><a class="ico_shelf" href="#" data-reader-action="add-shelf" th:title="#{book.addShelf}"><b th:text="#{book.addShelf}">Thêm vào tủ sách</b></a>
                         </li>
-                        <li class="li_shelfed" style="display: none;"><a class="ico_shelfed" href="javascript:void(0);"
-                                                                         th:title="#{book.inShelf}"><b th:text="#{book.inShelf}">Đã lưu</b></a></li>
+                        <li class="li_shelfed" style="display: none;"><a class="ico_shelfed" href="/user/favorites.html"
+                                                                          th:title="#{book.inShelf}"><b th:text="#{book.inShelf}">Đã lưu</b></a></li>
 
                         <li><a class="ico_comment" th:href="'/book/comment-'+${book.id}+'.html'" th:title="#{book.comment}">
                             <b th:text="#{book.comment}">Bình luận</b></a></li>
-                        <li><a class="ico_setup" href="javascript:void(0);" th:title="#{reader.settings}"><b th:text="#{reader.settings}">Cài đặt</b></a></li>
+                        <li><a class="ico_setup" href="#" data-reader-action="show-setup" th:title="#{reader.settings}"><b th:text="#{reader.settings}">Cài đặt</b></a></li>
                     </ul>
                 </div>
                 <div class="menu_right" style="position: fixed; bottom: 0">
                     <ul>
                         <li><a class="ico_pagePrev"
-                               th:href="'javascript:enterPreIndexPage(\''+${book.id}+'\',\''+${preBookIndexId}+'\');'"
+                               th:href="${preBookIndexId != 0 ? '/book/' + book.id + '/' + preBookIndexId + '.html' : '/book/indexList-' + book.id + '.html'}"
                                th:title="#{reader.previous}"><i th:text="#{reader.previous}">Chương trước</i></a></li>
                         <li><a class="ico_pageNext"
-                               th:href="'javascript:enterNextIndexPage(\''+${book.id}+'\',\''+${nextBookIndexId}+'\');'"
+                               th:href="${nextBookIndexId != 0 ? '/book/' + book.id + '/' + nextBookIndexId + '.html' : '/book/indexList-' + book.id + '.html'}"
                                th:title="#{reader.next}"><i th:text="#{reader.next}">Chương sau</i></a></li>
                     </ul>
                 </div>
@@ -113,7 +110,7 @@
                 <div class="bookNav">
                     <a href="/" th:text="#{site.home}">Trang chủ</a>&gt; <a th:href="'/book/bookclass.html?c='+${book.catId}"
                                                th:text="${book.catName}">
-                </a>&gt; <a th:href="'/book/'+${book.id}+'.html'" th:utext="${book.bookName}">
+                </a>&gt; <a th:href="'/book/'+${book.id}+'.html'" th:text="${book.bookName}">
 
                 </a>
                 </div>
@@ -121,12 +118,12 @@
                     <div class="textbox cf">
 
                         <div class="book_title">
-                            <h1 th:utext="${bookIndex.indexName}">
+                            <h1 th:text="${bookIndex.indexName}">
                             </h1>
                             <div class="textinfo">
                                 <span th:text="#{book.category}+': '">Thể loại: </span><a th:href="'/book/bookclass.html?c='+${book.catId}" th:text="${book.catName}"></a>
-                                <span th:text="#{book.author}+': '">Tác giả: </span><a th:href="'javascript:searchByK(\''+${book.authorName}+'\')'"
-                                      th:utext="${book.authorName}"></a><span
+                                <span th:text="#{book.author}+': '">Tác giả: </span><a th:href="@{/book/book_ranking.html(keyword=${book.authorName})}"
+                                      th:text="${book.authorName}"></a><span
                                     th:text="#{reader.words}+': '+${bookIndex.wordCount}"></span><span
                                     th:text="#{reader.updated}+': '+${#dates.format(bookIndex.updateTime, 'dd/MM/yy HH:mm:ss')}"></span>
                             </div>
@@ -138,8 +135,7 @@
                                 </p>
 
                                 <div class="pc_bar" style="display: none;">
-                                    <a href="javascript:void(0);" class="icon_pc"
-                                       onclick="javascript:uFans.startSupportRead();">
+                                    <a href="#" class="icon_pc" data-reader-action="support">
                                         <span><i class="icon_yb"></i><em th:text="#{reader.support}">Ủng hộ tác giả</em></span>
                                     </a>
                                 </div>
@@ -150,8 +146,8 @@
                                     <ul class="order_list">
                                         <li><span th:text="#{book.price}+': '">Giá: </span><span class="red" th:text="${bookIndex.bookPrice}+' '+#{payment.currency}+' ('+#{reader.vip.rate}+')'"></span>
                                         </li>
-                                        <li id="panelPay" class="btns"><a class="btn_red"
-                                                                          href="javascript:buyBookIndex()" th:text="#{book.buy}">Mua chương</a></li>
+                                        <li id="panelPay" class="btns"><a class="btn_red" data-reader-action="buy-chapter"
+                                                                          href="#" th:text="#{book.buy}">Mua chương</a></li>
 
                                     </ul>
                                     <div th:replace="common/reading_ticket_unlock :: unlock"></div>
@@ -167,8 +163,7 @@
 
 
                                 <div class="pc_bar" style="display: none;">
-                                    <a href="javascript:void(0);" class="icon_pc"
-                                       onclick="javascript:uFans.startSupportRead();">
+                                    <a href="#" class="icon_pc" data-reader-action="support">
                                         <span><i class="icon_yb"></i><em th:text="#{reader.support}">Ủng hộ tác giả</em></span>
                                     </a>
                                 </div>
@@ -180,16 +175,16 @@
                 </div>
                 <div class="nextPageBox">
                     <a class="prev"
-                       th:href="'javascript:enterPreIndexPage(\''+${book.id}+'\',\''+${preBookIndexId}+'\');'" th:text="#{reader.previous}">Chương trước</a>
+                       th:href="${preBookIndexId != 0 ? '/book/' + book.id + '/' + preBookIndexId + '.html' : '/book/indexList-' + book.id + '.html'}" th:text="#{reader.previous}">Chương trước</a>
                     <a class="dir" th:href="'/book/indexList-'+${book.id}+'.html'"
                      th:text="#{book.catalog}">Mục lục</a> <a class="next"
-                               th:href="'javascript:enterNextIndexPage(\''+${book.id}+'\',\''+${nextBookIndexId}+'\');'" th:text="#{reader.next}">Chương sau</a>
+                               th:href="${nextBookIndexId != 0 ? '/book/' + book.id + '/' + nextBookIndexId + '.html' : '/book/indexList-' + book.id + '.html'}" th:text="#{reader.next}">Chương sau</a>
                 </div>
             </div>
         </div>
     </div>
     <div class="readPopup qrBox" style="display: none">
-        <a class="closePopup" href="javascript:void(0);" onclick="javascript:$('.maskBox,.qrBox').hide();"></a>
+        <a class="closePopup" href="#" data-reader-action="close-qr"></a>
         <div class="popupTit">
             <h3 th:text="#{reader.mobile}">Đọc trên điện thoại</h3>
         </div>
@@ -199,7 +194,7 @@
         </div>
     </div>
     <div class="readPopup setupBox" style="display: none;">
-        <a class="closePopup" href="javascript:void(0);" onclick="javascript:$('.maskBox,.setupBox').hide();"></a>
+        <a class="closePopup" href="#" data-reader-action="close-setup"></a>
         <div class="popupTit">
             <h3 th:text="#{reader.settings}">Cài đặt đọc</h3>
         </div>
@@ -207,32 +202,23 @@
             <ul>
                 <li class="readTheme">
                     <em class="tit" th:text="#{reader.theme}+': '">Giao diện đọc: </em>
-                    <a id="setup_color_white" class="white current"
-                       href="javascript:void(0);" th:title="#{reader.theme.white}" onclick="javascript:BookDetail.SetBackUpColor(1);"></a><a
-                        id="setup_color_green" class="green" href="javascript:void(0);" th:title="#{reader.theme.green}"
-                        onclick="javascript:BookDetail.SetBackUpColor(2);"></a><a id="setup_color_pink" class="pink"
-                                                                                  href="javascript:void(0);" th:title="#{reader.theme.pink}"
-                                                                                  onclick="javascript:BookDetail.SetBackUpColor(3);"></a><a
-                        id="setup_color_yellow" class="yellow" href="javascript:void(0);" th:title="#{reader.theme.yellow}"
-                        onclick="javascript:BookDetail.SetBackUpColor(4);"></a><a id="setup_color_gray" class="gray"
-                                                                                  href="javascript:void(0);" th:title="#{reader.theme.gray}"
-                                                                                  onclick="javascript:BookDetail.SetBackUpColor(5);"></a><a
-                        id="setup_color_night" class="night" href="javascript:void(0);" th:title="#{reader.theme.night}"
-                        onclick="javascript:BookDetail.SetBackUpColor(6);"></a></li>
+                    <a id="setup_color_white" class="white current" data-reader-action="set-color" data-reader-value="1"
+                       href="#" th:title="#{reader.theme.white}"></a><a
+                        id="setup_color_green" class="green" data-reader-action="set-color" data-reader-value="2" href="#" th:title="#{reader.theme.green}"></a><a
+                        id="setup_color_pink" class="pink" data-reader-action="set-color" data-reader-value="3" href="#" th:title="#{reader.theme.pink}"></a><a
+                        id="setup_color_yellow" class="yellow" data-reader-action="set-color" data-reader-value="4" href="#" th:title="#{reader.theme.yellow}"></a><a
+                        id="setup_color_gray" class="gray" data-reader-action="set-color" data-reader-value="5" href="#" th:title="#{reader.theme.gray}"></a><a
+                        id="setup_color_night" class="night" data-reader-action="set-color" data-reader-value="6" href="#" th:title="#{reader.theme.night}"></a></li>
                 <li class="setFont setBtn"><em class="tit" th:text="#{reader.font}+': '">Phông chữ: </em> <a id="setup_font_yahei" class="setYahei current"
-                                                                         href="javascript:void(0);"
-                                                                         onclick="javascript:BookDetail.SetReadFontFamily(0);" th:text="#{reader.font.yahei}">Không chân</a>
-                    <a id="setup_font_simsun" class="setSimsun" href="javascript:void(0);"
-                       onclick="javascript:BookDetail.SetReadFontFamily(1);" th:text="#{reader.font.simsun}">Có chân</a> <a id="setup_font_ks" class="setKs"
-                                                                                       href="javascript:void(0);"
-                                                                                       onclick="javascript:BookDetail.SetReadFontFamily(2);" th:text="#{reader.font.kaiti}">Dễ đọc</a>
+                                                                         href="#" data-reader-action="set-font-family" data-reader-value="0" th:text="#{reader.font.yahei}">Không chân</a>
+                    <a id="setup_font_simsun" class="setSimsun" href="#" data-reader-action="set-font-family" data-reader-value="1"
+                       th:text="#{reader.font.simsun}">Có chân</a> <a id="setup_font_ks" class="setKs"
+                                                                                       href="#" data-reader-action="set-font-family" data-reader-value="2" th:text="#{reader.font.kaiti}">Dễ đọc</a>
                 </li>
-                <li class="fontSize setBtn"><em class="tit" th:text="#{reader.fontSize}+': '">Cỡ chữ: </em> <a class="small" href="javascript:void(0);"
-                                                                          onclick="javascript:BookDetail.SetReadFont(-2);">A-</a><span
+                <li class="fontSize setBtn"><em class="tit" th:text="#{reader.fontSize}+': '">Cỡ chữ: </em> <a class="small" href="#" data-reader-action="set-font-size" data-reader-value="-2">A-</a><span
                         class="current_font"
                         id="cFonts">
-                            16</span><a class="big" href="javascript:void(0);"
-                                        onclick="javascript:BookDetail.SetReadFont(2);">A+</a></li>
+                            16</span><a class="big" href="#" data-reader-action="set-font-size" data-reader-value="2">A+</a></li>
             </ul>
         </div>
     </div>
@@ -243,7 +229,7 @@
     <span id="LabErrorStatus"></span>
 </div>
 
-<div class="maskBox" style="display: none" onclick="javascript:uFans.closeBox();"></div>
+<div class="maskBox" style="display: none" data-reader-action="close-support"></div>
 <div class="readPopup pcBox" style="display: none" id="showPC"></div>
 <div class="readPopup flowerBox" style="display: none" id="showFlower"></div>
 <div class="readPopup newsTipBox" style="display: none;" id="showNote"></div>
@@ -275,8 +261,9 @@
         success: function (data) {
             if (data.code == 200) {
                 if (data.data) {
-                    $("#cFavs").html("<a class=\"ico_shelf\" href=\"javascript:void(0);\"><b>" +
-                        /*[[#{book.inShelf}]]*/ 'Đã lưu' + "</b></a>");
+                    var shelfLink = $("<a>", {"class": "ico_shelf", "href": "/user/favorites.html"});
+                    $("<b>").text(/*[[#{book.inShelf}]]*/ 'Đã lưu').appendTo(shelfLink);
+                    $("#cFavs").empty().append(shelfLink);
                 }
                 // Thêm lịch sử đọc.
                 $.ajax({
@@ -296,7 +283,7 @@
                 // Chưa đăng nhập.
 
             } else {
-                layer.alert(data.msg);
+                novelAlertText(data.msg);
             }
 
         },
@@ -391,7 +378,7 @@
                     location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
 
                 } else {
-                    layer.alert(data.msg);
+                    novelAlertText(data.msg);
                 }
 
             },
@@ -405,5 +392,6 @@
     $.post("/book/addVisitCount", {"bookId": $("#bookId").val()}, function () {
     });
 </script>
+<script src="/javascript/reader-page.js?v=1"></script>
 </body>
 </html>

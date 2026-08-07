@@ -1,367 +1,48 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
     <title th:text="${application.website.name}+' - '+#{user.bookshelf}"></title>
-
-    <meta name="keywords"
-          th:content="${application.website.name}+','+#{book.seo.list.keywords}">
-
-    <meta name="description"
-          th:content="#{book.seo.list.description(${application.website.name})}">
-
-
-    <div th:include="mobile/common/css :: css"></div>
-
-    </div>
-
-    <style type="text/css">
-
-        body {
-
-            -webkit-user-select: none; /* Chrome, Safari, Opera */
-
-
-            -moz-user-select: none; /* Firefox */
-
-
-            -ms-user-select: none; /* Internet Explorer/Edge */
-
-
-            user-select: none; /* Non-prefixed version, currently supported by Chrome, Opera, and Firefox */
-
-
-        }
-
-
-        .line-limit-length {
-
-            overflow: hidden;
-
-            text-overflow: ellipsis;
-
-            white-space: nowrap;
-
-        }
-
-        .indexP p a {
-            color: #4c6978;
-        }
-
-        .Readarea {
-            font-size: 18px;
-            line-height: 35px;
-            padding: 10px;
-            color: #333;
-        }
-
-        div, p {
-            wrap-work: break-word;
-            word-break: break-all;
-            word-wrap: break-word;
-            word-break: normal;
-            -moz-box-sizing: border-box;
-            -webkit-box-sizing: border-box;
-            box-sizing: border-box;
-            -ms-box-sizing: border-box;
-        }
-
-        .indexDiv a {
-            margin-left: 20px;
-        }
-
-        img {
-            width: 130px;
-            height: 180px;
-        }
-
-        #tipLayer {
-            display: none;
-            position: absolute;
-            background-color: rgba(255, 0, 0, 0.8);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 3px;
-            cursor: pointer;
-            z-index: 1000;
-        }
-
-    </style>
+    <meta name="keywords" th:content="${application.website.name}+','+#{book.seo.list.keywords}"/>
+    <meta name="description" th:content="#{book.seo.list.description(${application.website.name})}"/>
+    <div th:replace="mobile/common/css :: css"></div>
+    <link rel="stylesheet" href="/mobile/css/mobile-favorites-page.css"/>
 </head>
-<body>
+<body id="mobileFavoritesPage"
+      th:attr="data-author-label=#{book.author},
+               data-category-label=#{book.category},
+               data-status-label=#{book.status},
+               data-serializing-label=#{book.status.serializing},
+               data-completed-label=#{book.status.completed},
+               data-updated-label=#{reader.updated},
+               data-description-label=#{book.description},
+               data-network-error=#{auth.networkError}">
 
-<input type="hidden" id="limit" th:value="${limit}"/>
-<input type="hidden" id="curr" th:value="${curr}"/>
-<input type="hidden" id="total" th:value="${total}"/>
-<input type="hidden" id="ids" th:value="${ids}"/>
-<input type="hidden" id="bookStatus" th:value="${bookStatus}"/>
-<input type="hidden" id="token" th:value="${token}"/>
-<input type="hidden" id="keyword" th:value="${keyword}"/>
-<input type="hidden" id="catId" th:value="${catId}"/>
-<input type="hidden" id="sortBy" th:value="${sortBy}"/>
-<input type="hidden" id="sort" th:value="${sort}"/>
-
-<div style="height: 50px;line-height: 50px;text-align: center" class="layui-header header header-doc  layui-bg-cyan">
-
-    <div style="width:10%;float: left;margin-left: 10px">
-        <a href="javascript:history.go(-1)">
-            <i style="font-size: 20px;color: #fff;" class="layui-icon">&#xe65c;</i></a>
+<div class="layui-header header header-doc layui-bg-cyan mobile-favorites-header">
+    <div class="mobile-favorites-header-side mobile-favorites-header-back">
+        <a href="#back" id="mobileFavoritesBack" th:aria-label="#{reader.back}">
+            <i class="layui-icon" aria-hidden="true">&#xe65c;</i>
+        </a>
     </div>
     <b class="layui-icon" th:text="#{user.bookshelf}">Tủ sách</b>
-    <div style="width:10%;float: right;margin-right: 10px"><a href="/">
-        <i style="font-size: 20px;color: #fff;" class="layui-icon">&#xe68e;</i>
-    </a>
+    <div class="mobile-favorites-header-side mobile-favorites-header-home">
+        <a href="/" th:aria-label="#{site.home}">
+            <i class="layui-icon" aria-hidden="true">&#xe68e;</i>
+        </a>
     </div>
 </div>
-<div id="body">
-    <div id="bookList">
 
-
-    </div>
-    <div id="tipLayer"
-         style="display:none; position:absolute; background-color:rgba(255, 0, 0, 0.8); color:white; padding:5px; border-radius:3px; cursor:pointer;">
+<main id="body">
+    <div id="bookList"></div>
+    <button type="button" id="tipLayer">
         <span th:text="#{book.removeShelf}">Xóa khỏi tủ sách</span>
-    </div>
+    </button>
+    <div id="books"></div>
+</main>
 
-
-    <div id="books" style="text-align: center;"></div>
-
-</div>
-<div th:replace="mobile/common/footer :: footer">
-</div>
-
-<a name="buttom"></a>
-</body>
+<div th:replace="mobile/common/footer :: footer"></div>
 <div th:replace="mobile/common/js :: js"></div>
-
-<script th:inline="javascript">
-
-    const authorLabel = /*[[#{book.author}]]*/ 'Tác giả';
-    const categoryLabel = /*[[#{book.category}]]*/ 'Danh mục truyện';
-    const statusLabel = /*[[#{book.status}]]*/ 'Trạng thái';
-    const serializingLabel = /*[[#{book.status.serializing}]]*/ 'Đang ra';
-    const completedLabel = /*[[#{book.status.completed}]]*/ 'Đã hoàn thành';
-    const updatedLabel = /*[[#{reader.updated}]]*/ 'Cập nhật';
-    const descriptionLabel = /*[[#{book.description}]]*/ 'Giới thiệu';
-    const networkErrorText = /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng';
-
-    var timeout, isLongPress = false;
-
-    search(1, 20);
-
-    function search(curr, limit) {
-
-
-        $.ajax({
-            type: "get",
-            url: "/user/listBookShelfByPage",
-            data: {'curr': curr, 'limit': limit},
-            dataType: "json",
-            success: function (data) {
-                if (data.code == 200) {
-                    var bookList = data.data.list;
-                    var bookListHtml = "";
-                    for (var i = 0; i < bookList.length; i++) {
-                        var book = bookList[i];
-
-                        /*var end = book.bookDesc.indexOf("<");
-                        if(end != -1) {
-                            book.bookDesc = book.bookDesc.substring(0,end);
-                        }*/
-
-                        if (book.bookDesc) {
-                            book.bookDesc = book.bookDesc.replace(/<[^>]+>/g, "").replace(/\s+/g, "").replace(/&nbsp;/g, "");
-                        }
-
-                        bookListHtml += ("<div id='" + book.bookId + "' onclick='read(\"" + book.bookId + "\",\"" + book.preContentId + "\")' class=\"item layui-row\" style=\"margin-bottom:10px;padding:10px;background: #f2f2f2\">\n" +
-                            "            <div class=\"layui-col-xs6 layui-col-sm3 layui-col-md2 layui-col-lg2\" style=\"text-align: center\">\n" +
-                            "                <img style='width: 130px;height: 180px' align=\"center\"\n" +
-                            "                     src=\"" + book.picUrl + "\"/>\n" +
-                            "            </div>\n" +
-                            "        \n" +
-                            "        <div style=\"padding: 10px\" class=\"layui-col-xs6 layui-col-sm8 layui-col-md8 layui-col-lg8\">\n" +
-                            "                <div class=\"line-limit-length\" style=\";color: #000;font-size: 15px\">" + book.bookName + "</div>\n" +
-                            "            <div style=\";color: #4c6978;float: right;\"><i style=\"color: red\"></i></div>\n" +
-                            "                <div style=\"color: #a6a6a6;\" class=\"line-limit-length\">" + authorLabel + ": " + book.authorName + "</div>\n" +
-                            "            <div style=\"margin-top: 5px;color: #a6a6a6;\">" + categoryLabel + ": " + book.catName + "</div>\n" +
-                            "            <div style=\"margin-top: 5px;color: #a6a6a6;\">" + statusLabel + ": " + (book.bookStatus == 0 ? serializingLabel : completedLabel) + "</div>\n" +
-                            "            <div style=\"margin-top: 5px;color: #a6a6a6;\">" + updatedLabel + ": <i style='color: red'>" + book.lastIndexUpdateTime.substr(0, 11) + "</i>\n" +
-                            "            </div>\n" +
-                            "            <div style=\"margin-top: 5px;color: #a6a6a6;\">" + descriptionLabel + ": " + (book.bookDesc ? (book.bookDesc.length > 15 ? (book.bookDesc.substr(0, 15) + "...") : book.bookDesc) : '') + "</div>\n" +
-                            "\n" +
-                            "\n" +
-                            "        </div>\n" +
-                            "\n" +
-                            "    </div>");
-                    }
-                    $("#bookList").html(bookListHtml);
-
-
-                    $(".item").on('touchstart', function (e) {
-                        var element = $(this);
-                        // Xóa bộ hẹn giờ còn tồn tại.
-                        clearTimeout(timeout);
-                        isLongPress = false;
-
-                        // Lấy vị trí điểm chạm.
-                        var touch = e.originalEvent.touches[0];
-
-                        // Mở menu nhấn giữ sau 500 ms.
-                        timeout = setTimeout(function () {
-                            e.preventDefault();
-                            showTip(touch, element);
-                        }, 1000);
-                    }).on('touchend', function (e) {
-                        if (!isLongPress) {
-                            // Nếu không nhấn giữ, xử lý như một lần nhấn bình thường.
-                            clearTimeout(timeout);
-                        }
-                    }).on('touchmove', function () {
-                        clearTimeout(timeout);
-                        hideTip();
-                    }).on('contextmenu', function (e) {
-                        e.preventDefault();
-                    });
-
-                    $('#tipLayer').click(function () {
-                        // Xóa phần tử tương ứng khi xác nhận trong menu.
-                        removeFromBookShelf($(this).data('target').attr("id"));
-                        $(this).data('target').remove();
-                        hideTip();
-                    });
-
-
-                    layui.use('laypage', function () {
-                        var laypage = layui.laypage;
-
-                        // Khởi tạo phân trang Layui.
-                        laypage.render({
-                            elem: 'books' // ID phần tử, không thêm dấu #.
-                            , count: data.data.total // Tổng số bản ghi từ máy chủ.
-                            , curr: data.data.pageNum
-                            , limit: data.data.pageSize
-                            , jump: function (obj, first) {
-
-
-                                // obj chứa các tham số phân trang hiện tại.
-                                console.log(obj.curr); // Trang hiện tại.
-                                console.log(obj.limit); // Số bản ghi mỗi trang.
-
-
-                                // Không gọi lại trong lần khởi tạo đầu tiên.
-                                if (!first) {
-                                    search(obj.curr, obj.limit);
-                                } else {
-
-                                }
-                            }
-                        });
-                    });
-                } else {
-                    layer.alert(data.msg);
-                }
-
-            },
-            error: function () {
-                layer.alert(networkErrorText);
-            }
-        })
-
-    }
-
-    function showTip(touchEvent, element) {
-        isLongPress = true;
-        // Đặt vị trí menu theo điểm chạm.
-        $('#tipLayer')
-            .css({
-                top: touchEvent.pageY - 100, // Dịch menu lên trên điểm chạm.
-                left: touchEvent.pageX - ($('#tipLayer').outerWidth() / 2)
-            })
-            .data('target', element) // Lưu phần tử đích cho thao tác tiếp theo.
-            .show();
-    }
-
-    function hideTip() {
-        isLongPress = false;
-        $('#tipLayer').hide().removeData('target'); // Ẩn menu và xóa dữ liệu đích.
-    }
-
-
-    function searchByAllCondition(curr, limit, newKeyword) {
-        var toUrl = "/book/search?curr=" + curr + "&limit=" + limit;
-        var ids = $("#ids").val();
-        if (ids) {
-            toUrl += ("&historyBookIds=" + ids);
-        }
-        var token = $("#token").val();
-        if (token) {
-            toUrl += ("&token=" + token);
-        }
-        var keyword = $("#keyword").val();
-        if (newKeyword) {
-            toUrl += encodeURI("&keyword=" + newKeyword);
-        } else if (keyword) {
-            toUrl += encodeURI("&keyword=" + keyword);
-        }
-        var bookStatus = $("#bookStatus").val();
-        if (bookStatus) {
-            toUrl += ("&bookStatus=" + bookStatus);
-        }
-        var catId = $("#catId").val();
-        if (catId) {
-            toUrl += ("&catId=" + catId);
-        }
-
-        var sortBy = $("#sortBy").val();
-        if (sortBy) {
-            toUrl += ("&sortBy=" + sortBy);
-        }
-
-        var sort = $("#sort").val();
-        if (sort) {
-            toUrl += ("&sort=" + sort);
-        }
-
-        window.location.href = toUrl;
-    }
-
-    function searchBooks() {
-        var keywords = $("#title").val();
-        $("#keyword").val("");
-        searchByAllCondition(1, 20, keywords);
-    }
-
-    function read(bookId, contentId) {
-        if (isLongPress) {
-            return false;
-        }
-        location.href = '/book/' + bookId + "/" + contentId + ".html"
-        hideTip();
-    }
-
-</script>
-<script>
-
-
-    function removeFromBookShelf(bookId) {
-
-        $.ajax({
-            type: "delete",
-            url: "/user/removeFromBookShelf/" + bookId,
-            data: {},
-            dataType: "json",
-            success: function (data) {
-                if (data.code == 200) {
-                    $("#shelf" + bookId).remove();
-                }
-            }
-        });
-
-    }
-
-
-</script>
-
-
+<script src="/mobile/js/mobile-favorites-page.js" type="text/javascript"></script>
+</body>
 </html>

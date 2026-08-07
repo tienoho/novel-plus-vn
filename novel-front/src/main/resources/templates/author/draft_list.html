@@ -95,7 +95,7 @@
             rows += '<tr><td>' + escapeHtml(draft.indexName) + '</td>'
                 + '<td>' + escapeHtml(statusLabels[draft.status] || draft.status) + '</td>'
                 + '<td>' + escapeHtml(draft.updateTime ? new Date(draft.updateTime).toLocaleString('vi-VN') : '') + '</td>'
-                + '<td><a href="javascript:continueDraft(' + Number(draft.id) + ')">' + escapeHtml(continueText) + '</a></td></tr>';
+                + '<td><a href="#" data-csp-action="continue-draft" data-draft-id="' + Number(draft.id) + '">' + escapeHtml(continueText) + '</a></td></tr>';
         });
         $('#draftRows').html(rows);
     }).fail(function () { layer.alert(networkErrorText); });
