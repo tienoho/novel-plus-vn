@@ -1,0 +1,12 @@
+# Cấu hình website
+website:
+  # Tên website
+  name: Novel Plus
+  # Tên miền
+  domain: www.xxyopen.com
+  # Từ khóa SEO
+  keyword: ${website.name},truyện,đọc truyện,CMS truyện,nền tảng văn học
+  # Mô tả SEO
+  description: ${website.name} là nền tảng đọc và sáng tác truyện trên máy tính và thiết bị di động, hỗ trợ thành viên, tác giả, thanh toán, tin tức, báo cáo và thu thập nội dung.
+  # Tài khoản liên hệ QQ
+  qq:

@@ -1,0 +1,111 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="vi" xmlns="http://www.w3.org/1999/xhtml">
+<head th:replace="common/header :: common_head(~{::title},~{::meta},~{::link},~{})">
+    <title th:text="#{site.login}+' - '+${application.website.name}"></title>
+    <meta name="keywords" th:content="#{site.login}+','+#{user.center}+','+${application.website.name}" />
+    <meta name="description" th:content="#{site.login}+' - '+${application.website.name}" />
+    <link rel="stylesheet" href="/css/user.css" />
+</head>
+<body class="">
+
+    <link rel="stylesheet" href="/css/user.css" />
+</head>
+<body class="">
+
+<div th:replace="common/top :: top('')">
+</div>
+
+<div class="main box_center cf">
+    <div class="userBox cf">
+        <div class="user_l">
+            <form method="post" action="./login.html" id="form1">
+                <h1 class="sr-only" th:text="#{site.login}">Đăng nhập</h1>
+                <h3 th:text="#{site.login}+' '+${application.website.name}"></h3>
+                <ul class="log_list">
+                    <li><span id="LabErr"></span></li>
+                    <li><input name="txtUName" type="text" id="txtUName" th:placeholder="#{auth.phone}" th:aria-label="#{auth.phone}" autocomplete="username" spellcheck="false" class="s_input icon_name" /></li>
+                    <li><input name="txtPassword" type="password" id="txtPassword" th:placeholder="#{auth.password}" th:aria-label="#{auth.password}" autocomplete="current-password" class="s_input icon_key" /></li>
+                    <li class="autologin cf"><label class="fl"><input id="autoLogin" type="checkbox"/><em th:text="#{auth.autoLogin}">Tự động đăng nhập lần sau</em></label></li>
+                    <li><button type="submit" name="btnLogin" id="btnLogin" class="btn_red" th:text="#{site.login}">Đăng nhập</button></li>
+                </ul>
+            </form>
+        </div>
+        <div class="user_r">
+            <p class="tit" th:text="#{auth.noAccount}">Bạn chưa có tài khoản?</p>
+            <a href="/user/register.html" class="btn_ora_white" th:text="#{auth.registerNow}">Đăng ký ngay</a>
+                <div class="fast_tit">
+                    <p class="lines"></p>
+                    <span class="title">Phương thức đăng nhập khác</span>
+                </div>
+                <ul class="fast_list">
+                    <li class="login_wb"><a href="/"><img src="/images/login_weibo.png" alt="Đăng nhập Weibo" class="img" /><span>Đăng nhập Weibo</span></a></li>
+                    <li class="login_qq"><a href="/"><img src="/images/login_qq.png" alt="Đăng nhập QQ" class="img" /><span>Đăng nhập QQ</span></a></li>
+                    <li class="login_wx"><a href="/"><img src="/images/login_weixin.png" alt="Đăng nhập WeChat" class="img" /><span>Đăng nhập WeChat</span></a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="common/footer :: footer">
+</div>
+
+
+</body>
+<div th:replace="common/js :: js"></div>
+<script type="text/javascript" th:inline="javascript">
+    const loginMessages = {
+        phoneRequired: /*[[#{auth.phone.required}]]*/ 'Vui lòng nhập số điện thoại!',
+        phoneInvalid: /*[[#{auth.phone.invalid}]]*/ 'Số điện thoại không đúng định dạng!',
+        passwordRequired: /*[[#{auth.password.required}]]*/ 'Vui lòng nhập mật khẩu!',
+        networkError: /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng'
+    };
+    if(localStorage.getItem("autoLogin")==1){
+        $("#autoLogin").attr("checked",'true');
+    }else{
+        $("#autoLogin").removeAttr("checked");
+    }
+    $("#btnLogin").click(function () {
+        var username = $("#txtUName").val();
+        if(username.isBlank()){
+            $("#LabErr").text(loginMessages.phoneRequired);
+            return;
+        }
+        if(!username.isPhone()){
+            $("#LabErr").text(loginMessages.phoneInvalid);
+            return;
+        }
+        var password = $("#txtPassword").val();
+        if(password.isBlank()){
+            $("#LabErr").text(loginMessages.passwordRequired);
+            return;
+        }
+        $.ajax({
+            type: "POST",
+            url: "/user/login",
+            data: {"username": username, "password": password},
+            dataType: "json",
+            success: function (data) {
+                if (data.code == 200) {
+                    if($("#autoLogin").is(':checked')){
+                        localStorage.setItem("autoLogin","1");
+                    }else {
+                        localStorage.setItem("autoLogin","0");
+                    }
+                    var orginUrl = getSearchString("originUrl");
+                    window.location.href = orginUrl == undefined || orginUrl.isBlank() ? "/" : orginUrl;
+                } else {
+                    $("#LabErr").text(data.msg || "");
+                }
+
+            },
+            error: function () {
+                layer.alert(loginMessages.networkError);
+            }
+        })
+
+    })
+</script>
+</html>

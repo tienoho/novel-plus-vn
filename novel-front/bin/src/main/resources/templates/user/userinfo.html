@@ -1,0 +1,147 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="vi">
+<head th:replace="common/header :: common_head(~{::title},~{},~{::link},~{})">
+    <title th:text="#{user.center}+'_'+${application.website.name}"></title>
+    <link rel="stylesheet" href="/css/user.css"/>
+</head>
+<body class="">
+
+<div th:replace="common/top :: top('')">
+</div>
+<div class="main box_center cf">
+    <div class="userBox cf">
+        <div class="my_l">
+
+            <ul class="log_list">
+                <li><a class="link_1 on" href="/user/userinfo.html" th:text="#{user.center}">Tài khoản của tôi</a></li>
+                <li><a class="link_4" href="/user/quests.html" th:text="#{gamification.page.nav}">Hành trình đọc</a></li>
+                <li><a class="link_4" href="/user/reading_tickets.html" th:text="#{reader.ticket.page.nav}">Vé đọc</a></li>
+                <li><a class="link_4" href="/user/gift_codes.html" th:text="#{gift.page.nav}">Mã quà</a></li>
+                <li><a class="link_4" href="/user/favorites.html" th:text="#{user.bookshelf}">Tủ sách</a></li>
+                <li><a class="link_6" href="/user/comment.html" th:text="#{user.comments}">Bình luận của tôi</a></li>
+                <li><a class="link_7" href="/user/feedback_list.html" th:text="#{user.feedback}">Phản hồi của tôi</a></li>
+                <li><a class="link_8" href="/user/setup.html" th:text="#{user.settings}">Cài đặt tài khoản</a></li>
+            </ul>
+
+        </div>
+        <div class="my_r">
+            <div class="my_info cf">
+                <img id="imgLogo" class="user_big_head" src="/images/man.png"/>
+                <div class="my_info_txt">
+                    <p class="my_name" id="my_name">
+                    </p>
+                    <ul class="my_list">
+                        <li class="my_gold"><i th:text="#{payment.balance}+': '">Số dư: </i><em class="red" id="accountBalance">0</em> <span th:text="#{payment.currency}">Xu</span>
+                            <!--<em class="red">+</em><em class="red">0</em> phiếu ưu đãi--><a href="/pay/index.html"
+                                                                                     class="btn_link" th:text="#{user.rechargeNow}">Nạp Xu ngay</a></li>
+                        <li class="my_baonian"></li>
+
+                    </ul>
+                </div>
+            </div>
+            <div class="my_bookshelf">
+                <div class="title cf">
+                    <h4 class="fl">
+                        <span th:text="#{user.bookshelf}">Tủ sách</span></h4>
+                    <a href="/user/favorites.html" class="fr"><span th:text="#{user.allFavorites}">Tất cả truyện đã lưu</span> &gt;</a>
+                </div>
+                <div class="updateTable">
+                    <table cellpadding="0" cellspacing="0">
+                        <thead>
+                        <tr>
+                            <th class="style">
+                                <span th:text="#{book.category}">Danh mục truyện</span>
+                            </th>
+                            <th class="name">
+                                <span th:text="#{book.name}">Tên truyện</span>
+                            </th>
+                            <th class="chapter">
+                                <span th:text="#{book.latest}">Chương mới nhất</span>
+                            </th>
+                            <th class="time">
+                                <span th:text="#{reader.updated}">Cập nhật</span>
+                            </th>
+                            <th class="goread">
+                                <span th:text="#{user.bookmark}">Đánh dấu</span>
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody id="bookShelfList">
+
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="common/footer :: footer">
+</div>
+<div th:replace="common/js :: js"></div>
+<script type="text/javascript" src="/javascript/user.js"></script>
+<script type="text/javascript" th:inline="javascript">
+    const continueReadingText = /*[[#{user.continueReading}]]*/ 'Đọc tiếp';
+    const networkErrorText = /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng';
+    // Tải thông tin người dùng.
+    $.ajax({
+        type: "get",
+        url: "/user/userInfo",
+        data: {},
+        dataType: "json",
+        success: function (data) {
+            if (data.code == 200) {
+                if (data.data.userPhoto) {
+                    $("#imgLogo").attr("src", data.data.userPhoto);
+                }
+                if (data.data.nickName) {
+                    $("#my_name").text(data.data.nickName);
+                } else {
+                    $("#my_name").text(data.data.username);
+                }
+
+                $("#accountBalance").text(data.data.accountBalance);
+
+            } else if (data.code == 1001) {
+                // Phiên đăng nhập đã hết hạn.
+                location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
+
+            } else {
+                novelAlertText(data.msg);
+            }
+
+        },
+        error: function () {
+            layer.alert(networkErrorText);
+        }
+    })
+    // Tải danh sách truyện trong tủ sách.
+    $.ajax({
+        type: "get",
+        url: "/user/listBookShelfByPage",
+        data: {'limit': 2},
+        dataType: "json",
+        success: function (data) {
+            if (data.code == 200) {
+                var bookShelfList = data.data.list;
+                if (bookShelfList.length > 0) {
+                    novelRenderBookTable("bookShelfList", bookShelfList, {
+                        continueText: continueReadingText
+                    });
+                }
+
+            } else {
+                novelAlertText(data.msg);
+            }
+
+        },
+        error: function () {
+            layer.alert(networkErrorText);
+        }
+    })
+
+</script>
+</body>
+</html>

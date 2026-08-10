@@ -1,0 +1,342 @@
+.reading-ticket-shell {
+    color: #243447;
+}
+
+.reading-ticket-heading,
+.reading-ticket-card,
+.reading-ticket-section {
+    box-sizing: border-box;
+    margin-bottom: 18px;
+    border: 1px solid #dce5e1;
+    border-radius: 12px;
+    background: #fff;
+    padding: 22px;
+}
+
+.reading-ticket-heading h1,
+.reading-ticket-section h2 {
+    margin: 0 0 10px;
+}
+
+.reading-ticket-heading p,
+.reading-ticket-section p {
+    margin: 6px 0;
+}
+
+.reading-ticket-balance-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: linear-gradient(135deg, #f0fff6, #fff8e7);
+}
+
+.reading-ticket-balance {
+    color: #b45309;
+    font-size: 34px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.reading-ticket-current,
+.reading-ticket-plans,
+.reading-ticket-grants {
+    display: grid;
+    gap: 12px;
+}
+
+.reading-ticket-current span,
+.reading-ticket-grant span {
+    display: block;
+    margin-top: 5px;
+    color: #52606d;
+}
+
+.reading-ticket-plans {
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+.reading-ticket-plan,
+.reading-ticket-grant {
+    border: 1px solid #e4ebe7;
+    border-radius: 9px;
+    padding: 14px;
+    background: #fbfdfc;
+}
+
+.reading-ticket-plan h3 {
+    margin: 0 0 8px;
+}
+
+.reading-ticket-plan small,
+.reading-ticket-empty {
+    color: #667085;
+}
+
+.reading-ticket-renewal-controls {
+    display: grid;
+    gap: 10px;
+    margin-top: 14px;
+    border-top: 1px solid #dce5e1;
+    padding-top: 14px;
+}
+
+.reading-ticket-renewal-controls label {
+    display: grid;
+    gap: 6px;
+    color: #344054;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.reading-ticket-renewal-controls select {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 40px;
+    border: 1px solid #98a2b3;
+    border-radius: 6px;
+    background: #fff;
+    color: #243447;
+    font: inherit;
+    padding: 8px 10px;
+}
+
+.reading-ticket-renewal-controls select:disabled {
+    background: #f2f4f7;
+    color: #667085;
+    cursor: not-allowed;
+}
+
+.reading-ticket-renewal-controls .reading-ticket-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    cursor: pointer;
+}
+
+.reading-ticket-checkbox input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: #176b45;
+}
+
+.reading-ticket-current .reading-ticket-checkbox span {
+    display: inline;
+    margin-top: 0;
+    color: inherit;
+}
+
+.reading-ticket-help {
+    display: block;
+    margin-top: 8px;
+    line-height: 1.45;
+}
+
+.reading-ticket-mandate {
+    display: grid;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.reading-ticket-mandate button,
+.reading-ticket-current-actions button {
+    min-height: 40px;
+    border: 1px solid #176b45;
+    border-radius: 6px;
+    background: #fff;
+    color: #176b45;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 600;
+    padding: 8px 12px;
+    transition: background-color .2s ease, color .2s ease, transform .2s ease;
+}
+
+.reading-ticket-mandate button:hover,
+.reading-ticket-current-actions button:hover {
+    background: #eaf7f0;
+}
+
+.reading-ticket-mandate button:active,
+.reading-ticket-current-actions button:active {
+    transform: translateY(1px);
+}
+
+.reading-ticket-mandate button:disabled,
+.reading-ticket-current-actions button:disabled {
+    cursor: wait;
+    opacity: .65;
+}
+
+.reading-ticket-current-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.reading-ticket-current-actions button {
+    white-space: nowrap;
+}
+
+.reading-ticket-current-actions .reading-ticket-danger {
+    border-color: #b42318;
+    color: #b42318;
+}
+
+.reading-ticket-current-actions .reading-ticket-danger:hover {
+    background: #fef3f2;
+}
+
+.reading-ticket-success {
+    color: #176b45 !important;
+}
+
+.reading-ticket-warning {
+    color: #8a4b08 !important;
+    line-height: 1.45;
+}
+
+.reading-ticket-plan-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.reading-ticket-plan-actions button {
+    min-height: 38px;
+    border: 0;
+    border-radius: 6px;
+    background: #176b45;
+    color: #fff;
+    cursor: pointer;
+    font: inherit;
+    padding: 8px 12px;
+}
+
+.reading-ticket-plan-actions button:disabled {
+    cursor: wait;
+    opacity: .65;
+}
+
+.reading-ticket-checkout-qr img {
+    display: block;
+    width: min(280px, 100%);
+    height: auto;
+    margin: 12px 0;
+}
+
+.reading-ticket-checkout-qr code {
+    display: block;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.reading-ticket-status {
+    margin: 10px 0 0;
+    color: #176b45;
+}
+
+.reading-ticket-status.is-error {
+    color: #b42318;
+}
+
+.reading-ticket-unlock {
+    box-sizing: border-box;
+    margin-top: 14px;
+    border-top: 1px solid #e4e7ec;
+    padding-top: 14px;
+    font-size: 15px;
+}
+
+.reading-ticket-unlock button {
+    min-height: 40px;
+    margin-top: 8px;
+    border: 0;
+    border-radius: 6px;
+    background: #b45309;
+    color: #fff;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    padding: 9px 16px;
+}
+
+.reading-ticket-unlock button:disabled {
+    cursor: not-allowed;
+    opacity: .65;
+}
+
+.reading-ticket-unlock button:focus-visible,
+.reading-ticket-mobile-header a:focus-visible,
+.reading-ticket-plan-actions button:focus-visible,
+.reading-ticket-mandate button:focus-visible,
+.reading-ticket-current-actions button:focus-visible,
+.reading-ticket-renewal-controls input:focus-visible,
+.reading-ticket-renewal-controls select:focus-visible {
+    outline: 3px solid #ffbf47;
+    outline-offset: 3px;
+}
+
+.reading-ticket-mobile-body {
+    margin: 0;
+    background: #f5f7f6;
+}
+
+.reading-ticket-mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 50px;
+    background: #159957;
+    color: #fff;
+    padding: 0 14px;
+}
+
+.reading-ticket-mobile-header a {
+    color: #fff;
+    font-size: 24px;
+    text-decoration: none;
+}
+
+.reading-ticket-shell-mobile {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 14px;
+}
+
+@media (max-width: 640px) {
+    .reading-ticket-heading,
+    .reading-ticket-card,
+    .reading-ticket-section {
+        padding: 16px;
+    }
+
+    .reading-ticket-balance-card {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .reading-ticket-balance {
+        font-size: 30px;
+    }
+
+    .reading-ticket-current-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .reading-ticket-current-actions button {
+        width: 100%;
+        white-space: normal;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .reading-ticket-mandate button,
+    .reading-ticket-current-actions button {
+        transition: none;
+    }
+}

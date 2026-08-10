@@ -1,0 +1,60 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="vi">
+<head th:replace="common/header :: common_head(~{::title},~{},~{::link},~{})">
+    <title th:text="#{user.settings}+'_'+${application.website.name}"></title>
+    <link rel="stylesheet" href="/css/user.css"/>
+</head>
+<body id="userSettingsPage" data-settings-mode="setup"
+      th:attr="data-edit-text=#{user.edit},
+               data-male-text=#{user.gender.male},
+               data-female-text=#{user.gender.female},
+               data-select-text=#{user.gender.select},
+               data-network-error=#{auth.networkError},
+               data-select-upload=#{user.avatar.select}">
+
+<div th:replace="common/top :: top('')"></div>
+<main class="main box_center cf">
+    <div class="userBox cf">
+        <div class="my_l">
+            <ul class="log_list">
+                <li><a class="link_1" href="/user/userinfo.html" th:text="#{user.center}">Tài khoản của tôi</a></li>
+                <li><a class="link_4" href="/user/favorites.html" th:text="#{user.bookshelf}">Tủ sách</a></li>
+                <li><a class="link_6" href="/user/comment.html" th:text="#{user.comments}">Bình luận của tôi</a></li>
+                <li><a class="link_7" href="/user/feedback_list.html" th:text="#{user.feedback}">Phản hồi của tôi</a></li>
+                <li><a class="link_8 on" href="/user/setup.html" th:text="#{user.settings}">Cài đặt tài khoản</a></li>
+            </ul>
+        </div>
+        <div class="my_r">
+            <div class="my_info cf">
+                <div class="my_info_txt">
+                    <ul class="mytab_list">
+                        <li>
+                            <i class="tit" th:text="#{user.avatar}">Ảnh đại diện</i>
+                            <a href="#avatar-upload" style="position: relative">
+                                <img id="imgLogo" class="user_img" th:alt="#{user.avatar}" src="/images/man.png"/>
+                                <input class="opacity" type="file" id="file0" name="file"
+                                       accept=".jpg,.jpeg,.gif,.png,image/jpeg,image/gif,image/png"
+                                       th:title="#{user.avatar.upload}"
+                                       style="z-index:100;cursor:pointer;left:0;top:-25px;width:60px;height:80px;opacity:0;position:absolute"/>
+                            </a>
+                        </li>
+                        <li><i class="tit" th:text="#{user.nickname}">Biệt danh</i><a href="/user/set_name.html" id="my_name"></a></li>
+                        <li style="display:none"><i class="tit" th:text="#{user.email}">Email</i><span></span></li>
+                        <li><i class="tit" th:text="#{user.gender}">Giới tính</i><a href="/user/set_sex.html" id="my_sex"></a></li>
+                        <li><i class="tit" th:text="#{user.password}">Mật khẩu</i><a href="/user/set_password.html" th:text="#{user.password.change}">Đổi mật khẩu</a></li>
+                        <li><i class="tit" th:text="#{user.currentStatus}">Trạng thái hiện tại</i><a href="#logout" data-user-action="logout" th:text="#{site.logout}">Đăng xuất</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div th:replace="common/footer :: footer"></div>
+<div th:replace="common/js :: js"></div>
+<script src="/javascript/user.js" type="text/javascript"></script>
+<script src="/javascript/ajaxfileupload.js" type="text/javascript"></script>
+<script src="/javascript/user-settings-page.js" type="text/javascript"></script>
+</body>
+</html>

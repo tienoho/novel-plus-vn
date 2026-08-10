@@ -1,0 +1,1928 @@
+:root {
+    --bg-body: #f8fafc;
+    --bg-surface: #ffffff;
+    --bg-glass: rgba(255, 255, 255, 0.75);
+    --border-glass: rgba(226, 232, 240, 0.8);
+    --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+    --text-main: #0f172a;
+    --text-sub: #64748b;
+    --accent-emerald: #3eaf7c;
+    --accent-glow: rgba(62, 175, 124, 0.25);
+    --card-radius: 16px;
+}
+
+[data-theme="dark"] {
+    --bg-body: #0b0f19;
+    --bg-surface: #151c2c;
+    --bg-glass: rgba(21, 28, 44, 0.8);
+    --border-glass: rgba(255, 255, 255, 0.1);
+    --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    --text-main: #f1f5f9;
+    --text-sub: #94a3b8;
+    --accent-emerald: #10b981;
+    --accent-glow: rgba(16, 185, 129, 0.35);
+}
+
+body {
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+[data-theme="dark"] .header,
+[data-theme="dark"] .topMain,
+[data-theme="dark"] .mainNav,
+[data-theme="dark"] .rightBox,
+[data-theme="dark"] .leftBox,
+[data-theme="dark"] .userBox,
+[data-theme="dark"] .wrap_bg,
+[data-theme="dark"] .channelWrap,
+[data-theme="dark"] .footer,
+[data-theme="dark"] .hot_articles,
+[data-theme="dark"] .updateTable table,
+[data-theme="dark"] .friend_link,
+[data-theme="dark"] .my_l,
+[data-theme="dark"] .my_r,
+[data-theme="dark"] .payBox {
+    background-color: var(--bg-surface) !important;
+    color: var(--text-main) !important;
+    border-color: var(--border-glass) !important;
+}
+
+[data-theme="dark"] a,
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] p,
+[data-theme="dark"] span,
+[data-theme="dark"] td,
+[data-theme="dark"] th {
+    color: var(--text-main);
+}
+
+[data-theme="dark"] .black9,
+[data-theme="dark"] .intro_txt,
+[data-theme="dark"] .author,
+[data-theme="dark"] .time {
+    color: var(--text-sub);
+}
+
+.glass-card {
+    background: var(--bg-glass);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-glass);
+    box-shadow: var(--shadow-glass);
+    border-radius: var(--card-radius);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px var(--accent-glow);
+}
+
+.theme-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-glass);
+    color: var(--text-main);
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    font-size: 16px;
+    padding: 0;
+    margin-left: 12px;
+}
+
+.theme-toggle-btn:hover {
+    transform: scale(1.1);
+}
+
+a img {
+    border: none
+}
+
+/* Accessibility Screen Reader Utility */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+.sr-only-focusable:active,
+.sr-only-focusable:focus {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 99999;
+    width: auto;
+    height: auto;
+    padding: 8px 16px;
+    background: #3eaf7c;
+    color: #fff;
+    border-radius: 4px;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+a {
+    outline: none;
+    color: #333;
+    text-decoration: none
+}
+
+a:hover, .topBar a:hover, .red, .record_list li:hover .read_link a {
+    color: #3eaf7c
+}
+
+.red1 {
+    color: #ff4040
+}
+
+.unlink {
+    text-decoration: underline
+}
+
+.blue {
+    color: #5fc3f3
+}
+
+.green {
+    color: #360
+}
+
+.black {
+    color: #000
+}
+
+.black3 {
+    color: #333
+}
+
+.black6 {
+    color: #666
+}
+
+.black9 {
+    color: #999
+}
+
+.ccc {
+    color: #ccc
+}
+
+.orange {
+    color: #f60
+}
+
+.font12 {
+    font-size: 12px !important
+}
+
+.font14 {
+    font-size: 14px !important
+}
+
+.font16 {
+    font-size: 16px !important
+}
+
+.font18 {
+    font-size: 18px !important
+}
+
+.font20 {
+    font-size: 20px !important
+}
+
+.font26 {
+    font-size: 26px !important
+}
+
+.ellipsis {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    word-break: keep-all
+}
+
+textarea {
+    resize: none;
+    outline: none;
+    border: 1px solid #CCC;
+    font: 12px/1.8 "microsoft yahei", Arial;
+    padding-left: 5px
+}
+
+input {
+    outline: none;
+    border: none; /* padding-left: 5px; font-size: 13px;*/
+    font-family: "microsoft yahei", Arial;
+    *background: none
+}
+
+i, em, cite {
+    font-style: normal
+}
+
+.layui-inline, input, label {
+    vertical-align: middle
+}
+
+button, input, optgroup, select, textarea {
+    color: inherit;
+    font: inherit;
+    margin: 0;
+    outline: 0
+}
+
+button, select {
+    text-transform: none
+}
+
+/*select { -webkit-appearance: none; border: none }*/
+input {
+    line-height: normal
+}
+
+input[type=checkbox], input[type=radio] {
+    box-sizing: border-box;
+    padding: 0
+}
+
+input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button {
+    height: auto
+}
+
+input[type=search] {
+    -webkit-appearance: textfield;
+    -moz-box-sizing: content-box;
+    -webkit-box-sizing: content-box;
+    box-sizing: content-box
+}
+
+input[type=search]::-webkit-search-cancel-button, input[type=search]::-webkit-search-decoration {
+    -webkit-appearance: none
+}
+
+input[type="submit"], input[type="reset"], input[type="button"], button {
+    -webkit-appearance: none
+}
+
+:-moz-placeholder {
+    color: #999
+}
+
+::-moz-placeholder {
+    color: #999
+}
+
+input:-ms-input-placeholder, textarea:-ms-input-placeholder {
+    color: #999
+}
+
+input::-webkit-input-placeholder, textarea::-webkit-input-placeholder {
+    color: #999
+}
+
+.cf {
+    zoom: 1
+}
+
+.cf:before, .cf:after {
+    content: "";
+    display: table;
+    display: block;
+    font-size: 0;
+    height: 0;
+    line-height: 0;
+    clear: both;
+    visibility: hidden
+}
+
+.cf:after {
+    clear: both
+}
+
+.clear {
+    clear: both
+}
+
+.tl {
+    text-align: left
+}
+
+.tc {
+    text-align: center
+}
+
+.tr {
+    text-align: right
+}
+
+.fl {
+    float: left
+}
+
+.fr {
+    float: right
+}
+
+.block {
+    display: block
+}
+
+.none, .hidden {
+    display: none
+}
+
+/*base end*/
+.channelWrap {
+    background: #fff;
+    border-radius: 6px;
+    padding: 20px;
+    margin-bottom: 20px
+}
+
+.channelWrap.channelBanner {
+    padding-bottom: 14px
+}
+
+.wrap_left {
+    width: 750px
+}
+
+.wrap_right {
+    width: 250px
+}
+
+.wrap_inner {
+    padding: 20px;
+    border-radius: 6px;
+    background: #fff;
+}
+
+.wrap_bg {
+    border-radius: 6px;
+    background: #fff;
+}
+
+.pad20 {
+    padding: 20px
+}
+
+.pad20_nobt {
+    padding: 20px 20px 0
+}
+
+.topBar {
+    width: 100%;
+    background: #fbfaf8;
+    border-bottom: 1px solid #eae6e2;
+    height: 35px;
+    line-height: 35px
+}
+
+.box_center {
+    width: 1020px;
+    margin: 0 auto
+}
+
+.top_l {
+    float: left
+}
+
+.top_r {
+    float: right
+}
+
+.topBar .line {
+    display: inline-block;
+    padding: 0 12px;
+    color: #e5d9da
+}
+
+.topBar a {
+    display: inline-block;
+    color: #8C8C8C
+}
+
+.topBar a.on {
+    color: #333
+}
+
+.topMain {
+    height: 92px;
+    background: #fff;
+    overflow: hidden
+}
+
+.logo {
+    width: 160px;
+    float: left;
+    padding: 23px 130px 0 0;
+    display: block
+}
+
+.logo img {
+    width: auto;
+    height: 48px
+}
+
+.searchBar {
+    width: 342px;
+    margin-top: 27px;
+    overflow: hidden
+}
+
+.searchBar .search /*, .searchBar .hotword*/
+{
+    width: 342px;
+    overflow: hidden
+}
+
+.searchBar .s_int {
+    width: 250px;
+    padding: 0 14px 0 18px;
+    height: 36px;
+    line-height: 36px \9;
+    vertical-align: middle;
+    border: 1px solid #3eaf7c;
+    border-right: none;
+    color: #333;
+    float: left;
+    border-radius: 20px 0 0 20px;
+    font-size: 14px; /*background: #fff;*/
+    background: 0 0
+}
+
+/*.searchBar .s_btn { width: 78px; height: 38px; line-height: 38px; background: #f65167; color: #fff; font-size: 16px; text-align: center; float: left; cursor: pointer; padding: 0 }
+.searchBar .s_btn:hover { background:#E23249 }*/
+.searchBar .search_btn {
+    float: left;
+    width: 58px;
+    height: 38px;
+    text-align: center;
+    border-radius: 0 20px 20px 0;
+    background-color: #3eaf7c;
+    cursor: pointer;
+    border: none;
+    padding: 0;
+    outline: none;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.searchBar .search_btn:focus-visible {
+    box-shadow: 0 0 0 3px rgba(62, 175, 124, 0.4);
+}
+
+.searchBar .search_btn .icon {
+    width: 18px;
+    height: 18px;
+    display: block;
+    margin: 9px auto 0;
+    background: url(../images/search.png) no-repeat;
+    background-size: cover;
+    filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='/images/search.png', sizingMethod='scale');
+}
+
+/*.hotword { padding-top: 3px }
+.hotword a, .hotword span { color: #999; margin: 0 6px 0 5px }
+.hotword a:hover { color: #666 }*/
+.bookShelf {
+    margin-top: 27px;
+    padding-left: 20px;
+    overflow: hidden
+}
+
+.bookShelf .sj_link {
+    height: 38px;
+    line-height: 38px;
+    padding-left: 30px;
+    font-size: 15px;
+    color: #404040;
+    background: url(../images/icon_sj.png) no-repeat 6px 50%;
+    float: left
+}
+
+.bookShelf .user_link {
+    height: 38px;
+    line-height: 38px;
+    padding-left: 20px;
+    font-size: 15px;
+    color: #404040;
+    float: right
+}
+
+.bookShelf .user_head {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    float: left;
+    margin: 6px 5px 0 0
+}
+
+.bookShelf .user_name {
+    max-width: 100px;
+    display: inline-block
+}
+
+.bookShelf .line {
+    float: left;
+    color: #ccc
+}
+
+/*.bookShelf img { position: absolute; top: 17px; left: 17px; z-index: 10 }*/
+.mainNav {
+    width: 100%;
+    height: 48px;
+    background: #3eaf7c;
+    margin-bottom: 20px
+}
+
+.mainNav .nav li {
+    float: left
+}
+
+.mainNav .nav li a {
+    float: left;
+    height: 44px;
+    line-height: 48px;
+    color: #fff;
+    font-size: 16px;
+    margin: 0 34px;
+    border-bottom: 2px solid #3eaf7c;
+    transition: color .3s, background-color .3s, border .3s
+}
+
+.mainNav .nav li.on a, .mainNav .nav li a:hover {
+    border-bottom: 2px solid rgba(255, 255, 255, .8)
+}
+
+.footer {
+    padding: 0 0 20px; /*margin-top: 20px; background: #fbfaf8; border-top: 1px solid #e0e0e0; */
+    text-align: center;
+    font-size: 12px
+}
+
+.copyright ul li {
+    color: #999;
+    line-height: 26px
+}
+
+.copyright .menu {
+    padding: 2px 0 6px;
+    font-size: 12px
+}
+
+.copyright .line {
+    display: inline-block;
+    padding: 0 12px;
+    color: #e5d9da
+}
+
+.copyright p {
+    margin-top: 10px;
+    color: #999
+}
+
+.code_bar img {
+    margin-left: 66px
+}
+
+.rBar {
+    float: right;
+    width: 268px
+}
+
+.btn_gray, .btn_red, .btn_ora, .btn_ora_white, .btn_red1 {
+    border-radius: 20px;
+    font-size: 15px;
+    display: inline-block;
+    text-align: center;
+    cursor: pointer; /*padding: 0 34px; height: 34px; line-height: 34px;*/
+    padding: 11px 36px;
+    line-height: 1;
+}
+
+.btn_gray {
+    border: 1px solid #dedede;
+    background: #fafafa;
+}
+
+.btn_red, .btn_ora {
+    border: 1px solid #3eaf7c;
+    background: #3eaf7c;
+    color: #fff
+}
+
+.btn_red1 {
+    border: 1px solid #ff4040;
+    background: #ff4040;
+    color: #fff
+}
+
+.btn_ora_white {
+    border: 1px solid #3eaf7c;
+    color: #3eaf7c
+}
+
+.btn_ora_white:hover {
+    background: #fefaf6
+}
+
+.btn_link {
+    padding: 2px 6px;
+    background: #3eaf7c;
+    color: #fff;
+    border-radius: 2px
+}
+
+.btn_gray:hover {
+    background: #f0f0f0;
+    color: #333
+}
+
+.btn_ora:hover, .btn_red:hover, .btn_link:hover {
+    background: #3eaf7c;
+    color: #fff
+}
+
+.btn_red1:hover {
+    background: #fc2525;
+    color: #fff
+}
+
+.btn_gray:focus-visible, .btn_red:focus-visible, .btn_ora:focus-visible, .btn_ora_white:focus-visible, .btn_red1:focus-visible, .btn_link:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(62, 175, 124, 0.4);
+}
+
+.pay_Checkout .btn_red, .btn_big {
+    font-size: 16px;
+    padding: 15px 0;
+    border-radius: 4px;
+    width: 196px;
+}
+
+i.vip {
+    width: 26px;
+    height: 14px;
+    text-align: center;
+    line-height: 14px;
+    font-size: 11px;
+    color: #fff;
+    background: #fe8034;
+    border-radius: 2px;
+    margin: 13px 0 0 3px;
+    display: inline-block;
+    transform: scale(0.88);
+}
+
+i.vip_b {
+    width: 36px;
+    height: 22px;
+    text-align: center;
+    line-height: 22px;
+    font-size: 15px;
+    color: #fff;
+    background: #3eaf7c;
+    border-radius: 4px;
+    margin-left: 5px;
+    display: inline-block;
+    vertical-align: 3px
+}
+
+.pageBox {
+    text-align: center;
+    padding: 20px 0
+}
+
+.pageBox a, .pageBox span {
+    display: inline-block;
+    color: #999;
+    padding: 6px 10px;
+    margin: 0 5px;
+    border-radius: 4px;
+    font-size: 14px;
+    line-height: 1
+}
+
+.pageBox .current, .pageBox a:hover {
+    background: #3eaf7c;
+    color: #fff
+}
+
+.top_nearread {
+    display: inline-block;
+    position: relative;
+    margin-right: 10px;
+    float: left
+}
+
+.top_nearread .nearread {
+    padding: 0 9px
+}
+
+.top_nearread .nearread.on {
+    border-left: 1px solid #d9d9d9;
+    border-right: 1px solid #d9d9d9;
+    background: #FFF;
+    padding: 0 8px;
+    height: 36px;
+    position: relative;
+    z-index: 8
+}
+
+.icon_down {
+    display: inline-block;
+    vertical-align: middle;
+    margin: 2px 0 0 5px;
+    width: 0px;
+    height: 0px;
+    overflow: hidden;
+    border-width: 4px;
+    border-style: solid dashed dashed;
+    border-color: #7f7f7f transparent transparent;
+}
+
+.book_record {
+    width: 382px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 9
+}
+
+.record_box {
+    width: 380px;
+    background: #fff;
+    margin-top: 35px;
+    border: 1px solid #d9d9d9
+}
+
+.book_record .sp {
+    width: 77px;
+    height: 6px;
+    background: #fff;
+    position: absolute;
+    top: 32px;
+    right: 1px
+}
+
+.record_title {
+    padding: 14px 10px
+}
+
+.record_title a {
+    border: 1px solid #dedede;
+    background: #fafafa;
+    border-radius: 2px;
+    font-size: 12px;
+    padding: 6px 12px;
+    line-height: 1;
+    margin-right: 14px
+}
+
+.record_title a.on {
+    border: 1px solid #f65167;
+    background: #f65167;
+    color: #fff
+}
+
+.record_box .all {
+    display: block;
+    height: 28px;
+    line-height: 28px;
+    text-align: center;
+    background: #f6f6f6
+}
+
+.record_list ul {
+    margin-bottom: 10px
+}
+
+.record_list li {
+    clear: both;
+    padding: 10px;
+    line-height: 1;
+    overflow: hidden
+}
+
+.record_list li:hover {
+    background: #f6f6f6
+}
+
+.record_list li .cover {
+    width: 50px;
+    height: 63px;
+    background: #f6f6f6
+}
+
+.record_list li .cover img {
+    width: 100%;
+    height: 100%;
+}
+
+.record_list a {
+    display: inline;
+    color: #333
+}
+
+.record_list .book_intro {
+    width: 300px;
+    height: 65px;
+    padding-left: 10px;
+    position: relative;
+}
+
+.record_list .book_intro p {
+    height: 20px;
+    line-height: 20px;
+    overflow: hidden;
+    color: #999;
+}
+
+.record_list .book_intro .p1 {
+    font-size: 14px;
+}
+
+.record_list .book_intro .p2 {
+    margin: 2px 0;
+    white-space: nowrap;
+    text-overflow: ellipsis
+}
+
+.record_list .book_intro .p3 {
+}
+
+.record_list .book_intro i.vip {
+    margin: 0 0 0 3px
+}
+
+.record_list .read_link a {
+    color: #fff
+}
+
+.manBody {
+}
+
+.manBody .mainNav {
+    background: #3e3d43
+}
+
+.manBody .searchBar .s_int {
+    border: 1px solid #878689;
+    border-right: none;
+    background-position: 8px -22px
+}
+
+.manBody .mainNav .nav li.on a, .manBody .mainNav .nav li a:hover {
+    background: #313035
+}
+
+.nav_sub {
+    margin-bottom: 16px
+}
+
+.nav_sub a {
+    padding: 0 6px
+}
+
+.copyright .menu a {
+    color: #666;
+    font-size: 12px
+}
+
+.copyright .menu a:hover, .bookShelf .sj_link:hover {
+    color: #3eaf7c
+}
+
+.rightList .more, .more_bar {
+    margin: 1px 0;
+    height: 34px;
+    line-height: 34px;
+    border-radius: 1px;
+    background-color: #f7f7f7;
+    text-align: center
+}
+
+.rightList .more a, .more_bar a {
+    display: block;
+    color: #666
+}
+
+.header, .footer {
+    min-width: 1020px
+}
+
+/*base*/
+.noborder {
+    border: 0 !important
+}
+
+.nomargin {
+    margin: 0 !important
+}
+
+.ml {
+    margin-left: 12px
+}
+
+.mr {
+    margin-right: 12px
+}
+
+.ml5 {
+    margin-left: 5px
+}
+
+.ml10 {
+    margin-left: 10px
+}
+
+.ml15 {
+    margin-left: 15px
+}
+
+.ml20 {
+    margin-left: 20px
+}
+
+.mr5 {
+    margin-right: 5px
+}
+
+.mr10 {
+    margin-right: 10px
+}
+
+.mr15 {
+    margin-right: 15px
+}
+
+.mr20 {
+    margin-right: 20px
+}
+
+.mt5 {
+    margin-top: 5px
+}
+
+.mt10 {
+    margin-top: 10px
+}
+
+.mt15 {
+    margin-top: 15px
+}
+
+.mt20 {
+    margin-top: 20px
+}
+
+.mb5 {
+    margin-bottom: 5px
+}
+
+.mb10 {
+    margin-bottom: 10px
+}
+
+.mb15 {
+    margin-bottom: 15px
+}
+
+.mb20 {
+    margin-bottom: 20px
+}
+
+.mb50 {
+    margin-bottom: 50px
+}
+
+.pointer {
+    cursor: pointer
+}
+
+.notindent {
+    text-indent: inherit !important
+}
+
+.vm {
+    vertical-align: middle !important
+}
+
+.border_t {
+    border-top: 1px solid #eee
+}
+
+.border_b {
+    border-bottom: 1px solid #eee
+}
+
+.border_l {
+    border-left: 1px solid #eee
+}
+
+.border_r {
+    border-right: 1px solid #eee
+}
+
+.layui-laypage-curr {
+    background: #3eaf7c;
+}
+
+.layui-laypage-curr em {
+    color: #fff;
+}
+
+.layui-disabled, .layui-disabled:hover {
+    color: #d2d2d2 !important;
+    cursor: not-allowed !important
+}
+
+#noFeedbackNote {
+    line-height: 400px;
+    text-align: center;
+    border-top: 1px solid #eee;
+}
+
+#txtDescription {
+    /*width: 900px;*/
+    height: 288px;
+    margin: 20px auto 20px;
+    padding: 10px;
+
+
+    /* Kiểu mới */
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #eee;
+    font-size: 14px;
+}
+
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #eee;
+    font-size: 14px;
+}
+
+.userBox {
+    margin: 0 auto
+}
+
+
+.layui-elem-quote {
+    margin-bottom: 10px;
+    padding: 15px;
+    line-height: 1.8;
+    border-left: 5px solid #16b777;
+    border-radius: 0 2px 2px 0;
+    background-color: #fafafa;
+}
+
+/* ==========================================================================
+   Design Tokens & Modern Utility Framework (Novel-Plus 2026 UI Upgrade)
+   ========================================================================== */
+:root {
+    --np-primary: #159957;
+    --np-primary-hover: #117a45;
+    --np-primary-light: rgba(21, 153, 87, 0.12);
+    --np-primary-glow: rgba(21, 153, 87, 0.25);
+
+    --np-bg-body: #f8fafc;
+    --np-bg-surface: #ffffff;
+    --np-bg-glass: rgba(255, 255, 255, 0.88);
+    --np-border: #e2e8f0;
+    --np-border-light: #f1f5f9;
+
+    --np-text-main: #0f172a;
+    --np-text-sub: #475569;
+    --np-text-muted: #94a3b8;
+
+    /* Rank Badges Gradients */
+    --np-gold-grad: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    --np-silver-grad: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+    --np-bronze-grad: linear-gradient(135deg, #b45309 0%, #78350f 100%);
+
+    /* Responsive Container & Elevation */
+    --np-max-width: 1440px;
+    --np-radius-sm: 8px;
+    --np-radius-md: 12px;
+    --np-radius-lg: 16px;
+    --np-radius-full: 9999px;
+
+    --np-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+    --np-shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.06);
+    --np-shadow-hover: 0 12px 30px -4px rgba(15, 23, 42, 0.12);
+}
+
+/* Full Desktop Responsive Container */
+.np-container {
+    width: 100%;
+    max-width: var(--np-max-width);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+    .np-container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
+
+/* Re-define box_center to support wide container while keeping compatibility */
+.box_center {
+    width: 100% !important;
+    max-width: var(--np-max-width) !important;
+    margin: 0 auto !important;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+    .box_center {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
+
+/* Flex & Grid Utilities */
+.d-flex { display: flex !important; }
+.flex-column { flex-direction: column !important; }
+.align-items-center { align-items: center !important; }
+.justify-content-between { justify-content: space-between !important; }
+.justify-content-center { justify-content: center !important; }
+.flex-wrap { flex-wrap: wrap !important; }
+.flex-1 { flex: 1 1 0% !important; }
+.gap-1 { gap: 0.25rem !important; }
+.gap-2 { gap: 0.5rem !important; }
+.gap-3 { gap: 1rem !important; }
+.gap-4 { gap: 1.5rem !important; }
+
+/* Badge Chips */
+.np-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
+    border-radius: var(--np-radius-full);
+    background: var(--np-primary-light);
+    color: var(--np-primary);
+}
+
+.np-badge-gold {
+    background: var(--np-gold-grad);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.35);
+}
+
+.np-badge-silver {
+    background: var(--np-silver-grad);
+    color: #ffffff;
+}
+
+.np-badge-bronze {
+    background: var(--np-bronze-grad);
+    color: #ffffff;
+}
+
+/* Glassmorphism Surface */
+.np-glass {
+    background: var(--np-bg-glass);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+/* ==========================================================================
+   Group 5: Mobile Web & PWA Bottom Navigation Dock
+   ========================================================================== */
+.np-mobile-nav {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .np-mobile-nav {
+        display: flex !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        height: 60px !important;
+        z-index: 1000 !important;
+        background: rgba(255, 255, 255, 0.92) !important;
+        backdrop-filter: blur(16px) !important;
+        -webkit-backdrop-filter: blur(16px) !important;
+        border-top: 1px solid var(--np-border-light) !important;
+        box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.08) !important;
+        align-items: center;
+        justify-content: space-around;
+        padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+
+    .np-mobile-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.2rem;
+        color: var(--np-text-sub);
+        font-size: 0.6875rem;
+        font-weight: 600;
+        text-decoration: none !important;
+        transition: all 0.15s ease;
+        flex: 1;
+    }
+
+    .np-mobile-nav-item:active {
+        transform: scale(0.92);
+        color: var(--np-primary);
+    }
+
+    .np-mobile-nav-item.on {
+        color: var(--np-primary);
+    }
+
+    /* Padding bottom offset to prevent footer content overlap */
+    body {
+        padding-bottom: 64px !important;
+    }
+}
+
+/* ==========================================================================
+   Micro-Interactions Suite (Novel-Plus Premium UX Touch)
+   ========================================================================== */
+
+/* 1. Global Button & Card Active Press Dynamics */
+button:active, .btn_red:active, .btn_ora:active, .btn_ora_white:active,
+.btn_link:active, .np-badge:active, .so_tag a:active {
+    transform: scale(0.96) !important;
+    transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* 2. Form Input Focus Ring Glow */
+input[type="text"], input[type="password"], input[type="search"], textarea, .s_input {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+input[type="text"]:focus, input[type="password"]:focus, input[type="search"]:focus, textarea:focus, .s_input:focus {
+    border-color: var(--np-primary) !important;
+    box-shadow: 0 0 0 3px rgba(21, 153, 87, 0.18) !important;
+    outline: none !important;
+}
+
+/* 3. Smooth Skeleton Shimmer Animation */
+@keyframes np-shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.np-skeleton {
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 37%, #f1f5f9 63%);
+    background-size: 200% 100%;
+    animation: np-shimmer 1.4s ease infinite;
+    border-radius: var(--np-radius-md);
+}
+
+/* 4. Link & Menu Item Hover Micro-Transitions */
+a {
+    transition: color 0.15s ease, opacity 0.15s ease, transform 0.15s ease;
+}
+
+/* Smooth Image Hover Scale */
+.cover img, .book_cover img {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.cover:hover img, .book_cover:hover img {
+    transform: translateY(-4px) scale(1.02) !important;
+    box-shadow: 0 12px 24px -6px rgba(15, 23, 42, 0.16) !important;
+}
+
+/* 5. Smooth Global Scrolling & Custom Overlay Scrollbars */
+html {
+    scroll-behavior: smooth;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--np-bg-body);
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* 6. Interactive Table Row Micro-Highlighting */
+.updateTable tbody tr {
+    transition: background-color 0.15s ease !important;
+}
+
+.updateTable tbody tr:hover {
+    background-color: rgba(21, 153, 87, 0.04) !important;
+}
+
+/* ==========================================================================
+   Homepage Expansion Styles (Genre Chips, Continue Reading, Bento Grid)
+   ========================================================================== */
+.quick-genre-chips {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 12px 4px;
+    margin-bottom: 16px;
+    scrollbar-width: none;
+}
+.quick-genre-chips::-webkit-scrollbar {
+    display: none;
+}
+.chip-item {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 16px;
+    border-radius: 20px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-glass);
+    color: var(--text-main);
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+.chip-item:hover, .chip-item.active {
+    background: var(--accent-emerald);
+    color: #ffffff !important;
+    border-color: var(--accent-emerald);
+    box-shadow: 0 4px 12px var(--accent-glow);
+}
+
+.continue-reading-bar {
+    padding: 14px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.cr-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.cr-badge {
+    padding: 3px 10px;
+    border-radius: 12px;
+    background: var(--accent-emerald);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+}
+.cr-title {
+    font-size: 15px;
+    color: var(--text-main);
+}
+.cr-chapter {
+    font-size: 13px;
+    color: var(--text-sub);
+}
+.cr-btn {
+    padding: 6px 18px;
+    border-radius: 16px;
+    font-size: 13px;
+}
+
+.author-spotlight-wrap {
+    margin: 24px 0;
+    padding: 20px;
+}
+.author-spotlight-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--text-main);
+}
+.author-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+}
+.author-card {
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-decoration: none;
+}
+.author-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--accent-emerald);
+}
+.author-name-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-main);
+}
+.author-works {
+    font-size: 12px;
+    color: var(--text-sub);
+}
+
+/* ==========================================================================
+   Total UI Overhaul Rules: 1400px Layout, Glass Sticky Header, 3D Gradient Buttons
+   ========================================================================== */
+
+/* 1. Full-Width Responsive Container (1400px) */
+.box_center {
+    width: 1400px !important;
+    max-width: 95vw !important;
+    margin: 0 auto !important;
+}
+
+/* 2. Sticky Floating Glass Header */
+.header, .topMain {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1000 !important;
+    background: var(--bg-glass) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border-bottom: 1px solid var(--border-glass) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* 3. Universal 3D Gradient Buttons & Micro-Animations */
+.btn_ora, .btn_ora_white, .search_btn, .cr-btn, .hero-slide-btn, .btn_addsj {
+    background: linear-gradient(135deg, var(--accent-emerald), var(--accent-glow)) !important;
+    color: #ffffff !important;
+    border-radius: 20px !important;
+    border: none !important;
+    font-weight: 600 !important;
+    box-shadow: 0 4px 15px var(--accent-glow) !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.btn_ora:hover, .btn_ora_white:hover, .search_btn:hover, .cr-btn:hover, .hero-slide-btn:hover, .btn_addsj:hover {
+    transform: translateY(-3px) scale(1.02) !important;
+    box-shadow: 0 8px 25px var(--accent-glow) !important;
+}
+
+/* 4. Glowing Rank Badges */
+.rank-badge-1, .num1, .hot_articles dt i {
+    background: linear-gradient(135deg, #ffe259, #ffa751) !important;
+    color: #7a4100 !important;
+    font-weight: 800 !important;
+    border-radius: 50% !important;
+    box-shadow: 0 4px 12px rgba(255, 167, 81, 0.4) !important;
+}
+
+.rank-badge-2, .num2 {
+    background: linear-gradient(135deg, #e0e0e0, #f5f5f5) !important;
+    color: #424242 !important;
+    font-weight: 800 !important;
+    border-radius: 50% !important;
+}
+
+.rank-badge-3, .num3 {
+    background: linear-gradient(135deg, #e55d87, #5fc3e4) !important;
+    color: #ffffff !important;
+    font-weight: 800 !important;
+    border-radius: 50% !important;
+}
+
+/* 5. Pill Search Inputs with Glowing Focus Rings */
+.s_int, #searchKey, #q {
+    border-radius: 20px !important;
+    border: 1px solid var(--border-glass) !important;
+    background: var(--bg-surface) !important;
+    color: var(--text-main) !important;
+    padding: 8px 16px !important;
+    transition: all 0.25s ease !important;
+}
+
+.s_int:focus, #searchKey:focus, #q:focus {
+    border-color: var(--accent-emerald) !important;
+    box-shadow: 0 0 0 4px var(--accent-glow) !important;
+    outline: none !important;
+}
+
+/* ==========================================================================
+   Extreme Visual Polish: Entrance Animations, Swiper Active Pills, Rank Border Glow
+   ========================================================================== */
+
+/* 1. Entrance Micro-Animations */
+@keyframes npFadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.channelBanner, #continueReadingWidget, .quick-genre-chips, .author-spotlight-wrap, .hot_articles, .updateTable {
+    animation: npFadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* 2. Enhanced 3D Card Hover Elevation */
+.glass-card {
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.35s ease !important;
+}
+
+.glass-card:hover {
+    transform: translateY(-6px) scale(1.015) !important;
+    box-shadow: 0 20px 40px var(--accent-glow) !important;
+    border-color: var(--accent-emerald) !important;
+}
+
+/* 3. Swiper Active Pill Pagination & Glass Arrows */
+.heroSwiper .swiper-pagination-bullet {
+    width: 8px !important;
+    height: 8px !important;
+    border-radius: 50% !important;
+    transition: all 0.3s ease !important;
+}
+
+.heroSwiper .swiper-pagination-bullet-active {
+    width: 28px !important;
+    border-radius: 10px !important;
+    background: var(--accent-emerald) !important;
+    box-shadow: 0 0 10px var(--accent-glow) !important;
+}
+
+.heroSwiper .swiper-button-next,
+.heroSwiper .swiper-button-prev {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 50% !important;
+    background: var(--bg-glass) !important;
+    backdrop-filter: blur(12px) !important;
+    border: 1px solid var(--border-glass) !important;
+    color: var(--text-main) !important;
+    box-shadow: var(--shadow-glass) !important;
+    transition: all 0.25s ease !important;
+}
+
+.heroSwiper .swiper-button-next:hover,
+.heroSwiper .swiper-button-prev:hover {
+    background: var(--accent-emerald) !important;
+    color: #ffffff !important;
+    transform: scale(1.1) !important;
+}
+
+/* 4. Left Border Glow for Rank Lists & Update Tables */
+.updateTable tbody tr, .rank_list li {
+    border-left: 4px solid transparent !important;
+    transition: border-left-color 0.25s ease, background 0.25s ease !important;
+}
+
+.updateTable tbody tr:hover, .rank_list li:hover {
+    border-left-color: var(--accent-emerald) !important;
+    background: linear-gradient(90deg, var(--accent-glow), transparent) !important;
+}
+
+/* 5. Glassmorphic Footer */
+.footer {
+    background: var(--bg-glass) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border-top: 1px solid var(--border-glass) !important;
+}
+
+/* ==========================================================================
+   Sub-Page & Reader Polish: Book Detail, Reader Bar, Auth Inputs, Bento Stats
+   ========================================================================== */
+
+/* 1. Book Detail Hero Card & 3D Cover Shadow */
+.channelBookInfo {
+    background: var(--bg-glass) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid var(--border-glass) !important;
+    border-radius: 16px !important;
+    padding: 24px !important;
+    box-shadow: var(--shadow-glass) !important;
+}
+
+.channelBookInfo .attr .user_photo img, .book_cover img {
+    border-radius: 12px !important;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.25) !important;
+    transition: transform 0.3s ease !important;
+}
+
+.channelBookInfo .attr .user_photo img:hover, .book_cover img:hover {
+    transform: translateY(-4px) scale(1.03) !important;
+}
+
+/* 2. Reader Navigation Bar & Buttons */
+.indexDiv {
+    background: var(--bg-glass) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border-top: 1px solid var(--border-glass) !important;
+    border-bottom: 1px solid var(--border-glass) !important;
+    padding: 12px 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 16px !important;
+}
+
+.indexDiv a {
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 8px 24px !important;
+    border-radius: 20px !important;
+    background: linear-gradient(135deg, var(--accent-emerald), var(--accent-glow)) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    box-shadow: 0 4px 15px var(--accent-glow) !important;
+    transition: all 0.25s ease !important;
+}
+
+.indexDiv a:hover {
+    transform: translateY(-2px) scale(1.03) !important;
+    box-shadow: 0 8px 25px var(--accent-glow) !important;
+}
+
+/* 3. Auth Form Inputs & Focus Rings */
+.layui-input, .layui-textarea {
+    border-radius: 12px !important;
+    border: 1px solid var(--border-glass) !important;
+    background: var(--bg-surface) !important;
+    color: var(--text-main) !important;
+    transition: all 0.25s ease !important;
+}
+
+.layui-input:focus, .layui-textarea:focus {
+    border-color: var(--accent-emerald) !important;
+    box-shadow: 0 0 0 4px var(--accent-glow) !important;
+}
+
+/* 4. VIP Chapter Purchase Card */
+.screen_container {
+    background: var(--bg-glass) !important;
+    backdrop-filter: blur(16px) !important;
+    border: 2px solid var(--accent-emerald) !important;
+    border-radius: 16px !important;
+    padding: 24px !important;
+    text-align: center !important;
+    box-shadow: 0 10px 30px var(--accent-glow) !important;
+}
+
+/* ==========================================================================
+   Super Next-Gen Interactivity: Ambient Mesh, Reader Dock, Back-to-Top
+   ========================================================================== */
+
+/* 1. Ambient Light Mesh Background Gradient */
+body {
+    background-image: radial-gradient(circle at 15% 15%, var(--accent-glow), transparent 40%),
+                      radial-gradient(circle at 85% 75%, var(--accent-glow), transparent 40%) !important;
+    background-attachment: fixed !important;
+}
+
+/* 2. Floating Reader Control Dock */
+#readerControlDock {
+    position: fixed !important;
+    bottom: 24px !important;
+    right: 24px !important;
+    z-index: 9999 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 8px 16px !important;
+    border-radius: 30px !important;
+    background: var(--bg-glass) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid var(--border-glass) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25) !important;
+    transition: all 0.3s ease !important;
+}
+
+.dock-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 50% !important;
+    background: var(--bg-surface) !important;
+    border: 1px solid var(--border-glass) !important;
+    color: var(--text-main) !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+.dock-btn:hover {
+    transform: scale(1.1) !important;
+    background: var(--accent-emerald) !important;
+    color: #ffffff !important;
+}
+
+/* 3. Floating Back to Top Button */
+#backToTopBtn {
+    position: fixed !important;
+    bottom: 80px !important;
+    right: 24px !important;
+    z-index: 9998 !important;
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 50% !important;
+    background: var(--bg-glass) !important;
+    backdrop-filter: blur(16px) !important;
+    border: 1px solid var(--border-glass) !important;
+    color: var(--text-main) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2) !important;
+}
+
+#backToTopBtn.visible {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+#backToTopBtn:hover {
+    transform: translateY(-4px) scale(1.1) !important;
+    background: var(--accent-emerald) !important;
+    color: #ffffff !important;
+}
+
+/* ==========================================================================
+   Mobile PWA App-Dock Navigation Bar
+   ========================================================================== */
+.mobile-app-dock {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 9990 !important;
+    height: 60px !important;
+    background: var(--bg-glass) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border-top: 1px solid var(--border-glass) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-around !important;
+}
+
+.mobile-dock-item {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 11px !important;
+    color: var(--text-sub) !important;
+    text-decoration: none !important;
+    gap: 3px !important;
+    transition: color 0.2s ease !important;
+}
+
+.mobile-dock-item.active, .mobile-dock-item:hover {
+    color: var(--accent-emerald) !important;
+}
+
+.mobile-dock-icon {
+    font-size: 18px !important;
+}
+
+/* ==========================================================================
+   Frontend-Design Polish: Shimmer Badges, Spotlight Cards, Progress Line
+   ========================================================================== */
+
+/* 1. Shimmer Sheen Animation for Rank Badges */
+@keyframes npShimmer {
+    0% { transform: translateX(-100%) rotate(25deg); }
+    100% { transform: translateX(200%) rotate(25deg); }
+}
+
+.rank-tag-gold, .rank-tag-silver, .rank-tag-bronze {
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.rank-tag-gold::after, .rank-tag-silver::after, .rank-tag-bronze::after {
+    content: '' !important;
+    position: absolute !important;
+    top: -50% !important;
+    left: -50% !important;
+    width: 200% !important;
+    height: 200% !important;
+    background: linear-gradient(
+        60deg,
+        transparent 30%,
+        rgba(255, 255, 255, 0.4) 50%,
+        transparent 70%
+    ) !important;
+    animation: npShimmer 3.5s infinite !important;
+}
+
+/* 2. Glass Card Spotlight Hover Effect */
+.glass-card {
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, border-color 0.35s ease !important;
+}
+
+.glass-card:hover {
+    border-color: var(--accent-emerald) !important;
+    box-shadow: 0 12px 35px var(--accent-glow), 0 0 15px rgba(255, 255, 255, 0.05) !important;
+}
+
+/* 3. Reading Progress Top Line */
+#chapterProgressLine {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    height: 3px !important;
+    background: linear-gradient(90deg, var(--accent-emerald), #ffffff) !important;
+    z-index: 10000 !important;
+    width: 0%;
+    transition: width 0.1s ease-out !important;
+    box-shadow: 0 0 8px var(--accent-emerald) !important;
+}
+
+/* 4. Micro Badge Pulse */
+.np-badge-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 2px 10px !important;
+    border-radius: 12px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    background: var(--accent-glow) !important;
+    color: var(--accent-emerald) !important;
+    border: 1px solid var(--accent-emerald) !important;
+    box-shadow: 0 0 8px var(--accent-glow) !important;
+}
+
+@media (max-width: 768px) {
+    .continue-reading-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .cr-action {
+        width: 100%;
+        text-align: right;
+    }
+    .author-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    .author-grid {
+        grid-template-columns: 1fr;
+    }
+}

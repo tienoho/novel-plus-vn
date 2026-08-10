@@ -1,0 +1,342 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    <html xmlns="http://www.w3.org/1999/xhtml" lang="vi">
+<head>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+        <title th:text="#{author.system}">Hệ thống quản lý tác giả</title>
+        <link rel="stylesheet" href="/css/base.css?v=1"/>
+        <link rel="stylesheet" href="/css/user.css"/>
+        <link rel="stylesheet" href="/css/author-ai.css?v=1"/>
+        <link rel="stylesheet" href="/css/author-editor.css?v=1"/>
+    </head>
+</head>
+<body class="">
+
+<div class="header">
+    <div class="mainNav" id="mainNav">
+        <div class="box_center cf"
+             style="text-align: center;height: 44px;line-height: 48px;color: #fff;font-size: 16px;">
+
+            <span th:text="#{author.system}">Hệ thống quản lý tác giả</span>
+
+        </div>
+    </div>
+</div>
+
+<div class="main box_center cf">
+    <div class="userBox cf">
+        <div class="my_l">
+
+            <ul class="log_list">
+                <li><a class="link_4 on" href="/author/index.html" th:text="#{author.management}">Quản lý truyện</a></li>
+                <li><a class="link_4" href="/author/draft_list.html" th:text="#{author.draft.management}">Quản lý bản nháp</a></li>
+                <li><a class="link_2" href="/author/author_income_detail.html" th:text="#{author.income}">Thu nhập nhuận bút</a></li>
+            </ul>
+
+        </div>
+        <div class="my_r">
+            <div class="my_bookshelf">
+
+                <div class="userBox cf">
+                    <form method="post" action="./register.html" id="form2">
+                        <div class="user_l">
+                            <div></div>
+                            <h3 th:text="#{author.chapter.form}">Nội dung chương</h3>
+                            <ul class="log_list">
+                                <li><span id="LabErr"></span></li>
+                                <b th:text="#{author.chapter.name}+': '">Tên chương:</b>
+                                <li><input type="text" id="bookIndex" name="bookIndex" class="s_input" ></li>
+                                <b th:text="#{author.chapter.content}+': '">Nội dung:</b>
+                                <li id="contentLi">
+                                    <div class="editor-container">
+                                        <div class="ai-toolbar" role="toolbar" th:attr="aria-label=#{ai.toolbar.label}">
+                                            <button type="button" class="ai-link expand" data-operation="expand" th:text="#{ai.expand}">Mở rộng nội dung</button>
+                                            <button type="button" class="ai-link condense" data-operation="condense" th:text="#{ai.condense}">Rút gọn nội dung</button>
+                                            <button type="button" class="ai-link continue" data-operation="continue" th:text="#{ai.continue}">Viết tiếp</button>
+                                            <button type="button" class="ai-link polish" data-operation="polish" th:text="#{ai.polish}">Trau chuốt nội dung</button>
+                                        </div>
+                                        <p class="ai-privacy-note" th:text="#{ai.provenance.notice}"></p>
+                                        <textarea name="bookContent" rows="30" cols="80" id="bookContent"
+                                                  class="textarea"></textarea>
+                                    </div>
+                                </li>
+                                <b th:text="#{author.chapter.paid}+': '">Có thu phí:</b>
+                                <li><input type="radio" name="isVip" value="0"><span th:text="#{author.chapter.free}">Miễn phí</span>
+                                    <input type="radio" name="isVip" value="1"><span th:text="#{author.chapter.charge}">Thu phí</span>
+                                </li>
+                                <li id="chapterCommercialPanel" class="chapter-commercial-panel" style="display:none">
+                                    <div class="chapter-commercial-grid">
+                                        <div class="chapter-commercial-field">
+                                            <label for="chapterCustomPrice" th:text="#{author.chapter.customPrice}">Giá tùy chỉnh (Xu)</label>
+                                            <input type="number" id="chapterCustomPrice" min="1" max="1000000"
+                                                   th:placeholder="#{author.chapter.customPrice.placeholder}"/>
+                                        </div>
+                                        <div class="chapter-commercial-field">
+                                            <label for="chapterUnlockAt" th:text="#{author.chapter.unlockAt}">Tự mở khóa lúc</label>
+                                            <input type="datetime-local" id="chapterUnlockAt"/>
+                                        </div>
+                                        <div class="chapter-commercial-field">
+                                            <label for="chapterFreeFrom" th:text="#{author.chapter.freeFrom}">Miễn phí từ</label>
+                                            <input type="datetime-local" id="chapterFreeFrom"/>
+                                        </div>
+                                        <div class="chapter-commercial-field">
+                                            <label for="chapterFreeUntil" th:text="#{author.chapter.freeUntil}">Miễn phí đến</label>
+                                            <input type="datetime-local" id="chapterFreeUntil"/>
+                                        </div>
+                                    </div>
+                                    <small class="chapter-price-preview"><span th:text="#{author.chapter.effectivePrice}">Giá hiệu lực:</span>
+                                        <strong id="chapterPricePreview" th:text="#{author.chapter.automaticPrice}">Tự động theo số chữ</strong>
+                                    </small>
+                                    <small class="chapter-commercial-help" th:text="#{author.chapter.commercial.help}">Cửa sổ miễn phí gồm thời điểm bắt đầu và không gồm thời điểm kết thúc.</small>
+                                </li>
+                                <li style="margin-top: 10px">
+                                    <input type="button" id="btnSaveDraft" class="btn_ora_white"
+                                           th:value="#{author.draft.save}" value="Lưu bản nháp">
+                                    <input type="datetime-local" id="draftScheduleAt"
+                                           th:title="#{author.draft.scheduleAt}" title="Thời gian xuất bản">
+                                    <input type="button" id="btnScheduleDraft" class="btn_ora_white"
+                                           th:value="#{author.draft.schedule}" value="Lên lịch">
+                                    <input type="button" id="btnCancelSchedule" class="btn_ora_white"
+                                           th:value="#{author.draft.cancelSchedule}" value="Hủy lịch">
+                                    <input type="button" name="btnRegister" th:value="#{author.draft.publishNow}"
+                                           value="Xuất bản ngay" id="btnRegister" class="btn_red">
+                                    <span id="draftStatus" style="margin-left: 10px"></span>
+                                </li>
+                            </ul>
+                        </div>
+                    </form>
+                </div>
+                <!--<div id="divData" class="updateTable">
+                    <table cellpadding="0" cellspacing="0">
+                        <thead>
+                        <tr>
+
+                            <th class="name">
+                                Nguồn crawler đang bật
+                            </th>
+                            <th class="chapter">
+                                Số lượng thu thập thành công qua WebSocket
+                            </th>
+                            <th class="time">
+                            Số lượng mục tiêu
+                            </th>
+                            <th class="goread">
+                                Trạng thái (mỗi lần chỉ chạy một nguồn crawler)
+                            </th>
+                            <th class="goread">
+                                Thao tác bắt đầu/dừng
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody id="bookShelfList">
+
+
+
+                        </tbody>
+                    </table>
+                    <div class="pageBox cf" id="shellPage">
+                    </div>
+                </div>-->
+            </div>
+        </div>
+    </div>
+</div>
+
+
+</body>
+<script src="/javascript/jquery-1.8.0.min.js" type="text/javascript"></script>
+<script src="/layui/layui.all.js" type="text/javascript"></script>
+<script src="/javascript/header.js" type="text/javascript"></script>
+<script src="/javascript/user.js" type="text/javascript"></script>
+<script src="/javascript/common.js?v=5" type="text/javascript"></script>
+<script src="/javascript/author-editor.js" type="text/javascript"></script>
+<script src="/javascript/author-ai.js?v=1" type="text/javascript"></script>
+
+<script language="javascript" type="text/javascript" th:inline="javascript">
+    const paidLabelText = /*[[#{author.chapter.paid}]]*/ 'Có thu phí';
+    const freeText = /*[[#{author.chapter.free}]]*/ 'Miễn phí';
+    const chargeText = /*[[#{author.chapter.charge}]]*/ 'Thu phí';
+    const chapterNameRequiredText = /*[[#{author.chapter.name.required}]]*/ 'Tên chương không được để trống.';
+    const chapterContentRequiredText = /*[[#{author.chapter.content.required}]]*/ 'Nội dung chương không được để trống.';
+    const networkErrorText = /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng';
+    const selectTextMessage = /*[[#{ai.selectText}]]*/ 'Vui lòng chọn đoạn văn cần xử lý.';
+    const ratioPromptText = /*[[#{ai.ratio.prompt}]]*/ 'Nhập tỷ lệ';
+    const ratioInvalidText = /*[[#{ai.ratio.invalid}]]*/ 'Vui lòng nhập tỷ lệ hợp lệ.';
+    const lengthPromptText = /*[[#{ai.length.prompt}]]*/ 'Nhập độ dài viết tiếp (ký tự)';
+    const lengthInvalidText = /*[[#{ai.length.invalid}]]*/ 'Vui lòng nhập độ dài hợp lệ.';
+    const confirmText = /*[[#{common.confirm}]]*/ 'Đồng ý';
+    const cancelText = /*[[#{common.cancel}]]*/ 'Hủy';
+    const aiFailedText = /*[[#{ai.failed}]]*/ 'Không thể xử lý nội dung bằng AI. Vui lòng thử lại.';
+    const draftMessages = {
+        saving: /*[[#{author.draft.saving}]]*/ 'Đang tự lưu...',
+        saved: /*[[#{author.draft.saved}]]*/ 'Đã tự lưu',
+        restored: /*[[#{author.draft.restored}]]*/ 'Đã khôi phục bản nháp',
+        saveFailed: /*[[#{author.draft.saveFailed}]]*/ 'Không thể lưu bản nháp',
+        publishFailed: /*[[#{author.draft.publishFailed}]]*/ 'Không thể xuất bản chương',
+        scheduled: /*[[#{author.draft.scheduled}]]*/ 'Đã lên lịch xuất bản',
+        scheduleRequired: /*[[#{author.draft.scheduleRequired}]]*/ 'Vui lòng chọn thời gian xuất bản',
+        scheduleFailed: /*[[#{author.draft.scheduleFailed}]]*/ 'Không thể lên lịch xuất bản',
+        scheduleCancelled: /*[[#{author.draft.scheduleCancelled}]]*/ 'Đã hủy lịch xuất bản',
+        scheduledReadOnly: /*[[#{author.draft.scheduledReadOnly}]]*/ 'Bản nháp đã lên lịch; hãy hủy lịch trước khi chỉnh sửa',
+        restoreFailed: /*[[#{author.draft.restoreFailed}]]*/ 'Không thể tải bản nháp; mã bản nháp vẫn được giữ để thử lại',
+        automaticPrice: /*[[#{author.chapter.automaticPrice}]]*/ 'Tự động theo số chữ'
+    };
+
+    var bookId = getSearchString("bookId");
+    var indexId = getSearchString("indexId");
+    var indexName = decodeURI(decodeURI(getSearchString("indexName")));
+    var isVip = getSearchString("isVip");
+    var authorEditor = null;
+
+    function initializeAuthorEditor() {
+        if (authorEditor) return;
+        authorEditor = NovelAuthorEditor.create({
+            bookId: bookId,
+            indexId: indexId,
+            titleSelector: '#bookIndex',
+            contentSelector: '#bookContent',
+            vipSelector: 'input[name=isVip]',
+            commercialPanelSelector: '#chapterCommercialPanel',
+            customPriceSelector: '#chapterCustomPrice',
+            unlockAtSelector: '#chapterUnlockAt',
+            freeFromSelector: '#chapterFreeFrom',
+            freeUntilSelector: '#chapterFreeUntil',
+            pricePreviewSelector: '#chapterPricePreview',
+            statusSelector: '#draftStatus',
+            saveSelector: '#btnSaveDraft',
+            publishSelector: '#btnRegister',
+            scheduleSelector: '#draftScheduleAt',
+            scheduleButtonSelector: '#btnScheduleDraft',
+            cancelScheduleSelector: '#btnCancelSchedule',
+            redirectUrl: '/author/index_list.html?bookId=' + bookId,
+            messages: draftMessages
+        });
+        authorEditor.init();
+    }
+
+    NovelAuthorAi.init({
+        bookId: bookId,
+        contentSelector: '#bookContent',
+        draftId: function () { return authorEditor ? authorEditor.payload().draftId : null; },
+        messages: {
+            selectText: selectTextMessage,
+            ratioPrompt: ratioPromptText,
+            ratioInvalid: ratioInvalidText,
+            lengthPrompt: lengthPromptText,
+            lengthInvalid: lengthInvalidText,
+            confirm: confirmText,
+            cancel: cancelText,
+            networkError: networkErrorText,
+            failed: aiFailedText
+        }
+    });
+
+    $("#bookIndex").val(indexName);
+    $('input[name=isVip][value="' + (isVip == 1 ? '1' : '0') + '"]').prop('checked', true);
+
+    $.ajax({
+        type: "get",
+        url: "/author/queryIndexContent/"+indexId,
+        data: {},
+        dataType: "json",
+        success: function (data) {
+            if (data.code == 200) {
+
+                $("#bookContent").val(data.data);
+                $.ajax({
+                    type: "get",
+                    url: "/author/chapter-commercial-policy/" + indexId,
+                    dataType: "json",
+                    success: function (policyResponse) {
+                        if (policyResponse.code != 200 || !policyResponse.data) {
+                            layer.alert(policyResponse.msg || networkErrorText);
+                            return;
+                        }
+                        var policy = policyResponse.data;
+                        $('input[name=isVip][value="' + Number(policy.isVip || 0) + '"]').prop('checked', true);
+                        $("#chapterCustomPrice").val(policy.customPrice || '');
+                        $("#chapterUnlockAt").val(NovelAuthorEditor.formatLocalDateTime(policy.unlockAt));
+                        $("#chapterFreeFrom").val(NovelAuthorEditor.formatLocalDateTime(policy.freeFrom));
+                        $("#chapterFreeUntil").val(NovelAuthorEditor.formatLocalDateTime(policy.freeUntil));
+                        $("#chapterPricePreview").text(Number(policy.bookPrice || 0) + ' Xu');
+                        initializeAuthorEditor();
+                    },
+                    error: function () {
+                        layer.alert(networkErrorText);
+                    }
+                });
+            } else {
+                novelAlertText(data.msg);
+            }
+
+        },
+        error: function () {
+            lock = false;
+            layer.alert(networkErrorText);
+        }
+    })
+
+
+
+
+
+
+    var lock = false;
+    function addBookContent() {
+
+        if(lock){
+            return;
+        }
+        lock = true;
+
+
+
+
+
+        var indexName = $("#bookIndex").val();
+        if(!indexName){
+            $("#LabErr").text(chapterNameRequiredText);
+            lock = false;
+            return;
+        }
+
+        var content = $("#bookContent").val();
+        if(!content){
+            $("#LabErr").text(chapterContentRequiredText);
+            lock = false;
+            return;
+        }
+
+
+
+
+
+        $.ajax({
+            type: "POST",
+            url: "/author/updateBookContent",
+            data: {'indexId':indexId,'indexName':indexName,'content':content},
+            dataType: "json",
+            success: function (data) {
+                if (data.code == 200) {
+
+                    window.location.href = '/author/index_list.html?bookId='+bookId;
+
+
+                } else {
+                    lock = false;
+                    $("#LabErr").text(data.msg || "");
+                }
+
+            },
+            error: function () {
+                lock = false;
+                layer.alert(networkErrorText);
+            }
+        })
+
+    }
+
+</script>
+</html>

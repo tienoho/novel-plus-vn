@@ -1,0 +1,89 @@
+body {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.mobile-favorites-header {
+    height: 50px;
+    line-height: 50px;
+    text-align: center;
+}
+
+.mobile-favorites-header-side {
+    width: 10%;
+}
+
+.mobile-favorites-header-back {
+    float: left;
+    margin-left: 10px;
+}
+
+.mobile-favorites-header-home {
+    float: right;
+    margin-right: 10px;
+}
+
+.mobile-favorites-header .layui-icon {
+    color: #fff;
+    font-size: 20px;
+}
+
+.mobile-favorites-item {
+    margin-bottom: 10px;
+    padding: 10px;
+    background: #f2f2f2;
+}
+
+.mobile-favorites-cover {
+    text-align: center;
+}
+
+.mobile-favorites-cover img {
+    width: 130px;
+    height: 180px;
+}
+
+.mobile-favorites-details {
+    padding: 10px;
+}
+
+.mobile-favorites-title {
+    overflow: hidden;
+    color: #000;
+    font-size: 15px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mobile-favorites-meta {
+    margin-top: 5px;
+    color: #a6a6a6;
+}
+
+.mobile-favorites-author {
+    overflow: hidden;
+    color: #a6a6a6;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mobile-favorites-updated {
+    color: red;
+}
+
+#tipLayer {
+    position: absolute;
+    z-index: 1000;
+    display: none;
+    padding: 5px 10px;
+    border-radius: 3px;
+    background-color: rgba(255, 0, 0, 0.8);
+    color: #fff;
+    cursor: pointer;
+}
+
+#books {
+    text-align: center;
+}

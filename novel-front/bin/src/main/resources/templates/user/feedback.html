@@ -1,0 +1,47 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="vi">
+<head th:replace="common/header :: common_head(~{::title},~{},~{::link},~{})">
+    <title th:text="#{user.feedback.form}+'_'+${application.website.name}"></title>
+    <link rel="stylesheet" href="/css/user.css"/>
+</head>
+<body id="userFeedbackPage"
+      th:attr="data-feedback-required=#{user.feedback.required},
+               data-feedback-min-length=#{user.feedback.minLength},
+               data-network-error=#{auth.networkError}">
+
+<div th:replace="common/top :: top('')"></div>
+<main class="main box_center cf">
+    <div class="channelWrap channelFeedback cf">
+        <div class="userBox cf">
+            <div class="viewhistoryBox">
+                <div class="my_bookshelf">
+                    <div class="title cf">
+                        <h2 class="fl ml10" th:text="#{user.feedback.form}">Gửi phản hồi</h2>
+                    </div>
+                    <div class="feedbackBox">
+                        <form method="post" action="#feedback" id="feedbackForm">
+                            <ul class="reg_list">
+                                <li>
+                                    <textarea name="content" rows="2" cols="20" id="txtDescription"
+                                              class="textarea" th:placeholder="#{user.feedback.placeholder}"></textarea>
+                                </li>
+                                <li class="mb20">
+                                    <input type="submit" name="btnSave" th:value="#{common.submit}" id="btnSave"
+                                           class="btn_red btn_big"/>
+                                </li>
+                                <li><span id="LabErr"></span></li>
+                            </ul>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div th:replace="common/footer :: footer"></div>
+<div th:replace="common/js :: js"></div>
+<script src="/javascript/user-feedback-page.js" type="text/javascript"></script>
+</body>
+</html>

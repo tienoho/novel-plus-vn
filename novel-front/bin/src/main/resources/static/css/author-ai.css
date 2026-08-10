@@ -1,0 +1,62 @@
+.editor-container {
+    margin: 10px 0;
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, .1);
+}
+
+.editor-container #bookContent {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 400px;
+    padding: 15px;
+    border: 1px solid #e6e6e6;
+    border-radius: 4px;
+    font-size: 14px;
+    line-height: 1.6;
+    resize: vertical;
+}
+
+.ai-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.ai-link {
+    min-height: 40px;
+    padding: 9px 16px;
+    border: 0;
+    border-radius: 8px;
+    color: #fff;
+    font: 500 14px/1.4 Arial, sans-serif;
+    cursor: pointer;
+    transition: transform .2s ease, box-shadow .2s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, .1);
+}
+
+.ai-link:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0, 0, 0, .15); }
+.ai-link:active { transform: translateY(0); }
+.ai-link:focus-visible { outline: 3px solid #ffbf47; outline-offset: 2px; }
+.ai-link.expand { background: linear-gradient(135deg, #b42318, #e5484d); }
+.ai-link.condense { background: linear-gradient(135deg, #6941c6, #9e77ed); }
+.ai-link.continue { background: linear-gradient(135deg, #b54708, #ef8d32); }
+.ai-link.polish { background: linear-gradient(135deg, #067647, #12a36d); }
+
+.ai-privacy-note {
+    margin: 0 0 12px;
+    color: #475467;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+    .editor-container { padding: 12px; }
+    .ai-link { flex: 1 1 140px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ai-link { transition: none; }
+}

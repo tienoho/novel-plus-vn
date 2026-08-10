@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<section th:fragment="unlock" id="readingTicketUnlock" class="reading-ticket-unlock"
+         data-account-endpoint="/user/reading-tickets"
+         th:data-endpoint="'/book/'+${book.id}+'/chapter/'+${bookIndex.id}+'/reading-ticket-unlock'"
+         data-login-url="/user/login.html"
+         th:data-action="#{reader.ticket.unlock.action}"
+         th:data-unlocking="#{reader.ticket.unlock.unlocking}"
+         th:data-login-required="#{reader.ticket.unlock.loginRequired}"
+         th:data-login-action="#{reader.ticket.unlock.loginAction}"
+         th:data-load-failed="#{reader.ticket.unlock.loadFailed}"
+         th:data-unlock-failed="#{reader.ticket.unlock.failed}"
+         th:data-unlock-uncertain="#{reader.ticket.unlock.uncertain}"
+         hidden>
+    <p><span th:text="#{reader.ticket.unlock.balance}+': '">Số dư của bạn: </span>
+        <strong data-reading-ticket-balance>–</strong>
+        <span th:text="#{reader.ticket.unit}">Vé đọc</span>
+    </p>
+    <button type="button" data-reading-ticket-action disabled
+            th:text="#{reader.ticket.unlock.action}">Mở bằng 1 Vé đọc</button>
+    <p class="reading-ticket-status" data-reading-ticket-status role="status" aria-live="polite" hidden></p>
+</section>
+</body>
+</html>

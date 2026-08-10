@@ -1,0 +1,47 @@
+mode:
+  # Chế độ đơn máy
+  type: Standalone
+  # Lưu bền metadata
+  repository:
+    # Lưu bền vào cơ sở dữ liệu
+    type: JDBC
+
+# Cấu hình nguồn dữ liệu
+dataSources:
+  ds_1:
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    driverClassName: com.mysql.cj.jdbc.Driver
+    jdbcUrl: jdbc:mysql://localhost:3306/novel_plus?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: '__DB_USERNAME__'
+    password: '__DB_PASSWORD__'
+# Cấu hình quy tắc
+rules:
+  - !SINGLE
+    tables:
+      - "*.*"
+  - !SHARDING
+    tables: # Cấu hình quy tắc phân mảnh dữ liệu
+      book_content:
+        # Chiến lược phân cơ sở dữ liệu; để trống dùng chiến lược mặc định
+        actualDataNodes: ds_${1}.book_content${0..9}
+        # Chiến lược phân bảng
+        tableStrategy:
+          standard:
+            # Tên cột phân mảnh
+            shardingColumn: index_id
+            # Tên thuật toán phân mảnh
+            shardingAlgorithmName: bookContentSharding
+
+    shardingAlgorithms:
+      bookContentSharding:
+        # Thuật toán phân mảnh biểu thức dòng bằng Groovy, hỗ trợ toán tử = và IN trong SQL
+        type: INLINE
+        props:
+          # Biểu thức dòng của thuật toán phân mảnh
+          algorithm-expression: book_content${index_id % 10}
+
+
+
+props:
+  # In SQL trong log hay không
+  sql-show: true

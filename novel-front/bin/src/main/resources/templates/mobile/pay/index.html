@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title th:text="#{payment.title}+' - '+${application.website.name}"></title>
+
+    <meta name="keywords" th:content="${application.website.keyword}">
+    <meta name="description" th:content="${application.website.description}">
+
+
+    <div th:include="mobile/common/css :: css"></div>
+
+    <style type="text/css">
+
+
+        .line-limit-length {
+
+            overflow: hidden;
+
+            text-overflow: ellipsis;
+
+            white-space: nowrap;
+
+        }
+
+        .indexP p a {
+            color: #4c6978;
+        }
+
+        .Readarea {
+            font-size: 18px;
+            line-height: 35px;
+            padding: 10px;
+            color: #333;
+        }
+
+        div, p {
+            wrap-work: break-word;
+            word-break: break-all;
+            word-wrap: break-word;
+            word-break: normal;
+            -moz-box-sizing: border-box;
+            -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+            -ms-box-sizing: border-box;
+        }
+
+        .indexDiv a {
+            margin-left: 20px;
+        }
+
+        img {
+            width: 130px;
+            height: 180px;
+        }
+
+        .payHead {
+            height: 36px;
+            line-height: 36px;
+            padding: 20px 0 50px;
+            margin: 0 24px;
+            font-size: 16px;
+            border-bottom: 1px solid #eaeaea;
+            zoom: 1;
+        }
+
+        .pay_way li {
+            text-align: center;
+            cursor: pointer;
+            border: 2px solid #eee;
+            margin: 0;
+            padding-top: 20px;
+            padding-bottom: 20px;
+            list-style: none;
+            flex: 1 1 calc(50% - 6px);
+            max-width: calc(50% - 6px);
+        }
+
+        #payAmount {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 0;
+            padding: 20px 12px 0;
+        }
+
+        .pay_way li.on {
+            border-color: #3eaf7c;
+        }
+
+    </style>
+</head>
+<body>
+
+
+<input type="hidden" id="limit" th:value="${limit}"/>
+<input type="hidden" id="curr" th:value="${curr}"/>
+<input type="hidden" id="total" th:value="${total}"/>
+<input type="hidden" id="ids" th:value="${ids}"/>
+<input type="hidden" id="bookStatus" th:value="${bookStatus}"/>
+<input type="hidden" id="token" th:value="${token}"/>
+<input type="hidden" id="keyword" th:value="${keyword}"/>
+<input type="hidden" id="catId" th:value="${catId}"/>
+<input type="hidden" id="sortBy" th:value="${sortBy}"/>
+<input type="hidden" id="sort" th:value="${sort}"/>
+
+<div style="height: 50px;line-height: 50px;text-align: center" class="layui-header header header-doc  layui-bg-cyan">
+
+    <div style="width:10%;float: left;margin-left: 10px">
+        <a href="/" id="payBack" th:attr="aria-label=#{reader.back},title=#{reader.back}">
+            <i style="font-size: 20px;color: #fff;" class="layui-icon">&#xe65c;</i></a>
+    </div>
+    <b class="layui-icon" th:text="#{payment.title}">Nạp Xu</b>
+    <div style="width:10%;float: right;margin-right: 10px"><a href="/" th:attr="aria-label=#{site.home},title=#{site.home}">
+        <i style="font-size: 20px;color: #fff;" class="layui-icon">&#xe68e;</i>
+    </a>
+    </div>
+</div>
+<div id="body" class="layui-row">
+    <div class="payHead cf">
+        <div class="fl">
+            <span th:text="#{payment.account}+': '">Tài khoản nạp: </span><span class="user_name" id="my_name"></span>&nbsp;&nbsp;
+            <span th:text="#{payment.balance}+': '">Số dư: </span><em style="color: #3eaf7c" id="accountBalance">0</em>
+            <span th:text="#{payment.currency}">Xu</span>
+        </div>
+    </div>
+    <h5 style="text-align: center" th:text="#{payment.vnpay}">VNPAY</h5>
+    <p style="text-align: center" th:text="#{payment.exchange.vnd(${vnpayXuPerThousandVnd})}">
+        Tỷ giá hiện tại: 1.000 VND = 100 Xu
+    </p>
+    <p style="text-align:center;color:#228b22" th:if="${param.payment != null and param.payment[0] == 'vnpay-success'}"
+       th:text="#{payment.vnpay.return.success}">Thanh toán thành công. Số Xu đã được cập nhật.</p>
+    <p style="text-align:center;color:#d58512" th:if="${param.payment != null and param.payment[0] == 'vnpay-processing'}"
+       th:text="#{payment.vnpay.return.processing}">VNPAY đã tiếp nhận giao dịch. Hệ thống đang chờ IPN xác nhận.</p>
+    <p style="text-align:center;color:#ff5722" th:if="${param.payment != null and param.payment[0] == 'vnpay-failed'}"
+       th:text="#{payment.vnpay.return.failed}">Giao dịch VNPAY không thành công hoặc dữ liệu trả về không hợp lệ.</p>
+    <p style="text-align: center;color: #ff5722" th:if="${!vnpayEnabled}" th:text="#{payment.vnpay.unavailable}">
+        VNPAY chưa được cấu hình. Vui lòng liên hệ quản trị viên.
+    </p>
+    <h5 style="text-align: center" th:text="#{payment.amount}">Chọn số tiền nạp</h5>
+    <ul id="payAmount" class="pay_way layui-row">
+        <li th:each="amount : ${vnpayAllowedAmountsVnd}" data-amount="" role="button" tabindex="0"
+            aria-pressed="false" th:attr="data-amount=${amount}"
+            class="layui-col-xs4 layui-col-sm3 layui-col-md2">
+            <div class="layui-panel">
+                <div><strong th:text="${#numbers.formatInteger(amount,1,'POINT')}+' VND'">10.000 VND</strong><br>
+                    <span class="pay_mn" th:text="${amount / 1000 * vnpayXuPerThousandVnd}+' '+#{payment.currency}">1000 Xu</span></div>
+            </div>
+        </li>
+
+    </ul>
+
+    <form action="/pay/vnpay" method="post" id="payform" name="payform" data-enabled="false"
+          data-network-error="" data-unavailable="" data-invalid-amount="" data-invalid-redirect=""
+          th:attr="data-enabled=${vnpayEnabled},data-network-error=#{auth.networkError},
+                   data-unavailable=#{payment.vnpay.unavailable},data-invalid-amount=#{payment.amount.invalid},
+                   data-invalid-redirect=#{payment.redirect.invalid}">
+
+        <input type="hidden" id="pValue" name="payAmount"/>
+        <button type="submit" id="paySubmit" class="layui-btn layui-btn-fluid layui-bg-cyan" th:disabled="${!vnpayEnabled}"
+                th:text="#{payment.payNow}">Thanh toán ngay</button>
+    </form>
+
+
+</div>
+<div th:replace="mobile/common/footer :: footer">
+</div>
+
+<a name="buttom"></a>
+<div th:replace="mobile/common/js :: js"></div>
+<script src="/javascript/pay.js"></script>
+</body>
+</html>

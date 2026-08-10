@@ -1,0 +1,117 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="vi">
+<head th:replace="common/header :: common_head(~{::title},~{::meta},~{::link},~{})">
+    <title th:text="#{news.title}+'_'+${application.website.name}"></title>
+    <meta name="keywords" th:content="#{news.title}+','+#{book.seo.list.keywords}"/>
+    <meta name="description"
+          th:content="#{book.seo.list.description(${application.website.name})}"/>
+    <link rel="stylesheet" href="/css/about.css"/>
+</head>
+<body class="body">
+
+<div th:replace="common/top :: top('')">
+</div>
+<!-- Bắt đầu nội dung chính. -->
+<div class="main box_center cf">
+
+
+    <div class="my_r" style="width: 960px">
+        <div class="newsBox">
+            <ul class="news_list" id="newsList">
+
+
+            </ul>
+
+
+        </div>
+        <div class="pageBox cf" id="newsPage">
+
+        </div>
+    </div>
+
+
+</div>
+<!-- Kết thúc nội dung chính. -->
+
+<div th:replace="common/footer :: footer">
+</div>
+v
+<div th:replace="common/js :: js"></div>
+<script src="/javascript/bookdetail.js" type="text/javascript"></script>
+<script language="javascript" type="text/javascript" th:inline="javascript">
+    const networkErrorText = /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng';
+    search(1, 5);
+
+    function search(curr, limit) {
+
+        $.ajax({
+            type: "get",
+            url: "/news/listByPage",
+            data: {'curr': curr, 'limit': limit},
+            dataType: "json",
+            success: function (data) {
+                if (data.code == 200) {
+                    var newsList = data.data.list;
+                    if (newsList.length > 0) {
+                        var newsFragment = document.createDocumentFragment();
+                        for (var i = 0; i < newsList.length; i++) {
+                            var news = newsList[i];
+                            var newsId = NovelSafeDom.positiveId(news.id);
+                            if (!newsId) {
+                                continue;
+                            }
+                            var newsItem = NovelSafeDom.element("li");
+                            var title = NovelSafeDom.element("h5");
+                            title.appendChild(NovelSafeDom.element("i", "dot"));
+                            title.appendChild(NovelSafeDom.link("newsInfo-" + newsId + ".html", null, news.title));
+                            newsItem.appendChild(title);
+                            newsItem.appendChild(NovelSafeDom.element("p", null, news.createTime));
+                            newsFragment.appendChild(newsItem);
+                        }
+                        document.getElementById("newsList").replaceChildren(newsFragment);
+
+                        layui.use('laypage', function () {
+                            var laypage = layui.laypage;
+
+                            // Khởi tạo phân trang Layui.
+                            laypage.render({
+                                elem: 'newsPage' // ID phần tử, không thêm dấu #.
+                                , count: data.data.total // Tổng số bản ghi từ máy chủ.
+                                , curr: data.data.pageNum
+                                , limit: data.data.pageSize
+                                , jump: function (obj, first) {
+
+
+                                    // obj chứa các tham số phân trang hiện tại.
+                                    console.log(obj.curr); // Trang hiện tại.
+                                    console.log(obj.limit); // Số bản ghi mỗi trang.
+
+
+                                    // Không gọi lại trong lần khởi tạo đầu tiên.
+                                    if (!first) {
+                                        search(obj.curr, obj.limit);
+                                    } else {
+
+                                    }
+                                }
+                            });
+                        });
+
+                    }
+
+
+                } else {
+                    novelAlertText(data.msg);
+                }
+
+            },
+            error: function () {
+                layer.alert(networkErrorText);
+            }
+        })
+
+    }
+</script>
+</body>
+</html>

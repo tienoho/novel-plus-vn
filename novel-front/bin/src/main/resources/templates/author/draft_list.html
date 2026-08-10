@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title th:text="#{author.draft.management}">Quản lý bản nháp</title>
+    <link rel="stylesheet" href="/css/base.css?v=1">
+    <link rel="stylesheet" href="/css/user.css">
+</head>
+<body>
+<div class="header">
+    <div class="mainNav">
+        <div class="box_center" style="text-align:center;height:44px;line-height:48px;color:#fff;font-size:16px"
+             th:text="#{author.system}">Hệ thống quản lý tác giả</div>
+    </div>
+</div>
+<div class="main box_center cf">
+    <div class="userBox cf">
+        <div class="my_l">
+            <ul class="log_list">
+                <li><a class="link_4" href="/author/index.html" th:text="#{author.management}">Quản lý truyện</a></li>
+                <li><a class="link_4 on" href="/author/draft_list.html" th:text="#{author.draft.management}">Quản lý bản nháp</a></li>
+                <li><a class="link_2" href="/author/author_income_detail.html" th:text="#{author.income}">Thu nhập nhuận bút</a></li>
+            </ul>
+        </div>
+        <div class="my_r">
+            <div class="my_bookshelf">
+                <h3 th:text="#{author.draft.management}">Quản lý bản nháp</h3>
+                <div id="draftEmpty" style="display:none;padding:20px" th:text="#{author.draft.empty}">Chưa có bản nháp</div>
+                <table id="draftTable" class="updateTable" style="width:100%">
+                    <thead>
+                    <tr>
+                        <th th:text="#{author.chapter.name}">Tên chương</th>
+                        <th th:text="#{common.status}">Trạng thái</th>
+                        <th th:text="#{common.updateTime}">Cập nhật</th>
+                        <th th:text="#{common.action}">Thao tác</th>
+                    </tr>
+                    </thead>
+                    <tbody id="draftRows"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="/javascript/jquery-1.8.0.min.js"></script>
+<script src="/layui/layui.all.js"></script>
+<script src="/javascript/safe-dom.js?v=1"></script>
+<script src="/javascript/common.js?v=5"></script>
+<script th:inline="javascript">
+    const continueText = /*[[#{common.edit}]]*/ 'Tiếp tục chỉnh sửa';
+    const networkErrorText = /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng';
+    const statusLabels = {
+        DRAFT: /*[[#{author.draft.save}]]*/ 'Bản nháp',
+        SCHEDULED: /*[[#{author.draft.scheduled}]]*/ 'Đã lên lịch xuất bản',
+        PUBLISHING: /*[[#{author.draft.processing}]]*/ 'Đang xử lý',
+        PUBLISHED: /*[[#{common.published}]]*/ 'Đã xuất bản',
+        CANCELLED: /*[[#{common.cancelled}]]*/ 'Đã hủy'
+    };
+
+    function continueDraft(id) {
+        const draft = window.draftItems.find(function (item) { return String(item.id) === String(id); });
+        if (!draft) return;
+        const storageKey = 'novel:author-editor:' + draft.bookId + ':' + (draft.indexId || 'new');
+        localStorage.setItem(storageKey, JSON.stringify({
+            draftId: draft.id,
+            version: draft.version,
+            clientKey: draft.clientKey,
+            status: draft.status
+        }));
+        const page = draft.indexId ? 'content_update.html' : 'content_add.html';
+        let url = '/author/' + page + '?bookId=' + draft.bookId;
+        if (draft.indexId) {
+            url += '&indexId=' + draft.indexId + '&indexName=' + encodeURIComponent(encodeURIComponent(draft.indexName || ''))
+                + '&isVip=' + Number(draft.isVip || 0);
+        }
+        window.location.href = url;
+    }
+
+    $.getJSON('/author/drafts?page=1&limit=100', function (response) {
+        if (!response || response.code !== 200) {
+            layer.alert(response && response.msg ? response.msg : networkErrorText);
+            return;
+        }
+        window.draftItems = response.data.items || [];
+        if (!window.draftItems.length) {
+            $('#draftTable').hide();
+            $('#draftEmpty').show();
+            return;
+        }
+        const fragment = document.createDocumentFragment();
+        window.draftItems.forEach(function (draft) {
+            const draftId = NovelSafeDom.positiveId(draft.id);
+            if (!draftId) return;
+            const row = document.createElement('tr');
+            row.appendChild(NovelSafeDom.element('td', null, draft.indexName));
+            row.appendChild(NovelSafeDom.element('td', null, statusLabels[draft.status] || draft.status));
+            row.appendChild(NovelSafeDom.element('td', null,
+                draft.updateTime ? new Date(draft.updateTime).toLocaleString('vi-VN') : ''));
+            const action = document.createElement('td');
+            const link = NovelSafeDom.link('#continue-draft', null, continueText);
+            link.setAttribute('data-csp-action', 'continue-draft');
+            link.setAttribute('data-draft-id', draftId);
+            action.appendChild(link);
+            row.appendChild(action);
+            fragment.appendChild(row);
+        });
+        document.getElementById('draftRows').replaceChildren(fragment);
+    }).fail(function () { layer.alert(networkErrorText); });
+</script>
+</body>
+</html>

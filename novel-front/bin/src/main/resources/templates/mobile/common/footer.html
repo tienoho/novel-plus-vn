@@ -1,0 +1,36 @@
+<div th:fragment="footer">
+    <div style="height: 50px"></div>
+    <div id="footer"
+         class="layui-footer footer footer-demo layui-bg-cyan">
+        <a href="/" style="font-size: 16px;color: #fff;" th:text="#{site.home}">Trang chủ</a>
+        <a href="/user/read_history.html" style="font-size: 16px;color: #fff;margin-left: 18px" th:text="#{user.history}">Lịch sử đọc</a>
+        <a href="/user/favorites.html" style="font-size: 16px;color: #fff;margin-left: 18px" th:text="#{user.bookshelf}">Tủ sách</a>
+        <a href="/user/notifications.html" style="font-size:16px;color:#fff;margin-left:18px"><span th:text="#{notification.title}">Thông báo</span><b data-notification-badge style="display:none;margin-left:2px;padding:1px 4px;border-radius:8px;background:#e64a19;color:#fff;font-size:10px">0</b></a>
+
+
+        <div style="margin-top:-3px;float: right"><a href="#top" th:title="#{site.backToTop}"><i class="layui-icon"
+                                                                    style="margin-right:15px;font-size: 25px;color:#fff ">&#xe604;</i></a>
+        </div>
+        <script src="/javascript/notification-badge.js" defer></script>
+    </div>
+
+    <!-- PWA Mobile Bottom Navigation Dock -->
+    <nav class="mobile-app-dock" aria-label="Điều hướng PWA Mobile">
+        <a href="/" class="mobile-dock-item active">
+            <span class="mobile-dock-icon">🏠</span>
+            <span th:text="#{site.home}">Trang chủ</span>
+        </a>
+        <a href="/book/bookclass.html" class="mobile-dock-item">
+            <span class="mobile-dock-icon">📚</span>
+            <span th:text="#{site.allBooks}">Tác phẩm</span>
+        </a>
+        <a href="/book/book_ranking.html" class="mobile-dock-item">
+            <span class="mobile-dock-icon">🏆</span>
+            <span th:text="#{site.ranking}">Xếp hạng</span>
+        </a>
+        <a href="/user/favorites.html" class="mobile-dock-item">
+            <span class="mobile-dock-icon">🔖</span>
+            <span th:text="#{user.bookshelf}">Tủ sách</span>
+        </a>
+    </nav>
+</div>

@@ -1,0 +1,87 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="vi" xmlns="http://www.w3.org/1999/xhtml">
+<head th:replace="common/header :: common_head(~{::title},~{},~{::link},~{})">
+    <title th:text="#{payment.title}+' - '+${application.website.name}"></title>
+    <link rel="stylesheet" href="/css/base.css"/>
+    <link rel="stylesheet" href="/css/main.css"/>
+    <link rel="stylesheet" href="/css/user.css"/>
+</head>
+<body class="">
+
+<div th:replace="common/top :: top('')">
+</div>
+
+<form action="/pay/vnpay" method="post" id="payform" name="payform" data-enabled="false"
+      data-network-error="" data-unavailable="" data-invalid-amount="" data-invalid-redirect=""
+      th:attr="data-enabled=${vnpayEnabled},data-network-error=#{auth.networkError},
+               data-unavailable=#{payment.vnpay.unavailable},data-invalid-amount=#{payment.amount.invalid},
+               data-invalid-redirect=#{payment.redirect.invalid}">
+    <div class="main box_center cf">
+        <h1 class="sr-only" th:text="#{site.recharge}">Nạp Xu</h1>
+
+        <div class="channelWrap channelPay cf">
+
+            <div class="payBox cf">
+                <div class="payHead cf">
+                    <div class="fl">
+                        <span th:text="#{payment.account}+': '">Tài khoản nạp: </span><span class="user_name" id="my_name"></span>
+                        <span th:text="#{payment.balance}+': '">Số dư: </span><em class="red" id="accountBalance">0</em>
+                        <span th:text="#{payment.currency}">Xu</span>
+                    </div>
+                </div>
+                <div class="payCon">
+                    <h5 th:text="#{payment.method}">Chọn phương thức thanh toán</h5>
+                    <p style="color:#228b22" th:if="${param.payment != null and param.payment[0] == 'vnpay-success'}"
+                       th:text="#{payment.vnpay.return.success}">Thanh toán thành công. Số Xu đã được cập nhật.</p>
+                    <p style="color:#d58512" th:if="${param.payment != null and param.payment[0] == 'vnpay-processing'}"
+                       th:text="#{payment.vnpay.return.processing}">VNPAY đã tiếp nhận giao dịch. Hệ thống đang chờ IPN xác nhận.</p>
+                    <p class="red" th:if="${param.payment != null and param.payment[0] == 'vnpay-failed'}"
+                       th:text="#{payment.vnpay.return.failed}">Giao dịch VNPAY không thành công hoặc dữ liệu trả về không hợp lệ.</p>
+                    <p class="red" th:if="${!vnpayEnabled}" th:text="#{payment.vnpay.unavailable}">
+                        VNPAY chưa được cấu hình. Vui lòng liên hệ quản trị viên.
+                    </p>
+                    <ul class="pay_way cf" id="ulPayType">
+                        <li class="on" valp="4"><strong th:text="#{payment.vnpay}">VNPAY</strong></li>
+
+                    </ul>
+                    <h5 th:text="#{payment.amount}">Chọn số tiền nạp</h5>
+                    <ul class="pay_way cf" id="ulZFWX">
+                        <li th:each="amount : ${vnpayAllowedAmountsVnd}" data-amount="" role="button" tabindex="0"
+                            aria-pressed="false" th:attr="data-amount=${amount}">
+                            <strong th:text="${#numbers.formatInteger(amount,1,'POINT')}+' VND'">10.000 VND</strong>
+                            <span class="pay_mn" th:text="${amount / 1000 * vnpayXuPerThousandVnd}+' '+#{payment.currency}">1000 Xu</span>
+                        </li>
+                    </ul>
+                    <ul class="pay_Checkout" id="ulZFWXXJ">
+                        <li th:text="#{payment.exchange.vnd(${vnpayXuPerThousandVnd})}">Tỷ giá hiện tại: 1.000 VND = 100 Xu</li>
+                        <li><span th:text="#{payment.total}+': '">Tổng thanh toán: </span><em class="red" id="showTotal">0 VND</em>
+                            <span th:text="#{payment.receive}">Nhận được</span> <em class="red" id="showRemark">0 Xu</em></li>
+                        <li><button class="btn_red" id="paySubmit" type="submit" th:disabled="${!vnpayEnabled}"
+                                    th:text="#{payment.payNow}">Thanh toán ngay</button></li>
+                    </ul>
+                </div>
+                <div class="payFoot">
+                    <strong class="tip_tit" th:text="#{payment.notice}">Lưu ý</strong>
+                    <ul class="tip_list">
+                        <li th:text="'1. '+#{payment.notice.scope}"></li>
+                        <li th:text="'2. '+#{payment.notice.channels}"></li>
+                        <li th:text="'3. '+#{payment.notice.period}"></li>
+                        <li><span th:text="'4. '+#{payment.notice.support}"></span> <a href="/user/feedback.html" target="_blank" rel="noopener" class="unlink black9" th:text="#{site.feedback}">Góp ý</a></li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <input type="hidden" id="pValue" name="payAmount"/>
+</form>
+
+
+<div th:replace="common/footer :: footer">
+</div>
+<div th:replace="common/js :: js"></div>
+<script src="/javascript/pay.js" type="text/javascript"></script>
+
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title th:text="${application.website.name}+' - '+#{book.list}"></title>
+    <meta name="keywords" th:content="${application.website.name}+','+#{book.seo.list.keywords}">
+    <meta name="description" th:content="#{book.seo.list.description(${application.website.name})}">
+    <div th:include="mobile/common/css :: css"></div>
+    <link rel="stylesheet" href="/mobile/css/mobile-book-ranking-page.css">
+</head>
+<body data-mobile-book-ranking-page
+      th:attr="data-author-label=#{book.author},
+               data-category-label=#{book.category},
+               data-status-label=#{book.status},
+               data-serializing-label=#{book.status.serializing},
+               data-completed-label=#{book.status.completed},
+               data-updated-label=#{reader.updated},
+               data-description-label=#{book.description},
+               data-network-error-text=#{auth.networkError}">
+<div class="layui-header header header-doc layui-bg-cyan"
+     style="height:50px;line-height:50px;text-align:center">
+    <div style="float:left;margin-left:10px">
+        <a href="/" data-mobile-book-ranking-back th:attr="aria-label=#{reader.back}">
+            <i class="layui-icon" style="font-size:20px;color:#fff">&#xe65c;</i>
+        </a>
+    </div>
+    <b class="layui-icon" th:text="#{book.list}">Danh sách truyện</b>
+    <div style="float:right;margin-right:10px">
+        <a href="/" th:attr="aria-label=#{site.home}">
+            <i class="layui-icon" style="font-size:20px;color:#fff">&#xe68e;</i>
+        </a>
+    </div>
+</div>
+
+<div th:replace="common/monthly_ticket :: ranking_widget"></div>
+
+<div class="mobile-ranking-search">
+    <input id="title" type="search" name="title" autocomplete="off" class="layui-input"
+           th:placeholder="#{book.search.placeholder}" th:value="${keyword}">
+    <button id="mobileBookRankingSearch" type="button" class="layui-btn"
+            th:text="#{common.search}">Tìm kiếm</button>
+</div>
+
+<div id="bookList"></div>
+<div id="books"></div>
+
+<div th:replace="mobile/common/footer :: footer"></div>
+<div th:replace="mobile/common/js :: js"></div>
+<script src="/mobile/js/mobile-book-ranking-page.js"></script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="vi">
+<head th:replace="common/header :: common_head(~{::title},~{},~{::link},~{})">
+    <title th:text="#{user.comments}+'_'+${application.website.name}"></title>
+    <link rel="stylesheet" href="/css/user.css"/>
+</head>
+<body id="userCommentPage"
+      th:attr="data-comment-trainee=#{comment.trainee},data-network-error=#{auth.networkError}">
+
+<div th:replace="common/top :: top('')"></div>
+<div class="main box_center cf">
+    <div class="userBox cf">
+        <div class="my_l">
+            <ul class="log_list">
+                <li><a class="link_1" href="/user/userinfo.html" th:text="#{user.center}">Tài khoản của tôi</a></li>
+                <li><a class="link_4" href="/user/favorites.html" th:text="#{user.bookshelf}">Tủ sách</a></li>
+                <li><a class="link_6 on" href="/user/comment.html" th:text="#{user.comments}">Bình luận của tôi</a></li>
+                <li><a class="link_7" href="/user/feedback_list.html" th:text="#{user.feedback}">Phản hồi của tôi</a></li>
+                <li><a class="link_8" href="/user/setup.html" th:text="#{user.settings}">Cài đặt tài khoản</a></li>
+            </ul>
+        </div>
+        <div class="my_r">
+            <div class="my_bookshelf">
+                <div class="title cf">
+                    <h2 class="fl" th:text="#{user.comments}">Bình luận của tôi</h2>
+                    <div class="fr"></div>
+                </div>
+                <div class="bookComment">
+                    <div class="no_contet no_comment" style="display:none">
+                        <span th:text="#{user.comments.empty}">Bạn chưa đăng bình luận nào.</span>
+                    </div>
+                    <div class="commentBar" id="commentBar"></div>
+                </div>
+                <div class="pageBox cf" id="commentPage"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="common/footer :: footer"></div>
+<div th:replace="common/js :: js"></div>
+<script src="/javascript/user-comment-page.js" type="text/javascript"></script>
+</body>
+</html>

@@ -1,0 +1,172 @@
+server:
+  port: 8083
+
+novel:
+  gift-code:
+    enabled: ${GIFT_CODE_ENABLED:false}
+    hmac-key-id: ${GIFT_CODE_HMAC_KEY_ID:legacy-v1}
+    hmac-secret: ${GIFT_CODE_HMAC_SECRET:disabled}
+    hmac-verification-keys: ${GIFT_CODE_HMAC_VERIFICATION_KEYS:}
+    policy-version: ${GIFT_CODE_POLICY_VERSION:v1}
+  reader-entitlement:
+    # Chỉ bật sau khi migration 20260730 đã chạy và API/UI đã qua staging.
+    enabled: ${READING_TICKET_ENABLED:false}
+    policy-version: ${READING_TICKET_POLICY_VERSION:v1}
+    max-lots-per-spend: ${READING_TICKET_MAX_LOTS_PER_SPEND:20}
+    expiry-cron: ${READING_TICKET_EXPIRY_CRON:0 30 3 * * ?}
+    expiry-batch-size: ${READING_TICKET_EXPIRY_BATCH_SIZE:500}
+    expiry-max-lots-per-user: ${READING_TICKET_EXPIRY_MAX_LOTS_PER_USER:1000}
+    subscription-grant-cron: ${READING_SUBSCRIPTION_GRANT_CRON:0 10 0 * * ?}
+    subscription-zone-id: ${READING_SUBSCRIPTION_ZONE_ID:Asia/Ho_Chi_Minh}
+    subscription-grant-batch-size: ${READING_SUBSCRIPTION_GRANT_BATCH_SIZE:200}
+    subscription-renewal-enabled: ${READING_SUBSCRIPTION_RENEWAL_ENABLED:false}
+    subscription-renewal-delay-ms: ${READING_SUBSCRIPTION_RENEWAL_DELAY_MS:60000}
+    subscription-renewal-batch-size: ${READING_SUBSCRIPTION_RENEWAL_BATCH_SIZE:100}
+  payment:
+    vietqr:
+      enabled: ${VIETQR_ENABLED:false}
+      bank-bin: ${VIETQR_BANK_BIN:disabled}
+      account-no: ${VIETQR_ACCOUNT_NO:disabled}
+      account-name: ${VIETQR_ACCOUNT_NAME:disabled}
+      secret-token: ${VIETQR_WEBHOOK_SECRET:disabled}
+  # Gamification: Ngọn Đuốc, nhiệm vụ, cảnh giới, kỳ xếp hạng và quỹ thưởng.
+  # Mọi cờ enabled mặc định tắt; bật theo thứ tự rollout trong doc/gamification.md.
+  # Ý nghĩa từng ngưỡng và lý do chọn giá trị: doc/gamification-policy-v1.md.
+  gamification:
+    policy-version: ${GAMIFICATION_POLICY_VERSION:v1}
+    zone-id: ${GAMIFICATION_ZONE_ID:Asia/Ho_Chi_Minh}
+    event:
+      enabled: ${GAMIFICATION_EVENT_ENABLED:false}
+      drain-batch-size: ${GAMIFICATION_EVENT_DRAIN_BATCH:200}
+      drain-delay-ms: ${GAMIFICATION_EVENT_DRAIN_DELAY_MS:15000}
+      max-attempt: ${GAMIFICATION_EVENT_MAX_ATTEMPT:10}
+    ticket:
+      enabled: ${GAMIFICATION_TICKET_ENABLED:false}
+      lot-validity-days: ${GAMIFICATION_TICKET_LOT_DAYS:60}
+      grant-on-top-up-enabled: ${GAMIFICATION_TICKET_GRANT_ON_TOPUP:false}
+      expiry-cron: ${GAMIFICATION_TICKET_EXPIRY_CRON:0 20 3 * * ?}
+      expiry-batch-size: ${GAMIFICATION_TICKET_EXPIRY_BATCH:500}
+      max-grant-per-batch: ${GAMIFICATION_TICKET_MAX_GRANT_BATCH:1000}
+    vote:
+      enabled: ${GAMIFICATION_VOTE_ENABLED:false}
+      allow-crawled-books: ${GAMIFICATION_VOTE_ALLOW_CRAWLED:false}
+      # Muối riêng để hash IP phục vụ fraud review; bắt buộc tối thiểu 32 ký tự khi bật vote.
+      ip-hash-salt: ${GAMIFICATION_VOTE_IP_HASH_SALT:disabled}
+      max-tickets-per-request: ${GAMIFICATION_VOTE_MAX_PER_REQUEST:10}
+      max-votes-per-day: ${GAMIFICATION_VOTE_MAX_VOTES_DAY:20}
+      max-tickets-per-day: ${GAMIFICATION_VOTE_MAX_TICKETS_DAY:50}
+      max-tickets-per-book-per-season: ${GAMIFICATION_VOTE_MAX_PER_BOOK:100}
+      max-lots-per-spend: ${GAMIFICATION_VOTE_MAX_LOTS:50}
+    quest:
+      enabled: ${GAMIFICATION_QUEST_ENABLED:false}
+      reply-quest-enabled: ${GAMIFICATION_QUEST_REPLY_ENABLED:false}
+      reading-minutes-target: ${GAMIFICATION_QUEST_READ_MINUTES:30}
+      heartbeat-interval-seconds: ${GAMIFICATION_HEARTBEAT_INTERVAL:60}
+      heartbeat-max-minutes-per-day: ${GAMIFICATION_HEARTBEAT_MAX_MIN:180}
+    realm:
+      enabled: ${GAMIFICATION_REALM_ENABLED:false}
+      affects-benefits: ${GAMIFICATION_REALM_AFFECTS_BENEFITS:false}
+      change-cooldown-hours: ${GAMIFICATION_REALM_COOLDOWN_HOURS:24}
+    season:
+      enabled: ${GAMIFICATION_SEASON_ENABLED:false}
+      close-cron: ${GAMIFICATION_SEASON_CLOSE_CRON:0 5 0 1 * ?}
+      close-drain-seconds: ${GAMIFICATION_SEASON_DRAIN_SECONDS:60}
+      resume-delay-ms: ${GAMIFICATION_SEASON_RESUME_DELAY_MS:30000}
+      auto-finalize: ${GAMIFICATION_SEASON_AUTO_FINALIZE:false}
+      review-window-hours: ${GAMIFICATION_SEASON_REVIEW_HOURS:72}
+    reward:
+      enabled: ${GAMIFICATION_REWARD_ENABLED:false}
+      claim-window-days: ${GAMIFICATION_REWARD_CLAIM_WINDOW_DAYS:7}
+      release-cron: ${GAMIFICATION_REWARD_RELEASE_CRON:0 40 3 * * ?}
+    job:
+      lease-seconds: ${GAMIFICATION_JOB_LEASE_SECONDS:300}
+      batch-size: ${GAMIFICATION_JOB_BATCH_SIZE:500}
+
+spring:
+  profiles:
+    active: dev
+    include: website,vnpay,oss
+
+jwt:
+  secret: ${JWT_SECRET:}
+  access-expiration: ${JWT_ACCESS_EXPIRATION:900}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800}
+
+auth:
+  cookie:
+    secure: ${AUTH_COOKIE_SECURE:false}
+
+#Mật khẩu quản lý bộ nhớ đệm
+cache:
+  manager:
+    password: ${CACHE_MANAGER_PASSWORD:}
+
+
+# Chống tấn công XSS
+xss:
+  # Công tắc lọc
+  enabled: true
+  # Đường dẫn loại trừ (nhiều giá trị cách nhau bằng dấu phẩy)
+  excludes: /system/notice/*
+  # Đường dẫn cần lọc (nhiều giá trị cách nhau bằng dấu phẩy)
+  urlPatterns: /book/addCommentReply,/book/addBookComment,/user/addFeedBack,/author/addBook,/author/addBookContent,/author/updateBookContent,/author/drafts/autosave,/author/register.html
+
+
+author:
+  editor:
+    schedule-batch-size: ${AUTHOR_EDITOR_SCHEDULE_BATCH_SIZE:20}
+    schedule-delay-ms: ${AUTHOR_EDITOR_SCHEDULE_DELAY_MS:30000}
+    schedule-initial-delay-ms: ${AUTHOR_EDITOR_SCHEDULE_INITIAL_DELAY_MS:30000}
+  income:
+    #Tỷ lệ thu nhập sau thuế
+    tax-rate: 0.9
+    #Tỷ lệ chia doanh thu
+    share-proportion: 0.7
+    #Tỷ lệ quy đổi (CNY)
+    exchange-proportion: 0.01
+  payout:
+    # Chỉ bật sau khi cấu hình mã hóa PII, quy trình duyệt KYC và vận hành chuyển khoản.
+    enabled: ${AUTHOR_PAYOUT_ENABLED:false}
+    vnd-per-xu: ${AUTHOR_PAYOUT_VND_PER_XU:10}
+    minimum-xu: ${AUTHOR_PAYOUT_MIN_XU:100000}
+    request-open-day: ${AUTHOR_PAYOUT_REQUEST_OPEN_DAY:1}
+    request-close-day: ${AUTHOR_PAYOUT_REQUEST_CLOSE_DAY:10}
+
+notification:
+  chapter:
+    schedule-delay-ms: ${NOTIFICATION_CHAPTER_SCHEDULE_DELAY_MS:15000}
+    schedule-initial-delay-ms: ${NOTIFICATION_CHAPTER_SCHEDULE_INITIAL_DELAY_MS:15000}
+
+security:
+  csp:
+    enabled: ${CSP_ENABLED:true}
+    # Chỉ chuyển sang true khi verifier không còn inline handler/script thiếu nonce.
+    enforce: ${CSP_ENFORCE:true}
+  pii:
+    encryption-key: ${PII_ENCRYPTION_KEY:disabled}
+
+#Quy tắc định giá chương
+book:
+  price:
+    #Số chữ
+    word-count: 1000
+    #Giá trị (Xu)
+    value: 5
+
+
+--- #--------------------- Cấu hình Spring AI ----------------------
+spring:
+  ai:
+    openai:
+      image:
+        enabled: ${AI_IMAGE_ENABLED:false}
+        base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+        api-key: ${OPENAI_API_KEY:disabled}
+        options:
+          model: ${OPENAI_IMAGE_MODEL:gpt-image-1}
+          response_format: URL
+      api-key: ${OPENAI_API_KEY:disabled}
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+      chat:
+        options:
+          model: ${OPENAI_CHAT_MODEL:gpt-4.1-mini}

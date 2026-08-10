@@ -1,0 +1,68 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="vi" xmlns="http://www.w3.org/1999/xhtml">
+<head th:replace="common/header :: common_head(~{::title},~{::meta},~{::link},~{})">
+    <title th:text="#{site.register}+' - '+${application.website.name}"></title>
+    <meta name="keywords" th:content="#{site.register}+','+#{user.center}+','+${application.website.name}"/>
+    <meta name="description"
+          th:content="${application.website.description}"/>
+    <link rel="stylesheet" href="/css/user.css" />
+</head>
+<body class="">
+
+<div th:replace="common/top :: top('')">
+</div>
+
+<div class="main box_center cf">
+    <div class="userBox cf">
+        <form method="post" action="/user/register" id="form2" data-register-form
+              data-phone-required="" data-phone-invalid="" data-password-required=""
+              data-captcha-required="" data-network-error=""
+              th:attr="data-phone-required=#{auth.phone.required},data-phone-invalid=#{auth.phone.invalid},
+                       data-password-required=#{auth.password.required},data-captcha-required=#{auth.captcha.required},
+                       data-network-error=#{auth.networkError}">
+            <div class="user_l">
+                <h1 class="sr-only" th:text="#{site.register}">Đăng ký</h1>
+                <h3 th:text="#{site.register}+' '+${application.website.name}"></h3>
+                <ul class="log_list">
+                    <li><span id="LabErr" role="alert" aria-live="polite"></span></li>
+                    <li><input name="username" type="text" id="txtUName" class="s_input icon_name"
+                               th:placeholder="#{auth.phone}" th:aria-label="#{auth.phone}" autocomplete="username" spellcheck="false"/></li>
+                    <li><input name="password" type="password" id="txtPassword" class="s_input icon_key"
+                               th:placeholder="#{auth.password.hint}" th:aria-label="#{auth.password.hint}" autocomplete="new-password"/></li>
+                    <li class="log_code cf"><input name="velCode" type="text" maxlength="4" id="TxtChkCode"
+                                                   class="s_input icon_code" th:placeholder="#{auth.captcha}" th:aria-label="#{auth.captcha}" autocomplete="off"/><img
+                            style="border: 1px solid #eee" class="code_pic" src="/file/getVerify" id="chkd"
+                            role="button" tabindex="0" th:alt="#{auth.captcha.refresh}"
+                            th:attr="aria-label=#{auth.captcha.refresh},title=#{auth.captcha.refresh}"/></li>
+                    <li><button type="submit" name="btnRegister" id="btnRegister" class="btn_red" th:text="#{site.register}">Đăng ký</button></li>
+                </ul>
+            </div>
+        </form>
+        <div class="user_r">
+            <p class="tit" th:text="#{auth.hasAccount}">Bạn đã có tài khoản?</p>
+            <a href="/user/login.html" class="btn_ora_white" th:text="#{auth.loginNow}">Đăng nhập ngay</a>
+            <div class="fast_login" style="display:none;">
+                <div class="fast_tit">
+                    <p class="lines"></p>
+                    <span class="title" th:text="#{auth.otherMethods}">Phương thức đăng nhập khác</span>
+                </div>
+                <ul class="fast_list">
+                    <li class="login_wb"><a href="/"><img src="/images/login_weibo.png" alt="Đăng nhập Weibo"
+                                                                    class="img"><span>Đăng nhập Weibo</span></a></li>
+                    <li class="login_qq"><a href="/"><img src="/images/login_qq.png" alt="Đăng nhập QQ"
+                                                                    class="img"><span>Đăng nhập QQ</span></a></li>
+                    <li class="login_wx"><a href="/"><img src="/images/login_weixin.png" alt="Đăng nhập WeChat"
+                                                                    class="img"><span>Đăng nhập WeChat</span></a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="common/footer :: footer">
+</div>
+<div th:replace="common/js :: js"></div>
+<script src="/javascript/user-register-page.js"></script>
+</body>
+</html>

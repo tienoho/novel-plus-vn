@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <title th:text="#{author.reward.title}">Thưởng xếp hạng tháng</title>
+    <link rel="stylesheet" href="/css/base.css?v=1"/>
+    <link rel="stylesheet" href="/css/user.css"/>
+    <style>
+        .author-reward-note {
+            margin: 16px 0;
+            padding: 12px 16px;
+            border-left: 3px solid #e54d42;
+            background: #fff8f7;
+            line-height: 1.7;
+        }
+
+        .author-reward-table-wrap {
+            overflow-x: auto;
+        }
+
+        .author-reward-table {
+            min-width: 860px;
+        }
+
+        .author-reward-message {
+            padding: 28px 12px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <div class="mainNav" id="mainNav">
+        <div class="box_center cf"
+             style="text-align: center;height: 44px;line-height: 48px;color: #fff;font-size: 16px;">
+            <span th:text="#{author.system}">Hệ thống quản lý tác giả</span>
+        </div>
+    </div>
+</div>
+
+<div class="main box_center cf">
+    <div class="userBox cf">
+        <div class="my_l">
+            <ul class="log_list">
+                <li><a class="link_4" href="/author/index.html" th:text="#{author.management}">Quản lý truyện</a></li>
+                <li><a class="link_2 on" href="/author/author_income_detail.html" th:text="#{author.income}">Thu nhập nhuận bút</a></li>
+            </ul>
+        </div>
+        <div class="my_r">
+            <div class="my_bookshelf">
+                <div class="title cf">
+                    <h2 class="fl ml10"><a href="/author/author_income_detail.html" th:text="#{author.income.details}">Chi tiết lượt mua</a></h2>
+                    <i class="fl ml20 mr20 font16">|</i>
+                    <h2 class="fl"><a href="/author/author_income.html" th:text="#{author.income.summary}">Tổng hợp nhuận bút</a></h2>
+                    <i class="fl ml20 mr20 font16">|</i>
+                    <h2 class="fl"><a href="/author/monthly_rewards.html" class="red" th:text="#{author.reward.view}">Lịch sử thưởng tháng</a></h2>
+                </div>
+
+                <p class="author-reward-note">
+                    <strong th:text="#{author.reward.title}">Thưởng xếp hạng tháng</strong><br/>
+                    <span th:text="#{author.reward.subtitle}">Thưởng được hạch toán sau khi kỳ xếp hạng được duyệt và chỉ khả dụng để rút khi đã phát hành.</span><br/>
+                    <span th:text="#{author.reward.pendingNote}">Thưởng ở trạng thái Chờ phát hành chưa được cộng vào số dư khả dụng để rút.</span>
+                </p>
+
+                <div class="updateTable author-reward-table-wrap">
+                    <table class="author-reward-table" cellpadding="0" cellspacing="0">
+                        <thead>
+                        <tr>
+                            <th class="goread" th:text="#{author.reward.period}">Kỳ</th>
+                            <th class="goread" th:text="#{author.reward.book}">Truyện</th>
+                            <th class="goread" th:text="#{author.reward.rank}">Hạng</th>
+                            <th class="goread" th:text="#{author.reward.amount}">Thưởng (Xu)</th>
+                            <th class="goread" th:text="#{author.reward.status}">Trạng thái</th>
+                            <th class="goread" th:text="#{author.reward.postedAt}">Hạch toán lúc</th>
+                            <th class="goread" th:text="#{author.reward.releasedAt}">Khả dụng lúc</th>
+                        </tr>
+                        </thead>
+                        <tbody id="rewardList" aria-live="polite">
+                        <tr><td class="author-reward-message" colspan="7" th:text="#{author.reward.loading}">Đang tải lịch sử thưởng...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/javascript/jquery-1.8.0.min.js" type="text/javascript"></script>
+<script src="/layui/layui.all.js" type="text/javascript"></script>
+<script src="/javascript/header.js" type="text/javascript"></script>
+<script src="/javascript/user.js" type="text/javascript"></script>
+<script th:inline="javascript">
+    (function () {
+        'use strict';
+
+        const messages = {
+            empty: /*[[#{author.reward.empty}]]*/ 'Bạn chưa có thưởng xếp hạng tháng.',
+            loadError: /*[[#{author.reward.loadError}]]*/ 'Không thể tải lịch sử thưởng. Vui lòng thử lại sau.',
+            unknownStatus: /*[[#{author.reward.status.unknown}]]*/ 'Không xác định',
+            status: {
+                CALCULATED: /*[[#{author.reward.status.calculated}]]*/ 'Đã tính',
+                APPROVED: /*[[#{author.reward.status.approved}]]*/ 'Đã duyệt',
+                POSTED_PENDING: /*[[#{author.reward.status.postedPending}]]*/ 'Chờ phát hành',
+                RELEASED: /*[[#{author.reward.status.released}]]*/ 'Đã phát hành',
+                CLAWED_BACK: /*[[#{author.reward.status.clawedBack}]]*/ 'Đã thu hồi'
+            }
+        };
+        const numberFormatter = new Intl.NumberFormat('vi-VN');
+        const dateFormatter = new Intl.DateTimeFormat('vi-VN', {
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Ho_Chi_Minh'
+        });
+        const rewardList = document.getElementById('rewardList');
+
+        function appendCell(row, value) {
+            const cell = document.createElement('td');
+            cell.className = 'goread';
+            cell.textContent = value;
+            row.appendChild(cell);
+        }
+
+        function formatPeriod(periodCode) {
+            const match = /^(\d{4})-(\d{2})$/.exec(String(periodCode || ''));
+            return match ? match[2] + '/' + match[1] : (periodCode || '-');
+        }
+
+        function formatDate(value) {
+            if (!value) {
+                return '-';
+            }
+            const date = new Date(value);
+            return Number.isNaN(date.getTime()) ? '-' : dateFormatter.format(date);
+        }
+
+        function appendBookCell(row, reward) {
+            const cell = document.createElement('td');
+            cell.className = 'goread';
+            const link = document.createElement('a');
+            link.href = '/book/' + encodeURIComponent(reward.bookId) + '.html';
+            link.textContent = reward.bookName || ('#' + reward.bookId);
+            cell.appendChild(link);
+            row.appendChild(cell);
+        }
+
+        function renderMessage(message) {
+            const row = document.createElement('tr');
+            const cell = document.createElement('td');
+            cell.className = 'author-reward-message';
+            cell.colSpan = 7;
+            cell.textContent = message;
+            row.appendChild(cell);
+            rewardList.replaceChildren(row);
+        }
+
+        function renderRewards(rewards) {
+            if (!Array.isArray(rewards) || rewards.length === 0) {
+                renderMessage(messages.empty);
+                return;
+            }
+            const rows = document.createDocumentFragment();
+            rewards.forEach(function (reward) {
+                const row = document.createElement('tr');
+                row.className = 'book_list';
+                appendCell(row, formatPeriod(reward.periodCode));
+                appendBookCell(row, reward);
+                appendCell(row, '#' + reward.rank);
+                appendCell(row, numberFormatter.format(reward.amountXu || 0));
+                appendCell(row, messages.status[reward.status] || messages.unknownStatus);
+                appendCell(row, formatDate(reward.postedAt));
+                appendCell(row, formatDate(reward.releasedAt));
+                rows.appendChild(row);
+            });
+            rewardList.replaceChildren(rows);
+        }
+
+        fetch('/author/monthly-rewards', {headers: {'Accept': 'application/json'}})
+            .then(function (response) { return response.json(); })
+            .then(function (result) {
+                if (result.code === 200) {
+                    renderRewards(result.data);
+                    return;
+                }
+                if (result.code === 1001) {
+                    window.location.href = '/user/login.html?originUrl=' + encodeURIComponent(window.location.href);
+                    return;
+                }
+                renderMessage(result.msg || messages.loadError);
+            })
+            .catch(function () {
+                renderMessage(messages.loadError);
+            });
+    }());
+</script>
+</body>
+</html>

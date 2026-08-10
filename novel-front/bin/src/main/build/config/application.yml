@@ -1,0 +1,86 @@
+#Cổng
+server:
+  port: 8085
+
+spring:
+  data:
+    redis:
+      #IP máy chủ Redis
+      host: 127.0.0.1
+      #Cổng kết nối Redis
+      port: 6379
+      #Mật khẩu kết nối Redis
+      password: ${SPRING_DATA_REDIS_PASSWORD:}
+      #Thời gian chờ kết nối (mili giây)
+      timeout: 10000
+
+
+pic:
+  save:
+    #Cách lưu ảnh: 1 dùng ảnh mạng; 2 lưu cục bộ
+    type: 2
+    #Đường dẫn lưu ảnh
+    path: /var/pic
+
+
+#Cấu hình template
+templates:
+  name: green
+
+#Cấu hình lưu nội dung tác phẩm
+content:
+  save:
+    storage: db # Cách lưu nội dung: db cơ sở dữ liệu, txt văn bản TXT
+    path: /Users/xiongxiaoyang/books  # Đường dẫn lưu văn bản TXT của tác phẩm
+
+
+
+# Cấu hình proxy HTTP
+http:
+  proxy:
+    # Bật proxy HTTP: true bật, false tắt
+    enabled: false
+    # IP proxy
+    ip: proxy.bestproxy.com
+    # Cổng proxy
+    port: 2312
+    # Tên người dùng proxy
+    username: ${HTTP_PROXY_USERNAME:}
+    # Mật khẩu proxy
+    password: ${HTTP_PROXY_PASSWORD:}
+
+novel:
+  gift-code:
+    enabled: ${GIFT_CODE_ENABLED:false}
+    hmac-key-id: ${GIFT_CODE_HMAC_KEY_ID:legacy-v1}
+    hmac-secret: ${GIFT_CODE_HMAC_SECRET:disabled}
+    hmac-verification-keys: ${GIFT_CODE_HMAC_VERIFICATION_KEYS:}
+    policy-version: ${GIFT_CODE_POLICY_VERSION:v1}
+  reader-entitlement:
+    enabled: ${READING_TICKET_ENABLED:false}
+    policy-version: ${READING_TICKET_POLICY_VERSION:v1}
+    max-lots-per-spend: ${READING_TICKET_MAX_LOTS_PER_SPEND:20}
+    expiry-cron: ${READING_TICKET_EXPIRY_CRON:0 30 3 * * ?}
+    expiry-batch-size: ${READING_TICKET_EXPIRY_BATCH_SIZE:500}
+    expiry-max-lots-per-user: ${READING_TICKET_EXPIRY_MAX_LOTS_PER_USER:1000}
+    subscription-grant-cron: ${READING_SUBSCRIPTION_GRANT_CRON:0 10 0 * * ?}
+    subscription-zone-id: ${READING_SUBSCRIPTION_ZONE_ID:Asia/Ho_Chi_Minh}
+    subscription-grant-batch-size: ${READING_SUBSCRIPTION_GRANT_BATCH_SIZE:200}
+
+
+--- #--------------------- Cấu hình Spring AI ----------------------
+spring:
+  ai:
+    openai:
+      image:
+        enabled: ${AI_IMAGE_ENABLED:false}
+        base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+        api-key: ${OPENAI_API_KEY:disabled}
+        options:
+          model: ${OPENAI_IMAGE_MODEL:gpt-image-1}
+          response_format: URL
+      api-key: ${OPENAI_API_KEY:disabled}
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+      chat:
+        options:
+          model: ${OPENAI_CHAT_MODEL:gpt-4.1-mini}

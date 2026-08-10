@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+    <title th:text="${application.website.name}+' - '+#{user.bookshelf}"></title>
+    <meta name="keywords" th:content="${application.website.name}+','+#{book.seo.list.keywords}"/>
+    <meta name="description" th:content="#{book.seo.list.description(${application.website.name})}"/>
+    <div th:replace="mobile/common/css :: css"></div>
+    <link rel="stylesheet" href="/mobile/css/mobile-favorites-page.css"/>
+</head>
+<body id="mobileFavoritesPage"
+      th:attr="data-author-label=#{book.author},
+               data-category-label=#{book.category},
+               data-status-label=#{book.status},
+               data-serializing-label=#{book.status.serializing},
+               data-completed-label=#{book.status.completed},
+               data-updated-label=#{reader.updated},
+               data-description-label=#{book.description},
+               data-network-error=#{auth.networkError}">
+
+<div class="layui-header header header-doc layui-bg-cyan mobile-favorites-header">
+    <div class="mobile-favorites-header-side mobile-favorites-header-back">
+        <a href="#back" id="mobileFavoritesBack" th:aria-label="#{reader.back}">
+            <i class="layui-icon" aria-hidden="true">&#xe65c;</i>
+        </a>
+    </div>
+    <b class="layui-icon" th:text="#{user.bookshelf}">Tủ sách</b>
+    <div class="mobile-favorites-header-side mobile-favorites-header-home">
+        <a href="/" th:aria-label="#{site.home}">
+            <i class="layui-icon" aria-hidden="true">&#xe68e;</i>
+        </a>
+    </div>
+</div>
+
+<main id="body">
+    <div id="bookList"></div>
+    <button type="button" id="tipLayer">
+        <span th:text="#{book.removeShelf}">Xóa khỏi tủ sách</span>
+    </button>
+    <div id="books"></div>
+</main>
+
+<div th:replace="mobile/common/footer :: footer"></div>
+<div th:replace="mobile/common/js :: js"></div>
+<script src="/mobile/js/mobile-favorites-page.js" type="text/javascript"></script>
+</body>
+</html>

@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>novel</artifactId>
+        <groupId>com.java2nb</groupId>
+        <version>5.3.3</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>novel-front</artifactId>
+
+    <name>novel-front</name>
+    <description>Cổng đọc và khu vực tác giả Novel Plus</description>
+
+    <properties>
+        <!-- Theme nguồn được đóng gói; có thể đổi bằng -Dtheme.name=orange|blue|green|dark. -->
+        <theme.name>green</theme.name>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.java2nb</groupId>
+            <artifactId>novel-common</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-crypto</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>2.2</version>
+        </dependency>
+
+        <!-- Hỗ trợ đăng nhập bằng JWT (JSON Web Token). -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt</artifactId>
+            <version>${jjwt.version}</version>
+        </dependency>
+
+        <!--aliyunOSS-->
+        <dependency>
+            <groupId>com.aliyun.oss</groupId>
+            <artifactId>aliyun-sdk-oss</artifactId>
+            <version>${aliyun-sdk-oss.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-fileupload</groupId>
+            <artifactId>commons-fileupload</artifactId>
+            <version>${commons-fileupload.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
+        <!-- AI -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-model-openai</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.lionsoul</groupId>
+            <artifactId>ip2region</artifactId>
+            <version>2.7.0</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+            </resource>
+            <resource>
+                <directory>../templates/${theme.name}/html</directory>
+                <targetPath>templates</targetPath>
+                <filtering>false</filtering>
+            </resource>
+            <resource>
+                <directory>../templates/${theme.name}/static</directory>
+                <targetPath>static</targetPath>
+                <filtering>false</filtering>
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <configuration>
+                    <!-- Resource theme được khai báo sau runtime và phải luôn ghi đè file cùng đường dẫn. -->
+                    <overwrite>true</overwrite>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.8</version>
+                <executions>
+                    <execution>
+                        <id>clear-theme-output</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <tasks>
+                                <!-- Tránh file của theme trước còn sót khi đổi -Dtheme.name mà không chạy clean. -->
+                                <delete dir="${project.build.outputDirectory}/templates" quiet="true"/>
+                                <delete dir="${project.build.outputDirectory}/static" quiet="true"/>
+                            </tasks>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>package-distribution</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <tasks>
+                                <!-- Distribution phải được tái tạo, không cập nhật ZIP hoặc giữ file từ lần build trước. -->
+                                <delete dir="${project.build.directory}/build" quiet="true"/>
+                                <!-- Thư mục. -->
+                                <copy todir="${project.build.directory}/build/config" overwrite="true">
+                                    <fileset dir="${basedir}/src/main/build/config">
+                                        <include name="*.*"/>
+                                    </fileset>
+                                    <fileset dir="${basedir}/src/main/resources">
+                                        <include name="application-vnpay.yml"/>
+                                        <include name="application-website.yml"/>
+                                    </fileset>
+                                </copy>
+                                <!-- Bản phân phối chạy application-prod từ file system, nên mỗi
+                                     theme phải là runtime base đã được phủ overlay tương ứng. -->
+                                <delete dir="${project.build.directory}/build/templates" quiet="true"/>
+                                <macrodef name="merge-theme">
+                                    <attribute name="name"/>
+                                    <sequential>
+                                        <copy todir="${project.build.directory}/build/templates/@{name}/html"
+                                              overwrite="true">
+                                            <fileset dir="${basedir}/src/main/resources/templates"/>
+                                        </copy>
+                                        <copy todir="${project.build.directory}/build/templates/@{name}/static"
+                                              overwrite="true">
+                                            <fileset dir="${basedir}/src/main/resources/static"/>
+                                        </copy>
+                                        <copy todir="${project.build.directory}/build/templates/@{name}/html"
+                                              overwrite="true">
+                                            <fileset dir="${basedir}/../templates/@{name}/html"/>
+                                        </copy>
+                                        <copy todir="${project.build.directory}/build/templates/@{name}/static"
+                                              overwrite="true">
+                                            <fileset dir="${basedir}/../templates/@{name}/static"/>
+                                        </copy>
+                                    </sequential>
+                                </macrodef>
+                                <merge-theme name="green"/>
+                                <merge-theme name="orange"/>
+                                <merge-theme name="dark"/>
+                                <merge-theme name="blue"/>
+                                <copy file="${project.build.directory}/${project.artifactId}-${project.version}.jar"
+                                      tofile="${project.build.directory}/build/${project.artifactId}.jar"/>
+
+                                <copy todir="${project.build.directory}/build/bin">
+                                    <fileset dir="${basedir}/src/main/build/scripts">
+                                        <include name="*.sh"/>
+                                        <include name="*.txt"/>
+                                        <include name="*.bat"/>
+                                    </fileset>
+                                </copy>
+                                <fixcrlf srcdir="${project.build.directory}/build/bin" eol="unix"/>
+                                <copy file="${basedir}/src/main/build/docker/Dockerfile"
+                                      tofile="${project.build.directory}/build/Dockerfile"/>
+                                <zip destfile='${project.build.directory}/build/${project.artifactId}.zip'
+                                     compress="false">
+                                    <zipfileset filemode="755" dir='${project.build.directory}/build/'
+                                                excludes="${project.artifactId}.zip"/>
+                                </zip>
+                            </tasks>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+    <!--    <build>-->
+    <!--        <plugins>-->
+    <!--            &lt;!&ndash; Đóng gói các mô-đun dependency cùng groupId. &ndash;&gt;-->
+    <!--            <plugin>-->
+    <!--                <groupId>org.apache.maven.plugins</groupId>-->
+    <!--                <artifactId>maven-shade-plugin</artifactId>-->
+    <!--                <configuration>-->
+    <!--                    <createDependencyReducedPom>false</createDependencyReducedPom>-->
+    <!--                </configuration>-->
+    <!--                <executions>-->
+    <!--                    <execution>-->
+    <!--                        <phase>package</phase>-->
+    <!--                        <goals>-->
+    <!--                            <goal>shade</goal>-->
+    <!--                        </goals>-->
+    <!--                        <configuration>-->
+    <!--                            <artifactSet>-->
+    <!--                                <includes>-->
+    <!--                                    <include>${project.groupId}:*:*</include>-->
+    <!--                                </includes>-->
+    <!--                            </artifactSet>-->
+    <!--                        </configuration>-->
+    <!--                    </execution>-->
+    <!--                </executions>-->
+    <!--            </plugin>-->
+    <!--            <plugin>-->
+    <!--                &lt;!&ndash; Loại dependency bên thứ ba khi đóng gói. &ndash;&gt;-->
+    <!--                <groupId>org.springframework.boot</groupId>-->
+    <!--                <artifactId>spring-boot-maven-plugin</artifactId>-->
+    <!--                <configuration>-->
+    <!--                    <layout>ZIP</layout>-->
+    <!--                    <includes>-->
+    <!--                        <include>-->
+    <!--                            <groupId>non-exists</groupId>-->
+    <!--                            <artifactId>non-exists</artifactId>-->
+    <!--                        </include>-->
+    <!--                    </includes>-->
+    <!--                </configuration>-->
+    <!--            </plugin>-->
+    <!--            &lt;!&ndash; Sao chép dependency bên thứ ba tới thư mục chỉ định. &ndash;&gt;-->
+    <!--            <plugin>-->
+    <!--                <groupId>org.apache.maven.plugins</groupId>-->
+    <!--                <artifactId>maven-dependency-plugin</artifactId>-->
+    <!--                <executions>-->
+    <!--                    <execution>-->
+    <!--                        <id>copy-dependencies</id>-->
+    <!--                        <phase>package</phase>-->
+    <!--                        <goals>-->
+    <!--                            <goal>copy-dependencies</goal>-->
+    <!--                        </goals>-->
+    <!--                        <configuration>-->
+    <!--                            &lt;!&ndash; target/lib là thư mục xuất JAR dependency và có thể thay đổi. &ndash;&gt;-->
+    <!--                            <outputDirectory>target/lib</outputDirectory>-->
+    <!--                            <excludeTransitive>false</excludeTransitive>-->
+    <!--                            <stripVersion>false</stripVersion>-->
+    <!--                            <includeScope>runtime</includeScope>-->
+    <!--                            <excludeGroupIds>${project.groupId}</excludeGroupIds>-->
+    <!--                        </configuration>-->
+    <!--                    </execution>-->
+    <!--                </executions>-->
+    <!--            </plugin>-->
+    <!--            <plugin>-->
+    <!--                <artifactId>maven-antrun-plugin</artifactId>-->
+    <!--                <version>1.8</version>-->
+    <!--                <executions>-->
+    <!--                    <execution>-->
+    <!--                        <phase>package</phase>-->
+    <!--                        <goals>-->
+    <!--                            <goal>run</goal>-->
+    <!--                        </goals>-->
+    <!--                        <configuration>-->
+    <!--                            <tasks>-->
+    <!--                                &lt;!&ndash; Thư mục. &ndash;&gt;-->
+    <!--                                <copy todir="${project.build.directory}/build/conf" overwrite="true">-->
+    <!--                                    <fileset dir="${basedir}/src/main/resources">-->
+    <!--                                        <include name="**/*.*"/>-->
+    <!--                                        <exclude name="mybatis/*/*.*"/>-->
+    <!--                                    </fileset>-->
+    <!--                                    <fileset dir="${basedir}/../novel-common/src/main/resources">-->
+    <!--                                        <include name="**/*.*"/>-->
+    <!--                                        <exclude name="mybatis/**"/>-->
+    <!--                                    </fileset>-->
+    <!--                                </copy>-->
+    <!--                                <move todir="${project.build.directory}/build/lib">-->
+    <!--                                    <fileset dir="target/lib"/>-->
+    <!--                                </move>-->
+    <!--                                <copy file="${project.build.directory}/${project.artifactId}-${project.version}.jar"-->
+    <!--                                      tofile="${project.build.directory}/build/${project.artifactId}.jar" />-->
+
+    <!--                                <fixcrlf srcdir="${basedir}/src/main/build/scripts" eol="unix"/>-->
+    <!--                                <copy todir="${project.build.directory}/build/bin">-->
+    <!--                                    <fileset dir="${basedir}/src/main/build/scripts">-->
+    <!--                                        <include name="*.sh" />-->
+    <!--                                        <include name="*.txt" />-->
+    <!--                                        <include name="*.bat" />-->
+    <!--                                    </fileset>-->
+    <!--                                </copy>-->
+    <!--                                <zip destfile='${project.build.directory}/build/${project.artifactId}.zip'>-->
+    <!--                                    <zipfileset filemode="755" dir= '${project.build.directory}/build/' />-->
+    <!--                                </zip>-->
+    <!--                            </tasks>-->
+    <!--                        </configuration>-->
+    <!--                    </execution>-->
+    <!--                </executions>-->
+    <!--            </plugin>-->
+    <!--        </plugins>-->
+    <!--    </build>-->
+
+</project>

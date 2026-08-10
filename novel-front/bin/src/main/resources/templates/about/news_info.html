@@ -1,0 +1,41 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="vi">
+<head th:replace="common/header :: common_head(~{::title},~{::meta},~{::link},~{})">
+    <title th:text="#{news.title}+'_'+${application.website.name}"></title>
+    <meta name="keywords" th:content="#{news.title}+','+#{book.seo.list.keywords}"/>
+    <meta name="description" th:content="#{book.seo.list.description(${application.website.name})}" />
+    <link rel="stylesheet" href="/css/about.css" />
+</head>
+<body class="body">
+
+<div th:replace="common/top :: top('')">
+</div>
+<input type="hidden" id="newsId" th:value="${news.id}"/>
+<div class="main box_center cf">
+    <div class="newsMain cf">
+        <div class="nav_sub">
+            <span th:text="#{news.currentLocation}+': '">Vị trí hiện tại: </span><a href="/" th:text="#{site.home}">Trang chủ</a> &gt; <a href="/about/news.html" th:text="#{news.title}">Tin tức và thông báo</a> &gt; <span th:text="${news.title}"></span>
+        </div>
+        <div class="channelWrap channelNews cf">
+            <div class="news_title">
+                <h2 th:text="${news.title}"></h2>
+                <!--while [[...]] corresponds to th:text (i.e. result will be HTML-escaped), [(...)] corresponds to th:utext-->
+                <p class="from"><span th:text="#{news.source}+': '">Nguồn: </span>[[${news.sourceName}]] <span class="time" th:text="#{news.time}+': '+${#dates.format(news.createTime, 'dd/MM/yy')}"></span> <span class="time" th:text="#{news.views}+': '+${news.readCount}"></span></p>
+            </div>
+            <div class="news_info" th:utext="${news.content}">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="common/footer :: footer">
+</div>
+
+</body>
+<div th:replace="common/js :: js"></div>
+<script src="/javascript/bookdetail.js" type="text/javascript"></script>
+<script type="text/javascript">
+    $.post("/news/addReadCount", {"newsId": $("#newsId").val()}, function () {
+    });
+</script>
+</html>

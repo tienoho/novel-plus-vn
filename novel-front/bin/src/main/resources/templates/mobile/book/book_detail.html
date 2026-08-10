@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title th:text="#{reader.seo.detail.title(${book.bookName})}"></title>
+    <meta name="keywords" th:content="#{reader.seo.detail.keywords(${book.bookName})}">
+    <meta name="description" th:content="#{reader.seo.detail.description(${book.bookName})}">
+    <div th:include="mobile/common/css :: css"></div>
+    <style>
+        .indexP p a { color:#4c6978; }
+        .tag-list { padding:0 0 20px;position:fixed;top:50px;right:0;width:120px;z-index:100000; }
+        .tag-list .tag { float:right;width:100%;text-align:right;margin-top:5px; }
+        .tag-list .tag a { display:inline-block;margin-right:8px;font-size:12px; }
+        .tag-list .highlight { padding:5px 9px;border:1px solid #f90;color:#f90;border-radius:50px; }
+        .tag-list .tag .text { display:inline-block;vertical-align:middle;color:#f90; }
+        .tag-list .tag .icn { margin-right:5px;color:#ccc; }
+        ul,li { padding:0;margin:0;list-style:none; }
+        .line-limit-length { overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+    </style>
+</head>
+<body>
+<div id="content" data-mobile-book-detail-page
+     th:attr="data-in-shelf-text=#{book.inShelf},data-network-error-text=#{auth.networkError}">
+    <ul class="tag-list clearfix" id="tagLi"></ul>
+    <input type="hidden" id="bookIdHidden" th:value="${bookId}"/>
+    <input type="hidden" id="bookNamedHidden" th:value="${book.bookName}"/>
+    <input type="hidden" id="preContentId" th:value="${firstBookIndexId}"/>
+
+    <div style="height:50px;line-height:50px;text-align:center" class="layui-header header header-doc layui-bg-cyan">
+        <div style="float:left;margin-left:10px"><a href="/" data-mobile-book-detail-back th:attr="aria-label=#{reader.back}"><i style="font-size:20px;color:#fff" class="layui-icon">&#xe65c;</i></a></div>
+        <b class="layui-icon" th:text="${book.bookName}"></b>
+        <div style="float:right;margin-right:10px"><a href="/"><i style="font-size:20px;color:#fff" class="layui-icon">&#xe68e;</i></a></div>
+    </div>
+
+    <div class="layui-row" style="background:#f2f2f2">
+        <div style="padding:3px" class="layui-col-xs4 layui-col-sm2 layui-col-md2 layui-col-lg2">
+            <img style="width:130px;height:auto;max-width:100%;max-height:100%" th:src="${book.picUrl}" th:alt="${book.bookName}"/>
+        </div>
+        <div style="position:relative;padding:3px 10px 0" class="layui-col-xs8 layui-col-sm8 layui-col-md8 layui-col-lg8">
+            <a th:href="@{/book/book_ranking.html(keyword=${book.authorName})}"><div style="color:#444" th:text="#{book.authorBy(${book.authorName})}"></div></a>
+            <a th:href="'/book/book_ranking.html?catId='+${book.catId}"><div style="margin-top:5px;color:#444" th:text="#{book.category}+': '+${book.catName}"></div></a>
+            <div style="margin-top:5px;color:#444"><span th:text="#{book.status}+': '"></span><span th:if="${book.bookStatus==0}" th:text="#{book.status.serializing}"></span><span th:if="${book.bookStatus!=0}" th:text="#{book.status.completed}"></span></div>
+            <div style="margin-top:5px;color:#444"><span th:text="#{reader.update}+': '"></span><i th:text="${#dates.format(book.lastIndexUpdateTime,'dd/MM/yy')}"></i></div>
+            <div style="margin-top:5px;color:#444"><span th:text="#{reader.score}+': '"></span><i style="font-weight:bold;color:red" th:text="${book.score}"></i></div>
+            <div style="margin-top:5px;color:#444"><span th:text="#{book.visits}+': '"></span><i style="font-weight:bold;color:red" th:text="${book.visitCount}"></i></div>
+        </div>
+    </div>
+
+    <div style="text-align:center;height:45px;line-height:45px">
+        <a th:href="'/book/'+${book.id}+'/'+${firstBookIndexId}+'.html'" type="button" style="background-color:#3eaf7c!important" class="layui-btn layui-btn-sm layui-btn-radius" th:text="#{book.readNow}">Đọc ngay</a>
+        <button type="button" id="cFavs" style="border:1px solid #3eaf7c;color:#3eaf7c;background-color:#fff!important" class="layui-btn layui-btn-sm layui-btn-radius" th:text="#{book.addShelf}">Thêm vào tủ sách</button>
+        <button th:if="${book.authorId != null}" type="button" data-author-follow style="border:1px solid #3eaf7c;color:#3eaf7c;background:#fff" class="layui-btn layui-btn-sm layui-btn-radius"
+                th:attr="data-author-id=${book.authorId},data-text-follow=#{notification.followAuthor},data-text-following=#{notification.followingAuthor},data-text-unfollow=#{notification.unfollowAuthor},data-network-error=#{auth.networkError}"
+                th:text="#{notification.followAuthor}">Theo dõi tác giả</button>
+    </div>
+    <p style="line-height:23px;padding:10px;font-size:14px;color:#333" th:text="${book.bookDesc}"></p>
+
+    <div th:replace="common/monthly_ticket :: book_widget(${book.id})"></div>
+
+    <div class="layui-collapse"><div class="layui-colla-item">
+        <h2 class="layui-colla-title"><span th:text="#{book.latest}">Chương mới nhất</span>
+            <span style="margin-left:30px"><span th:text="#{reader.update}+': '"></span><i th:text="${#dates.format(book.lastIndexUpdateTime,'dd/MM/yy HH:mm:ss')}"></i></span>
+        </h2>
+        <div class="layui-colla-content layui-show indexP layui-row" id="indexList"></div>
+    </div></div>
+    <div style="height:42px;color:#4c6978;line-height:42px;padding-left:30px;background:#f2f2f2">
+        <a th:href="'/book/indexList-'+${book.id}+'.html'" th:text="#{book.allCatalog}">Toàn bộ mục lục</a>
+    </div>
+</div>
+<div th:replace="mobile/common/footer :: footer"></div>
+<div th:replace="mobile/common/js :: js"></div>
+<script src="/javascript/author-follow.js" defer></script>
+<script src="/mobile/js/mobile-book-detail-page.js"></script>
+</body>
+</html>

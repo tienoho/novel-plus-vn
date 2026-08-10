@@ -1,0 +1,228 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    <html xmlns="http://www.w3.org/1999/xhtml" lang="vi">
+<head>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+        <title th:text="#{author.system}">Hệ thống quản lý tác giả</title>
+        <link rel="stylesheet" href="/css/base.css?v=1"/>
+        <link rel="stylesheet" href="/css/user.css"/>
+    </head>
+</head>
+<body class="">
+
+<div class="header">
+    <div class="mainNav" id="mainNav">
+        <div class="box_center cf"
+             style="text-align: center;height: 44px;line-height: 48px;color: #fff;font-size: 16px;">
+
+            <span th:text="#{author.system}">Hệ thống quản lý tác giả</span>
+
+        </div>
+    </div>
+</div>
+
+<div class="main box_center cf">
+    <div class="userBox cf">
+        <div class="my_l">
+
+            <ul class="log_list">
+                <li><a class="link_4" href="/author/index.html" th:text="#{author.management}">Quản lý truyện</a></li>
+                <li><a class="link_2 on" href="/author/author_income_detail.html" th:text="#{author.income}">Thu nhập nhuận bút</a></li>
+                <!-- Các liên kết crawler cũ không được kích hoạt trong khu vực tác giả. -->
+            </ul>
+
+        </div>
+        <div class="my_r">
+            <div class="my_bookshelf">
+                <div class="title cf">
+                    <h2 class="fl ml10"><a href="/author/author_income_detail.html" class="red" th:text="#{author.income.details}">Chi tiết lượt mua</a></h2><i
+                        class="fl ml20 mr20 font16">|</i>
+                    <h2 class="fl"><a href="/author/author_income.html" th:text="#{author.income.summary}">Tổng hợp nhuận bút</a></h2>
+                </div>
+
+                <div id="divData" class="updateTable">
+                    <table cellpadding="0" cellspacing="0">
+                        <thead>
+                        <tr>
+                            <th class="goread">
+                                <span th:text="#{author.income.date}">Ngày</span>
+                            </th>
+                            <th class="goread">
+                                <span th:text="#{author.income.subscriptionTotal}">Tổng Xu đã mua</span>
+                            </th>
+                            <th class="goread">
+                                <span th:text="#{author.income.subscriptionCount}">Số lần mua</span>
+                            </th>
+                            <th class="goread">
+                                <span th:text="#{author.income.subscriberCount}">Số người mua</span>
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody id="bookList">
+
+
+                        </tbody>
+                    </table>
+                    <div class="pageBox cf" id="shellPage">
+                    </div>
+                </div>
+                <!--<div id="divData" class="updateTable">
+                    <table cellpadding="0" cellspacing="0">
+                        <thead>
+                        <tr>
+
+                            <th class="name">
+                                Nguồn crawler đang bật
+                            </th>
+                            <th class="chapter">
+                                Số lượng thu thập thành công qua WebSocket
+                            </th>
+                            <th class="time">
+                            Số lượng mục tiêu
+                            </th>
+                            <th class="goread">
+                                Trạng thái (mỗi lần chỉ chạy một nguồn crawler)
+                            </th>
+                            <th class="goread">
+                                Thao tác bắt đầu/dừng
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody id="bookShelfList">
+
+
+
+                        </tbody>
+                    </table>
+                    <div class="pageBox cf" id="shellPage">
+                    </div>
+                </div>-->
+            </div>
+        </div>
+    </div>
+</div>
+
+
+</body>
+<script src="/javascript/jquery-1.8.0.min.js" type="text/javascript"></script>
+<script src="/layui/layui.all.js" type="text/javascript"></script>
+<script src="/javascript/header.js" type="text/javascript"></script>
+<script src="/javascript/user.js" type="text/javascript"></script>
+<script src="/javascript/common.js?v=5" type="text/javascript"></script>
+
+<script language="javascript" type="text/javascript" th:inline="javascript">
+    const currencyText = /*[[#{payment.currency}]]*/ 'Xu';
+    const networkErrorText = /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng';
+    var bookId = getSearchString("bookId");
+    search(1, 10);
+
+    function search(curr, limit) {
+
+        var data = {'curr': curr, 'limit': limit};
+
+        if (bookId) {
+            data.bookId = bookId;
+        }
+
+        $.ajax({
+            type: "get",
+            url: "/author/listIncomeDailyByPage",
+            data: data,
+            dataType: "json",
+            success: function (data) {
+                if (data.code == 200) {
+                    var bookList = data.data.list;
+                    if (bookList.length > 0) {
+                        var incomeRows = document.createDocumentFragment();
+                        for (var i = 0; i < bookList.length; i++) {
+                            var book = bookList[i];
+                            var row = NovelSafeDom.element("tr", "book_list");
+                            row.appendChild(NovelSafeDom.element("td", "goread", book.incomeDate));
+                            row.appendChild(NovelSafeDom.element("td", "goread",
+                                NovelSafeDom.text(book.incomeAccount) + " " + currencyText));
+                            row.appendChild(NovelSafeDom.element("td", "goread", book.incomeCount));
+                            row.appendChild(NovelSafeDom.element("td", "goread", book.incomeNumber));
+                            incomeRows.appendChild(row);
+                        }
+                        document.getElementById("bookList").replaceChildren(incomeRows);
+
+                        layui.use('laypage', function () {
+                            var laypage = layui.laypage;
+
+                            // Khởi tạo phân trang Layui.
+                            laypage.render({
+                                elem: 'shellPage' // ID phần tử, không thêm dấu #.
+                                , count: data.data.total // Tổng số bản ghi từ máy chủ.
+                                , curr: data.data.pageNum
+                                , limit: data.data.pageSize
+                                , jump: function (obj, first) {
+
+
+                                    // obj chứa các tham số phân trang hiện tại.
+                                    console.log(obj.curr); // Trang hiện tại.
+                                    console.log(obj.limit); // Số bản ghi mỗi trang.
+
+
+                                    // Không gọi lại trong lần khởi tạo đầu tiên.
+                                    if (!first) {
+                                        search(obj.curr, obj.limit);
+                                    } else {
+
+                                    }
+                                }
+                            });
+                        });
+
+                    }
+
+
+                } else if (data.code == 1001) {
+                    // Phiên đăng nhập đã hết hạn.
+                    location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
+
+                } else {
+                    novelAlertText(data.msg);
+                }
+
+            },
+            error: function () {
+                layer.alert(networkErrorText);
+            }
+        })
+
+    }
+
+
+    function updateBookStatus(bookId, status) {
+
+        $.ajax({
+            type: "POST",
+            url: "/author/updateBookStatus",
+            data: {'bookId': bookId, 'status': status == 0 ? 1 : 0},
+            dataType: "json",
+            success: function (data) {
+                if (data.code == 200) {
+
+                    location.reload();
+
+
+                } else if (data.code == 1001) {
+                    // Phiên đăng nhập đã hết hạn.
+                    location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
+
+                } else {
+                    novelAlertText(data.msg);
+                }
+
+            },
+            error: function () {
+                layer.alert(networkErrorText);
+            }
+        })
+
+
+    }
+</script>
+</html>

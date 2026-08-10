@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title th:text="#{author.collaboration.title}">Quản lý cộng tác viên</title>
+    <link rel="stylesheet" href="/css/base.css?v=1"/>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #f6f7f9; color: #252b32; }
+        .header { min-width: 0; }
+        .header .box_center { width: auto; }
+        .collab-shell.box_center { width: auto; }
+        .collab-shell { max-width: 1120px; margin: 28px auto; padding: 0 20px 40px; }
+        .collab-heading { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; }
+        .collab-heading h1 { margin: 0 0 8px; font-size: 28px; }
+        .collab-heading p { margin: 0; color: #66717d; }
+        .collab-back, .collab-secondary { color: #2e7d61; background: #fff; border: 1px solid #bad8cb; }
+        .collab-layout { display: grid; grid-template-columns: minmax(300px, 390px) minmax(0, 1fr); gap: 22px; margin-top: 24px; }
+        .collab-panel { background: #fff; border: 1px solid #e2e6ea; border-radius: 12px; padding: 20px; box-shadow: 0 4px 18px rgba(30, 45, 55, .05); }
+        .collab-panel h2 { margin: 0 0 18px; font-size: 20px; }
+        .collab-field { margin-bottom: 15px; }
+        .collab-field label, .collab-permissions legend { display: block; margin-bottom: 6px; font-weight: 600; }
+        .collab-field input, .collab-field select { width: 100%; min-height: 42px; border: 1px solid #ccd3d9; border-radius: 7px; padding: 8px 10px; background: #fff; }
+        .collab-permissions { margin: 0 0 16px; padding: 0; border: 0; }
+        .collab-check { display: flex; gap: 9px; align-items: flex-start; margin: 9px 0; line-height: 1.4; }
+        .collab-check input { margin-top: 3px; }
+        .collab-actions, .collab-card-actions { display: flex; flex-wrap: wrap; gap: 9px; }
+        .collab-primary, .collab-secondary, .collab-danger, .collab-back { display: inline-flex; align-items: center; justify-content: center; min-height: 38px; border-radius: 7px; padding: 8px 13px; cursor: pointer; text-decoration: none; }
+        .collab-primary { border: 1px solid #2e7d61; background: #2e7d61; color: #fff; }
+        .collab-danger { border: 1px solid #c84c4c; background: #fff; color: #a83232; }
+        .collab-error { margin-top: 18px; border: 1px solid #e5aaaa; background: #fff4f4; color: #8d2929; padding: 11px 13px; border-radius: 7px; }
+        .collab-empty { color: #6c7680; padding: 20px 0; text-align: center; }
+        .collab-card { border: 1px solid #e2e6ea; border-radius: 9px; padding: 15px; margin-bottom: 12px; }
+        .collab-card-head { display: flex; justify-content: space-between; gap: 14px; align-items: flex-start; }
+        .collab-card h3 { margin: 0 0 5px; font-size: 17px; overflow-wrap: anywhere; }
+        .collab-meta { color: #68747f; overflow-wrap: anywhere; }
+        .collab-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+        .collab-tag { background: #eef6f2; color: #28674f; border-radius: 999px; padding: 4px 9px; font-size: 12px; }
+        @media (max-width: 760px) {
+            .collab-shell { margin-top: 18px; padding: 0 12px 28px; }
+            .collab-heading, .collab-card-head { display: block; }
+            .collab-back, .collab-card-actions { margin-top: 12px; }
+            .collab-layout { grid-template-columns: 1fr; }
+            .collab-panel { padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <div class="mainNav" id="mainNav">
+        <div class="box_center cf" style="text-align:center;height:44px;line-height:48px;color:#fff;font-size:16px">
+            <span th:text="#{author.system}">Hệ thống quản lý tác giả</span>
+        </div>
+    </div>
+</div>
+
+<main class="collab-shell box_center">
+    <div class="collab-heading">
+        <div>
+            <h1 th:text="#{author.collaboration.title}">Quản lý cộng tác viên</h1>
+            <p th:text="#{author.collaboration.description}">Phân quyền theo tác phẩm.</p>
+        </div>
+        <a class="collab-back" href="/author/index.html" th:text="#{author.collaboration.back}">Quay lại danh sách truyện</a>
+    </div>
+
+    <div id="collabError" class="collab-error" style="display:none"></div>
+    <div class="collab-layout" id="collabWorkspace">
+        <section class="collab-panel" th:attr="aria-label=#{author.collaboration.title}">
+            <h2 id="collabFormTitle" th:text="#{author.collaboration.add}">Thêm cộng tác viên</h2>
+            <input type="hidden" id="collaboratorId"/>
+            <input type="hidden" id="collaboratorVersion" value="0"/>
+            <div class="collab-field" id="collabIdentityGroup">
+                <label for="collabIdentity" th:text="#{author.collaboration.identity}">Tên đăng nhập hoặc số điện thoại</label>
+                <input id="collabIdentity" type="text" maxlength="32"
+                       th:placeholder="#{author.collaboration.identity.placeholder}" autocomplete="off"/>
+            </div>
+            <div class="collab-field">
+                <label for="collabRole" th:text="#{author.collaboration.role}">Vai trò</label>
+                <select id="collabRole">
+                    <option value="CO_AUTHOR" th:text="#{author.collaboration.role.coAuthor}">Đồng tác giả</option>
+                    <option value="EDITOR" th:text="#{author.collaboration.role.editor}">Biên tập viên</option>
+                </select>
+            </div>
+            <fieldset class="collab-permissions">
+                <legend th:text="#{author.collaboration.permissions}">Quyền trên tác phẩm</legend>
+                <label class="collab-check"><input type="checkbox" id="canEditBook"/><span th:text="#{author.collaboration.permission.editBook}">Sửa thông tin</span></label>
+                <label class="collab-check"><input type="checkbox" id="canPublishBook"/><span th:text="#{author.collaboration.permission.publishBook}">Xuất bản truyện</span></label>
+                <label class="collab-check"><input type="checkbox" id="canManageChapters"/><span th:text="#{author.collaboration.permission.manageChapters}">Soạn chương</span></label>
+                <label class="collab-check"><input type="checkbox" id="canPublishChapters"/><span th:text="#{author.collaboration.permission.publishChapters}">Xuất bản chương</span></label>
+                <label class="collab-check"><input type="checkbox" id="canManageStory"/><span th:text="#{author.collaboration.permission.manageStory}">Kho tư liệu</span></label>
+                <label class="collab-check"><input type="checkbox" id="canViewAnalytics"/><span th:text="#{author.collaboration.permission.viewAnalytics}">Xem phân tích</span></label>
+            </fieldset>
+            <div class="collab-actions">
+                <button type="button" id="collabSave" class="collab-primary" th:text="#{author.collaboration.add}">Thêm cộng tác viên</button>
+                <button type="button" id="collabReset" class="collab-secondary" style="display:none" th:text="#{author.collaboration.cancelEdit}">Hủy chỉnh sửa</button>
+            </div>
+        </section>
+
+        <section class="collab-panel" th:attr="aria-label=#{author.collaboration.list}">
+            <h2 th:text="#{author.collaboration.list}">Danh sách cộng tác viên</h2>
+            <div id="collaboratorList"></div>
+        </section>
+    </div>
+</main>
+
+<script src="/javascript/jquery-1.8.0.min.js"></script>
+<script src="/layui/layui.all.js"></script>
+<script src="/javascript/header.js"></script>
+<script src="/javascript/common.js?v=5"></script>
+<script th:inline="javascript">
+    const collaborationMessages = {
+        missingBook: /*[[#{author.collaboration.missingBook}]]*/ 'Thiếu mã tác phẩm.',
+        ownerOnly: /*[[#{author.collaboration.ownerOnly}]]*/ 'Chỉ chủ sở hữu được quản lý cộng tác viên.',
+        empty: /*[[#{author.collaboration.empty}]]*/ 'Tác phẩm chưa có cộng tác viên.',
+        requiredIdentity: /*[[#{author.collaboration.validation.username}]]*/ 'Nhập tài khoản hợp lệ.',
+        add: /*[[#{author.collaboration.add}]]*/ 'Thêm cộng tác viên',
+        save: /*[[#{author.collaboration.save}]]*/ 'Lưu thay đổi',
+        saved: /*[[#{author.collaboration.saved}]]*/ 'Đã lưu quyền cộng tác.',
+        deleted: /*[[#{author.collaboration.deleted}]]*/ 'Đã gỡ cộng tác viên.',
+        deleteConfirm: /*[[#{author.collaboration.deleteConfirm}]]*/ 'Bạn có chắc muốn gỡ cộng tác viên này?',
+        notice: /*[[#{common.notice}]]*/ 'Thông báo',
+        confirm: /*[[#{common.confirm}]]*/ 'Đồng ý',
+        cancel: /*[[#{common.cancel}]]*/ 'Hủy',
+        edit: /*[[#{common.change}]]*/ 'Thay đổi',
+        remove: /*[[#{author.story.delete}]]*/ 'Xóa',
+        network: /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng',
+        username: /*[[#{author.collaboration.username}]]*/ 'Tài khoản',
+        penName: /*[[#{author.collaboration.penName}]]*/ 'Bút danh',
+        roleCoAuthor: /*[[#{author.collaboration.role.coAuthor}]]*/ 'Đồng tác giả',
+        roleEditor: /*[[#{author.collaboration.role.editor}]]*/ 'Biên tập viên',
+        editBook: /*[[#{author.collaboration.permission.editBook}]]*/ 'Sửa thông tin và ảnh bìa',
+        publishBook: /*[[#{author.collaboration.permission.publishBook}]]*/ 'Thay đổi trạng thái xuất bản truyện',
+        manageChapters: /*[[#{author.collaboration.permission.manageChapters}]]*/ 'Đọc và soạn chương/bản nháp',
+        publishChapters: /*[[#{author.collaboration.permission.publishChapters}]]*/ 'Xuất bản, sửa hoặc xóa chương live',
+        manageStory: /*[[#{author.collaboration.permission.manageStory}]]*/ 'Quản lý kho tư liệu',
+        viewAnalytics: /*[[#{author.collaboration.permission.viewAnalytics}]]*/ 'Xem phân tích tác phẩm'
+    };
+
+    var collaborationBookId = Number(getSearchString('bookId'));
+
+    function showCollaborationError(message) {
+        $('#collabError').text(message || '').show();
+    }
+
+    function clearCollaborationError() {
+        $('#collabError').text('').hide();
+    }
+
+    function applyRoleDefaults() {
+        var coAuthor = $('#collabRole').val() === 'CO_AUTHOR';
+        $('#canEditBook').prop('checked', coAuthor);
+        $('#canPublishBook').prop('checked', coAuthor);
+        $('#canManageChapters').prop('checked', true);
+        $('#canPublishChapters').prop('checked', coAuthor);
+        $('#canManageStory').prop('checked', true);
+        $('#canViewAnalytics').prop('checked', coAuthor);
+    }
+
+    function resetCollaborationForm() {
+        $('#collaboratorId').val('');
+        $('#collaboratorVersion').val('0');
+        $('#collabIdentity').val('');
+        $('#collabIdentityGroup').show();
+        $('#collabRole').val('CO_AUTHOR');
+        $('#collabFormTitle').text(collaborationMessages.add);
+        $('#collabSave').text(collaborationMessages.add);
+        $('#collabReset').hide();
+        applyRoleDefaults();
+    }
+
+    function permissionLabels(item) {
+        var definitions = [
+            ['canEditBook', collaborationMessages.editBook],
+            ['canPublishBook', collaborationMessages.publishBook],
+            ['canManageChapters', collaborationMessages.manageChapters],
+            ['canPublishChapters', collaborationMessages.publishChapters],
+            ['canManageStory', collaborationMessages.manageStory],
+            ['canViewAnalytics', collaborationMessages.viewAnalytics]
+        ];
+        return $.grep(definitions, function (definition) { return item[definition[0]] === true; });
+    }
+
+    function renderCollaborators(items) {
+        var host = $('#collaboratorList').empty();
+        if (!items || items.length === 0) {
+            host.append($('<div>').addClass('collab-empty').text(collaborationMessages.empty));
+            return;
+        }
+        $.each(items, function (_, item) {
+            var card = $('<article>').addClass('collab-card');
+            var head = $('<div>').addClass('collab-card-head');
+            var identity = $('<div>');
+            identity.append($('<h3>').text(item.penName || item.username));
+            identity.append($('<div>').addClass('collab-meta').text(
+                collaborationMessages.username + ': ' + item.username + ' · ' +
+                collaborationMessages.penName + ': ' + (item.penName || '—') + ' · ' +
+                (item.role === 'CO_AUTHOR' ? collaborationMessages.roleCoAuthor : collaborationMessages.roleEditor)
+            ));
+            var actions = $('<div>').addClass('collab-card-actions');
+            $('<button>').attr('type', 'button').addClass('collab-secondary').text(collaborationMessages.edit)
+                .on('click', function () { editCollaborator(item); }).appendTo(actions);
+            $('<button>').attr('type', 'button').addClass('collab-danger').text(collaborationMessages.remove)
+                .on('click', function () { deleteCollaborator(item); }).appendTo(actions);
+            head.append(identity, actions);
+            var tags = $('<div>').addClass('collab-tags');
+            $.each(permissionLabels(item), function (_, definition) {
+                tags.append($('<span>').addClass('collab-tag').text(definition[1]));
+            });
+            card.append(head, tags);
+            host.append(card);
+        });
+    }
+
+    function loadCollaborators() {
+        $.ajax({
+            type: 'get',
+            url: '/author/books/' + encodeURIComponent(collaborationBookId) + '/collaborators',
+            dataType: 'json',
+            success: function (result) {
+                if (result.code === 200) {
+                    renderCollaborators(result.data);
+                } else {
+                    showCollaborationError(result.msg);
+                }
+            },
+            error: function () { showCollaborationError(collaborationMessages.network); }
+        });
+    }
+
+    function loadCollaborationAccess() {
+        clearCollaborationError();
+        if (!Number.isSafeInteger(collaborationBookId) || collaborationBookId <= 0) {
+            $('#collabWorkspace').hide();
+            showCollaborationError(collaborationMessages.missingBook);
+            return;
+        }
+        $.ajax({
+            type: 'get',
+            url: '/author/books/' + encodeURIComponent(collaborationBookId) + '/access',
+            dataType: 'json',
+            success: function (result) {
+                if (result.code === 1001) {
+                    location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
+                } else if (result.code === 200 && result.data && result.data.owner === true) {
+                    loadCollaborators();
+                } else {
+                    $('#collabWorkspace').hide();
+                    showCollaborationError(result.msg || collaborationMessages.ownerOnly);
+                }
+            },
+            error: function () { showCollaborationError(collaborationMessages.network); }
+        });
+    }
+
+    function collaborationPayload() {
+        return {
+            role: $('#collabRole').val(),
+            canEditBook: $('#canEditBook').is(':checked'),
+            canPublishBook: $('#canPublishBook').is(':checked'),
+            canManageChapters: $('#canManageChapters').is(':checked'),
+            canPublishChapters: $('#canPublishChapters').is(':checked'),
+            canManageStory: $('#canManageStory').is(':checked'),
+            canViewAnalytics: $('#canViewAnalytics').is(':checked')
+        };
+    }
+
+    function saveCollaborator() {
+        clearCollaborationError();
+        var collaboratorId = $('#collaboratorId').val();
+        var payload = collaborationPayload();
+        if (collaboratorId) {
+            payload.expectedVersion = Number($('#collaboratorVersion').val());
+        } else {
+            payload.username = $.trim($('#collabIdentity').val());
+            if (!payload.username) {
+                showCollaborationError(collaborationMessages.requiredIdentity);
+                return;
+            }
+        }
+        $.ajax({
+            type: collaboratorId ? 'put' : 'post',
+            url: '/author/books/' + encodeURIComponent(collaborationBookId) + '/collaborators' +
+                (collaboratorId ? '/' + encodeURIComponent(collaboratorId) : ''),
+            contentType: 'application/json;charset=UTF-8',
+            data: JSON.stringify(payload),
+            dataType: 'json',
+            success: function (result) {
+                if (result.code === 200) {
+                    resetCollaborationForm();
+                    loadCollaborators();
+                    layer.msg(collaborationMessages.saved);
+                } else {
+                    showCollaborationError(result.msg);
+                }
+            },
+            error: function () { showCollaborationError(collaborationMessages.network); }
+        });
+    }
+
+    function editCollaborator(item) {
+        $('#collaboratorId').val(item.id);
+        $('#collaboratorVersion').val(item.version);
+        $('#collabIdentityGroup').hide();
+        $('#collabRole').val(item.role);
+        $('#canEditBook').prop('checked', item.canEditBook === true);
+        $('#canPublishBook').prop('checked', item.canPublishBook === true);
+        $('#canManageChapters').prop('checked', item.canManageChapters === true);
+        $('#canPublishChapters').prop('checked', item.canPublishChapters === true);
+        $('#canManageStory').prop('checked', item.canManageStory === true);
+        $('#canViewAnalytics').prop('checked', item.canViewAnalytics === true);
+        $('#collabFormTitle').text(collaborationMessages.save);
+        $('#collabSave').text(collaborationMessages.save);
+        $('#collabReset').show();
+        window.scrollTo(0, 0);
+    }
+
+    function deleteCollaborator(item) {
+        layer.confirm(collaborationMessages.deleteConfirm, {
+            title: collaborationMessages.notice,
+            btn: [collaborationMessages.confirm, collaborationMessages.cancel]
+        }, function (index) {
+            $.ajax({
+                type: 'delete',
+                url: '/author/books/' + encodeURIComponent(collaborationBookId) + '/collaborators/' +
+                    encodeURIComponent(item.id),
+                data: {expectedVersion: item.version},
+                dataType: 'json',
+                success: function (result) {
+                    if (result.code === 200) {
+                        resetCollaborationForm();
+                        loadCollaborators();
+                        layer.msg(collaborationMessages.deleted);
+                    } else {
+                        showCollaborationError(result.msg);
+                    }
+                },
+                error: function () { showCollaborationError(collaborationMessages.network); }
+            });
+            layer.close(index);
+        });
+    }
+
+    $('#collabRole').on('change', applyRoleDefaults);
+    $('#collabSave').on('click', saveCollaborator);
+    $('#collabReset').on('click', resetCollaborationForm);
+    resetCollaborationForm();
+    loadCollaborationAccess();
+</script>
+</body>
+</html>

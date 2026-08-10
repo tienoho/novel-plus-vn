@@ -1,0 +1,69 @@
+.author-page-title {
+    height: 44px;
+    color: #fff;
+    font-size: 16px;
+    line-height: 48px;
+    text-align: center;
+}
+
+.redBtn {
+    padding: 5px;
+    border: 1px solid #3eaf7c;
+    border-radius: 20px;
+    background: #3eaf7c;
+    color: #fff;
+}
+
+a.redBtn:hover {
+    color: #fff;
+}
+
+button.redBtn {
+    cursor: pointer;
+    font: inherit;
+}
+
+.book-transfer {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding: 12px;
+    border: 1px solid #e5e5e5;
+    background: #fafafa;
+}
+
+.book-transfer label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.book-transfer select {
+    min-width: 92px;
+    height: 32px;
+    border: 1px solid #ccc;
+    background: #fff;
+}
+
+.book-transfer .transfer-help {
+    flex: 1 1 260px;
+    color: #777;
+    line-height: 1.5;
+}
+
+.author-empty-chapters {
+    margin-top: 200px;
+}
+
+@media (max-width: 760px) {
+    .book-transfer {
+        align-items: stretch;
+    }
+
+    .book-transfer label,
+    .book-transfer button {
+        min-height: 36px;
+    }
+}

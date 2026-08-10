@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title th:text="#{site.login}">Đăng nhập</title>
+
+    <div th:include="mobile/common/css :: css"></div>
+
+
+</head>
+<body id="read">
+
+<div style="height: 50px;line-height: 50px;text-align: center" class="layui-header header header-doc  layui-bg-cyan">
+
+    <div style="width:10%;float: left;margin-left: 10px">
+        <a href="#" data-csp-action="history-back">
+            <i style="font-size: 20px;color: #fff;" class="layui-icon">&#xe65c;</i></a>
+    </div>
+    <b class="layui-icon" th:text="#{site.login}">Đăng nhập</b>
+    <div style="width:10%;float: right;margin-right: 10px"><a href="/">
+        <i style="font-size: 20px;color: #fff;" class="layui-icon">&#xe68e;</i>
+    </a>
+    </div>
+</div>
+<form lay-filter="loginForm" id="form1" style="height: 500px;padding-top:30px;padding-right: 20px" class="layui-form"
+      action="">
+    <input type="hidden" id="bookIdHidden" name="bookId" th:value="${bookId}"/>
+    <div class="layui-form-item">
+        <label class="layui-form-label" th:text="#{auth.phone}">Số điện thoại</label>
+        <div class="layui-input-inline">
+            <input name="txtUName" type="text" id="txtUName" th:placeholder="#{auth.phone}"
+                   autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label" th:text="#{auth.password}">Mật khẩu</label>
+        <div class="layui-input-inline">
+            <input name="txtPassword" type="password" id="txtPassword" th:placeholder="#{auth.password}"
+                   autocomplete="off" class="layui-input">
+        </div>
+
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <input id="autoLogin" type="checkbox" lay-skin="primary" th:title="#{auth.autoLogin}">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <input type="button" th:value="#{site.login}" id="btnLogin" class="layui-btn"/>
+            <a class="layui-btn layui-btn-primary" href="/user/register.html" th:text="#{site.register}">Đăng ký</a>
+        </div>
+    </div>
+</form>
+
+
+<div th:replace="mobile/common/footer :: footer">
+</div>
+</body>
+<div th:replace="mobile/common/js :: js">
+</div>
+<script type="text/javascript" th:inline="javascript">
+    const loginMessages = {
+        phoneRequired: /*[[#{auth.phone.required}]]*/ 'Vui lòng nhập số điện thoại!',
+        phoneInvalid: /*[[#{auth.phone.invalid}]]*/ 'Số điện thoại không đúng định dạng!',
+        passwordRequired: /*[[#{auth.password.required}]]*/ 'Vui lòng nhập mật khẩu!',
+        networkError: /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng'
+    };
+    if (localStorage.getItem("autoLogin") == 1) {
+        $("#autoLogin").prop("checked", 'true');
+        layui.form.render('checkbox', 'loginForm');
+    } else {
+        $("#autoLogin").removeAttr("checked");
+    }
+    $("#btnLogin").click(function () {
+        var username = $("#txtUName").val();
+        if (username.isBlank()) {
+            layer.alert(loginMessages.phoneRequired);
+            return;
+        }
+        if (!username.isPhone()) {
+            layer.alert(loginMessages.phoneInvalid);
+            return;
+        }
+        var password = $("#txtPassword").val();
+        if (password.isBlank()) {
+            layer.alert(loginMessages.passwordRequired);
+            return;
+        }
+        $.ajax({
+            type: "POST",
+            url: "/user/login",
+            data: {"username": username, "password": password},
+            dataType: "json",
+            success: function (data) {
+                if (data.code == 200) {
+                    if ($("#autoLogin").is(':checked')) {
+                        localStorage.setItem("autoLogin", "1");
+                    } else {
+                        localStorage.setItem("autoLogin", "0");
+                    }
+                    var orginUrl = getSearchString("originUrl");
+                    window.location.href = orginUrl == undefined || orginUrl.isBlank() ? "/" : orginUrl;
+                } else {
+                    novelAlertText(data.msg);
+                }
+
+            },
+            error: function () {
+                layer.alert(loginMessages.networkError);
+            }
+        })
+
+    })
+</script>
+
+
+</html>

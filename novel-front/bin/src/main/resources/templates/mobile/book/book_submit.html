@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title th:text="#{book.submit}">Gửi truyện</title>
+
+    <div th:include="common/css :: css"></div>
+
+
+
+</head>
+<body id="read" >
+
+</div>
+
+<div style="height: 50px;line-height: 50px;text-align: center" class="layui-header header header-doc  layui-bg-cyan">
+
+    <div style="float: left;margin-left: 10px">
+        <a href="#" data-csp-action="history-back">
+            <i style="font-size: 20px;color: #92B8B1;" class="layui-icon">&#xe65c;</i></a>
+    </div>
+    <b class="layui-icon" th:text="#{book.submit.single}">Gửi một truyện</b>
+    <div style="float: right;margin-right: 10px"><a href="/">
+        <i style="font-size: 20px;color: #92B8B1;" class="layui-icon">&#xe68e;</i>
+    </a>
+    </div>
+</div>
+<div style="height: 800px;padding: 20px;border: 1px solid #eee;">
+<form  class="layui-form" action="">
+    <div class="layui-form-item">
+        <label class="layui-form-label" th:text="#{book.sourceUrl}+': '">URL trang chi tiết nguồn:</label>
+        <div class="layui-col-xs7 layui-col-sm6 layui-col-md3 layui-col-lg1" >
+            <input type="text" id="bookUrl" name="bookUrl" required lay-verify="required" th:placeholder="#{book.sourceUrl.placeholder}" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label" th:text="#{book.name}+': '">Tên truyện:</label>
+        <div class="layui-col-xs7 layui-col-sm6 layui-col-md3 layui-col-lg1" >
+            <input type="text" id="bookName" name="bookName" required lay-verify="required" th:placeholder="#{book.name.placeholder}" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label" th:text="#{book.score}+': '">Điểm truyện:</label>
+        <div class="layui-col-xs7 layui-col-sm6 layui-col-md3 layui-col-lg1">
+            <input type="number" id="score" name="score" required lay-verify="required" th:placeholder="#{book.score.placeholder}" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn" lay-submit lay-filter="formDemo" th:text="#{common.submit}">Gửi</button>
+            <button type="reset" class="layui-btn layui-btn-primary" th:text="#{common.reset}">Đặt lại</button>
+        </div>
+    </div>
+</form>
+</div>
+
+<div th:replace="common/footer :: footer">
+</div>
+
+<a name="buttom"></a>
+</body>
+<div th:replace="common/js :: js"></div>
+
+
+<script th:inline="javascript">
+    // Xử lý form gửi truyện.
+    layui.use('form', function(){
+        var form = layui.form;
+
+        // Gửi dữ liệu mà không thay đổi tên field API.
+        form.on('submit(formDemo)', function(){
+            $.post("/book/submit",{"bookUrl":$("#bookUrl").val(),"bookName":$("#bookName").val(),"score":$("#score").val()},function (data) {
+                if(data.code == 1 ){
+                    layer.alert(/*[[#{book.submit.success}]]*/ 'Gửi thành công. Tác vụ đang chờ xử lý; vui lòng tìm lại sau.');
+                }else{
+                    layer.alert(/*[[#{book.submit.failed}]]*/ 'Không thể gửi truyện.');
+                }
+            });
+            return false;
+        });
+    });
+</script>
+
+
+</html>

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title th:text="#{author.story.title}">Kho tư liệu tác phẩm</title>
+    <link rel="stylesheet" href="/css/base.css?v=1"/>
+    <link rel="stylesheet" href="/css/user.css"/>
+    <style>
+        .story-shell { padding: 24px 0 48px; }
+        .story-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+        .story-heading h1 { font-size: 24px; color: #222; }
+        .story-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+        .story-tab { border: 1px solid #3eaf7c; background: #fff; color: #257b55; border-radius: 18px; padding: 7px 16px; cursor: pointer; }
+        .story-tab.on { background: #3eaf7c; color: #fff; }
+        .story-layout { display: grid; grid-template-columns: minmax(280px, 360px) minmax(0, 1fr); gap: 22px; }
+        .story-form, .story-list { border: 1px solid #e6e6e6; background: #fff; border-radius: 8px; padding: 18px; }
+        .story-field { margin-bottom: 14px; }
+        .story-field label { display: block; margin-bottom: 6px; color: #444; font-weight: 600; }
+        .story-field input, .story-field select, .story-field textarea { width: 100%; box-sizing: border-box; border: 1px solid #d9d9d9; border-radius: 4px; padding: 9px 10px; font: inherit; }
+        .story-field textarea { min-height: 220px; resize: vertical; line-height: 1.6; }
+        .story-actions { display: flex; gap: 8px; }
+        .story-primary, .story-secondary, .story-danger { border: 0; border-radius: 4px; padding: 9px 15px; cursor: pointer; }
+        .story-primary { background: #3eaf7c; color: #fff; }
+        .story-secondary { background: #eee; color: #333; }
+        .story-danger { background: #fff1f0; color: #b42318; border: 1px solid #f5b7b1; }
+        .story-card { border-bottom: 1px solid #eee; padding: 14px 0; }
+        .story-card:first-child { padding-top: 0; }
+        .story-card:last-child { border-bottom: 0; padding-bottom: 0; }
+        .story-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+        .story-card h3 { font-size: 18px; color: #222; overflow-wrap: anywhere; }
+        .story-meta { color: #777; font-size: 13px; margin: 5px 0 9px; }
+        .story-content { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.65; color: #444; }
+        .story-card-actions { display: flex; gap: 6px; flex: 0 0 auto; }
+        .story-empty { color: #777; text-align: center; padding: 48px 12px; }
+        .story-error { color: #b42318; background: #fff1f0; border: 1px solid #f5b7b1; padding: 12px; border-radius: 4px; }
+        @media (max-width: 800px) {
+            .header { min-width: 0; }
+            .header .box_center { width: auto; }
+            .story-shell.box_center { width: auto; }
+            .story-shell { padding-left: 12px; padding-right: 12px; }
+            .story-layout { grid-template-columns: 1fr; }
+            .story-heading { align-items: flex-start; flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <div class="mainNav">
+        <div class="box_center cf" style="text-align:center;height:44px;line-height:48px;color:#fff;font-size:16px;">
+            <span th:text="#{author.system}">Hệ thống quản lý tác giả</span>
+        </div>
+    </div>
+</div>
+
+<main class="box_center story-shell">
+    <div class="story-heading">
+        <div>
+            <h1 th:text="#{author.story.title}">Kho tư liệu tác phẩm</h1>
+            <p th:text="#{author.story.description}">Quản lý dàn ý, nhân vật, địa điểm và dòng thời gian riêng tư.</p>
+        </div>
+        <a class="story-secondary" href="/author/index.html" th:text="#{author.story.back}">Quay lại danh sách truyện</a>
+    </div>
+
+    <div class="story-tabs" role="tablist" th:attr="aria-label=#{author.story.type}">
+        <button type="button" class="story-tab on" data-type="OUTLINE" th:text="#{author.story.type.outline}">Dàn ý</button>
+        <button type="button" class="story-tab" data-type="CHARACTER" th:text="#{author.story.type.character}">Nhân vật</button>
+        <button type="button" class="story-tab" data-type="LOCATION" th:text="#{author.story.type.location}">Địa điểm</button>
+        <button type="button" class="story-tab" data-type="TIMELINE" th:text="#{author.story.type.timeline}">Dòng thời gian</button>
+    </div>
+
+    <div id="storyError" class="story-error" style="display:none"></div>
+    <div class="story-layout" id="storyWorkspace">
+        <section class="story-form" th:attr="aria-label=#{author.story.form}">
+            <input type="hidden" id="storyItemId"/>
+            <input type="hidden" id="storyVersion" value="0"/>
+            <div class="story-field">
+                <label for="storyType" th:text="#{author.story.type}">Loại tư liệu</label>
+                <select id="storyType">
+                    <option value="OUTLINE" th:text="#{author.story.type.outline}">Dàn ý</option>
+                    <option value="CHARACTER" th:text="#{author.story.type.character}">Nhân vật</option>
+                    <option value="LOCATION" th:text="#{author.story.type.location}">Địa điểm</option>
+                    <option value="TIMELINE" th:text="#{author.story.type.timeline}">Dòng thời gian</option>
+                </select>
+            </div>
+            <div class="story-field">
+                <label for="storyTitle" th:text="#{author.story.itemTitle}">Tiêu đề</label>
+                <input id="storyTitle" type="text" maxlength="120" th:placeholder="#{author.story.itemTitle.placeholder}"/>
+            </div>
+            <div class="story-field">
+                <label for="storyTimeline" th:text="#{author.story.timelineLabel}">Mốc thời gian</label>
+                <input id="storyTimeline" type="text" maxlength="100" th:placeholder="#{author.story.timelineLabel.placeholder}"/>
+            </div>
+            <div class="story-field">
+                <label for="storyOrder" th:text="#{author.story.order}">Thứ tự</label>
+                <input id="storyOrder" type="number" min="0" max="1000000" value="0"/>
+            </div>
+            <div class="story-field">
+                <label for="storyContent" th:text="#{author.story.content}">Nội dung</label>
+                <textarea id="storyContent" maxlength="20000" th:placeholder="#{author.story.content.placeholder}"></textarea>
+            </div>
+            <div class="story-actions">
+                <button type="button" id="storySave" class="story-primary" th:text="#{author.story.save}">Lưu tư liệu</button>
+                <button type="button" id="storyReset" class="story-secondary" th:text="#{author.story.new}">Tạo mới</button>
+            </div>
+        </section>
+
+        <section class="story-list" th:attr="aria-label=#{author.story.list}">
+            <div id="storyItems"></div>
+        </section>
+    </div>
+</main>
+
+<script src="/javascript/jquery-1.8.0.min.js"></script>
+<script src="/layui/layui.all.js"></script>
+<script src="/javascript/header.js"></script>
+<script src="/javascript/common.js?v=5"></script>
+<script th:inline="javascript">
+    const storyMessages = {
+        missingBook: /*[[#{author.story.missingBook}]]*/ 'Thiếu mã tác phẩm.',
+        empty: /*[[#{author.story.empty}]]*/ 'Chưa có tư liệu trong nhóm này.',
+        requiredTitle: /*[[#{author.story.validation.title}]]*/ 'Tiêu đề phải dài từ 1 đến 120 ký tự.',
+        saved: /*[[#{author.story.saved}]]*/ 'Đã lưu tư liệu.',
+        deleted: /*[[#{author.story.deleted}]]*/ 'Đã xóa tư liệu.',
+        edit: /*[[#{author.story.edit}]]*/ 'Sửa',
+        remove: /*[[#{author.story.delete}]]*/ 'Xóa',
+        deleteConfirm: /*[[#{author.story.deleteConfirm}]]*/ 'Bạn có chắc muốn xóa tư liệu này?',
+        notice: /*[[#{common.notice}]]*/ 'Thông báo',
+        confirm: /*[[#{common.confirm}]]*/ 'Đồng ý',
+        cancel: /*[[#{common.cancel}]]*/ 'Hủy',
+        network: /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng',
+        typeOutline: /*[[#{author.story.type.outline}]]*/ 'Dàn ý',
+        typeCharacter: /*[[#{author.story.type.character}]]*/ 'Nhân vật',
+        typeLocation: /*[[#{author.story.type.location}]]*/ 'Địa điểm',
+        typeTimeline: /*[[#{author.story.type.timeline}]]*/ 'Dòng thời gian',
+        timeline: /*[[#{author.story.timelineLabel}]]*/ 'Mốc thời gian',
+        order: /*[[#{author.story.order}]]*/ 'Thứ tự'
+    };
+
+    var storyBookId = Number(getSearchString('bookId'));
+    var activeStoryType = 'OUTLINE';
+
+    function storyTypeLabel(type) {
+        return {
+            OUTLINE: storyMessages.typeOutline,
+            CHARACTER: storyMessages.typeCharacter,
+            LOCATION: storyMessages.typeLocation,
+            TIMELINE: storyMessages.typeTimeline
+        }[type] || type;
+    }
+
+    function showStoryError(message) {
+        $('#storyError').text(message).show();
+    }
+
+    function clearStoryError() {
+        $('#storyError').text('').hide();
+    }
+
+    function resetStoryForm() {
+        $('#storyItemId').val('');
+        $('#storyVersion').val('0');
+        $('#storyType').val(activeStoryType);
+        $('#storyTitle').val('');
+        $('#storyTimeline').val('');
+        $('#storyOrder').val('0');
+        $('#storyContent').val('');
+    }
+
+    function renderStoryItems(items) {
+        var host = $('#storyItems').empty();
+        if (!items || items.length === 0) {
+            host.append($('<div>').addClass('story-empty').text(storyMessages.empty));
+            return;
+        }
+        $.each(items, function (_, item) {
+            var card = $('<article>').addClass('story-card');
+            var head = $('<div>').addClass('story-card-head');
+            var titleBox = $('<div>');
+            titleBox.append($('<h3>').text(item.title));
+            var meta = storyTypeLabel(item.type) + ' · ' + storyMessages.order + ': ' + item.sortOrder;
+            if (item.timelineLabel) {
+                meta += ' · ' + storyMessages.timeline + ': ' + item.timelineLabel;
+            }
+            titleBox.append($('<div>').addClass('story-meta').text(meta));
+            var actions = $('<div>').addClass('story-card-actions');
+            $('<button>').attr('type', 'button').addClass('story-secondary').text(storyMessages.edit)
+                .on('click', function () { editStoryItem(item); }).appendTo(actions);
+            $('<button>').attr('type', 'button').addClass('story-danger').text(storyMessages.remove)
+                .on('click', function () { deleteStoryItem(item); }).appendTo(actions);
+            head.append(titleBox, actions);
+            card.append(head, $('<div>').addClass('story-content').text(item.content || ''));
+            host.append(card);
+        });
+    }
+
+    function loadStoryItems() {
+        clearStoryError();
+        if (!Number.isSafeInteger(storyBookId) || storyBookId <= 0) {
+            $('#storyWorkspace').hide();
+            showStoryError(storyMessages.missingBook);
+            return;
+        }
+        $.ajax({
+            type: 'get',
+            url: '/author/story-items',
+            data: {bookId: storyBookId, type: activeStoryType},
+            dataType: 'json',
+            success: function (result) {
+                if (result.code === 200) {
+                    renderStoryItems(result.data);
+                } else if (result.code === 1001) {
+                    location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
+                } else {
+                    showStoryError(result.msg);
+                }
+            },
+            error: function () { showStoryError(storyMessages.network); }
+        });
+    }
+
+    function editStoryItem(item) {
+        activeStoryType = item.type;
+        $('.story-tab').removeClass('on').filter('[data-type="' + item.type + '"]').addClass('on');
+        $('#storyItemId').val(item.id);
+        $('#storyVersion').val(item.version);
+        $('#storyType').val(item.type);
+        $('#storyTitle').val(item.title);
+        $('#storyTimeline').val(item.timelineLabel || '');
+        $('#storyOrder').val(item.sortOrder);
+        $('#storyContent').val(item.content || '');
+        window.scrollTo(0, 0);
+    }
+
+    function storyPayload() {
+        return {
+            type: $('#storyType').val(),
+            title: $.trim($('#storyTitle').val()),
+            timelineLabel: $.trim($('#storyTimeline').val()),
+            sortOrder: Number($('#storyOrder').val() || 0),
+            content: $('#storyContent').val() || ''
+        };
+    }
+
+    function saveStoryItem() {
+        clearStoryError();
+        var payload = storyPayload();
+        if (!payload.title) {
+            showStoryError(storyMessages.requiredTitle);
+            return;
+        }
+        var itemId = $('#storyItemId').val();
+        var method = itemId ? 'put' : 'post';
+        var url = itemId ? '/author/story-items/' + encodeURIComponent(itemId) : '/author/story-items';
+        if (itemId) {
+            payload.expectedVersion = Number($('#storyVersion').val());
+        } else {
+            payload.bookId = storyBookId;
+        }
+        $.ajax({
+            type: method,
+            url: url,
+            contentType: 'application/json;charset=UTF-8',
+            data: JSON.stringify(payload),
+            dataType: 'json',
+            success: function (result) {
+                if (result.code === 200) {
+                    activeStoryType = result.data.type;
+                    resetStoryForm();
+                    loadStoryItems();
+                    layer.msg(storyMessages.saved);
+                } else {
+                    showStoryError(result.msg);
+                }
+            },
+            error: function () { showStoryError(storyMessages.network); }
+        });
+    }
+
+    function deleteStoryItem(item) {
+        layer.confirm(storyMessages.deleteConfirm, {
+            title: storyMessages.notice,
+            btn: [storyMessages.confirm, storyMessages.cancel]
+        }, function (index) {
+            $.ajax({
+                type: 'delete',
+                url: '/author/story-items/' + encodeURIComponent(item.id),
+                data: {expectedVersion: item.version},
+                dataType: 'json',
+                success: function (result) {
+                    if (result.code === 200) {
+                        resetStoryForm();
+                        loadStoryItems();
+                        layer.msg(storyMessages.deleted);
+                    } else {
+                        showStoryError(result.msg);
+                    }
+                },
+                error: function () { showStoryError(storyMessages.network); }
+            });
+            layer.close(index);
+        });
+    }
+
+    $('.story-tab').on('click', function () {
+        activeStoryType = $(this).attr('data-type');
+        $('.story-tab').removeClass('on');
+        $(this).addClass('on');
+        resetStoryForm();
+        loadStoryItems();
+    });
+    $('#storyType').on('change', function () {
+        activeStoryType = $(this).val();
+        $('.story-tab').removeClass('on').filter('[data-type="' + activeStoryType + '"]').addClass('on');
+    });
+    $('#storySave').on('click', saveStoryItem);
+    $('#storyReset').on('click', resetStoryForm);
+    resetStoryForm();
+    loadStoryItems();
+</script>
+</body>
+</html>

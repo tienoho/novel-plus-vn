@@ -1,0 +1,1349 @@
+@charset "utf-8";
+.Interaction_tab a, .Interaction_tab a .icon, .Interaction_tab a.fr .icon, .dashang_bar .l_bar .list li, .btn_pc, .btn_flw, .fansBox .fans_bg, .icon_hg {
+    background: url(../images/icon_interation.png) no-repeat
+}
+
+.InteractionBox {
+    padding: 15px 14px 11px
+}
+
+.Interaction_tab a {
+    width: 339px;
+    height: 60px;
+    line-height: 60px;
+    font-size: 14px;
+    color: #000
+}
+
+/*.Interaction_tab a:hover, .Interaction_tab a.on { background-position: 0 -60px; color: #000 }*/
+.Interaction_tab a .icon {
+    width: 38px;
+    height: 60px;
+    float: left;
+    margin: 0 10px 0 64px;
+    background-position: -348px 0
+}
+
+.Interaction_tab a.fr .icon {
+    background-position: -348px -60px
+}
+
+.Interaction_tab h4 {
+    font-size: 17px;
+    margin-right: 8px;
+    display: inline
+}
+
+.InteractionBox .l_bar, .InteractionBox .r_bar {
+    width: 335px;
+    margin: 0 2px;
+    float: left
+}
+
+.InteractionBox .r_bar .time {
+    padding-right: 1px
+}
+
+.InteractionBox .l_bar .tit {
+    padding: 22px 14px 0 4px
+}
+
+.InteractionBox .l_bar .tit .red, .InteractionBox .r_bar .tit .red {
+    padding: 0 5px
+}
+
+.InteractionBox .l_bar .tit .fl {
+    font-size: 17px
+}
+
+.InteractionBox .l_bar .tit .fr {
+    padding-top: 7px
+}
+
+.dashang_bar .l_bar .list {
+    padding-top: 20px
+}
+
+.dashang_bar .l_bar .list li {
+    width: 90px;
+    height: 134px;
+    line-height: 1;
+    float: left;
+    margin: 0 20px 0 6px;
+    text-align: center;
+    background-position: 0 -130px
+}
+
+.dashang_bar .l_bar .list li img {
+    width: 60px;
+    height: 60px;
+    background: #fff;
+    margin: 35px 15px 10px;
+    border-radius: 50%;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, .3)
+}
+
+.dashang_bar .l_bar .list li .user_name {
+    line-height: 1 !important;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    display: block;
+    padding: 0 10px
+}
+
+.dashang_bar .l_bar .list .li_1 {
+}
+
+.dashang_bar .l_bar .list .li_2 {
+    background-position: -100px -130px
+}
+
+.dashang_bar .l_bar .list .li_3 {
+    background-position: -200px -130px;
+    margin-right: 0
+}
+
+.InteractionBox .r_bar .tit {
+    padding: 14px 1px 12px 1px
+}
+
+.InteractionBox .r_bar .tit strong {
+    display: block;
+    font-size: 13px
+}
+
+.InteractionBox .r_bar .list, .InteractionBox .r_bar .sum {
+    margin: 0 1px
+}
+
+.InteractionBox .r_bar .list li {
+    height: 27px;
+    line-height: 27px;
+    overflow: hidden;
+    border-top: 1px dotted #ccc;
+    color: #999
+}
+
+.InteractionBox .r_bar .list li .user_name {
+    margin-right: 8px
+}
+
+.InteractionBox .r_bar .sum {
+    border-top: 1px dotted #ccc;
+    line-height: 34px
+}
+
+.btn_pc, .btn_flw {
+    width: 140px;
+    height: 44px;
+    display: inline-block;
+    background-position: 0 -270px
+}
+
+.btn_flw {
+    width: 122px;
+    background-position: -150px -270px
+}
+
+.flower_bar .l_bar .list {
+    padding: 0 14px 0 4px
+}
+
+.flower_bar .l_bar li {
+    padding: 15px 0 6px;
+    overflow: hidden;
+    clear: both
+}
+
+.flower_bar .l_bar .book_intro {
+    width: 265px
+}
+
+.flower_bar .l_bar .cover img {
+    width: 45px;
+    height: 56px;
+    background: #f6f6f6;
+    margin: 2px 16px 0 0
+}
+
+.flower_bar .l_bar .book_intro .txt {
+    height: 38px;
+    line-height: 18px;
+    padding-top: 2px;
+    color: #999;
+    overflow: hidden;
+    display: block
+}
+
+.r_fansBrank .book_intro {
+    float: inherit !important
+}
+
+.user_level1, .user_level2, .user_level3, .user_level4, .user_level5, .user_level6, .user_level7, .user_level8, .user_level9, .user_level10, .user_level11 {
+    width: 30px;
+    height: 16px;
+    line-height: 16px;
+    text-align: center;
+    border-radius: 2px;
+    margin: 11px 0 0;
+    color: #fff
+}
+
+.user_level1 {
+    background: #d0d0d0
+}
+
+.user_level2 {
+    background: #c0c0c0
+}
+
+.user_level3 {
+    background: #b4b3b3
+}
+
+.user_level4 {
+    background: #a0dfe6
+}
+
+.user_level5 {
+    background: #77d2db
+}
+
+.user_level6 {
+    background: #b4d894
+}
+
+.user_level7 {
+    background: #94c766
+}
+
+.user_level8 {
+    background: #ffc24c
+}
+
+.user_level9 {
+    background: #ffa800
+}
+
+.user_level10 {
+    background: #ff6e26
+}
+
+.user_level11 {
+    background: #ff0000
+}
+
+/* Lớp nổi cố định */
+.readPopup {
+    border: 1px solid #D9D9D9;
+    border-radius: 3px;
+    background: #FFF;
+    box-shadow: 0 1px 2px #999;
+    overflow: hidden;
+    padding-bottom: 20px;
+    z-index: 9999;
+    position: fixed;
+    left: 50%;
+    top: 50%
+}
+
+.icon_check {
+    position: absolute;
+    width: 29px;
+    height: 25px;
+    right: -1px;
+    top: -1px;
+    z-index: 2;
+    background: url(../images/icon_readpage.png) no-repeat 0 -142px
+}
+
+.on .icon_check {
+    display: block
+}
+
+.closePopup {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 16px;
+    height: 15px;
+    background: url(../images/icon_readpage.png) no-repeat -43px -126px
+}
+
+.chapterBox {
+    width: 600px;
+    margin-left: -300px;
+    margin-top: -260px
+}
+
+.chapterBox .scrollWrap {
+    height: 540px
+}
+
+/* Nội dung hộp thoại */
+.popupTit h2 {
+    text-align: center;
+    letter-spacing: 15px;
+    color: #333;
+    font: 700 20px/30px "Microsoft Yahei";
+    margin: 30px 0
+}
+
+.popupTit h3 {
+    font-size: 16px;
+    margin: 15px 20px
+}
+
+.scrollWrap {
+    overflow-y: scroll;
+    position: relative
+}
+
+.dirWrap {
+    padding: 0 40px
+}
+
+.scrollWrap h3 {
+    padding-left: 26px;
+    font-size: 14px;
+    background: #e6e6e6;
+    height: 30px;
+    line-height: 30px;
+    font-weight: normal;
+    position: relative;
+    cursor: pointer;
+    margin: 0 0 15px;
+    border-radius: 3px
+}
+
+.readPopup .tc .btn_gray {
+    margin-left: 30px
+}
+
+/* Ủng hộ, tặng hoa */
+.pcBox, .flowerBox {
+    width: 500px;
+    margin-left: -251px;
+    margin-top: -215px
+}
+
+.propsList {
+    padding: 15px 0 10px 20px
+}
+
+.propsList li {
+    float: left;
+    cursor: pointer;
+    margin: 0 8px 16px;
+    text-align: center
+}
+
+.propWrap {
+    width: 134px;
+    height: 54px;
+    line-height: 54px;
+    text-align: center;
+    font-size: 15px;
+    color: #000;
+    display: block;
+    border: 1px solid #e6e6e6;
+    background: #fafafa;
+    position: relative
+}
+
+.on .propWrap, .propWrap:hover {
+    width: 132px;
+    height: 52px;
+    line-height: 52px;
+    color: #3eaf7c;
+    border: 2px solid #3eaf7c;
+    background: #fff
+}
+
+.propsList li i {
+    display: none;
+    line-height: 1
+}
+
+.propsList li .propsBox {
+    padding-top: 20px
+}
+
+.have_num {
+    padding: 0 30px 10px;
+    font-size: 14px;
+    color: #999
+}
+
+.have_num .red {
+    margin: 0 4px
+}
+
+.popup_text {
+    width: 418px;
+    height: 62px;
+    padding: 8px 10px;
+    margin: 8px 30px 20px;
+    color: #555;
+    border: 1px solid #e6e6e6;
+}
+
+/* Thông báo */
+.newsTipBox {
+    width: 400px;
+    padding-bottom: 30px;
+    margin-left: -200px;
+    margin-top: -105px
+}
+
+.tipWrap {
+    padding: 30px;
+    font-size: 14px
+}
+
+/* Lớp phủ */
+.maskBox {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 995;
+    width: 100%;
+    height: 100%;
+    background: black;
+    filter: alpha(opacity=30);
+    opacity: 0.3;
+    animation: mask 2s ease-out 0s 1 normal
+}
+
+@keyframes mask {
+    0% {
+        filter: alpha(opacity=0);
+        opacity: 0
+    }
+    100% {
+        filter: alpha(opacity=30);
+        opacity: 0.3
+    }
+}
+
+.fansBox {
+    width: 998px;
+    border: 1px solid #eaeaea
+}
+
+.fansHead {
+    height: 54px;
+    line-height: 54px;
+    margin: 0 14px;
+    border-bottom: 1px solid #eaeaea;
+    font-weight: normal
+}
+
+.fansHead h2 {
+    font-size: 20px;
+    font-weight: normal
+}
+
+.fansCon {
+    padding: 20px
+}
+
+.fansCon .r_bar {
+    width: 204px
+}
+
+.fansCon .cover {
+    width: 200px;
+    height: 250px;
+    background: #f6f6f6;
+    border: 1px solid #ebebeb;
+    padding: 1px;
+}
+
+.fansCon .btn_red {
+    width: 202px;
+    margin: 2px 0 14px;
+    padding: 10px 0
+}
+
+.fansCon .l_bar {
+    width: 750px
+}
+
+.fansCon .l_bar .list1 {
+    padding-top: 4px
+}
+
+.fansCon .list1 li {
+    width: 33%;
+    line-height: 1;
+    float: left
+}
+
+.fansCon .list1 .fans_bg {
+    width: 90px;
+    height: 112px;
+    background-position: 0 -320px;
+    position: relative;
+    margin-right: 18px
+}
+
+.fansCon .list1 .fans_bg img {
+    width: 60px;
+    height: 60px;
+    background: #fff;
+    margin: 39px 15px 0;
+    border-radius: 50%;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, .3)
+}
+
+.fansCon .list1 h5 {
+    font-size: 16px;
+    padding: 9px 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.fansCon .list1 li .user_name {
+    line-height: 1 !important
+}
+
+.fansCon .list1 .li_2 .fans_bg {
+    background-position: -100px -320px
+}
+
+.fansCon .list1 .li_3 .fans_bg {
+    background-position: -200px -320px
+}
+
+.fansCon .fans_info {
+    width: 136px;
+    font-size: 14px
+}
+
+.fansCon .fans_info .fans_pointer {
+    padding: 14px 0 22px
+}
+
+.fans_level span {
+    padding: 1px 10px 2px
+}
+
+.icon_hg {
+    width: 30px;
+    height: 30px;
+    display: inline-block;
+    background-position: -300px -320px;
+    position: absolute;
+    top: -13px;
+    right: -13px
+}
+
+.fansCon .list2 {
+    padding: 0
+}
+
+.fansCon .list2 li {
+    width: 250px;
+    float: left;
+    height: 59px;
+    padding: 0 0 19px;
+    display: inline
+}
+
+.fansCon .list2 .num {
+    font: 16px/59px "Microsoft YaHei", Arial, SimSun;
+    width: 32px;
+    color: #666;
+    font-weight: bold
+}
+
+.fansCon .list2 .img {
+    width: 40px;
+    height: 40px;
+    margin-top: 10px;
+    position: relative
+}
+
+.fansCon .list2 .img img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%
+}
+
+.fansCon .list2 .img span {
+    display: block;
+    margin: 0;
+    position: absolute;
+    left: 5px;
+    bottom: 0
+}
+
+.fansCon .list2 .msg {
+    display: inline;
+    width: 164px;
+    padding: 8px 0 0 12px;
+}
+
+.fansCon .list2 .msg h4 {
+    line-height: 24px;
+    font-weight: normal;
+    font-size: 16px;
+    overflow: hidden;
+    height: 24px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.fansCon .list2 .msg p {
+    font-size: 12px;
+    line-height: 16px;
+    color: #999;
+}
+
+.fansTop {
+    margin-bottom: 8px;
+    border-bottom: 1px solid #eaeaea
+}
+
+.fans_tab {
+    width: 1005px;
+    overflow: hidden;
+}
+
+.fans_tab ul {
+    float: left;
+    width: 280px;
+    margin-right: 55px;
+}
+
+.fans_tab li {
+    line-height: 39px;
+    overflow: hidden;
+    font-size: 14px;
+    height: 39px;
+    border-bottom: 1px solid #ebebeb;
+}
+
+.fans_tab li .num {
+    float: left;
+    width: 40px;
+    color: #666;
+}
+
+.fans_tab li a {
+    float: left;
+    overflow: hidden;
+    width: 200px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.fans_tab li .fans_level {
+    float: left;
+    font-size: 12px;
+    width: 40px;
+    text-align: right;
+    color: #999;
+}
+
+.fansRule dl {
+    padding: 20px 20px 30px
+}
+
+.fansRule dt {
+    line-height: 24px;
+    margin-bottom: 6px;
+    font-size: 16px;
+}
+
+.fansRule dd {
+    font-size: 12px;
+    line-height: 20px;
+    margin-bottom: 16px;
+    color: #777;
+}
+
+.fansRule table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.fansRule table th, .fansRule table td {
+    font-weight: 400;
+    min-width: 40px;
+    padding: 12px 0;
+    text-align: left;
+    border-top: 1px solid #ebebeb;
+    border-bottom: 1px solid #ebebeb;
+}
+
+.fansRule ol li {
+    list-style-type: decimal;
+    list-style-position: inside;
+}
+
+.InteractionBox .l_bar, .flower_bar .l_bar {
+    display: none
+}
+
+.dashang_bar {
+    float: left
+}
+
+.flower_bar {
+    float: right
+}
+
+.author_head {
+    text-align: center
+}
+
+.author_head .head img {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #f6f6f6;
+    display: block;
+    margin: 0 auto
+}
+
+.author_head .msg {
+    margin-top: -4px
+}
+
+.author_head .msg h4 {
+    font-size: 14px;
+    line-height: 2.4
+}
+
+.icon_qyzz {
+    padding: 5px;
+    line-height: 1;
+    background: #3eaf7c;
+    color: #fff;
+    border-radius: 3px;
+    display: inline-block
+}
+
+.author_intro, .author_book {
+    border-top: 1px dotted #e0e0e0
+}
+
+.author_intro h4, .author_book h4 {
+    font-weight: normal;
+    font-size: 12px;
+    padding: 10px 0 5px
+}
+
+.author_intro .intro_txt, .author_book .book_txt {
+    line-height: 1.8;
+    padding-bottom: 10px
+}
+
+.author_book .rightList ul {
+    padding: 0
+}
+
+
+.tj_bar .cover {
+    float: left;
+    display: block;
+    margin-right: 10px
+}
+
+.tj_bar .cover img {
+    width: 64px;
+    height: auto;
+    background: #f6f6f6
+}
+
+.tj_bar .book_intro {
+    padding: 15px 0;
+    clear: both;
+    word-break: break-all;
+    zoom: 1;
+    overflow: hidden
+}
+
+.tj_bar .dec {
+    width: 136px;
+    float: right
+}
+
+.tj_bar .book_intro .book_name {
+    display: block;
+    font-size: 14px;
+    line-height: 1;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden
+}
+
+.tj_bar .book_intro .txt {
+    height: 54px;
+    line-height: 1.5;
+    color: #808080;
+    overflow: hidden;
+    display: block;
+    margin-top: 10px;
+}
+
+.tj_bar li {
+    border-bottom: 1px solid #eee
+}
+
+.tj_bar li:last-child {
+    border: none
+}
+
+.tj_bar li:last-child .book_intro {
+    padding: 15px 0 2px
+}
+
+.friend_link {
+    display: none
+}
+
+.footer {
+    background: #fff;
+    padding: 16px 0 20px
+}
+
+/* ==========================================================================
+   Group 1: Book Catalog & Ranking UI Modernization (Novel-Plus Upgrade)
+   ========================================================================== */
+
+/* 1. Catalog Filter Section (.so_tag) */
+.so_tag {
+    background: #ffffff !important;
+    border-radius: var(--np-radius-lg) !important;
+    padding: 1.5rem !important;
+    box-shadow: var(--np-shadow-card) !important;
+    border: 1px solid var(--np-border-light) !important;
+    margin-bottom: 1.75rem !important;
+    box-sizing: border-box;
+}
+
+.so_tag ul.list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.125rem;
+}
+
+.so_tag li {
+    display: flex !important;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.so_tag .tit {
+    font-weight: 700 !important;
+    color: var(--np-text-main) !important;
+    min-width: 150px;
+    flex-shrink: 0;
+}
+
+.so_tag a {
+    display: inline-flex !important;
+    align-items: center;
+    padding: 0.35rem 0.875rem !important;
+    border-radius: var(--np-radius-full) !important;
+    background: var(--np-bg-body) !important;
+    color: var(--np-text-sub) !important;
+    font-size: 0.8125rem !important;
+    font-weight: 500 !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border: 1px solid var(--np-border) !important;
+    text-decoration: none !important;
+    margin: 0 !important;
+}
+
+.so_tag a:hover {
+    background: rgba(21, 153, 87, 0.1) !important;
+    color: var(--np-primary) !important;
+    border-color: rgba(21, 153, 87, 0.3) !important;
+}
+
+.so_tag a.on {
+    background: var(--np-primary) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    border-color: var(--np-primary) !important;
+    box-shadow: 0 4px 12px var(--np-primary-glow) !important;
+}
+
+/* 2. Catalog Content & Table Containers */
+.channelClassContent, .pad20 {
+    background: #ffffff;
+    border-radius: var(--np-radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--np-shadow-card);
+    border: 1px solid var(--np-border-light);
+    box-sizing: border-box;
+}
+
+/* 3. Ranking Layout (.channelRankingContent) */
+.channelRankingContent {
+    display: grid !important;
+    grid-template-columns: 1fr 300px !important;
+    gap: 1.75rem !important;
+    background: transparent !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+@media (max-width: 1024px) {
+    .channelRankingContent {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+.channelRankingContent .wrap_left {
+    width: 100% !important;
+    float: none !important;
+    background: #ffffff;
+    border-radius: var(--np-radius-lg);
+    padding: 0 !important;
+    box-shadow: var(--np-shadow-card);
+    border: 1px solid var(--np-border-light);
+    box-sizing: border-box;
+}
+
+.channelRankingContent .wrap_right {
+    width: 100% !important;
+    float: none !important;
+    background: #ffffff;
+    border-radius: var(--np-radius-lg);
+    padding: 1.25rem !important;
+    box-shadow: var(--np-shadow-card);
+    border: 1px solid var(--np-border-light);
+    box-sizing: border-box;
+}
+
+.rightList2 ul {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.rightList2 a {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem !important;
+    border-radius: var(--np-radius-md) !important;
+    color: var(--np-text-main) !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+    transition: all 0.2s ease !important;
+    border: 1px solid transparent !important;
+    text-decoration: none !important;
+}
+
+.rightList2 a:hover {
+    background: var(--np-bg-body) !important;
+}
+
+.rightList2 a.on {
+    background: rgba(21, 153, 87, 0.08) !important;
+    color: var(--np-primary) !important;
+    border: 1px solid rgba(21, 153, 87, 0.25) !important;
+}
+
+/* Rank Number Badge Adjustments in Ranking Table */
+.rankTable td.rank i.num1 {
+    background: var(--np-gold-grad) !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
+}
+
+    width: 136px;
+    float: right
+}
+
+.tj_bar .book_intro .book_name {
+    display: block;
+    font-size: 14px;
+    line-height: 1;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden
+}
+
+.tj_bar .book_intro .txt {
+    height: 54px;
+    line-height: 1.5;
+    color: #808080;
+    overflow: hidden;
+    display: block;
+    margin-top: 10px;
+}
+
+.tj_bar li {
+    border-bottom: 1px solid #eee
+}
+
+.tj_bar li:last-child {
+    border: none
+}
+
+.tj_bar li:last-child .book_intro {
+    padding: 15px 0 2px
+}
+
+.friend_link {
+    display: none
+}
+
+.footer {
+    background: #fff;
+    padding: 16px 0 20px
+}
+
+/* ==========================================================================
+   Group 1: Book Catalog & Ranking UI Modernization (Novel-Plus Upgrade)
+   ========================================================================== */
+
+/* 1. Catalog Filter Section (.so_tag) */
+.so_tag {
+    background: #ffffff !important;
+    border-radius: var(--np-radius-lg) !important;
+    padding: 1.5rem !important;
+    box-shadow: var(--np-shadow-card) !important;
+    border: 1px solid var(--np-border-light) !important;
+    margin-bottom: 1.75rem !important;
+    box-sizing: border-box;
+}
+
+.so_tag ul.list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.125rem;
+}
+
+.so_tag li {
+    display: flex !important;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.so_tag .tit {
+    font-weight: 700 !important;
+    color: var(--np-text-main) !important;
+    min-width: 150px;
+    flex-shrink: 0;
+}
+
+.so_tag a {
+    display: inline-flex !important;
+    align-items: center;
+    padding: 0.35rem 0.875rem !important;
+    border-radius: var(--np-radius-full) !important;
+    background: var(--np-bg-body) !important;
+    color: var(--np-text-sub) !important;
+    font-size: 0.8125rem !important;
+    font-weight: 500 !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border: 1px solid var(--np-border) !important;
+    text-decoration: none !important;
+    margin: 0 !important;
+}
+
+.so_tag a:hover {
+    background: rgba(21, 153, 87, 0.1) !important;
+    color: var(--np-primary) !important;
+    border-color: rgba(21, 153, 87, 0.3) !important;
+}
+
+.so_tag a.on {
+    background: var(--np-primary) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    border-color: var(--np-primary) !important;
+    box-shadow: 0 4px 12px var(--np-primary-glow) !important;
+}
+
+/* 2. Catalog Content & Table Containers */
+.channelClassContent, .pad20 {
+    background: #ffffff;
+    border-radius: var(--np-radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--np-shadow-card);
+    border: 1px solid var(--np-border-light);
+    box-sizing: border-box;
+}
+
+/* 3. Ranking Layout (.channelRankingContent) */
+.channelRankingContent {
+    display: grid !important;
+    grid-template-columns: 1fr 300px !important;
+    gap: 1.75rem !important;
+    background: transparent !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+@media (max-width: 1024px) {
+    .channelRankingContent {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+.channelRankingContent .wrap_left {
+    width: 100% !important;
+    float: none !important;
+    background: #ffffff;
+    border-radius: var(--np-radius-lg);
+    padding: 0 !important;
+    box-shadow: var(--np-shadow-card);
+    border: 1px solid var(--np-border-light);
+    box-sizing: border-box;
+}
+
+.channelRankingContent .wrap_right {
+    width: 100% !important;
+    float: none !important;
+    background: #ffffff;
+    border-radius: var(--np-radius-lg);
+    padding: 1.25rem !important;
+    box-shadow: var(--np-shadow-card);
+    border: 1px solid var(--np-border-light);
+    box-sizing: border-box;
+}
+
+.rightList2 ul {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.rightList2 a {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem !important;
+    border-radius: var(--np-radius-md) !important;
+    color: var(--np-text-main) !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+    transition: all 0.2s ease !important;
+    border: 1px solid transparent !important;
+    text-decoration: none !important;
+}
+
+.rightList2 a:hover {
+    background: var(--np-bg-body) !important;
+}
+
+.rightList2 a.on {
+    background: rgba(21, 153, 87, 0.08) !important;
+    color: var(--np-primary) !important;
+    border: 1px solid rgba(21, 153, 87, 0.25) !important;
+}
+
+/* Rank Number Badge Adjustments in Ranking Table */
+.rankTable td.rank i.num1 {
+    background: var(--np-gold-grad) !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
+}
+
+.rankTable td.rank i.num2 {
+    background: var(--np-silver-grad) !important;
+    color: #ffffff !important;
+}
+
+.rankTable td.rank i.num3 {
+    background: var(--np-bronze-grad) !important;
+    color: #ffffff !important;
+}
+
+/* Mobile Responsive Adjustments for Catalog & Ranking */
+@media (max-width: 768px) {
+    .so_tag {
+        padding: 1rem !important;
+    }
+
+    .so_tag li {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.375rem !important;
+    }
+
+    .so_tag .tit {
+        min-width: auto !important;
+        font-size: 0.8125rem !important;
+    }
+
+    .so_tag a {
+        font-size: 0.75rem !important;
+        padding: 0.25rem 0.625rem !important;
+    }
+
+    .channelClassContent, .pad20 {
+        padding: 1rem !important;
+    }
+}
+
+/* ==========================================================================
+   Group 2: Book Detail Page UI Modernization
+   ========================================================================== */
+
+.channelBookInfo {
+    background: #ffffff !important;
+    border-radius: var(--np-radius-lg) !important;
+    padding: 2rem !important;
+    box-shadow: var(--np-shadow-card) !important;
+    border: 1px solid var(--np-border-light) !important;
+    margin-bottom: 2rem !important;
+    box-sizing: border-box;
+}
+
+.bookCover {
+    display: flex !important;
+    gap: 2rem !important;
+    align-items: flex-start !important;
+}
+
+@media (max-width: 768px) {
+    .bookCover {
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+    }
+}
+
+.bookCover .book_cover img {
+    width: 170px !important;
+    height: 230px !important;
+    border-radius: var(--np-radius-md) !important;
+    object-fit: cover !important;
+    box-shadow: var(--np-shadow-hover) !important;
+    border: 2px solid #ffffff !important;
+    flex-shrink: 0;
+}
+
+.book_info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.book_info .tit {
+    margin-bottom: 1rem;
+}
+
+.book_info .tit h1 {
+    font-size: 1.75rem !important;
+    font-weight: 700 !important;
+    color: var(--np-text-main) !important;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.book_info .tit .author {
+    font-size: 0.9375rem !important;
+    color: var(--np-primary) !important;
+    font-weight: 600 !important;
+    margin-left: 1rem !important;
+    vertical-align: middle;
+}
+
+.book_info .list li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.book_info .list .item {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.875rem;
+    background: var(--np-bg-body);
+    border-radius: var(--np-radius-full);
+    font-size: 0.8125rem;
+    color: var(--np-text-sub);
+    border: 1px solid var(--np-border-light);
+}
+
+.book_info .list .item em {
+    font-weight: 700;
+    color: var(--np-text-main);
+    margin-left: 0.25rem;
+}
+
+.book_info .intro_txt {
+    font-size: 0.875rem;
+    line-height: 1.7;
+    color: var(--np-text-sub);
+    background: var(--np-bg-body);
+    padding: 1rem 1.25rem;
+    border-radius: var(--np-radius-md);
+    border: 1px solid var(--np-border-light);
+    margin-bottom: 1.5rem;
+}
+
+.book_info .btns {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.book_info .btn_ora {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    padding: 0.625rem 1.75rem !important;
+    background: var(--np-primary) !important;
+    color: #ffffff !important;
+    font-size: 0.9375rem !important;
+    font-weight: 700 !important;
+    border-radius: var(--np-radius-full) !important;
+    box-shadow: 0 4px 14px var(--np-primary-glow) !important;
+    text-decoration: none !important;
+    transition: all 0.2s ease !important;
+    height: auto !important;
+    line-height: normal !important;
+}
+
+.book_info .btn_ora:hover {
+    background: var(--np-primary-hover) !important;
+    transform: translateY(-2px);
+}
+
+.book_info .btn_ora_white {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    padding: 0.625rem 1.5rem !important;
+    background: var(--np-bg-body) !important;
+    color: var(--np-text-main) !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    border-radius: var(--np-radius-full) !important;
+    border: 1px solid var(--np-border) !important;
+    text-decoration: none !important;
+    transition: all 0.2s ease !important;
+    height: auto !important;
+    line-height: normal !important;
+}
+
+.book_info .btn_ora_white:hover {
+    background: #ffffff !important;
+    border-color: var(--np-primary) !important;
+    color: var(--np-primary) !important;
+}
