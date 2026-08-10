@@ -22,14 +22,7 @@
 			<if test="isRequired != null and isRequired != ''"> and is_required = #{isRequired} </if>
 			<if test="dictType != null and dictType != ''"> and dict_type = #{dictType} </if>
 		</where>
-		<choose>
-			<when test="sort != null and sort.trim() != ''">
-				order by ${sort} ${order}
-			</when>
-			<otherwise>
-				order by id desc
-			</otherwise>
-		</choose>
+		order by id desc
 		<if test="offset != null and limit != null">
 			limit #{offset}, #{limit}
 		</if>

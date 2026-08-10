@@ -89,7 +89,10 @@ x-app-defaults: &app-defaults
 
 services:
   mysql:
-    image: mysql:8.4
+    build:
+      context: .
+      dockerfile: deploy/mysql/Dockerfile
+    image: ${NOVEL_MYSQL_IMAGE:-novel-plus/mysql:${IMAGE_TAG:-local}}
     environment:
       TZ: ${TZ:-Asia/Ho_Chi_Minh}
       MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
@@ -119,7 +122,7 @@ services:
     build:
       context: .
       dockerfile: deploy/flyway/Dockerfile
-    image: novel-plus/migrations:${IMAGE_TAG:-local}
+    image: ${NOVEL_MIGRATIONS_IMAGE:-novel-plus/migrations:${IMAGE_TAG:-local}}
     environment:
       # Flyway dùng root để tạo trigger bất biến; ứng dụng vẫn dùng MYSQL_USER ít quyền hơn.
       FLYWAY_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-novel_plus}?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=Asia/Ho_Chi_Minh
@@ -138,7 +141,7 @@ services:
     restart: "no"
 
   redis:
-    image: redis:7-alpine
+    image: redis:7-alpine@sha256:e7723ff73d963f5cc6d9c4643ea3d989527a402a319239054e9472a7fb9219a2
     command:
       - /bin/sh
       - -ec
@@ -160,15 +163,18 @@ services:
     restart: unless-stopped
 
   pushgateway:
-    image: prom/pushgateway:v1.11.1
+    build:
+      context: .
+      dockerfile: deploy/observability/pushgateway/Dockerfile
+    image: ${NOVEL_PUSHGATEWAY_IMAGE:-novel-plus/pushgateway:${IMAGE_TAG:-local}}
     command:
       - --web.listen-address=:9091
-      - --persistence.file=/data/metrics.db
+      - --persistence.file=/pushgateway/metrics.db
       - --persistence.interval=5m
     expose:
       - "9091"
     volumes:
-      - pushgateway-data:/data
+      - pushgateway-data:/pushgateway
     healthcheck:
       test: ["CMD", "wget", "--spider", "--quiet", "http://127.0.0.1:9091/-/ready"]
       interval: 15s
@@ -185,7 +191,7 @@ services:
       context: .
       dockerfile: deploy/docker/Dockerfile
       target: front
-    image: novel-plus/front:${IMAGE_TAG:-local}
+    image: ${NOVEL_FRONT_IMAGE:-novel-plus/front:${IMAGE_TAG:-local}}
     environment:
       <<: *app-environment
       SPRING_APPLICATION_NAME: novel-front
@@ -233,12 +239,19 @@ services:
       VNPAY_RECURRING_TMN_CODE: ${VNPAY_RECURRING_TMN_CODE:-disabled}
       VNPAY_RECURRING_HASH_SECRET_FILE: /run/secrets/vnpay_recurring_hash_secret
       VNPAY_RECURRING_PAY_URL: ${VNPAY_RECURRING_PAY_URL:-https://sandbox.vnpayment.vn/recurring-payment/pay}
+      VNPAY_RECURRING_QUERY_URL: ${VNPAY_RECURRING_QUERY_URL:-https://sandbox.vnpayment.vn/merchant_webapi/api/transaction}
+      VNPAY_RECURRING_SERVER_IP: ${VNPAY_RECURRING_SERVER_IP:-127.0.0.1}
       VNPAY_RECURRING_RETURN_URL: ${VNPAY_RECURRING_RETURN_URL:-http://localhost:8083/payment/vnpay-recurring/return}
       VNPAY_RECURRING_CANCEL_URL: ${VNPAY_RECURRING_CANCEL_URL:-http://localhost:8083/payment/vnpay-recurring/cancel}
-      VNPAY_RECURRING_RESULT_REDIRECT_URL: ${VNPAY_RECURRING_RESULT_REDIRECT_URL:-/pay}
+      VNPAY_RECURRING_RESULT_REDIRECT_URL: ${VNPAY_RECURRING_RESULT_REDIRECT_URL:-/user/reading_tickets.html}
       VNPAY_RECURRING_ORDER_TYPE: ${VNPAY_RECURRING_ORDER_TYPE:-other}
       VNPAY_RECURRING_CONNECT_TIMEOUT_SECONDS: ${VNPAY_RECURRING_CONNECT_TIMEOUT_SECONDS:-5}
       VNPAY_RECURRING_REQUEST_TIMEOUT_SECONDS: ${VNPAY_RECURRING_REQUEST_TIMEOUT_SECONDS:-15}
+      VNPAY_RECURRING_QUERY_DELAY_MS: ${VNPAY_RECURRING_QUERY_DELAY_MS:-300000}
+      VNPAY_RECURRING_REVOCATION_DELAY_MS: ${VNPAY_RECURRING_REVOCATION_DELAY_MS:-60000}
+      VNPAY_RECURRING_REVOCATION_RETRY_DELAY_MS: ${VNPAY_RECURRING_REVOCATION_RETRY_DELAY_MS:-300000}
+      VNPAY_RECURRING_REVOCATION_LEASE_MS: ${VNPAY_RECURRING_REVOCATION_LEASE_MS:-60000}
+      VNPAY_RECURRING_REVOCATION_BATCH_SIZE: ${VNPAY_RECURRING_REVOCATION_BATCH_SIZE:-50}
       VIETQR_ENABLED: ${VIETQR_ENABLED:-false}
       VIETQR_BANK_BIN: ${VIETQR_BANK_BIN:-disabled}
       VIETQR_ACCOUNT_NO: ${VIETQR_ACCOUNT_NO:-disabled}
@@ -289,7 +302,7 @@ services:
       context: .
       dockerfile: deploy/docker/Dockerfile
       target: crawl
-    image: novel-plus/crawl:${IMAGE_TAG:-local}
+    image: ${NOVEL_CRAWL_IMAGE:-novel-plus/crawl:${IMAGE_TAG:-local}}
     environment:
       <<: *app-environment
       SPRING_APPLICATION_NAME: novel-crawl
@@ -332,7 +345,7 @@ services:
       context: .
       dockerfile: deploy/docker/Dockerfile
       target: admin
-    image: novel-plus/admin:${IMAGE_TAG:-local}
+    image: ${NOVEL_ADMIN_IMAGE:-novel-plus/admin:${IMAGE_TAG:-local}}
     environment:
       <<: *app-environment
       SPRING_APPLICATION_NAME: novel-admin
@@ -368,7 +381,7 @@ services:
     build:
       context: .
       dockerfile: deploy/observability/alertmanager/Dockerfile
-    image: novel-plus/alertmanager:${IMAGE_TAG:-local}
+    image: ${NOVEL_ALERTMANAGER_IMAGE:-novel-plus/alertmanager:${IMAGE_TAG:-local}}
     environment:
       ALERTMANAGER_WEBHOOK_URL_FILE: /run/secrets/alertmanager_webhook_url
       ALERTMANAGER_ALLOW_HTTP: ${ALERTMANAGER_ALLOW_HTTP:-false}
@@ -389,7 +402,7 @@ services:
     restart: unless-stopped
 
   prometheus:
-    image: quay.io/prometheus/prometheus:v3.11.3
+    image: quay.io/prometheus/prometheus:v3.13.2@sha256:508729e0e2d18e11fd742a5a5ca70e557b940a93948c3c95fd0123a6fd538b69
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.path=/prometheus
@@ -417,7 +430,10 @@ services:
     restart: unless-stopped
 
   grafana:
-    image: grafana/grafana:13.1.0
+    build:
+      context: .
+      dockerfile: deploy/observability/grafana/Dockerfile
+    image: ${NOVEL_GRAFANA_IMAGE:-novel-plus/grafana:${IMAGE_TAG:-local}}
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD__FILE: /run/secrets/grafana_admin_password
@@ -454,7 +470,7 @@ services:
     build:
       context: .
       dockerfile: deploy/caddy/Dockerfile
-    image: novel-plus/caddy:${IMAGE_TAG:-local}
+    image: ${NOVEL_CADDY_IMAGE:-novel-plus/caddy:${IMAGE_TAG:-local}}
     environment:
       NOVEL_DOMAIN: ${NOVEL_DOMAIN:-localhost}
       NOVEL_ADMIN_DOMAIN: ${NOVEL_ADMIN_DOMAIN:-admin.localhost}
@@ -489,7 +505,7 @@ services:
     build:
       context: .
       dockerfile: deploy/backup/Dockerfile
-    image: novel-plus/backup:${IMAGE_TAG:-local}
+    image: ${NOVEL_BACKUP_IMAGE:-novel-plus/backup:${IMAGE_TAG:-local}}
     entrypoint: ["/usr/local/bin/novel-backup"]
     environment:
       MYSQL_HOST: mysql
@@ -516,7 +532,7 @@ services:
     build:
       context: .
       dockerfile: deploy/backup/Dockerfile
-    image: novel-plus/backup:${IMAGE_TAG:-local}
+    image: ${NOVEL_BACKUP_IMAGE:-novel-plus/backup:${IMAGE_TAG:-local}}
     entrypoint: ["/usr/local/bin/novel-restore"]
     user: "0:0"
     environment:
@@ -546,7 +562,7 @@ services:
     build:
       context: .
       dockerfile: deploy/backup/Dockerfile
-    image: novel-plus/backup:${IMAGE_TAG:-local}
+    image: ${NOVEL_BACKUP_IMAGE:-novel-plus/backup:${IMAGE_TAG:-local}}
     entrypoint: ["/usr/local/bin/novel-restore"]
     environment:
       MYSQL_HOST: mysql

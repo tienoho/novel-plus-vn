@@ -20,7 +20,7 @@
             },
             'continue-draft': function () {
                 if (typeof window.continueDraft === 'function') {
-                    window.continueDraft(Number(target.getAttribute('data-draft-id')));
+                    window.continueDraft(target.getAttribute('data-draft-id'));
                 }
             }
         };

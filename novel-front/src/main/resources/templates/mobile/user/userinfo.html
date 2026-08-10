@@ -247,9 +247,9 @@
                     $("#imgLogo").attr("src", data.data.userPhoto);
                 }
                 if (data.data.nickName) {
-                    $("#my_name").html(data.data.nickName);
+                    $("#my_name").text(data.data.nickName);
                 } else {
-                    $("#my_name").html(data.data.username);
+                    $("#my_name").text(data.data.username);
                 }
 
                 if (data.data.userSex === '0') {
@@ -260,7 +260,7 @@
                     $("#girlIcon").css("display", "inline")
                 }
 
-                $("#accountBalance").html(data.data.accountBalance);
+                $("#accountBalance").text(data.data.accountBalance);
 
             } else if (data.code == 1001) {
                 // Chuyển đến trang đăng nhập khi phiên đã hết hạn.

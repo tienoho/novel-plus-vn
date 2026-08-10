@@ -30,6 +30,11 @@
               data-checkout-endpoint="/user/reading-subscriptions/checkouts"
               data-channels-endpoint="/pay/channels"
               data-grants-endpoint="/user/reading-subscriptions/{id}/period-grants"
+              data-mandate-endpoint="/user/reading-subscriptions/mandates/vnpay"
+              data-mandate-state-endpoint="/user/reading-subscriptions/mandates/vnpay/current"
+              data-renewal-settings-endpoint="/user/reading-subscriptions/{id}/renewal-settings"
+              data-price-consent-endpoint="/user/reading-subscriptions/{id}/price-consents"
+              data-cancel-endpoint="/user/reading-subscriptions/{id}/cancel"
               data-login-url="/user/login.html"
               th:data-loading="#{reader.ticket.loading}"
               th:data-load-failed="#{reader.ticket.loadFailed}"
@@ -39,6 +44,7 @@
               th:data-validity="#{reader.ticket.validity}"
               th:data-checkout-unavailable="#{reader.ticket.checkoutUnavailable}"
               th:data-price-unavailable="#{reader.ticket.priceUnavailable}"
+              th:data-price-xu="#{reader.ticket.priceXu}"
               th:data-pay-vnpay="#{reader.ticket.checkout.vnpay}"
               th:data-pay-vietqr="#{reader.ticket.checkout.vietqr}"
               th:data-checkout-creating="#{reader.ticket.checkout.creating}"
@@ -50,8 +56,12 @@
               th:data-current-none="#{reader.ticket.current.none}"
               th:data-current-status="#{reader.ticket.current.status}"
               th:data-next-grant="#{reader.ticket.current.nextGrant}"
+              th:data-next-renewal="#{reader.ticket.current.nextRenewal}"
               th:data-end-at="#{reader.ticket.current.endAt}"
               th:data-status-active="#{reader.ticket.status.active}"
+              th:data-status-past-due="#{reader.ticket.status.pastDue}"
+              th:data-status-pending-price-consent="#{reader.ticket.status.pendingPriceConsent}"
+              th:data-status-cancel-at-period-end="#{reader.ticket.status.cancelAtPeriodEnd}"
               th:data-status-paused="#{reader.ticket.status.paused}"
               th:data-status-cancelled="#{reader.ticket.status.cancelled}"
               th:data-status-expired="#{reader.ticket.status.expired}"
@@ -59,7 +69,41 @@
               th:data-period="#{reader.ticket.grants.period}"
               th:data-expires-at="#{reader.ticket.grants.expiresAt}"
               th:data-ledger-empty="#{reader.ticket.ledger.empty}"
-              th:data-lots-empty="#{reader.ticket.lots.empty}">
+              th:data-lots-empty="#{reader.ticket.lots.empty}"
+              th:data-renewal-enable="#{reader.ticket.renewal.enable}"
+              th:data-renewal-help="#{reader.ticket.renewal.help}"
+              th:data-renewal-current="#{reader.ticket.renewal.current}"
+              th:data-renewal-on="#{reader.ticket.renewal.on}"
+              th:data-renewal-off="#{reader.ticket.renewal.off}"
+              th:data-renewal-primary="#{reader.ticket.renewal.primary}"
+              th:data-renewal-fallback="#{reader.ticket.renewal.fallback}"
+              th:data-renewal-save="#{reader.ticket.renewal.save}"
+              th:data-renewal-saving="#{reader.ticket.renewal.saving}"
+              th:data-renewal-saved="#{reader.ticket.renewal.saved}"
+              th:data-renewal-failed="#{reader.ticket.renewal.failed}"
+              th:data-funding-wallet="#{reader.ticket.funding.wallet}"
+              th:data-funding-vnpay="#{reader.ticket.funding.vnpay}"
+              th:data-funding-none="#{reader.ticket.funding.none}"
+              th:data-mandate-authorize="#{reader.ticket.mandate.authorize}"
+              th:data-mandate-continue="#{reader.ticket.mandate.continue}"
+              th:data-mandate-creating="#{reader.ticket.mandate.creating}"
+              th:data-mandate-redirecting="#{reader.ticket.mandate.redirecting}"
+              th:data-mandate-uncertain="#{reader.ticket.mandate.uncertain}"
+              th:data-mandate-unavailable="#{reader.ticket.mandate.unavailable}"
+              th:data-mandate-failed="#{reader.ticket.mandate.failed}"
+              th:data-mandate-active="#{reader.ticket.mandate.active}"
+              th:data-mandate-pending="#{reader.ticket.mandate.pending}"
+              th:data-mandate-revoke-pending="#{reader.ticket.mandate.revokePending}"
+              th:data-mandate-success="#{reader.ticket.mandate.success}"
+              th:data-mandate-processing="#{reader.ticket.mandate.processing}"
+              th:data-consent-required="#{reader.ticket.consent.required}"
+              th:data-consent-action="#{reader.ticket.consent.action}"
+              th:data-consent-saving="#{reader.ticket.consent.saving}"
+              th:data-consent-success="#{reader.ticket.consent.success}"
+              th:data-cancel-action="#{reader.ticket.cancel.action}"
+              th:data-cancel-confirm="#{reader.ticket.cancel.confirm}"
+              th:data-cancel-saving="#{reader.ticket.cancel.saving}"
+              th:data-cancel-success="#{reader.ticket.cancel.success}">
             <section class="reading-ticket-heading">
                 <h1 th:text="#{reader.ticket.page.title}">Vé đọc và thuê bao</h1>
                 <p th:text="#{reader.ticket.page.description}">Theo dõi số dư và quyền lợi đọc của bạn.</p>
@@ -99,6 +143,6 @@
 </div>
 <div th:replace="common/footer :: footer"></div>
 <div th:replace="common/js :: js"></div>
-<script src="/javascript/reading-ticket.js?v=2" type="text/javascript"></script>
+<script src="/javascript/reading-ticket.js?v=3" type="text/javascript"></script>
 </body>
 </html>

@@ -151,8 +151,7 @@
         if (permissions.pii) {
             buttons.push(actionButton('btn-info', text.viewPayoutDetails, 'view-payout', {id: row.id}));
         }
-        if (permissions.payout) {
-            if (row.status === 'PENDING_REVIEW') {
+        if (row.status === 'PENDING_REVIEW' && permissions.payoutApprove) {
                 buttons.push(actionButton('btn-primary', text.approveWithdrawal, 'approve-withdrawal', {
                     id: row.id,
                     version: row.version,
@@ -162,16 +161,20 @@
                     id: row.id,
                     version: row.version
                 }));
-            } else if (row.status === 'APPROVED') {
+        } else if (row.status === 'APPROVED') {
+            if (permissions.payoutExecute) {
                 buttons.push(actionButton('btn-primary', text.startProcessing, 'start-processing', {
                     id: row.id,
                     version: row.version
                 }));
+            }
+            if (permissions.payoutApprove) {
                 buttons.push(actionButton('btn-danger', text.reject, 'reject-withdrawal', {
                     id: row.id,
                     version: row.version
                 }));
-            } else if (row.status === 'PROCESSING') {
+            }
+        } else if (row.status === 'PROCESSING' && permissions.payoutExecute) {
                 buttons.push(actionButton('btn-success', text.markPaid, 'mark-paid', {
                     id: row.id,
                     version: row.version
@@ -180,7 +183,6 @@
                     id: row.id,
                     version: row.version
                 }));
-            }
         }
         return compactButtons(buttons);
     }

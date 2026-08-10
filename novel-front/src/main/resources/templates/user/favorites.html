@@ -95,30 +95,11 @@
                 if (data.code == 200) {
                     var bookShelfList = data.data.list;
                     if (bookShelfList.length > 0) {
-                        var bookShelfListHtml = "";
-                        for (var i = 0; i < bookShelfList.length; i++) {
-                            var book = bookShelfList[i];
-                            bookShelfListHtml += (" <tr id='shelf" + book.bookId + "' class=\"book_list\" vals=\"291\">\n" +
-                                "                            <td class=\"style bookclass\">\n" +
-                                "                                <a href=\"/book/bookclass.html?c=" + book.catId + "\" >[" + book.catName + "]</a>\n" +
-                                "                            </td>\n" +
-                                "                            <td class=\"name\">\n" +
-                                "                                <a href=\"/book/" + book.bookId + ".html\">\n" +
-                                "                                    " + book.bookName + "</a>\n" +
-                                "                            </td>\n" +
-                                "                            <td class=\"chapter\" valsc=\"291|2037554|1\">\n" +
-                                "<a href='/book/" + book.bookId + "/" + book.lastIndexId + ".html'>" + book.lastIndexName + "</a>" +
-                                "                            </td>\n" +
-                                "                            <td class=\"time\">\n" +
-                                "                                " + book.lastIndexUpdateTime + "\n" +
-                                "                            </td>\n" +
-                                "                            <td class=\"goread\">\n" +
-                                "<div style=''><a href='/book/" + book.bookId + "/" + book.preContentId + ".html'>" + continueReadingText + "</a></div>" +
-                                "<div style='line-height:8px;padding-bottom:13px'><a href='#' data-csp-action='remove-from-bookshelf' data-book-id='" + Number(book.bookId) + "'>" + removeShelfText + "</a></div>" +
-                                "                            </td>\n" +
-                                "                        </tr>");
-                        }
-                        $("#bookShelfList").html(bookShelfListHtml);
+                        novelRenderBookTable("bookShelfList", bookShelfList, {
+                            continueText: continueReadingText,
+                            removeText: removeShelfText,
+                            removable: true
+                        });
 
                         layui.use('laypage', function () {
                             var laypage = layui.laypage;

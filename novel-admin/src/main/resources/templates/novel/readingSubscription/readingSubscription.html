@@ -100,6 +100,54 @@
         <div class="col-sm-12">
             <div class="ibox">
                 <div class="ibox-title">
+                    <h5 th:text="#{admin.subscription.mandate.title}">Ủy quyền VNPAY cần xử lý</h5>
+                </div>
+                <div class="ibox-content">
+                    <form id="mandateQueueFilter" class="form-inline m-b-sm">
+                        <label for="mandateQueueStatus"
+                               th:text="#{admin.subscription.status}">Trạng thái</label>
+                        <select id="mandateQueueStatus" class="form-control">
+                            <option value="REVOKE_PENDING"
+                                    th:text="#{admin.subscription.status.revokePending}">Chờ thu hồi</option>
+                            <option value="FAILED"
+                                    th:text="#{admin.subscription.status.failed}">Thất bại</option>
+                            <option value="PENDING"
+                                    th:text="#{admin.subscription.status.pending}">Chờ xác nhận</option>
+                            <option value="REVOKED"
+                                    th:text="#{admin.subscription.status.revoked}">Đã thu hồi</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary"
+                                th:text="#{common.query}">Tra cứu</button>
+                    </form>
+                    <p class="help-block" th:text="#{admin.subscription.mandate.help}">
+                        Retry chỉ đưa mandate về lịch xử lý; không sửa token hay trạng thái provider.
+                    </p>
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="mandateQueueTable">
+                            <thead><tr>
+                                <th th:text="#{admin.subscription.mandate.id}">Mandate</th>
+                                <th th:text="#{admin.subscription.userId}">Người dùng</th>
+                                <th th:text="#{admin.subscription.mandate.merchantReference}">Mã tham chiếu</th>
+                                <th th:text="#{admin.subscription.mandate.providerRecurringId}">Mã provider</th>
+                                <th th:text="#{admin.subscription.status}">Trạng thái</th>
+                                <th th:text="#{admin.subscription.mandate.attempt}">Lần thử</th>
+                                <th th:text="#{admin.subscription.mandate.lastError}">Lỗi gần nhất</th>
+                                <th th:text="#{admin.subscription.mandate.nextAttempt}">Thử tiếp</th>
+                                <th th:text="#{admin.subscription.mandate.updatedAt}">Cập nhật</th>
+                                <th th:text="#{admin.subscription.actions}">Thao tác</th>
+                            </tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <pre id="mandateQueueDetail" class="m-t-md"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row" shiro:hasPermission="novel:readingSubscription:review">
+        <div class="col-sm-12">
+            <div class="ibox">
+                <div class="ibox-title">
                     <h5 th:text="#{admin.subscription.renewal.title}">Hàng đợi gia hạn tự động</h5>
                 </div>
                 <div class="ibox-content">
@@ -208,6 +256,9 @@
         statusRetryWait: /*[[#{admin.subscription.status.retryWait}]]*/ 'Chờ thử lại',
         statusFailed: /*[[#{admin.subscription.status.failed}]]*/ 'Thất bại',
         statusGraceExpired: /*[[#{admin.subscription.status.graceExpired}]]*/ 'Hết grace period',
+        statusPending: /*[[#{admin.subscription.status.pending}]]*/ 'Chờ xác nhận',
+        statusRevokePending: /*[[#{admin.subscription.status.revokePending}]]*/ 'Chờ thu hồi',
+        statusRevoked: /*[[#{admin.subscription.status.revoked}]]*/ 'Đã thu hồi',
         retryActivation: /*[[#{admin.subscription.review.retry}]]*/ 'Thử kích hoạt',
         sendToRefund: /*[[#{admin.subscription.review.refund}]]*/ 'Chuyển hoàn tiền',
         reviewReasonPrompt: /*[[#{admin.subscription.review.reasonPrompt}]]*/ 'Nhập lý do xử lý (8–500 ký tự)',
@@ -224,6 +275,11 @@
         renewalRetry: /*[[#{admin.subscription.renewal.retry}]]*/ 'Thử lại ngay',
         renewalRetryReason: /*[[#{admin.subscription.renewal.retryReason}]]*/ 'Nhập lý do retry (8–500 ký tự)',
         renewalRetryScheduled: /*[[#{admin.subscription.renewal.retryScheduled}]]*/ 'Đã đưa cycle vào lịch retry',
+        mandateEmpty: /*[[#{admin.subscription.mandate.empty}]]*/ 'Không có mandate trong hàng đợi',
+        mandateDetails: /*[[#{admin.subscription.mandate.details}]]*/ 'Audit',
+        mandateRetry: /*[[#{admin.subscription.mandate.retry}]]*/ 'Thử thu hồi lại',
+        mandateRetryReason: /*[[#{admin.subscription.mandate.retryReason}]]*/ 'Nhập lý do retry (8–500 ký tự)',
+        mandateRetryScheduled: /*[[#{admin.subscription.mandate.retryScheduled}]]*/ 'Đã đưa mandate vào lịch retry',
         requestFailed: /*[[#{common.failed}]]*/ 'Thao tác thất bại'
     };
     window.ReadingSubscriptionPermissions = {config: false, review: false};

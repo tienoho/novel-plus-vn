@@ -34,14 +34,7 @@
             <if test="createTime != null and createTime != ''">and create_time = #{createTime}</if>
             <if test="updateTime != null and updateTime != ''">and update_time = #{updateTime}</if>
         </where>
-        <choose>
-            <when test="sort != null and sort.trim() != ''">
-                order by ${sort} ${order}
-            </when>
-            <otherwise>
-                order by id desc
-            </otherwise>
-        </choose>
+        order by id desc
         <if test="offset != null and limit != null">
             limit #{offset}, #{limit}
         </if>

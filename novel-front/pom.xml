@@ -134,6 +134,8 @@
                         </goals>
                         <configuration>
                             <tasks>
+                                <!-- Distribution phải được tái tạo, không cập nhật ZIP hoặc giữ file từ lần build trước. -->
+                                <delete dir="${project.build.directory}/build" quiet="true"/>
                                 <!-- Thư mục. -->
                                 <copy todir="${project.build.directory}/build/config" overwrite="true">
                                     <fileset dir="${basedir}/src/main/build/config">

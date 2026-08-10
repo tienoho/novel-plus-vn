@@ -1,4 +1,5 @@
 <th:block th:fragment="js">
+    <link rel="stylesheet" href="/css/micro-interactions.css?v=1">
     <script th:inline="javascript">
         window.NovelI18n = Object.assign(window.NovelI18n || {}, {
             login: /*[[#{site.login}]]*/ 'Đăng nhập',
@@ -10,6 +11,7 @@
             lastReadChapter: /*[[#{user.lastReadChapter}]]*/ 'Chương vừa đọc',
             notice: /*[[#{common.notice}]]*/ 'Thông báo',
             cancel: /*[[#{common.cancel}]]*/ 'Hủy',
+            processing: /*[[#{common.processingShort}]]*/ 'Đang xử lý…',
             loginFirst: /*[[#{header.loginFirst}]]*/ 'Vui lòng đăng nhập trước',
             expand: /*[[#{book.expand}]]*/ 'Mở rộng',
             collapse: /*[[#{book.collapse}]]*/ 'Thu gọn',
@@ -148,6 +150,8 @@
     <script src="/layui/layui.all.js" type="text/javascript"></script>
     <script src="/javascript/layer-i18n.js" type="text/javascript"></script>
     <script src="/javascript/header.js" type="text/javascript"></script>
+    <script src="/javascript/safe-dom.js?v=1" type="text/javascript"></script>
+    <script src="/javascript/micro-interactions.js?v=1" type="text/javascript"></script>
     <script src="/javascript/common.js?v=5" type="text/javascript"></script>
     <script src="/javascript/csp-actions.js" type="text/javascript"></script>
     <script src="/javascript/pwa-register.js" type="text/javascript"></script>

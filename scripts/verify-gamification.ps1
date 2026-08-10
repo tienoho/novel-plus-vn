@@ -153,6 +153,28 @@ function Resolve-Maven {
     throw 'Maven was not found. Set MAVEN_CMD or install Maven.'
 }
 
+function Assert-MavenJava21 {
+    param([Parameter(Mandatory = $true)][string]$Maven)
+
+    $versionOutput = @(& $Maven '-version' 2>&1)
+    $versionExitCode = $LASTEXITCODE
+    if ($versionExitCode -ne 0) {
+        throw "Unable to inspect the Maven Java runtime (exit code $versionExitCode)."
+    }
+    $javaVersionLine = $versionOutput |
+        Where-Object { $_.ToString() -match 'Java version:\s*\d+' } |
+        Select-Object -First 1
+    if ($null -eq $javaVersionLine) {
+        throw 'Unable to determine the Java version used by Maven.'
+    }
+    $javaVersionMatch = [regex]::Match($javaVersionLine.ToString(), 'Java version:\s*(?<major>\d+)')
+    $javaMajorVersion = [int]$javaVersionMatch.Groups['major'].Value
+    if ($javaMajorVersion -ne 21) {
+        throw "Maven must use Java 21; detected Java $javaMajorVersion. Set JAVA_HOME to a JDK 21 installation."
+    }
+    Write-Output '[OK] Maven is using Java 21.'
+}
+
 Push-Location $repository
 try {
     if ($null -eq (Get-Command 'docker' -ErrorAction SilentlyContinue)) {
@@ -166,6 +188,8 @@ try {
         exit 0
     }
 
+    $maven = Resolve-Maven
+    Assert-MavenJava21 -Maven $maven
     Invoke-Native -FilePath 'docker' -Arguments @('info', '--format', '{{.ServerVersion}}')
     $database = Get-Setting -Name 'MYSQL_DATABASE' -DefaultValue 'novel_plus'
     $username = Get-Setting -Name 'MYSQL_USER' -DefaultValue 'novel'
@@ -185,7 +209,6 @@ try {
     New-Item -ItemType Directory -Force -Path $mavenTemp | Out-Null
     $env:TEMP = $mavenTemp
     $env:TMP = $mavenTemp
-    $maven = Resolve-Maven
     $jdbcUrl = "jdbc:mysql://127.0.0.1:$hostPort/$database" +
         '?allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf-8&useSSL=false' +
         '&serverTimezone=Asia/Ho_Chi_Minh'
@@ -197,20 +220,35 @@ try {
     $env:GIFT_CODE_HMAC_KEY_ID = 'legacy-v1'
     $env:GIFT_CODE_HMAC_SECRET = 'gift-code-integration-secret-at-least-32-characters'
     $env:GIFT_CODE_HMAC_VERIFICATION_KEYS = ''
-    $testNames = 'GamificationMySqlIntegrationTest,MonthlyTicketConcurrencyIT,MonthlySeasonConcurrencyIT,QuestCampaignConcurrencyIT,ReadingSubscriptionMySqlIntegrationTest,ReadingSubscriptionCheckoutMySqlIntegrationTest,ReadingSubscriptionPaidReviewConcurrencyIT,GiftCodeMySqlIntegrationTest,GiftCodeConcurrencyIT'
+    $integrationTestFiles = Get-ChildItem -LiteralPath (Join-Path $repository 'novel-front/src/test/java') `
+        -Recurse -File | Where-Object {
+            $_.Name -like '*MySqlIntegrationTest.java' -or $_.Name -like '*ConcurrencyIT.java'
+        }
+    if ($integrationTestFiles.Count -eq 0) {
+        throw 'No MySQL integration or concurrency tests were found.'
+    }
+
+    $enabledPropertyPattern = '@EnabledIfSystemProperty\(named\s*=\s*"([^"]+)"\s*,\s*matches\s*=\s*"true"\)'
+    $testProperties = New-Object 'System.Collections.Generic.HashSet[string]' ([System.StringComparer]::Ordinal)
+    foreach ($testFile in $integrationTestFiles) {
+        $source = Get-Content -LiteralPath $testFile.FullName -Raw
+        $propertyMatch = [regex]::Match($source, $enabledPropertyPattern)
+        if (-not $propertyMatch.Success) {
+            throw "Integration test $($testFile.Name) does not declare an EnabledIfSystemProperty gate."
+        }
+        [void]$testProperties.Add($propertyMatch.Groups[1].Value)
+    }
+
+    $testNames = (($integrationTestFiles.BaseName | Sort-Object -Unique) -join ',')
     $mavenArguments = @(
         '-q', '-pl', 'novel-front', '-am',
         "-Dtest=$testNames",
-        '-Dsurefire.failIfNoSpecifiedTests=false',
-        '-Dgamification.mysql.it=true',
-        '-Dgamification.concurrency.it=true',
-        '-Dreader.subscription.mysql.it=true',
-        '-Dgift.code.mysql.it=true',
-        '-Dgift.code.concurrency.it=true',
-        'test'
+        '-Dsurefire.failIfNoSpecifiedTests=false'
     )
+    $mavenArguments += ($testProperties | Sort-Object | ForEach-Object { "-D$_=true" })
+    $mavenArguments += 'test'
     Invoke-Native -FilePath $maven -Arguments $mavenArguments
-    Write-Output '[OK] Gamification MySQL and concurrency tests passed.'
+    Write-Output "[OK] All $($integrationTestFiles.Count) MySQL integration and concurrency test classes passed."
 }
 finally {
     if ($StopAfter -and -not $ConfigOnly) {

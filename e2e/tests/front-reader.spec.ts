@@ -110,8 +110,19 @@ test.describe('Độc giả đã đăng nhập', () => {
   test('khu vực tác giả hoạt động với tài khoản tác giả', async ({ page }, testInfo) => {
     test.skip(currentTheme() !== 'green' || testInfo.project.name !== 'desktop-chromium',
       'Chỉ cần một luồng tác giả production-like; bốn theme đã được bao phủ ở front công khai/độc giả.');
+    const runtimeErrors: string[] = [];
+    page.on('pageerror', error => runtimeErrors.push(error.message));
     await gotoOk(page, '/author/index.html');
     await assertVietnameseDocument(page);
     await expect(page.locator('body')).toContainText(/tác phẩm|sáng tác|tác giả/i);
+
+    await gotoOk(page, '/author/draft_list.html');
+    await expect(page.locator('#draftEmpty')).toBeVisible();
+    await assertVietnameseDocument(page);
+
+    await gotoOk(page, `/author/author_analytics.html?bookId=${BOOK_ID}`);
+    await expect(page.locator('#analyticsContent')).toBeVisible();
+    await assertVietnameseDocument(page);
+    expect(runtimeErrors).toEqual([]);
   });
 });

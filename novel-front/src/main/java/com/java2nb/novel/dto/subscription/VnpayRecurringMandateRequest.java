@@ -6,5 +6,6 @@ import jakarta.validation.constraints.Pattern;
 
 public record VnpayRecurringMandateRequest(
     @NotBlank @Pattern(regexp = "[A-Za-z0-9_-]{2,32}") String planCode,
-    @Min(1) long acceptedPlanVersion) {
+    @Min(1) long acceptedPlanVersion,
+    @NotBlank @Pattern(regexp = "[A-Za-z0-9_-]{8,64}") String clientRequestId) {
 }

@@ -29,12 +29,19 @@ vnpay:
     tmn-code: ${VNPAY_RECURRING_TMN_CODE:disabled}
     hash-secret: ${VNPAY_RECURRING_HASH_SECRET:disabled}
     pay-url: ${VNPAY_RECURRING_PAY_URL:https://sandbox.vnpayment.vn/recurring-payment/pay}
+    query-url: ${VNPAY_RECURRING_QUERY_URL:https://sandbox.vnpayment.vn/merchant_webapi/api/transaction}
+    server-ip: ${VNPAY_RECURRING_SERVER_IP:127.0.0.1}
     return-url: ${VNPAY_RECURRING_RETURN_URL:http://localhost:8083/payment/vnpay-recurring/return}
     cancel-url: ${VNPAY_RECURRING_CANCEL_URL:http://localhost:8083/payment/vnpay-recurring/cancel}
-    result-redirect-url: ${VNPAY_RECURRING_RESULT_REDIRECT_URL:/pay}
+    result-redirect-url: ${VNPAY_RECURRING_RESULT_REDIRECT_URL:/user/reading_tickets.html}
     order-type: ${VNPAY_RECURRING_ORDER_TYPE:other}
     version: 2.1.0
     locale: vn
     time-zone: Asia/Ho_Chi_Minh
     connect-timeout-seconds: ${VNPAY_RECURRING_CONNECT_TIMEOUT_SECONDS:5}
     request-timeout-seconds: ${VNPAY_RECURRING_REQUEST_TIMEOUT_SECONDS:15}
+    query-delay-ms: ${VNPAY_RECURRING_QUERY_DELAY_MS:300000}
+    revocation-delay-ms: ${VNPAY_RECURRING_REVOCATION_DELAY_MS:60000}
+    revocation-retry-delay-ms: ${VNPAY_RECURRING_REVOCATION_RETRY_DELAY_MS:300000}
+    revocation-lease-ms: ${VNPAY_RECURRING_REVOCATION_LEASE_MS:60000}
+    revocation-batch-size: ${VNPAY_RECURRING_REVOCATION_BATCH_SIZE:50}

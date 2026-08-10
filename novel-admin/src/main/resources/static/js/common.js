@@ -12,14 +12,18 @@ var HtmlUtil = {
     },
     /*2.Giải mã HTML bằng bộ chuyển đổi của trình duyệt*/
     htmlDecode:function (text){
-        //1.Tạo động phần tử chứa, ví dụ DIV
-        var temp = document.createElement("div");
-        //2.Gán chuỗi cần chuyển đổi vào innerHTML
-        temp.innerHTML = text;
-        //3.Trả về innerText hoặc textContent để nhận chuỗi đã giải mã HTML.
-        var output = temp.innerText || temp.textContent;
-        temp = null;
-        return output;
+        if (text == null) return "";
+        var named = {amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " "};
+        return String(text).replace(/&#(?:x([0-9a-f]+)|(\d+));|&(amp|lt|gt|quot|apos|nbsp);/gi,
+            function (entity, hex, decimal, name) {
+                if (name) return named[name.toLowerCase()];
+                var codePoint = parseInt(hex || decimal, hex ? 16 : 10);
+                if (!Number.isInteger(codePoint) || codePoint < 0 || codePoint > 0x10FFFF
+                    || (codePoint >= 0xD800 && codePoint <= 0xDFFF)) {
+                    return entity;
+                }
+                return String.fromCodePoint(codePoint);
+            });
     },
     /*3.Mã hóa HTML bằng biểu thức chính quy*/
     htmlEncodeByRegExp:function (str){

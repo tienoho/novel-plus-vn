@@ -96,6 +96,7 @@ public enum ResponseStatus implements IResultCode {
     READING_SUBSCRIPTION_PURCHASE_CONFLICT(7111, "reader.subscription.checkout.conflict"),
     READING_SUBSCRIPTION_MANDATE_UNAVAILABLE(7112, "reader.subscription.mandate.unavailable"),
     READING_SUBSCRIPTION_MANDATE_CONFLICT(7113, "reader.subscription.mandate.conflict"),
+    READING_SUBSCRIPTION_RENEWAL_CONFLICT(7114, "reader.subscription.renewal.conflict"),
 
     /** Lỗi mã quà. */
     GIFT_CODE_DISABLED(7201, "gift.code.disabled"),

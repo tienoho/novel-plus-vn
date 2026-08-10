@@ -50,6 +50,23 @@ class ThemePackagingIsolationTest {
     }
 
     @Test
+    void distributionDeletesPreviousOutputBeforeCopyingOrArchiving() throws Exception {
+        Path module = Path.of("").toAbsolutePath().normalize();
+        String pom = Files.readString(module.resolve("pom.xml"), StandardCharsets.UTF_8);
+        int legacyBuild = pom.indexOf("<!--    <build>");
+        String activePom = legacyBuild < 0 ? pom : pom.substring(0, legacyBuild);
+        int clearDistribution = activePom.indexOf(
+            "<delete dir=\"${project.build.directory}/build\" quiet=\"true\"/>");
+        int firstCopy = activePom.indexOf(
+            "<copy todir=\"${project.build.directory}/build/config\"");
+        int createArchive = activePom.indexOf(
+            "<zip destfile='${project.build.directory}/build/${project.artifactId}.zip'");
+
+        assertThat(clearDistribution).isGreaterThanOrEqualTo(0).isLessThan(firstCopy);
+        assertThat(clearDistribution).isLessThan(createArchive);
+    }
+
+    @Test
     void distributionNormalizesCopiedScriptsWithoutMutatingSources() throws Exception {
         Path module = Path.of("").toAbsolutePath().normalize();
         String pom = Files.readString(module.resolve("pom.xml"), StandardCharsets.UTF_8);

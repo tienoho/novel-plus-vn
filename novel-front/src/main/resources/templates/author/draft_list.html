@@ -44,6 +44,7 @@
 </div>
 <script src="/javascript/jquery-1.8.0.min.js"></script>
 <script src="/layui/layui.all.js"></script>
+<script src="/javascript/safe-dom.js?v=1"></script>
 <script src="/javascript/common.js?v=5"></script>
 <script th:inline="javascript">
     const continueText = /*[[#{common.edit}]]*/ 'Tiếp tục chỉnh sửa';
@@ -56,12 +57,8 @@
         CANCELLED: /*[[#{common.cancelled}]]*/ 'Đã hủy'
     };
 
-    function escapeHtml(value) {
-        return $('<div>').text(value || '').html();
-    }
-
     function continueDraft(id) {
-        const draft = window.draftItems.find(function (item) { return item.id === id; });
+        const draft = window.draftItems.find(function (item) { return String(item.id) === String(id); });
         if (!draft) return;
         const storageKey = 'novel:author-editor:' + draft.bookId + ':' + (draft.indexId || 'new');
         localStorage.setItem(storageKey, JSON.stringify({
@@ -90,14 +87,24 @@
             $('#draftEmpty').show();
             return;
         }
-        let rows = '';
+        const fragment = document.createDocumentFragment();
         window.draftItems.forEach(function (draft) {
-            rows += '<tr><td>' + escapeHtml(draft.indexName) + '</td>'
-                + '<td>' + escapeHtml(statusLabels[draft.status] || draft.status) + '</td>'
-                + '<td>' + escapeHtml(draft.updateTime ? new Date(draft.updateTime).toLocaleString('vi-VN') : '') + '</td>'
-                + '<td><a href="#" data-csp-action="continue-draft" data-draft-id="' + Number(draft.id) + '">' + escapeHtml(continueText) + '</a></td></tr>';
+            const draftId = NovelSafeDom.positiveId(draft.id);
+            if (!draftId) return;
+            const row = document.createElement('tr');
+            row.appendChild(NovelSafeDom.element('td', null, draft.indexName));
+            row.appendChild(NovelSafeDom.element('td', null, statusLabels[draft.status] || draft.status));
+            row.appendChild(NovelSafeDom.element('td', null,
+                draft.updateTime ? new Date(draft.updateTime).toLocaleString('vi-VN') : ''));
+            const action = document.createElement('td');
+            const link = NovelSafeDom.link('#continue-draft', null, continueText);
+            link.setAttribute('data-csp-action', 'continue-draft');
+            link.setAttribute('data-draft-id', draftId);
+            action.appendChild(link);
+            row.appendChild(action);
+            fragment.appendChild(row);
         });
-        $('#draftRows').html(rows);
+        document.getElementById('draftRows').replaceChildren(fragment);
     }).fail(function () { layer.alert(networkErrorText); });
 </script>
 </body>

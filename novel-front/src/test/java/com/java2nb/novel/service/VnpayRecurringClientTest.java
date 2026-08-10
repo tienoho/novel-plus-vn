@@ -114,6 +114,43 @@ class VnpayRecurringClientTest {
             .isEqualTo(VnpayRecurringChargeResult.Status.PENDING);
     }
 
+    @Test
+    void buildsDocumentedCancelPayloadAndChecksum() {
+        VnpayRecurringCancelCommand cancel = new VnpayRecurringCancelCommand(
+            "17000000000000003", "666821925535879168", "tokenABC123",
+            "127.0.0.1", "NovelPlusServer");
+
+        Map<String, Object> payload = client.buildCancelPayload(cancel);
+
+        assertThat(payload).containsEntry("command", "cancel_recurring")
+            .containsEntry("tmnCode", "VNPAYREC")
+            .containsEntry("addData", "")
+            .containsEntry("version", "2.1.0");
+        assertThat(payload.get("secureHash")).isEqualTo(
+            "7f63928940b340fbf9712fed97ae8f09f03d6f2735cffa52da0290feba179384"
+                + "e13f23fec72503d78265ace3ffcfa5b83d449dc6879e2d6473c544daaa919d9f");
+    }
+
+    @Test
+    void cancelTreatsMissingMandateOrTokenAsIdempotentSuccess() throws Exception {
+        for (String code : List.of("00", "04", "12")) {
+            assertThat(client.parseCancelResponse("{\"rspCode\":\"" + code + "\"}").status())
+                .isEqualTo(VnpayRecurringCancelResult.Status.REVOKED);
+        }
+        assertThat(client.parseCancelResponse("{\"rspCode\":\"06\"}").status())
+            .isEqualTo(VnpayRecurringCancelResult.Status.RETRY);
+    }
+
+    @Test
+    void revocationLeaseCoversAuthenticationAndCancelRequests() {
+        properties.setRequestTimeoutSeconds(30);
+        properties.setRevocationLeaseMs(60_000);
+        assertThat(properties.isConfigured()).isFalse();
+
+        properties.setRevocationLeaseMs(65_000);
+        assertThat(properties.isConfigured()).isTrue();
+    }
+
     private VnpayRecurringChargeCommand chargeCommand() {
         return new VnpayRecurringChargeCommand("17000000000000002", "NPR81A1",
             "666821925535879168", "tokenABC123", 49_000L, LocalDate.of(2027, 2, 1),

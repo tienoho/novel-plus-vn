@@ -71,7 +71,7 @@
 </div>
 
 <script type="text/javascript">
-    window.AuthorFinancePermissions = {pii: false, kyc: false, payout: false};
+    window.AuthorFinancePermissions = {pii: false, kyc: false, payoutApprove: false, payoutExecute: false};
 </script>
 <div shiro:hasPermission="novel:authorFinance:pii">
     <script type="text/javascript">window.AuthorFinancePermissions.pii = true;</script>
@@ -79,8 +79,11 @@
 <div shiro:hasPermission="novel:authorFinance:kyc">
     <script type="text/javascript">window.AuthorFinancePermissions.kyc = true;</script>
 </div>
-<div shiro:hasPermission="novel:authorFinance:payout">
-    <script type="text/javascript">window.AuthorFinancePermissions.payout = true;</script>
+<div shiro:hasPermission="novel:authorFinance:payout:approve">
+    <script type="text/javascript">window.AuthorFinancePermissions.payoutApprove = true;</script>
+</div>
+<div shiro:hasPermission="novel:authorFinance:payout:execute">
+    <script type="text/javascript">window.AuthorFinancePermissions.payoutExecute = true;</script>
 </div>
 
 <div th:include="include :: footer"></div>

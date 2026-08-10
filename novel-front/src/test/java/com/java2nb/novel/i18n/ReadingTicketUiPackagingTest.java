@@ -41,6 +41,11 @@ class ReadingTicketUiPackagingTest {
                 "data-checkout-endpoint=\"/user/reading-subscriptions/checkouts\"",
                 "data-channels-endpoint=\"/pay/channels\"",
                 "data-grants-endpoint=\"/user/reading-subscriptions/{id}/period-grants\"",
+                "data-mandate-endpoint=\"/user/reading-subscriptions/mandates/vnpay\"",
+                "data-mandate-state-endpoint=\"/user/reading-subscriptions/mandates/vnpay/current\"",
+                "data-renewal-settings-endpoint=\"/user/reading-subscriptions/{id}/renewal-settings\"",
+                "data-price-consent-endpoint=\"/user/reading-subscriptions/{id}/price-consents\"",
+                "data-cancel-endpoint=\"/user/reading-subscriptions/{id}/cancel\"",
                 "data-price-unavailable",
                 "id=\"readingTicketLedgerHistory\"",
                 "id=\"readingTicketLotHistory\"",
@@ -49,13 +54,22 @@ class ReadingTicketUiPackagingTest {
         assertThat(script)
             .contains("credentials: 'same-origin'", "replaceChildren()", "textContent",
                 "pendingRequestId", "if (!pendingRequestId)", "root.dataset.unlockUncertain",
-                "plan.priceVnd", "VND", "clientRequestId: requestId()",
+                "plan.priceVnd", "VND", "payload.clientRequestId = requestId('checkout')",
+                "clientRequestId: requestId('mandate')", "clientRequestId: requestId('consent')",
+                "headers['X-XSRF-TOKEN']", "form.method = 'POST'",
+                "jsonOptions('POST', {clientRequestId: pendingRequestId})",
+                "['ispTxnId', data.ispTxnId]", "['tmnCode', data.tmnCode]",
+                "['dataKey', data.dataKey]", "PAUSED: root.dataset.statusPaused",
                 "root.dataset.checkoutUncertain", "loadLedgerHistory", "loadLotHistory",
                 "root.dataset.ledgerEndpoint", "root.dataset.lotsEndpoint")
             .doesNotContain("innerHTML");
         assertThat(css).contains(
             "@media (max-width: 640px)", "@media (prefers-reduced-motion: reduce)",
-            ".reading-ticket-status.is-error");
+            ".reading-ticket-status.is-error", ".reading-ticket-renewal-controls",
+            ".reading-ticket-mandate", ".reading-ticket-current-actions",
+            ".reading-ticket-current-actions .reading-ticket-danger",
+            ".reading-ticket-success", ".reading-ticket-warning",
+            ".reading-ticket-renewal-controls select:focus-visible");
     }
 
     @Test

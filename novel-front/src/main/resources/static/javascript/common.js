@@ -56,8 +56,25 @@ Array.prototype.indexOf = function (val) {
 };
 
 
+function novelReadCookie(name) {
+    var prefix = name + '=';
+    var cookies = document.cookie ? document.cookie.split(';') : [];
+    for (var i = 0; i < cookies.length; i++) {
+        var cookie = cookies[i].trim();
+        if (cookie.indexOf(prefix) === 0) {
+            var value = cookie.substring(prefix.length);
+            try {
+                return decodeURIComponent(value);
+            } catch (ignored) {
+                return value;
+            }
+        }
+    }
+    return null;
+}
+
 function novelCsrfToken() {
-    return $.cookie('XSRF-TOKEN');
+    return novelReadCookie('XSRF-TOKEN');
 }
 
 $(document).ajaxSend(function (event, xhr, settings) {
@@ -169,7 +186,7 @@ function resolveSession() {
     });
 }
 
-var token = $.cookie('NovelSession');
+var token = novelReadCookie('NovelSession');
 if (!token) {
     handleAnonymousSession();
 } else {

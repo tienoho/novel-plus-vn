@@ -11,7 +11,11 @@ import com.java2nb.novel.core.payment.PaymentCreationResult;
 import com.java2nb.novel.service.OrderService;
 import com.java2nb.novel.service.ReadingSubscriptionCheckoutCreation;
 import com.java2nb.novel.service.VnpayRecurringMandateService;
+import com.java2nb.novel.service.VnpayRecurringMandateInitialization;
+import com.java2nb.novel.service.VnpayRecurringMandateState;
 import com.java2nb.novel.dto.subscription.ReadingSubscriptionCheckoutRequest;
+import com.java2nb.novel.dto.subscription.ReadingSubscriptionCancelRequest;
+import com.java2nb.novel.dto.subscription.VnpayRecurringMandateRequest;
 import com.java2nb.novel.service.subscription.ReadingSubscriptionService;
 import com.java2nb.novel.service.subscription.ReadingSubscriptionCheckoutOptions;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,16 +26,19 @@ import java.util.List;
 import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.anyString;
 
 class ReadingSubscriptionControllerTest {
     private ReadingSubscriptionService service;
     private ReaderEntitlementProperties properties;
+    private VnpayRecurringMandateService mandateService;
     private ReadingSubscriptionController controller;
 
     @BeforeEach
@@ -41,9 +48,10 @@ class ReadingSubscriptionControllerTest {
         properties.setEnabled(true);
         UserDetails user = mock(UserDetails.class);
         when(user.getId()).thenReturn(101L);
+        mandateService = mock(VnpayRecurringMandateService.class);
         controller = new ReadingSubscriptionController(service, properties,
             mock(OrderService.class), new PaymentAdapterFactory(List.of()),
-            new VnpayProperties(), new VietQrProperties(), mock(VnpayRecurringMandateService.class)) {
+            new VnpayProperties(), new VietQrProperties(), mandateService) {
             @Override
             protected UserDetails getUserDetails(jakarta.servlet.http.HttpServletRequest request) {
                 return user;
@@ -105,6 +113,35 @@ class ReadingSubscriptionControllerTest {
             any(ReadingSubscriptionCheckoutOptions.class));
         org.assertj.core.api.Assertions.assertThat(result.getData().paymentUrl())
             .isEqualTo("https://pay.example/checkout");
+    }
+
+    @Test
+    void mandateCreationUsesAuthenticatedUserAndClientRequestId() {
+        when(mandateService.create(eq(101L), eq("MONTHLY"), eq(3L),
+            eq("mandate_0001"), anyString(), any()))
+            .thenReturn(new VnpayRecurringMandateInitialization("NP123", "666821925535879168",
+                "https://sandbox.vnpayment.vn/recurring-payment/pay", "VNPAYREC", "data-key"));
+        when(mandateService.getState(101L)).thenReturn(
+            new VnpayRecurringMandateState(true, "PENDING", "mandate_0001", "MONTHLY", 3L));
+
+        var created = controller.createVnpayMandate(
+            new VnpayRecurringMandateRequest("MONTHLY", 3L, "mandate_0001"),
+            new MockHttpServletRequest());
+        var state = controller.getVnpayMandateState(new MockHttpServletRequest());
+
+        assertThat(created.getData().ispTxnId()).isEqualTo("666821925535879168");
+        assertThat(state.getData().configured()).isTrue();
+        assertThat(state.getData().clientRequestId()).isEqualTo("mandate_0001");
+    }
+
+    @Test
+    void renewalMutationMapsOptimisticFailureToBusinessResponse() {
+        when(service.cancelAtPeriodEnd(101L, 77L, 4L))
+            .thenThrow(new IllegalStateException("concurrent"));
+
+        assertThatThrownBy(() -> controller.cancelAtPeriodEnd(
+            77L, new ReadingSubscriptionCancelRequest(4L), new MockHttpServletRequest()))
+            .isInstanceOf(BusinessException.class);
     }
 
     private VnpayProperties configuredVnpay() {

@@ -84,6 +84,15 @@ groups:
           summary: "Có thuê bao quá hạn thanh toán"
           description: "Còn {{ $value }} thuê bao PAST_DUE cần theo dõi trong grace period."
 
+      - alert: VnpayRecurringMandateRevocationPending
+        expr: novel_subscription_renewal_queue{state="mandate_revoke_pending"} > 0
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Mandate VNPAY chờ thu hồi quá lâu"
+          description: "Còn {{ $value }} mandate REVOKE_PENDING cần kiểm tra provider hoặc retry có audit."
+
       - alert: NovelMigrationFailed
         expr: novel_migration_success == 0
         for: 1m

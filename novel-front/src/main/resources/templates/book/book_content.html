@@ -239,7 +239,7 @@
     var logoDark = $("#logoDark").val();
     if (font) {
         $(".readBox").css("font-size", font + "px");
-        $("#cFonts").html(font);
+        $("#cFonts").text(font);
         $("#ChapterBody").attr("class", "article-content font" + font);
         BookDetail.reShowCover();
     }

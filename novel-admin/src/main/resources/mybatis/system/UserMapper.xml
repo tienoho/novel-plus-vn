@@ -59,8 +59,11 @@
             <if test="district != null and district != ''">and district = #{district}</if>
         </where>
         <choose>
-            <when test="sort != null and sort.trim() != ''">
-                order by ${sort} ${order}
+            <when test="sort == 'gmt_create' and order == 'asc'">
+                order by gmt_create asc
+            </when>
+            <when test="sort == 'gmt_create'">
+                order by gmt_create desc
             </when>
             <otherwise>
                 order by user_id desc
@@ -106,8 +109,11 @@
         </where>
         ) t
         <choose>
-            <when test="sort != null and sort.trim() != ''">
-                order by ${sort} ${order}
+            <when test="sort == 'gmt_create' and order == 'asc'">
+                order by gmt_create asc
+            </when>
+            <when test="sort == 'gmt_create'">
+                order by gmt_create desc
             </when>
             <otherwise>
                 order by user_id desc

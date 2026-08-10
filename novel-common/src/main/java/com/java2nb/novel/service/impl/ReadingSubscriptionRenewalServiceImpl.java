@@ -4,6 +4,7 @@ import com.java2nb.novel.mapper.ReadingSubscriptionMapper;
 import com.java2nb.novel.mapper.ReadingSubscriptionRenewalMapper;
 import com.java2nb.novel.service.subscription.ReadingSubscriptionPlanRow;
 import com.java2nb.novel.service.subscription.ReadingSubscriptionProviderCharge;
+import com.java2nb.novel.service.subscription.ReadingSubscriptionProviderQuery;
 import com.java2nb.novel.service.subscription.ReadingSubscriptionRenewalAdminAuditRow;
 import com.java2nb.novel.service.subscription.ReadingSubscriptionRenewalAttemptRow;
 import com.java2nb.novel.service.subscription.ReadingSubscriptionRenewalQueueItem;
@@ -94,6 +95,13 @@ public class ReadingSubscriptionRenewalServiceImpl implements ReadingSubscriptio
     public List<Long> listDueCycleIds(Date now, int limit) {
         requireBatch(now, limit);
         return renewalMapper.selectDueCycleIds(now, limit);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Long> listProviderPendingCycleIds(Date now, int limit) {
+        requireBatch(now, limit);
+        return renewalMapper.selectProviderPendingCycleIds(now, limit);
     }
 
     @Override
@@ -215,6 +223,23 @@ public class ReadingSubscriptionRenewalServiceImpl implements ReadingSubscriptio
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    public ReadingSubscriptionProviderQuery claimProviderQuery(long cycleId, Date now,
+                                                                Date nextQueryAt) {
+        if (cycleId <= 0 || now == null || nextQueryAt == null || !nextQueryAt.after(now)) {
+            throw new IllegalArgumentException("Yêu cầu claim tra soát VNPAY không hợp lệ");
+        }
+        if (renewalMapper.claimProviderQuery(cycleId, now, nextQueryAt) != 1) {
+            return null;
+        }
+        ReadingSubscriptionProviderQuery query = renewalMapper.selectProviderQuery(cycleId);
+        if (query == null) {
+            throw new IllegalStateException("Không tìm thấy attempt VNPAY cần tra soát");
+        }
+        return query;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
     public ReadingSubscriptionRenewalResult settleProviderCharge(long cycleId, int attemptNo,
                                                                   String providerTransactionId,
                                                                   Date now) {
@@ -272,6 +297,52 @@ public class ReadingSubscriptionRenewalServiceImpl implements ReadingSubscriptio
             throw new IllegalStateException("Không thể chuyển cycle sang chờ tra soát VNPAY");
         }
         return ReadingSubscriptionRenewalResult.PROVIDER_PENDING;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ReadingSubscriptionRenewalResult settleProviderQuery(long cycleId, int attemptNo,
+                                                                 String providerTransactionId,
+                                                                 Date now) {
+        requireProviderResult(cycleId, attemptNo, providerTransactionId, now);
+        ReadingSubscriptionRenewalCycleRow cycle = lockPendingProviderCycle(cycleId, attemptNo);
+        if (cycle == null) {
+            return ReadingSubscriptionRenewalResult.NOT_DUE;
+        }
+        ReadingSubscriptionRow subscription = renewalMapper.lockSubscription(cycle.getSubscriptionId());
+        if (subscription == null || !Boolean.TRUE.equals(subscription.getAutoRenew())) {
+            throw new IllegalStateException("Thuê bao không còn hợp lệ sau khi QueryDr đã settlement");
+        }
+        if (renewalMapper.markUnknownProviderAttemptSettled(cycleId, attemptNo,
+            providerTransactionId, now) != 1
+            || renewalMapper.markPendingProviderCycleSettled(cycleId, cycle.getVersion(),
+                providerTransactionId, now) != 1
+            || renewalMapper.advanceSubscription(cycle, subscription.getVersion()) != 1) {
+            throw new IllegalStateException("Không thể hoàn tất cycle VNPAY sau QueryDr");
+        }
+        return ReadingSubscriptionRenewalResult.SETTLED;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ReadingSubscriptionRenewalResult recordProviderQueryFailure(long cycleId, int attemptNo,
+                                                                        String responseCode,
+                                                                        Date now) {
+        String code = normalizeProviderCode(responseCode);
+        ReadingSubscriptionRenewalCycleRow cycle = lockPendingProviderCycle(cycleId, attemptNo);
+        if (cycle == null) {
+            return ReadingSubscriptionRenewalResult.NOT_DUE;
+        }
+        ReadingSubscriptionRow subscription = renewalMapper.lockSubscription(cycle.getSubscriptionId());
+        if (subscription == null || !Boolean.TRUE.equals(subscription.getAutoRenew())) {
+            throw new IllegalStateException("Thuê bao không còn hợp lệ khi QueryDr trả lỗi cuối");
+        }
+        Date nextAttemptAt = nextAttemptAt(cycle, subscription, attemptNo, now);
+        if (renewalMapper.markUnknownProviderAttemptFailed(cycleId, attemptNo, code, now) != 1
+            || renewalMapper.scheduleProviderQueryRetry(cycleId, cycle.getVersion(), nextAttemptAt) != 1) {
+            throw new IllegalStateException("Không thể lên lịch retry sau QueryDr VNPAY");
+        }
+        return ReadingSubscriptionRenewalResult.RETRY_SCHEDULED;
     }
 
     @Override
@@ -340,6 +411,18 @@ public class ReadingSubscriptionRenewalServiceImpl implements ReadingSubscriptio
         }
         ReadingSubscriptionRenewalCycleRow cycle = renewalMapper.lockCycle(cycleId);
         if (cycle == null || !"PROCESSING".equals(cycle.getStatus())
+            || cycle.getAttemptCount() == null || cycle.getAttemptCount() != attemptNo) {
+            return null;
+        }
+        return cycle;
+    }
+
+    private ReadingSubscriptionRenewalCycleRow lockPendingProviderCycle(long cycleId, int attemptNo) {
+        if (cycleId <= 0 || attemptNo < 1 || attemptNo > 10) {
+            throw new IllegalArgumentException("Kết quả QueryDr gia hạn không hợp lệ");
+        }
+        ReadingSubscriptionRenewalCycleRow cycle = renewalMapper.lockCycle(cycleId);
+        if (cycle == null || !"PROVIDER_PENDING".equals(cycle.getStatus())
             || cycle.getAttemptCount() == null || cycle.getAttemptCount() != attemptNo) {
             return null;
         }

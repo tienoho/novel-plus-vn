@@ -5,6 +5,10 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$TmnCode,
     [string]$HashSecretFile = $env:VNPAY_SANDBOX_HASH_SECRET_FILE,
+    [string]$SandboxCardNumber = $env:VNPAY_SANDBOX_CARD_NUMBER,
+    [string]$SandboxCardHolder = $env:VNPAY_SANDBOX_CARD_HOLDER,
+    [string]$SandboxCardDate = $env:VNPAY_SANDBOX_CARD_DATE,
+    [string]$SandboxOtp = $env:VNPAY_SANDBOX_OTP,
     [string]$AcmeEmail = 'ops@example.com',
     [string]$EnvFile = '.env.uat',
     [string]$SecretDirectory = 'secrets/uat',
@@ -23,6 +27,12 @@ if ($TmnCode -notmatch '^[A-Za-z0-9]{8}$') {
 }
 if ($AcmeEmail -notmatch '^[^@\s]+@[^@\s]+\.[^@\s]+$') {
     throw 'Email ACME không hợp lệ.'
+}
+if ($SandboxCardNumber -notmatch '^\d{12,19}$' -or
+    $SandboxCardHolder -notmatch "^[\p{L} .'-]{2,80}$" -or
+    $SandboxCardDate -notmatch '^(0[1-9]|1[0-2])/\d{2}$' -or
+    $SandboxOtp -notmatch '^\d{4,12}$') {
+    throw 'Thiếu hoặc sai định dạng thẻ/OTP Sandbox; chỉ dùng dữ liệu test do VNPAY cấp.'
 }
 
 $resolvedEnvFile = if ([System.IO.Path]::IsPathRooted($EnvFile)) {
@@ -76,7 +86,9 @@ $secretNames = @(
     'crawler_admin_password', 'backup_encryption_password', 'vnpay_hash_secret',
     'vnpay_recurring_password', 'vnpay_recurring_client_secret',
     'vnpay_recurring_hash_secret', 'vietqr_webhook_secret',
-    'alertmanager_webhook_url', 'grafana_admin_password'
+    'alertmanager_webhook_url', 'grafana_admin_password',
+    'vnpay_sandbox_card_number', 'vnpay_sandbox_card_holder',
+    'vnpay_sandbox_card_date', 'vnpay_sandbox_otp'
 )
 
 New-Item -ItemType Directory -Path $resolvedSecretDirectory | Out-Null
@@ -90,12 +102,20 @@ try {
             'vnpay_recurring_hash_secret' { New-RandomSecret }
             'vietqr_webhook_secret' { New-RandomSecret }
             'alertmanager_webhook_url' { 'https://example.invalid/novel-plus-uat-alerts' }
+            'vnpay_sandbox_card_number' { $SandboxCardNumber }
+            'vnpay_sandbox_card_holder' { $SandboxCardHolder }
+            'vnpay_sandbox_card_date' { $SandboxCardDate }
+            'vnpay_sandbox_otp' { $SandboxOtp }
             default { New-RandomSecret }
         }
         [System.IO.File]::WriteAllText((Join-Path $resolvedSecretDirectory $name), $value,
             [System.Text.UTF8Encoding]::new($false))
     }
     $hashSecret = $null
+    $SandboxCardNumber = $null
+    $SandboxCardHolder = $null
+    $SandboxCardDate = $null
+    $SandboxOtp = $null
 
     if ([System.IO.Path]::IsPathRooted($SecretDirectory)) {
         $envSecretDirectory = $resolvedSecretDirectory.Replace('\', '/')

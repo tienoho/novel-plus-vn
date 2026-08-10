@@ -1,6 +1,7 @@
 package com.java2nb.novel.service.impl;
 
 import com.java2nb.novel.mapper.ReadingSubscriptionMapper;
+import com.java2nb.novel.mapper.ReadingSubscriptionMandateMapper;
 import com.java2nb.novel.mapper.ReadingSubscriptionPurchaseMapper;
 import com.java2nb.novel.service.entitlement.ReadingTicketGrantCommand;
 import com.java2nb.novel.service.entitlement.ReadingTicketPostResult;
@@ -9,6 +10,10 @@ import com.java2nb.novel.service.subscription.ReadingSubscriptionActivationComma
 import com.java2nb.novel.service.subscription.ReadingSubscriptionCheckoutOptions;
 import com.java2nb.novel.service.subscription.ReadingSubscriptionGrantResult;
 import com.java2nb.novel.service.subscription.ReadingSubscriptionGrantStatus;
+import com.java2nb.novel.service.subscription.ReadingSubscriptionMandateAdminAuditRow;
+import com.java2nb.novel.service.subscription.ReadingSubscriptionMandateAdminResult;
+import com.java2nb.novel.service.subscription.ReadingSubscriptionMandateQueueItem;
+import com.java2nb.novel.service.subscription.ReadingSubscriptionMandateRow;
 import com.java2nb.novel.service.subscription.ReadingSubscriptionPlanRow;
 import com.java2nb.novel.service.subscription.ReadingSubscriptionPlanCommand;
 import com.java2nb.novel.service.subscription.ReadingSubscriptionPeriodGrantRow;
@@ -33,6 +38,7 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class ReadingSubscriptionServiceImpl implements ReadingSubscriptionService {
     private final ReadingSubscriptionMapper mapper;
+    private final ReadingSubscriptionMandateMapper mandateMapper;
     private final ReadingSubscriptionPurchaseMapper purchaseMapper;
     private final ReadingTicketService ticketService;
 
@@ -184,13 +190,67 @@ public class ReadingSubscriptionServiceImpl implements ReadingSubscriptionServic
                                                     long expectedVersion) {
         ReadingSubscriptionRow subscription = requireOwnedSubscription(
             userId, subscriptionId, expectedVersion);
+        Date now = new Date();
+        mandateMapper.requestRevocation(userId, now);
         if ("CANCEL_AT_PERIOD_END".equals(subscription.getStatus())) {
             return subscription;
         }
-        if (mapper.cancelAtPeriodEnd(subscriptionId, userId, expectedVersion, new Date()) != 1) {
+        if (mapper.cancelAtPeriodEnd(subscriptionId, userId, expectedVersion, now) != 1) {
             throw new IllegalStateException("Thuê bao đã được cập nhật đồng thời");
         }
         return mapper.selectCurrentSubscriptionByUserId(userId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReadingSubscriptionMandateQueueItem> listMandateQueue(String status, int limit) {
+        String normalized = status == null ? "REVOKE_PENDING"
+            : status.trim().toUpperCase(java.util.Locale.ROOT);
+        if (!List.of("PENDING", "FAILED", "REVOKE_PENDING", "REVOKED").contains(normalized)
+            || limit < 1 || limit > 500) {
+            throw new IllegalArgumentException("Hàng đợi mandate hoặc giới hạn không hợp lệ");
+        }
+        return mandateMapper.selectMandateQueue(normalized, limit);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReadingSubscriptionMandateAdminAuditRow> listMandateAdminAudits(
+        long mandateId, int limit) {
+        if (mandateId <= 0 || limit < 1 || limit > 100) {
+            throw new IllegalArgumentException("Yêu cầu xem audit mandate không hợp lệ");
+        }
+        return mandateMapper.selectMandateAdminAudits(mandateId, limit);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ReadingSubscriptionMandateAdminResult adminScheduleMandateRevocationRetry(
+        long mandateId, long expectedVersion, long operatorId, String reason, Date now) {
+        String normalizedReason = normalizeReviewReason(operatorId, reason);
+        if (mandateId <= 0 || expectedVersion < 0 || now == null) {
+            throw new IllegalArgumentException("Mandate hoặc phiên bản không hợp lệ");
+        }
+        ReadingSubscriptionMandateRow mandate = mandateMapper.selectByIdForUpdate(mandateId);
+        if (mandate == null) {
+            throw new IllegalStateException("Mandate không tồn tại");
+        }
+        if (!Objects.equals(mandate.getVersion(), expectedVersion)) {
+            throw new IllegalStateException("Mandate đã được cập nhật đồng thời");
+        }
+        if (!"REVOKE_PENDING".equals(mandate.getStatus())) {
+            throw new IllegalStateException("Chỉ được retry mandate đang chờ thu hồi");
+        }
+        if (mandate.getRevokeLeaseUntil() != null && mandate.getRevokeLeaseUntil().after(now)) {
+            throw new IllegalStateException("Mandate đang được worker xử lý");
+        }
+        if (mandateMapper.adminScheduleRevocationRetry(mandateId, expectedVersion, now) != 1
+            || mandateMapper.insertMandateAdminAudit(mandateId, mandate.getUserId(), operatorId,
+                "RETRY_SCHEDULED", mandate.getStatus(), mandate.getStatus(), normalizedReason,
+                now) != 1) {
+            throw new IllegalStateException("Mandate đã được cập nhật đồng thời");
+        }
+        return ReadingSubscriptionMandateAdminResult.RETRY_SCHEDULED;
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.java2nb.novel.service;
 
 import com.java2nb.novel.core.config.PiiCryptoProperties;
 import com.java2nb.novel.core.config.VnpayRecurringProperties;
+import com.java2nb.novel.core.utils.ContentHashUtil;
 import com.java2nb.novel.mapper.ReadingSubscriptionMandateMapper;
 import com.java2nb.novel.mapper.ReadingSubscriptionMapper;
 import com.java2nb.novel.service.finance.PiiCryptoService;
@@ -60,14 +61,16 @@ class VnpayRecurringMandateServiceTest {
         when(subscriptionMapper.selectActivePlanByCode("MONTHLY")).thenReturn(plan);
         when(client.initializeMandate(any())).thenAnswer(invocation -> {
             VnpayRecurringMandateCommand command = invocation.getArgument(0);
-            verify(mandateMapper).insertPending(7L, command.merchantReference());
+            verify(mandateMapper).insertPending(eq(7L), eq(command.merchantReference()),
+                eq("mandate_0001"), any(), eq("MONTHLY"), eq(3L));
             return new VnpayRecurringMandateInitialization(command.merchantReference(),
                 "666821925535879168", properties.getPayUrl(), properties.getTmnCode(), "data-key");
         });
-        when(mandateMapper.registerProviderTransaction(any(), eq("666821925535879168"))).thenReturn(1);
+        when(mandateMapper.registerProviderInitialization(any(), eq("666821925535879168"), any()))
+            .thenReturn(1);
 
         VnpayRecurringMandateInitialization result = service.create(7L, "MONTHLY", 3L,
-            "127.0.0.1", "Mozilla/5.0");
+            "mandate_0001", "127.0.0.1", "Mozilla/5.0");
 
         assertThat(result.providerRecurringId()).isEqualTo("666821925535879168");
     }
@@ -80,9 +83,114 @@ class VnpayRecurringMandateServiceTest {
         plan.setPeriodMonths(1);
         when(subscriptionMapper.selectActivePlanByCode("MONTHLY")).thenReturn(plan);
 
-        assertThatThrownBy(() -> service.create(7L, "MONTHLY", 3L, "127.0.0.1", "Browser"))
+        assertThatThrownBy(() -> service.create(7L, "MONTHLY", 3L, "mandate_0001",
+            "127.0.0.1", "Browser"))
             .isInstanceOf(IllegalArgumentException.class);
-        verify(mandateMapper, never()).insertPending(anyLong(), any());
+        verify(mandateMapper, never()).insertPending(anyLong(), any(), any(), any(), any(), anyLong());
+    }
+
+    @Test
+    void marksPendingMandateFailedWhenProviderIsUnavailable() {
+        stubMonthlyPlan();
+        VnpayRecurringUnavailableException failure =
+            new VnpayRecurringUnavailableException("Provider unavailable");
+        when(client.initializeMandate(any())).thenThrow(failure);
+        when(mandateMapper.selectByMerchantReference(any())).thenReturn(mandate("PENDING", 0L));
+        when(mandateMapper.fail(9L, 0L)).thenReturn(1);
+
+        assertThatThrownBy(() -> service.create(7L, "MONTHLY", 3L, "mandate_0001",
+            "127.0.0.1", "Browser"))
+            .isSameAs(failure);
+
+        verify(mandateMapper).fail(9L, 0L);
+    }
+
+    @Test
+    void marksPendingMandateFailedWhenProviderTransactionCannotBeRecorded() {
+        stubMonthlyPlan();
+        when(client.initializeMandate(any())).thenAnswer(invocation -> {
+            VnpayRecurringMandateCommand command = invocation.getArgument(0);
+            return new VnpayRecurringMandateInitialization(command.merchantReference(),
+                "666821925535879168", properties.getPayUrl(), properties.getTmnCode(), "data-key");
+        });
+        when(mandateMapper.registerProviderInitialization(any(), eq("666821925535879168"), any()))
+            .thenReturn(0);
+        when(mandateMapper.selectByMerchantReference(any())).thenReturn(mandate("PENDING", 0L));
+        when(mandateMapper.fail(9L, 0L)).thenReturn(1);
+
+        assertThatThrownBy(() -> service.create(7L, "MONTHLY", 3L, "mandate_0001",
+            "127.0.0.1", "Browser"))
+            .isInstanceOf(VnpayRecurringUnavailableException.class)
+            .hasMessage("Không thể ghi nhận giao dịch VNPAY Recurring");
+
+        verify(mandateMapper).fail(9L, 0L);
+    }
+
+    @Test
+    void preservesProviderFailureWhenCleanupAlsoFails() {
+        stubMonthlyPlan();
+        VnpayRecurringUnavailableException providerFailure =
+            new VnpayRecurringUnavailableException("Provider unavailable");
+        IllegalStateException cleanupFailure = new IllegalStateException("Database unavailable");
+        when(client.initializeMandate(any())).thenThrow(providerFailure);
+        when(mandateMapper.selectByMerchantReference(any())).thenThrow(cleanupFailure);
+
+        assertThatThrownBy(() -> service.create(7L, "MONTHLY", 3L, "mandate_0001",
+            "127.0.0.1", "Browser"))
+            .isSameAs(providerFailure)
+            .satisfies(error -> assertThat(error.getSuppressed()).containsExactly(cleanupFailure));
+    }
+
+    @Test
+    void preservesProviderFailureWhenOptimisticCleanupLosesRace() {
+        stubMonthlyPlan();
+        VnpayRecurringRejectedException providerFailure = new VnpayRecurringRejectedException("99");
+        when(client.initializeMandate(any())).thenThrow(providerFailure);
+        when(mandateMapper.selectByMerchantReference(any())).thenReturn(mandate("PENDING", 0L));
+        when(mandateMapper.fail(9L, 0L)).thenReturn(0);
+
+        assertThatThrownBy(() -> service.create(7L, "MONTHLY", 3L, "mandate_0001",
+            "127.0.0.1", "Browser"))
+            .isSameAs(providerFailure);
+
+        verify(mandateMapper).fail(9L, 0L);
+    }
+
+    @Test
+    void replaysEncryptedProviderInitializationAfterResponseLoss() {
+        stubMonthlyPlan();
+        ReadingSubscriptionMandateRow pending = mandate("PENDING", 1L);
+        pending.setClientRequestId("mandate_0001");
+        pending.setPlanCodeSnapshot("MONTHLY");
+        pending.setAcceptedPlanVersion(3L);
+        pending.setRequestHash(ContentHashUtil.sha256Hex(
+            "VNPAY_RECURRING_MANDATE|7|mandate_0001|MONTHLY|3"));
+        pending.setProviderDataKeyCiphertext(piiCryptoService.encrypt("data-key"));
+        when(mandateMapper.selectByClientRequestId(7L, "mandate_0001")).thenReturn(pending);
+
+        VnpayRecurringMandateInitialization result = service.create(7L, "MONTHLY", 3L,
+            "mandate_0001", "127.0.0.1", "Browser");
+
+        assertThat(result.providerRecurringId()).isEqualTo("666821925535879168");
+        assertThat(result.dataKey()).isEqualTo("data-key");
+        verify(client, never()).initializeMandate(any());
+        verify(mandateMapper, never()).insertPending(anyLong(), any(), any(), any(), any(), anyLong());
+    }
+
+    @Test
+    void rejectsReusedClientRequestIdWithDifferentPayload() {
+        stubMonthlyPlan();
+        ReadingSubscriptionMandateRow pending = mandate("PENDING", 1L);
+        pending.setClientRequestId("mandate_0001");
+        pending.setRequestHash("0".repeat(64));
+        when(mandateMapper.selectByClientRequestId(7L, "mandate_0001")).thenReturn(pending);
+
+        assertThatThrownBy(() -> service.create(7L, "MONTHLY", 3L, "mandate_0001",
+            "127.0.0.1", "Browser"))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("Mã yêu cầu");
+
+        verify(client, never()).initializeMandate(any());
     }
 
     @Test
@@ -139,6 +247,14 @@ class VnpayRecurringMandateServiceTest {
         row.setStatus(status);
         row.setVersion(version);
         return row;
+    }
+
+    private void stubMonthlyPlan() {
+        ReadingSubscriptionPlanRow plan = new ReadingSubscriptionPlanRow();
+        plan.setPlanVersion(3L);
+        plan.setPriceVnd(100_000L);
+        plan.setPeriodMonths(1);
+        when(subscriptionMapper.selectActivePlanByCode("MONTHLY")).thenReturn(plan);
     }
 
     private VnpayRecurringProperties configuredProperties() {

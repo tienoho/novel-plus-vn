@@ -22,6 +22,8 @@ class ReadingSubscriptionAdminPackagingTest {
             "doc/sql/20260801_reader_subscription_admin.sql"));
         String reviewMigration = read(repository.resolve(
             "doc/sql/20260805_reader_subscription_paid_review.sql"));
+        String mandateAdminMigration = read(repository.resolve(
+            "doc/sql/20260815_reading_subscription_mandate_admin.sql"));
         String template = read(repository.resolve(
             "novel-admin/src/main/resources/templates/novel/readingSubscription/readingSubscription.html"));
         String script = read(repository.resolve(
@@ -29,7 +31,7 @@ class ReadingSubscriptionAdminPackagingTest {
 
         assertThat(compose)
             .contains("dockerfile: deploy/flyway/Dockerfile")
-            .contains("image: novel-plus/migrations:${IMAGE_TAG:-local}")
+            .contains("image: ${NOVEL_MIGRATIONS_IMAGE:-novel-plus/migrations:${IMAGE_TAG:-local}}")
             .contains("condition: service_completed_successfully")
             .contains("READING_SUBSCRIPTION_ADMIN_ACTIVATION_ENABLED: "
                 + "${READING_SUBSCRIPTION_ADMIN_ACTIVATION_ENABLED:-false}");
@@ -37,7 +39,9 @@ class ReadingSubscriptionAdminPackagingTest {
             .contains("doc/sql/20260801_reader_subscription_admin.sql "
                 + "/flyway/sql/V2026080101__reader_subscription_admin.sql")
             .contains("doc/sql/20260805_reader_subscription_paid_review.sql "
-                + "/flyway/sql/V2026080501__reader_subscription_paid_review.sql");
+                + "/flyway/sql/V2026080501__reader_subscription_paid_review.sql")
+            .contains("doc/sql/20260815_reading_subscription_mandate_admin.sql "
+                + "/flyway/sql/V2026081501__reading_subscription_mandate_admin.sql");
         assertThat(flywayEntrypoint)
             .contains("flyway migrate")
             .contains("flyway validate");
@@ -56,9 +60,16 @@ class ReadingSubscriptionAdminPackagingTest {
             .contains("novel:readingSubscription:review")
             .contains("trg_rsp_review_audit_no_update")
             .contains("trg_rsp_review_audit_no_delete");
+        assertThat(mandateAdminMigration)
+            .contains("reading_subscription_mandate_admin_audit")
+            .contains("RETRY_SCHEDULED")
+            .contains("trg_rs_mandate_admin_audit_no_update")
+            .contains("trg_rs_mandate_admin_audit_no_delete");
         assertThat(template)
             .contains("admin.subscription.title")
             .contains("admin.subscription.review.title")
+            .contains("admin.subscription.mandate.title")
+            .contains("mandateQueueTable")
             .contains("novel:readingSubscription:review");
         assertThat(script).doesNotContain("innerHTML");
     }

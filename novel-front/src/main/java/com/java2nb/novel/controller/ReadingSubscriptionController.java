@@ -16,6 +16,7 @@ import com.java2nb.novel.dto.subscription.ReadingSubscriptionPriceConsentRequest
 import com.java2nb.novel.dto.subscription.ReadingSubscriptionRenewalSettingsRequest;
 import com.java2nb.novel.dto.subscription.VnpayRecurringMandateRequest;
 import com.java2nb.novel.dto.subscription.VnpayRecurringMandateResponse;
+import com.java2nb.novel.dto.subscription.VnpayRecurringMandateStateResponse;
 import com.java2nb.novel.core.payment.PaymentAdapter;
 import com.java2nb.novel.core.payment.PaymentAdapterFactory;
 import com.java2nb.novel.core.payment.PaymentCreationRequest;
@@ -126,14 +127,22 @@ public class ReadingSubscriptionController extends BaseController {
         long userId = requireUser(request).getId();
         try {
             return RestResult.ok(VnpayRecurringMandateResponse.from(vnpayRecurringMandateService.create(
-                userId, input.planCode(), input.acceptedPlanVersion(), IpUtil.getRealIp(request),
-                request.getHeader("User-Agent"))));
+                userId, input.planCode(), input.acceptedPlanVersion(), input.clientRequestId(),
+                IpUtil.getRealIp(request), request.getHeader("User-Agent"))));
         } catch (IllegalStateException exception) {
             throw new BusinessException(ResponseStatus.READING_SUBSCRIPTION_MANDATE_CONFLICT);
         } catch (IllegalArgumentException | VnpayRecurringRejectedException
                  | VnpayRecurringUnavailableException exception) {
             throw new BusinessException(ResponseStatus.READING_SUBSCRIPTION_MANDATE_UNAVAILABLE);
         }
+    }
+
+    @GetMapping("mandates/vnpay/current")
+    public RestResult<VnpayRecurringMandateStateResponse> getVnpayMandateState(
+        HttpServletRequest request) {
+        requireEnabled();
+        return RestResult.ok(VnpayRecurringMandateStateResponse.from(
+            vnpayRecurringMandateService.getState(requireUser(request).getId())));
     }
 
     @GetMapping("{subscriptionId}/period-grants")
@@ -154,11 +163,15 @@ public class ReadingSubscriptionController extends BaseController {
         HttpServletRequest request) {
         requireEnabled();
         long userId = requireUser(request).getId();
-        return RestResult.ok(ReadingSubscriptionResponse.from(service.updateRenewalSettings(
-            userId, subscriptionId, input.expectedVersion(),
-            new ReadingSubscriptionCheckoutOptions(input.autoRenew(),
-                input.primaryFundingSource(), input.fallbackFundingSource(),
-                input.acceptedPlanVersion()))));
+        try {
+            return RestResult.ok(ReadingSubscriptionResponse.from(service.updateRenewalSettings(
+                userId, subscriptionId, input.expectedVersion(),
+                new ReadingSubscriptionCheckoutOptions(input.autoRenew(),
+                    input.primaryFundingSource(), input.fallbackFundingSource(),
+                    input.acceptedPlanVersion()))));
+        } catch (IllegalArgumentException | IllegalStateException exception) {
+            throw new BusinessException(ResponseStatus.READING_SUBSCRIPTION_RENEWAL_CONFLICT);
+        }
     }
 
     @PostMapping("{subscriptionId}/price-consents")
@@ -168,9 +181,13 @@ public class ReadingSubscriptionController extends BaseController {
         HttpServletRequest request) {
         requireEnabled();
         long userId = requireUser(request).getId();
-        return RestResult.ok(ReadingSubscriptionResponse.from(service.consentPrice(
-            userId, subscriptionId, input.expectedVersion(), input.acceptedPlanVersion(),
-            input.clientRequestId())));
+        try {
+            return RestResult.ok(ReadingSubscriptionResponse.from(service.consentPrice(
+                userId, subscriptionId, input.expectedVersion(), input.acceptedPlanVersion(),
+                input.clientRequestId())));
+        } catch (IllegalArgumentException | IllegalStateException exception) {
+            throw new BusinessException(ResponseStatus.READING_SUBSCRIPTION_RENEWAL_CONFLICT);
+        }
     }
 
     @PostMapping("{subscriptionId}/cancel")
@@ -180,8 +197,12 @@ public class ReadingSubscriptionController extends BaseController {
         HttpServletRequest request) {
         requireEnabled();
         long userId = requireUser(request).getId();
-        return RestResult.ok(ReadingSubscriptionResponse.from(service.cancelAtPeriodEnd(
-            userId, subscriptionId, input.expectedVersion())));
+        try {
+            return RestResult.ok(ReadingSubscriptionResponse.from(service.cancelAtPeriodEnd(
+                userId, subscriptionId, input.expectedVersion())));
+        } catch (IllegalArgumentException | IllegalStateException exception) {
+            throw new BusinessException(ResponseStatus.READING_SUBSCRIPTION_RENEWAL_CONFLICT);
+        }
     }
 
     private void requireEnabled() {

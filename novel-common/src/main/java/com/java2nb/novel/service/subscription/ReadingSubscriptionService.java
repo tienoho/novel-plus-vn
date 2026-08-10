@@ -23,7 +23,12 @@ public interface ReadingSubscriptionService {
                                         long expectedVersion, long acceptedPlanVersion,
                                         String clientRequestId);
     ReadingSubscriptionRow cancelAtPeriodEnd(long userId, long subscriptionId,
-                                             long expectedVersion);
+                                              long expectedVersion);
+    List<ReadingSubscriptionMandateQueueItem> listMandateQueue(String status, int limit);
+    List<ReadingSubscriptionMandateAdminAuditRow> listMandateAdminAudits(
+        long mandateId, int limit);
+    ReadingSubscriptionMandateAdminResult adminScheduleMandateRevocationRetry(
+        long mandateId, long expectedVersion, long operatorId, String reason, Date now);
     List<ReadingSubscriptionPeriodGrantRow> listPeriodGrants(long userId, long subscriptionId,
                                                              int limit);
     ReadingSubscriptionPurchasePage listPurchaseReviews(String status, int page, int pageSize);

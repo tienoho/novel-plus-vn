@@ -2,6 +2,7 @@ package com.java2nb.novel.mapper;
 
 import com.java2nb.novel.service.subscription.ReadingSubscriptionRenewalCycleRow;
 import com.java2nb.novel.service.subscription.ReadingSubscriptionProviderCharge;
+import com.java2nb.novel.service.subscription.ReadingSubscriptionProviderQuery;
 import com.java2nb.novel.service.subscription.ReadingSubscriptionRenewalAdminAuditRow;
 import com.java2nb.novel.service.subscription.ReadingSubscriptionRenewalAttemptRow;
 import com.java2nb.novel.service.subscription.ReadingSubscriptionRenewalQueueItem;
@@ -26,6 +27,7 @@ public interface ReadingSubscriptionRenewalMapper {
                     @Param("idempotencyKey") String idempotencyKey,
                     @Param("now") Date now);
     List<Long> selectDueCycleIds(@Param("now") Date now, @Param("limit") int limit);
+    List<Long> selectProviderPendingCycleIds(@Param("now") Date now, @Param("limit") int limit);
     long countCyclesByStatus(@Param("status") String status);
     long countPastDueSubscriptions();
     ReadingSubscriptionRenewalCycleRow lockCycle(@Param("cycleId") long cycleId);
@@ -44,6 +46,10 @@ public interface ReadingSubscriptionRenewalMapper {
                                @Param("attemptNo") int attemptNo,
                                @Param("now") Date now);
     ReadingSubscriptionProviderCharge selectProviderCharge(@Param("cycleId") long cycleId);
+    int claimProviderQuery(@Param("cycleId") long cycleId,
+                           @Param("now") Date now,
+                           @Param("nextQueryAt") Date nextQueryAt);
+    ReadingSubscriptionProviderQuery selectProviderQuery(@Param("cycleId") long cycleId);
     int markAttemptSettled(@Param("cycleId") long cycleId, @Param("attemptNo") int attemptNo,
                            @Param("reference") String reference, @Param("now") Date now);
     int markCycleSettled(@Param("cycleId") long cycleId,
@@ -74,6 +80,21 @@ public interface ReadingSubscriptionRenewalMapper {
                                  @Param("expectedVersion") long expectedVersion,
                                  @Param("reference") String reference,
                                  @Param("now") Date now);
+    int markUnknownProviderAttemptSettled(@Param("cycleId") long cycleId,
+                                          @Param("attemptNo") int attemptNo,
+                                          @Param("reference") String reference,
+                                          @Param("now") Date now);
+    int markPendingProviderCycleSettled(@Param("cycleId") long cycleId,
+                                        @Param("expectedVersion") long expectedVersion,
+                                        @Param("reference") String reference,
+                                        @Param("now") Date now);
+    int markUnknownProviderAttemptFailed(@Param("cycleId") long cycleId,
+                                         @Param("attemptNo") int attemptNo,
+                                         @Param("responseCode") String responseCode,
+                                         @Param("now") Date now);
+    int scheduleProviderQueryRetry(@Param("cycleId") long cycleId,
+                                   @Param("expectedVersion") long expectedVersion,
+                                   @Param("nextAttemptAt") Date nextAttemptAt);
     int markAttemptFailed(@Param("cycleId") long cycleId, @Param("attemptNo") int attemptNo,
                           @Param("message") String message, @Param("now") Date now);
     int scheduleRetry(@Param("cycleId") long cycleId,

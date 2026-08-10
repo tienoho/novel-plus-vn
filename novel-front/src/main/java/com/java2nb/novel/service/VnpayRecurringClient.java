@@ -32,6 +32,7 @@ public class VnpayRecurringClient {
     private volatile AccessToken cachedToken;
 
     private static final Set<String> AMBIGUOUS_RESPONSE_CODES = Set.of("01", "06", "99");
+    private static final Set<String> CANCELLED_RESPONSE_CODES = Set.of("00", "04", "12");
 
     @Autowired
     public VnpayRecurringClient(VnpayRecurringProperties properties, VnpayRecurringSigner signer,
@@ -99,6 +100,59 @@ public class VnpayRecurringClient {
         } catch (Exception exception) {
             return VnpayRecurringChargeResult.pending("UNAVAILABLE");
         }
+    }
+
+    public VnpayRecurringCancelResult cancel(VnpayRecurringCancelCommand command) {
+        requireConfigured();
+        try {
+            Map<String, Object> payload = buildCancelPayload(command);
+            HttpRequest request = HttpRequest.newBuilder(properties.endpoint("/recurring-payment/execute"))
+                .timeout(Duration.ofSeconds(properties.getRequestTimeoutSeconds()))
+                .header("Content-Type", "application/json")
+                .header("Authorization", bearerToken())
+                .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(payload),
+                    StandardCharsets.UTF_8))
+                .build();
+            HttpResponse<String> response = httpClient.send(request,
+                HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                return VnpayRecurringCancelResult.retry("HTTP_" + response.statusCode());
+            }
+            return parseCancelResponse(response.body());
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            return VnpayRecurringCancelResult.retry("INTERRUPTED");
+        } catch (Exception exception) {
+            return VnpayRecurringCancelResult.retry("UNAVAILABLE");
+        }
+    }
+
+    Map<String, Object> buildCancelPayload(VnpayRecurringCancelCommand command) {
+        Map<String, Object> transaction = Map.of("recurringId", command.providerRecurringId());
+        Map<String, Object> token = Map.of("tokenId", command.providerToken());
+        List<Object> fields = List.of(command.requestId(), "cancel_recurring",
+            properties.getTmnCode(), command.providerToken(), command.providerRecurringId(), "",
+            command.ipAddress(), command.userAgent(), properties.getVersion());
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("reqId", command.requestId());
+        payload.put("command", "cancel_recurring");
+        payload.put("tmnCode", properties.getTmnCode());
+        payload.put("transaction", transaction);
+        payload.put("token", token);
+        payload.put("ipAddr", command.ipAddress());
+        payload.put("userAgent", command.userAgent());
+        payload.put("addData", "");
+        payload.put("version", properties.getVersion());
+        payload.put("secureHash", signer.signFields(fields));
+        return payload;
+    }
+
+    VnpayRecurringCancelResult parseCancelResponse(String responseBody) throws Exception {
+        JsonNode response = objectMapper.readTree(responseBody);
+        String responseCode = text(response, "rspCode");
+        return CANCELLED_RESPONSE_CODES.contains(responseCode)
+            ? VnpayRecurringCancelResult.revoked(responseCode)
+            : VnpayRecurringCancelResult.retry(responseCode.isBlank() ? "INVALID_RESPONSE" : responseCode);
     }
 
     Map<String, Object> buildChargePayload(VnpayRecurringChargeCommand command) {

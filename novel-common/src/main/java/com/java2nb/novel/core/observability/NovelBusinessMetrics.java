@@ -18,7 +18,7 @@ public class NovelBusinessMetrics {
     }
 
     public enum PaymentOperation {
-        WEBHOOK, QUERY, RENEWAL
+        WEBHOOK, QUERY, RENEWAL, CANCEL
     }
 
     public enum Outcome {
@@ -31,7 +31,7 @@ public class NovelBusinessMetrics {
     }
 
     public enum RenewalQueue {
-        DUE, PROVIDER_PENDING, RETRY_WAIT, PAST_DUE
+        DUE, PROVIDER_PENDING, RETRY_WAIT, PAST_DUE, MANDATE_REVOKE_PENDING
     }
 
     public enum GamificationQueue {

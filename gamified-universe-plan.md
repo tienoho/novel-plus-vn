@@ -23,7 +23,7 @@ Không bao gồm trong đợt đầu:
 - Quyền lợi kinh tế khác nhau giữa các hệ cảnh giới.
 - Tự động chuyển tiền VND cho tác giả nếu quy trình KYC/payout chưa được bật.
 
-## Trạng thái triển khai xác minh ngày 2026-07-30
+## Trạng thái triển khai xác minh ngày 2026-08-09
 
 - Đã hoàn tất và qua unit/MySQL concurrency: ledger Ngọn Đuốc, lot FIFO, vote, expiry, ranking tháng,
   snapshot/state machine, quỹ thưởng tác giả qua clearing, admin grant/reward và lịch sử thưởng tác giả.
@@ -59,9 +59,16 @@ Không bao gồm trong đợt đầu:
 - Đã có CRUD admin cho campaign/reward nhiệm vụ với quyền `novel:gamification:config`: tạo DRAFT,
   thay reward EXP/Đuốc, kích hoạt, đóng và tra cứu. Kích hoạt dùng transaction `SERIALIZABLE`;
   concurrency IT chứng minh hai campaign giao nhau chỉ có đúng một campaign trở thành `ACTIVE`.
-- Chưa hoàn tất: consumer cấp Đuốc theo level, nội dung quy tắc/kết quả thưởng trên trang chủ và
-  browser regression trên thiết bị thật. Đây là phần M6/M7 tiếp theo; các feature flag liên quan vẫn
-  mặc định tắt.
+- Đã có consumer cấp Đuốc theo level: `LEVEL_REACHED` đi qua policy có phiên bản, idempotency
+  `userId + level + policyVersion` và cấp thưởng bằng lot/ledger hiện hữu; unit test và MySQL IT bao
+  phủ replay không cấp trùng.
+- Đã có chính sách gamification công khai có phiên bản, API public, nội dung luật chơi/kết quả thưởng
+  trên widget trang chủ và CRUD phát hành phía admin; migration bảo vệ audit và bản đã phát hành.
+- Đã có kỳ đặc biệt chạy song song kỳ thường: API liệt kê kỳ mở, vote/ranking/summary dùng `seasonId`,
+  snapshot/reward/reconciliation tách theo kỳ; MySQL IT xác minh phiếu của hai kỳ không trộn lẫn.
+- Đã có kiểm duyệt ticker, opt-out mặc định, risk assessment theo device/IP hash, queue review và audit.
+- Chưa hoàn tất ngoài mã nguồn: browser regression trên thiết bị vật lý và phê duyệt chính sách kinh
+  tế/pháp lý trước khi bật feature flag production. Các feature flag liên quan vẫn mặc định tắt.
 - `/book/analytics/read-event` tiếp tục chỉ phục vụ analytics và không làm nguồn thưởng: API này ẩn
   danh, nhận `visitorId`/`durationSeconds` do client tự khai và không có receipt bất biến.
 
@@ -449,11 +456,11 @@ Khuôn mẫu test tích hợp hiện có (`ReaderStateMySqlIntegrationTest`, `Re
 
 ### 3. Xây quest, điểm danh, EXP và cảnh giới dạng cấu hình
 
-- [ ] Tạo `quest_definition`, `quest_campaign`, `quest_reward`, `user_quest_progress`, `quest_claim`, `user_exp_ledger`, `gamification_profile`, `level_rule` và `realm_catalog`.
+- [x] Tạo `quest_definition`, `quest_campaign`, `quest_reward`, `user_quest_progress`, `quest_claim`, `user_exp_ledger`, `gamification_profile`, `level_rule` và `realm_catalog`.
 - [ ] Chuẩn hóa event từ đăng nhập, đọc, bình luận đã duyệt, mua chương và thanh toán thành source event có idempotency.
 - [ ] Tính ngày và streak theo `Asia/Ho_Chi_Minh`; dùng Clock có thể thay thế trong test.
 - [x] Đọc 30 phút dựa trên endpoint xác thực riêng, foreground/focus signal phía client, elapsed time và trần tích lũy phía server, receipt bất biến cùng kiểm tra request quá nhanh/quá trễ.
-- [ ] Tính level từ EXP ledger theo rule version; đổi realm có audit và cooldown.
+- [x] Tính level từ EXP ledger theo rule version; đổi realm có audit và cooldown.
 
 **Xác minh:** xử lý lại cùng source event không tăng tiến độ hoặc phát thưởng lần hai; thay đổi rule không âm thầm sửa lịch sử đã chốt.
 
@@ -512,7 +519,7 @@ Ràng buộc đã xác minh: `wallet_account` có `chk_wallet_available_balance`
 - [x] Book detail hiển thị tổng Đuốc của truyện, số dư của người đọc, lot sắp tắt và hộp xác nhận khi thắp nhiều Đuốc một lần.
 - [x] Trang ranking hiển thị kỳ hiện tại/lịch sử, trạng thái chốt, dữ liệu realtime/snapshot, số Đuốc và số độc giả.
 - [x] Trang chủ hiển thị Top 5 Đuốc, kỳ, trạng thái realtime/snapshot, mốc khóa sổ và thời gian còn lại.
-- [ ] Trang chủ hiển thị quy tắc và kết quả thưởng sau khi nội dung chính sách được chốt.
+- [x] Trang chủ hiển thị quy tắc và kết quả thưởng từ chính sách công khai đã phát hành.
 - [ ] Tác giả xem thứ hạng, thưởng dự kiến/đã chốt; admin xem fraud và reconciliation.
 - [ ] Toàn bộ chuỗi hiển thị tuân thủ bảng quy ước đặt tên: danh từ "Ngọn Đuốc", dạng ngắn "Đuốc" cho tiêu đề cột và tab, động từ "thắp" cho hành động và "tắt" cho hết hạn.
 - [ ] Sửa template base trong `novel-front/src/main/resources`, rồi sửa song song các file mà từng theme ở `templates/<theme>/html` ghi đè; nghiệm thu bằng bốn bản build `-Dtheme.name` riêng, cả desktop và mobile.
@@ -539,7 +546,7 @@ Ràng buộc đã xác minh: `wallet_account` có `chk_wallet_available_balance`
 - [ ] Chạy MySQL integration test cho migration, transaction, concurrency, unique key, month boundary, năm nhuận và timezone.
 - [ ] Kiểm thử duplicate event/request, chargeback trước/sau khi tiêu phiếu, truyện bị khóa và tác giả có nhiều truyện Top.
 - [ ] Chạy thử hai application instance chốt cùng kỳ, restart giữa các trạng thái và reconciliation sau lỗi.
-- [ ] Build Maven reactor bằng Java 17; chạy smoke Docker/API, render representative pages và parse JavaScript sau Thymeleaf.
+- [ ] Build Maven reactor bằng Java 21; chạy smoke Docker/API, render representative pages và parse JavaScript sau Thymeleaf.
 - [ ] Kiểm thử theme bằng **bốn lần build riêng** với `-Dtheme.name=green`, `orange`, `dark`, `blue`; một artifact chỉ chứa một theme nên không thể xác minh cả bốn trong một lần build.
 - [ ] Chạy `node scripts/verify-i18n.mjs` và `git diff --check`; lưu bằng chứng test trong báo cáo nghiệm thu.
 

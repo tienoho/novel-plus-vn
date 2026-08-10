@@ -42,6 +42,11 @@
 32. `20260805_reader_subscription_paid_review.sql` thêm trạng thái chuyển tiếp `REFUND_PENDING`, quyền xử lý riêng và audit bất biến cho đơn thuê bao đã thu tiền nhưng chưa thể kích hoạt. Migration không tự hoàn tiền và không sửa sổ cái.
 33. `20260806_gift_code_hmac_rotation.sql` gắn `hmac_key_id` cho mã quà cũ bằng giá trị `legacy-v1`, thêm index lookup theo khóa và trigger chặn sửa danh tính HMAC. Migration không re-hash và không cần plaintext.
 34. `20260807_vi_friend_link.sql` Việt hóa liên kết bạn bè seed còn sót bằng điều kiện khớp chính xác ID, URL và tên Trung mặc định; dữ liệu đã tùy chỉnh được giữ nguyên.
+35. `20260808_security_passwords.sql` vô hiệu hóa hash mật khẩu legacy và chuẩn bị bootstrap quản trị viên bằng BCrypt.
+36. `20260809_reading_subscription_recurring.sql` tạo mandate, cycle và attempt cho thuê bao tự gia hạn.
+37. Các migration `20260810`–`20260813` hoàn thiện kỳ đặc biệt, level reward, chống lạm dụng và chính sách gamification công khai.
+38. Các migration `20260814`–`20260816` bổ sung thu hồi, quản trị và idempotency mandate VNPAY Recurring.
+39. `20260817_author_payout_four_eyes.sql` lưu riêng người duyệt/người thực hiện, thêm check constraint maker-checker và tách quyền approve/execute. Yêu cầu legacy thiếu actor phase bị fail-closed để đối soát thủ công.
 
 ## Nâng cấp database đang hoạt động
 

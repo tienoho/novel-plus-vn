@@ -19,6 +19,7 @@ Các chức năng chính gồm đề xuất và tìm kiếm tiếng Việt có d
 - Hướng dẫn tích hợp VNPAY: [doc/vnpay.md](doc/vnpay.md)
 - Kiến trúc ví và sổ cái: [doc/wallet-ledger.md](doc/wallet-ledger.md)
 - KYC và tài chính tác giả: [doc/author-finance.md](doc/author-finance.md)
+- Biên bản phê duyệt pháp lý/vận hành: [doc/legal-operational-approval-record.md](doc/legal-operational-approval-record.md)
 - Biên bản nghiệm thu P0: [doc/p0-acceptance.md](doc/p0-acceptance.md)
 - Biên bản sẵn sàng production: [doc/production-readiness-acceptance.md](doc/production-readiness-acceptance.md)
 - Trình soạn thảo, bản nháp và lịch xuất bản: [doc/author-editor.md](doc/author-editor.md)
@@ -178,7 +179,7 @@ Username crawler lấy từ `CRAWLER_ADMIN_USERNAME`; password nằm trong file 
 
 MySQL, Redis, ảnh tải lên và nội dung truyện dùng named volume nên được giữ lại khi chạy `docker compose down`. Lệnh `docker compose down -v` xóa toàn bộ volume và dữ liệu, chỉ dùng khi chủ động khởi tạo lại môi trường.
 
-Flyway chạy baseline và 35 migration tăng dần, từ `20260712_vi_localization.sql` đến `20260813_gamification_public_policy.sql`, trong service one-shot trước các ứng dụng. Chuỗi migration bổ sung Việt hóa, bảo mật, thanh toán/sổ cái, thuê bao recurring, công cụ tác giả/độc giả và gamification. Không sửa checksum hoặc chạy lại SQL bằng shell loop. Nếu database cũ có dữ liệu không đáp ứng invariant, migration phải dừng để quản trị viên đối soát thay vì tự xóa hoặc gộp lịch sử. Xem thứ tự và quy tắc tại [hướng dẫn SQL](doc/sql/readme.md).
+Flyway chạy baseline và 39 migration tăng dần, từ `20260712_vi_localization.sql` đến `20260817_author_payout_four_eyes.sql`, trong service one-shot trước các ứng dụng. Chuỗi migration bổ sung Việt hóa, bảo mật, thanh toán/sổ cái, thuê bao recurring, công cụ tác giả/độc giả và gamification. Không sửa checksum hoặc chạy lại SQL bằng shell loop. Nếu database cũ có dữ liệu không đáp ứng invariant, migration phải dừng để quản trị viên đối soát thay vì tự xóa hoặc gộp lịch sử. Xem thứ tự và quy tắc tại [hướng dẫn SQL](doc/sql/readme.md).
 
 Các identifier/URL AI, VNPAY, OSS và email là tùy chọn trong `.env`; credential lõi, webhook checksum, mật khẩu Grafana và URL webhook Alertmanager nằm trong file secret, không ghi khóa thật vào source, image hay environment của container. IPN VNPAY phải được cấu hình thành `https://<ten-mien>/pay/vnpay/ipn`. Caddy tự cấp TLS, áp security header, giới hạn upload/rate cơ bản và chặn `/actuator/**` từ Internet; Prometheus chỉ scrape endpoint này trong network Compose. Backup profile tạo gói GPG AES-256 cho database và file. Quy trình giám sát, backup, restore drill và rollback nằm trong [runbook triển khai](doc/deployment.md).
 
@@ -202,6 +203,24 @@ VNPAY_RECONCILIATION_INITIAL_DELAY_MS=60000
 VNPAY_RECONCILIATION_MIN_AGE_MINUTES=20
 VNPAY_RECONCILIATION_MAX_AGE_DAYS=30
 VNPAY_RECONCILIATION_BATCH_SIZE=50
+```
+
+VNPAY Recurring dùng bộ credential riêng và chỉ được bật khi VNPAY đã cấp dịch vụ. Ngoài endpoint
+đăng ký/thanh toán định kỳ, phải cấu hình QueryDr để cycle không xác định được đối soát trước khi thử
+nguồn fallback:
+
+```dotenv
+VNPAY_RECURRING_ENABLED=false
+VNPAY_RECURRING_BASE_URL=https://sandbox.vnpayment.vn
+VNPAY_RECURRING_PAY_URL=https://sandbox.vnpayment.vn/recurring-payment/pay
+VNPAY_RECURRING_QUERY_URL=https://sandbox.vnpayment.vn/merchant_webapi/api/transaction
+VNPAY_RECURRING_SERVER_IP=127.0.0.1
+VNPAY_RECURRING_QUERY_DELAY_MS=300000
+VNPAY_RECURRING_REVOCATION_DELAY_MS=60000
+VNPAY_RECURRING_REVOCATION_RETRY_DELAY_MS=300000
+VNPAY_RECURRING_REVOCATION_LEASE_MS=60000
+VNPAY_RECURRING_REVOCATION_BATCH_SIZE=50
+# Client/password/client secret/TmnCode/HashSecret Recurring do VNPAY cấp riêng.
 ```
 
 Khi chuyển sang production, thay cả `VNPAY_PAY_URL`, `VNPAY_QUERY_URL`, mã website, khóa bí mật và IP máy chủ bằng thông tin VNPAY production. Không dùng Return URL để cộng Xu; hệ thống chỉ ghi nhận tiền từ IPN hoặc QueryDr có chữ ký hợp lệ, đúng merchant, đúng mã đơn, đúng kênh và đúng số tiền. Số Xu được chốt ngay lúc tạo đơn nên thay đổi tỷ lệ sau đó không làm sai đơn đang chờ. QueryDr tự đối soát các đơn quá 20 phút khi IPN bị gián đoạn; nhiều replica giành quyền xử lý bằng optimistic update và cập nhật số dư vẫn có tính idempotent. Mã kênh VNPAY trong `order_pay.pay_channel` là `4`; các đơn từ cổng thanh toán cũ vẫn được giữ để đối soát lịch sử nhưng không còn endpoint hoặc giao diện tạo giao dịch mới qua cổng đó.

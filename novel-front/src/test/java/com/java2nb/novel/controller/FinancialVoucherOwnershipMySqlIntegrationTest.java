@@ -57,7 +57,7 @@ class FinancialVoucherOwnershipMySqlIntegrationTest {
 
         byte[] pdf = voucherService.exportAuthorVoucherPdf(
             "VOUCHER-OWNERSHIP-OWN", AUTHOR_ID);
-        assertThat(new String(pdf, StandardCharsets.ISO_8859_1)).startsWith("%PDF-1.4");
+        assertThat(pdf).startsWith("%PDF-".getBytes(StandardCharsets.US_ASCII));
         assertThatThrownBy(() -> voucherService.exportAuthorVoucherPdf(
             "VOUCHER-OWNERSHIP-OTHER", AUTHOR_ID))
             .isInstanceOf(BusinessException.class);

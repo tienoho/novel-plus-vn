@@ -6,6 +6,8 @@
 **/.DS_Store
 /.env
 /.env.uat
+/.env.release
+/.env.rc-smoke
 /.vnpay-uat-registration.txt
 /secrets/*
 !/secrets/README.md

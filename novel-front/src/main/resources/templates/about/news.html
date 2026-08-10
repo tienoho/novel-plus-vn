@@ -54,15 +54,22 @@ v
                 if (data.code == 200) {
                     var newsList = data.data.list;
                     if (newsList.length > 0) {
-                        var newsListHtml = "";
+                        var newsFragment = document.createDocumentFragment();
                         for (var i = 0; i < newsList.length; i++) {
                             var news = newsList[i];
-                            newsListHtml += (" <li>\n" +
-                                "                        <h5><i class=\"dot\"></i><a href=\"newsInfo-" + news.id + ".html\" >" + news.title + "</a></h5>\n" +
-                                "                        <p>" + news.createTime + "</p>\n" +
-                                "                    </li>");
+                            var newsId = NovelSafeDom.positiveId(news.id);
+                            if (!newsId) {
+                                continue;
+                            }
+                            var newsItem = NovelSafeDom.element("li");
+                            var title = NovelSafeDom.element("h5");
+                            title.appendChild(NovelSafeDom.element("i", "dot"));
+                            title.appendChild(NovelSafeDom.link("newsInfo-" + newsId + ".html", null, news.title));
+                            newsItem.appendChild(title);
+                            newsItem.appendChild(NovelSafeDom.element("p", null, news.createTime));
+                            newsFragment.appendChild(newsItem);
                         }
-                        $("#newsList").html(newsListHtml);
+                        document.getElementById("newsList").replaceChildren(newsFragment);
 
                         layui.use('laypage', function () {
                             var laypage = layui.laypage;
@@ -108,4 +115,3 @@ v
 </script>
 </body>
 </html>
-

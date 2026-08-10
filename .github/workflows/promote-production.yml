@@ -1,0 +1,229 @@
+name: Quảng bá release production
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag RC dạng v<phiên-bản>
+        required: true
+        type: string
+      approval_record_id:
+        description: Mã biên bản phê duyệt đã ký
+        required: true
+        type: string
+      approval_record_sha256:
+        description: SHA-256 của bản biên bản đã ký
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-promotion-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    name: Xác minh và quảng bá ${{ inputs.tag }}
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    permissions:
+      attestations: read
+      contents: write
+
+    steps:
+      - name: Kiểm tra định dạng yêu cầu phê duyệt
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+          APPROVAL_RECORD_ID: ${{ inputs.approval_record_id }}
+          APPROVAL_RECORD_SHA256: ${{ inputs.approval_record_sha256 }}
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v[0-9][0-9A-Za-z._-]*$ ]] || {
+            echo 'Tag RC không hợp lệ.' >&2
+            exit 1
+          }
+          [[ "$APPROVAL_RECORD_ID" =~ ^[A-Za-z0-9._:/-]{3,128}$ ]] || {
+            echo 'Mã biên bản phê duyệt không hợp lệ.' >&2
+            exit 1
+          }
+          [[ "$APPROVAL_RECORD_SHA256" =~ ^[0-9a-f]{64}$ ]] || {
+            echo 'SHA-256 biên bản phê duyệt không hợp lệ.' >&2
+            exit 1
+          }
+
+      - name: Lấy mã nguồn đúng tag RC
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          fetch-depth: 0
+
+      - name: Cài Node.js 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+
+      - name: Xác nhận release còn ở trạng thái draft
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          release_state="$(gh release view "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --json isDraft,tagName \
+            --jq '[.isDraft, .tagName] | @tsv')"
+          if [[ "$release_state" != $'true\t'"$RELEASE_TAG" ]]; then
+              echo 'Không tìm thấy GitHub Release draft khớp tag RC.' >&2
+              exit 1
+          fi
+
+      - name: Tải manifest và artifact bằng chứng từ draft
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          mkdir -p release-meta release-artifacts runtime-dependency-evidence
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --dir release-meta \
+            --pattern 'release-manifest.json' \
+            --pattern 'release-manifest.sha256' \
+            --pattern 'rc-compose-smoke.json' \
+            --pattern 'rc-compose-smoke.log'
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --dir release-artifacts \
+            --pattern 'digest-*' \
+            --pattern 'trivy-novel-*' \
+            --pattern 'sbom-release-*' \
+            --pattern 'attestation-*'
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --dir runtime-dependency-evidence \
+            --pattern 'trivy-runtime-*'
+
+      - name: Xác minh manifest khớp tag và commit RC
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          rc_commit="$(git rev-parse HEAD)"
+          node scripts/generate-release-manifest.mjs verify \
+            --artifacts release-artifacts \
+            --manifest release-meta/release-manifest.json \
+            --checksum release-meta/release-manifest.sha256 \
+            --tag "$RELEASE_TAG" \
+            --commit "$rc_commit"
+
+      - name: Xác minh provenance và nội dung biên bản smoke RC
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          gh attestation verify release-meta/rc-compose-smoke.json --repo "$GITHUB_REPOSITORY"
+          node scripts/generate-release-manifest.mjs verify-smoke-record \
+            --manifest release-meta/release-manifest.json \
+            --record release-meta/rc-compose-smoke.json \
+            --tag "$RELEASE_TAG" \
+            --commit "$(git rev-parse HEAD)"
+
+      - name: Xác minh nội dung và provenance của dependency runtime
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          node scripts/generate-release-manifest.mjs verify-runtime-reports \
+            --reports runtime-dependency-evidence
+          for report in runtime-dependency-evidence/trivy-runtime-*.json; do
+            gh attestation verify "$report" --repo "$GITHUB_REPOSITORY"
+          done
+
+      - name: Đăng nhập registry chỉ để xác minh attestation
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Xác minh chữ ký provenance và SBOM của mười image
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE' > release-images.txt
+          import fs from 'node:fs';
+          const manifest = JSON.parse(fs.readFileSync('release-meta/release-manifest.json', 'utf8').replace(/^\uFEFF/, ''));
+          if (!Array.isArray(manifest.images) || manifest.images.length !== 10) {
+            throw new Error('Manifest không có đúng mười image.');
+          }
+          for (const image of manifest.images) {
+            console.log(`oci://${image.subject}@${image.digest}`);
+          }
+          NODE
+          while IFS= read -r image; do
+            [[ -n "$image" ]] || continue
+            gh attestation verify "$image" --repo "$GITHUB_REPOSITORY"
+            gh attestation verify "$image" --repo "$GITHUB_REPOSITORY" \
+              --predicate-type https://spdx.dev/Document/v2.3
+          done < release-images.txt
+
+      - name: Ghi vết quyết định promotion
+        shell: bash
+        env:
+          APPROVAL_RECORD_ID: ${{ inputs.approval_record_id }}
+          APPROVAL_RECORD_SHA256: ${{ inputs.approval_record_sha256 }}
+          RELEASE_TAG: ${{ inputs.tag }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          RC_COMMIT="$(git rev-parse HEAD)"
+          export RC_COMMIT
+          MANIFEST_SHA256="$(sha256sum release-meta/release-manifest.json | cut -d' ' -f1)"
+          export MANIFEST_SHA256
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const required = ['APPROVAL_RECORD_ID', 'APPROVAL_RECORD_SHA256', 'RELEASE_TAG', 'GITHUB_ACTOR', 'GITHUB_RUN_ID'];
+          for (const name of required) {
+            if (!process.env[name]) throw new Error(`Thiếu dữ liệu promotion: ${name}`);
+          }
+          const record = {
+            tag: process.env.RELEASE_TAG,
+            commit: process.env.RC_COMMIT,
+            approvalRecordId: process.env.APPROVAL_RECORD_ID,
+            approvalRecordSha256: process.env.APPROVAL_RECORD_SHA256,
+            releaseManifestSha256: process.env.MANIFEST_SHA256,
+            promotedBy: process.env.GITHUB_ACTOR,
+            workflowRun: `https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`,
+            promotedAt: new Date().toISOString(),
+          };
+          fs.writeFileSync('production-promotion-record.json', `${JSON.stringify(record, null, 2)}\n`, 'utf8');
+          NODE
+          gh release upload "$RELEASE_TAG" production-promotion-record.json \
+            --repo "$GITHUB_REPOSITORY" \
+            --clobber
+
+      - name: Công bố release sau phê duyệt
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          gh release edit "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --draft=false \
+            --latest
+          gh release view "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --json isDraft,isLatest \
+            --jq 'select(.isDraft == false and .isLatest == true)' \
+            >/dev/null

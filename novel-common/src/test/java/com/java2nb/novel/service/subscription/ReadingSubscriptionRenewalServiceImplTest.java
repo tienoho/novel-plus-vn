@@ -152,6 +152,49 @@ class ReadingSubscriptionRenewalServiceImplTest {
     }
 
     @Test
+    void claimsOnePendingProviderQueryWithLease() {
+        Date nextQueryAt = new Date(now.getTime() + 300_000L);
+        ReadingSubscriptionProviderQuery query = new ReadingSubscriptionProviderQuery(
+            81L, 1, "NPR81A1", 49_000L, now);
+        when(renewalMapper.claimProviderQuery(81L, now, nextQueryAt)).thenReturn(1);
+        when(renewalMapper.selectProviderQuery(81L)).thenReturn(query);
+
+        assertThat(service.claimProviderQuery(81L, now, nextQueryAt)).isEqualTo(query);
+    }
+
+    @Test
+    void settlesUnknownProviderAttemptAfterSignedQuery() {
+        ReadingSubscriptionRenewalCycleRow cycle = pendingCycle();
+        ReadingSubscriptionRow subscription = subscription("VNPAY_RECURRING", "WALLET_XU");
+        when(renewalMapper.lockCycle(81L)).thenReturn(cycle);
+        when(renewalMapper.lockSubscription(51L)).thenReturn(subscription);
+        when(renewalMapper.markUnknownProviderAttemptSettled(
+            81L, 1, "666821925535879168", now)).thenReturn(1);
+        when(renewalMapper.markPendingProviderCycleSettled(
+            81L, 2L, "666821925535879168", now)).thenReturn(1);
+        when(renewalMapper.advanceSubscription(cycle, 3L)).thenReturn(1);
+
+        assertThat(service.settleProviderQuery(81L, 1, "666821925535879168", now))
+            .isEqualTo(ReadingSubscriptionRenewalResult.SETTLED);
+    }
+
+    @Test
+    void finalProviderQueryFailureSchedulesRetryBeforeFallback() {
+        ReadingSubscriptionRenewalCycleRow cycle = pendingCycle();
+        ReadingSubscriptionRow subscription = subscription("VNPAY_RECURRING", "WALLET_XU");
+        Date retryAt = new Date(now.getTime() + 24L * 60 * 60 * 1000);
+        when(renewalMapper.lockCycle(81L)).thenReturn(cycle);
+        when(renewalMapper.lockSubscription(51L)).thenReturn(subscription);
+        when(renewalMapper.markUnknownProviderAttemptFailed(81L, 1, "02", now)).thenReturn(1);
+        when(renewalMapper.scheduleProviderQueryRetry(81L, 2L, retryAt)).thenReturn(1);
+
+        assertThat(service.recordProviderQueryFailure(81L, 1, "02", now))
+            .isEqualTo(ReadingSubscriptionRenewalResult.RETRY_SCHEDULED);
+        verify(walletLedgerService, never()).chargeReaderSubscription(
+            anyLong(), anyLong(), anyString(), anyString());
+    }
+
+    @Test
     void adminRetryRequiresRetryWaitAndWritesAudit() {
         ReadingSubscriptionRenewalCycleRow cycle = cycle();
         cycle.setStatus("RETRY_WAIT");
@@ -230,6 +273,14 @@ class ReadingSubscriptionRenewalServiceImplTest {
         row.setStatus("PROCESSING");
         row.setAttemptCount(1);
         row.setVersion(1L);
+        return row;
+    }
+
+    private ReadingSubscriptionRenewalCycleRow pendingCycle() {
+        ReadingSubscriptionRenewalCycleRow row = cycle();
+        row.setStatus("PROVIDER_PENDING");
+        row.setAttemptCount(1);
+        row.setVersion(2L);
         return row;
     }
 }

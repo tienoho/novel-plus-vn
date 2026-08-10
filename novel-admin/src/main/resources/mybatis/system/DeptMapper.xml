@@ -24,8 +24,11 @@
             <if test="delFlag != null and delFlag != ''">and del_flag = #{delFlag}</if>
         </where>
         <choose>
-            <when test="sort != null and sort.trim() != ''">
-                order by ${sort} ${order}
+            <when test="sort == 'order_num' and order == 'asc'">
+                order by order_num asc
+            </when>
+            <when test="sort == 'order_num'">
+                order by order_num desc
             </when>
             <otherwise>
                 order by dept_id desc

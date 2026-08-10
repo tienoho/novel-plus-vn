@@ -3,7 +3,10 @@ param(
     [int]$TimeoutSeconds = 600,
     [int]$MySqlHostPort = 13317,
     [int]$CaddyHttpHostPort = 13480,
-    [int]$CaddyHttpsHostPort = 13443
+    [int]$CaddyHttpsHostPort = 13443,
+    [switch]$SkipImageBuild,
+    [switch]$VerifyBackupRestore,
+    [string]$ReleaseEnvFile = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -11,9 +14,32 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 $secretDir = Join-Path ([System.IO.Path]::GetTempPath()) $ProjectName
 $resolvedTemp = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath())
 $resolvedSecret = [System.IO.Path]::GetFullPath($secretDir)
+$backupDir = Join-Path ([System.IO.Path]::GetTempPath()) "$ProjectName-backups"
+$resolvedBackup = [System.IO.Path]::GetFullPath($backupDir)
+$composeGlobalArguments = @()
+
+if (-not [string]::IsNullOrWhiteSpace($ReleaseEnvFile)) {
+    $releaseEnvPath = $ReleaseEnvFile
+    if (-not [System.IO.Path]::IsPathRooted($releaseEnvPath)) {
+        $releaseEnvPath = Join-Path $repoRoot $releaseEnvPath
+    }
+    $releaseEnvPath = [System.IO.Path]::GetFullPath($releaseEnvPath)
+    if (-not (Test-Path -LiteralPath $releaseEnvPath -PathType Leaf)) {
+        throw "Release env file does not exist: $releaseEnvPath"
+    }
+    $composeGlobalArguments += @("--env-file", $releaseEnvPath)
+}
+$composeGlobalArguments += @(
+    "-p", $ProjectName,
+    "-f", "$repoRoot/compose.yaml",
+    "-f", "$repoRoot/compose.test.yaml"
+)
 
 if (-not $resolvedSecret.StartsWith($resolvedTemp, [System.StringComparison]::OrdinalIgnoreCase)) {
     throw "Thư mục secret smoke phải nằm trong thư mục tạm của hệ điều hành."
+}
+if (-not $resolvedBackup.StartsWith($resolvedTemp, [System.StringComparison]::OrdinalIgnoreCase)) {
+    throw "Backup smoke directory must stay inside the operating system temp directory."
 }
 
 function New-RandomSecret([int]$byteCount = 48) {
@@ -29,7 +55,7 @@ function New-RandomSecret([int]$byteCount = 48) {
 }
 
 function Invoke-Compose([string[]]$Arguments) {
-    & docker compose -p $ProjectName -f "$repoRoot/compose.yaml" -f "$repoRoot/compose.test.yaml" @Arguments
+    & docker compose @composeGlobalArguments @Arguments
     if ($LASTEXITCODE -ne 0) {
         throw "Docker Compose thất bại: $($Arguments -join ' ')"
     }
@@ -208,6 +234,17 @@ function Assert-CaddyBoundary {
     Write-Output "Caddy boundary verified: actuator blocked on 3 app domains and Grafana proxy healthy."
 }
 
+function Assert-BackupRestore {
+    Invoke-Compose @("run", "--rm", "backup")
+    $archives = @(Get-ChildItem -LiteralPath $resolvedBackup -Filter "*.tar.gz.gpg" -File)
+    if ($archives.Count -ne 1) {
+        throw "Backup smoke must create exactly one encrypted archive; actual=$($archives.Count)."
+    }
+    $env:BACKUP_ARCHIVE = $archives[0].Name
+    Invoke-Compose @("run", "--rm", "restore-drill")
+    Write-Output "Backup image verified: encrypted archive and restore drill passed."
+}
+
 $secretNames = @(
     "mysql_root_password",
     "mysql_app_password",
@@ -228,6 +265,12 @@ $secretNames = @(
 )
 
 New-Item -ItemType Directory -Force -Path $secretDir | Out-Null
+if ($VerifyBackupRestore) {
+    if (Test-Path -LiteralPath $resolvedBackup) {
+        Remove-Item -LiteralPath $resolvedBackup -Recurse -Force
+    }
+    New-Item -ItemType Directory -Force -Path $resolvedBackup | Out-Null
+}
 foreach ($secretName in $secretNames) {
     $byteCount = if ($secretName -eq "pii_encryption_key") { 32 } else { 48 }
     [System.IO.File]::WriteAllText(
@@ -251,6 +294,8 @@ $previousNovelDomain = $env:NOVEL_DOMAIN
 $previousAdminDomain = $env:NOVEL_ADMIN_DOMAIN
 $previousCrawlDomain = $env:NOVEL_CRAWL_DOMAIN
 $previousGrafanaDomain = $env:NOVEL_GRAFANA_DOMAIN
+$previousBackupDir = $env:BACKUP_DIR
+$previousBackupArchive = $env:BACKUP_ARCHIVE
 $env:SECRETS_DIR = $secretDir
 $env:MYSQL_HOST_PORT = [string]$MySqlHostPort
 $env:ALERTMANAGER_ALLOW_HTTP = "true"
@@ -260,10 +305,23 @@ $env:NOVEL_DOMAIN = "localhost"
 $env:NOVEL_ADMIN_DOMAIN = "admin.localhost"
 $env:NOVEL_CRAWL_DOMAIN = "crawl.localhost"
 $env:NOVEL_GRAFANA_DOMAIN = "grafana.localhost"
+if ($VerifyBackupRestore) {
+    $env:BACKUP_DIR = $resolvedBackup
+    $env:BACKUP_ARCHIVE = ""
+}
 
 try {
-    Invoke-Compose @("up", "-d", "--build", "mysql", "pushgateway", "migrate", "redis", `
-        "front", "crawl", "admin", "alertmanager", "prometheus", "grafana", "caddy")
+    Invoke-Compose @("config", "--quiet")
+    $upArguments = @("up", "-d")
+    if ($SkipImageBuild) {
+        $upArguments += "--no-build"
+    }
+    else {
+        $upArguments += "--build"
+    }
+    $upArguments += @("mysql", "pushgateway", "migrate", "redis", "front", "crawl", "admin", `
+        "alertmanager", "prometheus", "grafana", "caddy")
+    Invoke-Compose $upArguments
 
     $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
     $migrateContainer = "$ProjectName-migrate-1"
@@ -320,14 +378,17 @@ try {
     Assert-CrawlerCsrf -Container $crawlContainer
     Assert-Observability -ProbeContainer $frontContainer
     Assert-CaddyBoundary -ProbeContainer $frontContainer
+    if ($VerifyBackupRestore) {
+        Assert-BackupRestore
+    }
 
-    Write-Output "Compose production smoke passed: Flyway, CSP, CSRF, observability and Caddy boundary are healthy."
+    Write-Output "Compose production smoke passed: Flyway, CSP, CSRF, observability, Caddy and optional backup checks are healthy."
 }
 finally {
     $previousCleanupErrorActionPreference = $ErrorActionPreference
     $ErrorActionPreference = "Continue"
     try {
-        & docker compose -p $ProjectName -f "$repoRoot/compose.yaml" -f "$repoRoot/compose.test.yaml" down -v --remove-orphans 2>&1 | Out-Null
+        & docker compose @composeGlobalArguments down -v --remove-orphans 2>&1 | Out-Null
         $cleanupExitCode = $LASTEXITCODE
     }
     finally {
@@ -335,6 +396,9 @@ finally {
     }
     if (Test-Path -LiteralPath $resolvedSecret) {
         Remove-Item -LiteralPath $resolvedSecret -Recurse -Force
+    }
+    if ($VerifyBackupRestore -and (Test-Path -LiteralPath $resolvedBackup)) {
+        Remove-Item -LiteralPath $resolvedBackup -Recurse -Force
     }
     $env:SECRETS_DIR = $previousSecretsDir
     $env:MYSQL_HOST_PORT = $previousMySqlHostPort
@@ -345,6 +409,8 @@ finally {
     $env:NOVEL_ADMIN_DOMAIN = $previousAdminDomain
     $env:NOVEL_CRAWL_DOMAIN = $previousCrawlDomain
     $env:NOVEL_GRAFANA_DOMAIN = $previousGrafanaDomain
+    $env:BACKUP_DIR = $previousBackupDir
+    $env:BACKUP_ARCHIVE = $previousBackupArchive
     if ($cleanupExitCode -ne 0) {
         throw "Docker Compose cleanup thất bại với exit code $cleanupExitCode."
     }

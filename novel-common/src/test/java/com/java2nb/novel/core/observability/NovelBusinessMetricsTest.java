@@ -14,6 +14,8 @@ class NovelBusinessMetricsTest {
 
         metrics.setLedgerMismatch(NovelBusinessMetrics.LedgerCheck.ZERO_SUM, 3);
         metrics.setRenewalQueue(NovelBusinessMetrics.RenewalQueue.PAST_DUE, 2);
+        metrics.setRenewalQueue(
+            NovelBusinessMetrics.RenewalQueue.MANDATE_REVOKE_PENDING, 4);
         metrics.setGamificationQueue(NovelBusinessMetrics.GamificationQueue.PENDING_EVENTS, 11);
         metrics.recordPayment(NovelBusinessMetrics.PaymentProvider.VNPAY,
             NovelBusinessMetrics.PaymentOperation.WEBHOOK,
@@ -23,6 +25,8 @@ class NovelBusinessMetricsTest {
             .tag("check", "zero_sum").gauge().value()).isEqualTo(3);
         assertThat(registry.get("novel_subscription_renewal_queue")
             .tag("state", "past_due").gauge().value()).isEqualTo(2);
+        assertThat(registry.get("novel_subscription_renewal_queue")
+            .tag("state", "mandate_revoke_pending").gauge().value()).isEqualTo(4);
         assertThat(registry.get("novel_gamification_queue")
             .tag("state", "pending_events").gauge().value()).isEqualTo(11);
         assertThat(registry.get("novel_payment_operations")

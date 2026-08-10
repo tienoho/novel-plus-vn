@@ -1,4 +1,4 @@
-// Back-to-Top Floating Button Handler
+// Điều khiển nút nổi cuộn lên đầu trang.
 (function () {
     document.addEventListener('DOMContentLoaded', function () {
         if (!document.getElementById('backToTopBtn')) {
@@ -19,7 +19,14 @@
             }, { passive: true });
 
             btn.addEventListener('click', function () {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                var reducedMotion = window.NovelUX
+                    ? window.NovelUX.prefersReducedMotion()
+                    : window.matchMedia
+                        && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                window.scrollTo({
+                    top: 0,
+                    behavior: reducedMotion ? 'auto' : 'smooth'
+                });
             });
         }
     });

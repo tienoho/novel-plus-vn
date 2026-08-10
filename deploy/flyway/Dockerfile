@@ -46,6 +46,10 @@ COPY --chmod=0444 doc/sql/20260810_gamification_special_seasons.sql /flyway/sql/
 COPY --chmod=0444 doc/sql/20260811_gamification_level_rewards.sql /flyway/sql/V2026081101__gamification_level_rewards.sql
 COPY --chmod=0444 doc/sql/20260812_gamification_abuse_review.sql /flyway/sql/V2026081201__gamification_abuse_review.sql
 COPY --chmod=0444 doc/sql/20260813_gamification_public_policy.sql /flyway/sql/V2026081301__gamification_public_policy.sql
+COPY --chmod=0444 doc/sql/20260814_reading_subscription_mandate_revocation.sql /flyway/sql/V2026081401__reading_subscription_mandate_revocation.sql
+COPY --chmod=0444 doc/sql/20260815_reading_subscription_mandate_admin.sql /flyway/sql/V2026081501__reading_subscription_mandate_admin.sql
+COPY --chmod=0444 doc/sql/20260816_reading_subscription_mandate_idempotency.sql /flyway/sql/V2026081601__reading_subscription_mandate_idempotency.sql
+COPY --chmod=0444 doc/sql/20260817_author_payout_four_eyes.sql /flyway/sql/V2026081701__author_payout_four_eyes.sql
 
 COPY --chmod=0555 deploy/flyway/entrypoint.sh /usr/local/bin/novel-flyway
 

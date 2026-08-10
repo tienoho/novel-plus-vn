@@ -44,6 +44,16 @@ public class ReadingSubscriptionRenewalSchedule {
                     subscriptionId, exception);
             }
         }
+        for (Long cycleId : service.listProviderPendingCycleIds(
+            now, properties.getSubscriptionRenewalBatchSize())) {
+            try {
+                record(vnpayRecurringRenewalProcessor.reconcile(cycleId, now));
+            } catch (RuntimeException exception) {
+                metrics.recordRenewal(Outcome.FAILED);
+                log.error("SUBSCRIPTION-RENEWAL-005 không thể QueryDr cycle: cycleId={}",
+                    cycleId, exception);
+            }
+        }
         for (Long cycleId : service.listDueCycleIds(
             now, properties.getSubscriptionRenewalBatchSize())) {
             try {

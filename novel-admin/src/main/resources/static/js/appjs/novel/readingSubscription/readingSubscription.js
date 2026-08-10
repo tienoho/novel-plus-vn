@@ -37,7 +37,10 @@
             PROVIDER_PENDING: messages.statusProviderPending,
             RETRY_WAIT: messages.statusRetryWait,
             FAILED: messages.statusFailed,
-            GRACE_EXPIRED: messages.statusGraceExpired
+            GRACE_EXPIRED: messages.statusGraceExpired,
+            PENDING: messages.statusPending,
+            REVOKE_PENDING: messages.statusRevokePending,
+            REVOKED: messages.statusRevoked
         };
         return labels[status] || status;
     }
@@ -288,6 +291,84 @@
         });
     }
 
+    function loadMandateQueue() {
+        if (!permissions.review) return;
+        $.get(base + '/mandates', {
+            status: $('#mandateQueueStatus').val(),
+            limit: 100
+        }).done(function (response) {
+            renderMandateQueue(response.data || []);
+        }).fail(showError);
+    }
+
+    function renderMandateQueue(items) {
+        var body = document.querySelector('#mandateQueueTable tbody');
+        while (body.firstChild) body.removeChild(body.firstChild);
+        if (!items.length) {
+            var emptyRow = document.createElement('tr');
+            var emptyCell = document.createElement('td');
+            emptyCell.colSpan = 10;
+            emptyCell.textContent = messages.mandateEmpty;
+            emptyRow.appendChild(emptyCell);
+            body.appendChild(emptyRow);
+        }
+        items.forEach(function (mandate) {
+            var row = document.createElement('tr');
+            textCell(row, mandate.mandateId);
+            textCell(row, mandate.userId);
+            textCell(row, mandate.merchantReference);
+            textCell(row, mandate.providerRecurringId);
+            textCell(row, statusLabel(mandate.status));
+            textCell(row, mandate.revokeAttemptCount);
+            textCell(row, mandate.revokeLastError);
+            textCell(row, formatDate(mandate.revokeNextAttemptAt));
+            textCell(row, formatDate(mandate.updateTime));
+            var actions = document.createElement('td');
+            actions.appendChild(actionButton(messages.mandateDetails, 'btn-info', function () {
+                loadMandateAudits(mandate.mandateId);
+            }));
+            var leaseUntil = mandate.revokeLeaseUntil ? new Date(mandate.revokeLeaseUntil) : null;
+            var leaseActive = leaseUntil && !Number.isNaN(leaseUntil.getTime())
+                && leaseUntil.getTime() > Date.now();
+            if (mandate.status === 'REVOKE_PENDING' && !leaseActive) {
+                actions.appendChild(document.createTextNode(' '));
+                actions.appendChild(actionButton(messages.mandateRetry, 'btn-warning', function () {
+                    promptMandateRetry(mandate);
+                }));
+            }
+            row.appendChild(actions);
+            body.appendChild(row);
+        });
+    }
+
+    function loadMandateAudits(mandateId) {
+        $.get(base + '/mandates/' + encodeURIComponent(mandateId) + '/audits', {limit: 50})
+            .done(function (response) {
+                document.getElementById('mandateQueueDetail').textContent = JSON.stringify({
+                    audits: response.data || []
+                }, null, 2);
+            }).fail(showError);
+    }
+
+    function promptMandateRetry(mandate) {
+        layer.prompt({title: messages.mandateRetryReason, formType: 2}, function (value, index) {
+            var reason = String(value || '').trim();
+            if (reason.length < 8 || reason.length > 500) {
+                layer.msg(messages.mandateRetryReason);
+                return;
+            }
+            layer.close(index);
+            $.post(base + '/mandates/retry', {
+                mandateId: mandate.mandateId,
+                expectedVersion: mandate.version,
+                reason: reason
+            }).done(function () {
+                layer.msg(messages.mandateRetryScheduled);
+                loadMandateQueue();
+            }).fail(showError);
+        });
+    }
+
     function changeStatus(plan, status) {
         $.post(base + '/plans/status', {
             planId: plan.id, expectedVersion: plan.version, status: status
@@ -377,8 +458,14 @@
             document.getElementById('renewalQueueDetail').textContent = '';
             loadRenewalQueue();
         });
+        $('#mandateQueueFilter').on('submit', function (event) {
+            event.preventDefault();
+            document.getElementById('mandateQueueDetail').textContent = '';
+            loadMandateQueue();
+        });
         loadPurchaseReviews();
         loadRenewalQueue();
+        loadMandateQueue();
     }
 
     loadPlans();

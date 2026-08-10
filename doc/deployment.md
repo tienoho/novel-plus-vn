@@ -5,7 +5,7 @@ Tài liệu này áp dụng cho bộ Docker Compose tại thư mục gốc. Stac
 ## 1. Chuẩn bị
 
 - Docker Engine có Docker Compose v2.
-- Máy chủ Linux x64/arm64 đủ tài nguyên để build bốn module Maven bằng JDK 21.
+- Máy chủ Linux x64/arm64 có Docker Compose v2, GitHub CLI và Node.js 22. Build từ source cần thêm JDK 21/Maven.
 - Bốn tên miền trỏ về máy chủ: website, admin, crawler và Grafana. Cổng 80/443 phải truy cập được từ Internet để Caddy cấp và gia hạn TLS.
 - Bản sao lưu database nếu đây là lần nâng cấp.
 
@@ -26,6 +26,54 @@ docker compose config --quiet
 ```
 
 ## 2. Cài mới
+
+### 2.1. Production từ release đã phê duyệt
+
+Không build lại mười image first-party trên máy production. Checkout đúng tag đã publish, tải
+toàn bộ bằng chứng từ GitHub Release, rồi sinh `.env.release` từ manifest và promotion record:
+
+```bash
+export TAG=v1.2.3
+git fetch --tags origin
+git checkout --detach "$TAG"
+mkdir -p release-meta release-artifacts
+gh release download "$TAG" --dir release-meta \
+  --pattern 'release-manifest.json' \
+  --pattern 'release-manifest.sha256' \
+  --pattern 'production-promotion-record.json'
+gh release download "$TAG" --dir release-artifacts \
+  --pattern 'digest-*' \
+  --pattern 'trivy-novel-*' \
+  --pattern 'sbom-release-*' \
+  --pattern 'attestation-*'
+node scripts/generate-release-manifest.mjs deploy-env \
+  --artifacts release-artifacts \
+  --manifest release-meta/release-manifest.json \
+  --checksum release-meta/release-manifest.sha256 \
+  --promotion-record release-meta/production-promotion-record.json \
+  --output .env.release \
+  --tag "$TAG"
+```
+
+`deploy-env` kiểm tra lại checksum/artifact, tag/commit, hash manifest trong promotion record và bằng
+chứng biên bản đã ký trước khi ghi đúng mười biến `NOVEL_*_IMAGE=subject@sha256:...`. Tệp này không có
+secret nhưng vẫn bị loại khỏi Git để tránh triển khai nhầm RC. Kiểm tra và pull đúng digest:
+
+```bash
+docker compose --env-file .env --env-file .env.release config --quiet
+docker compose --env-file .env --env-file .env.release --profile tools pull \
+  mysql migrate front crawl admin caddy alertmanager pushgateway grafana backup
+docker compose --env-file .env --env-file .env.release up -d --no-build
+docker compose --env-file .env --env-file .env.release ps --all
+```
+
+`mysql`, `front`, `admin`, `crawl`, `migrate`, `caddy`, `alertmanager`, `pushgateway` và `backup` phải resolve thành image có
+`@sha256:`. Ba service `backup`, `restore`, `restore-drill` dùng chung một image backup đã attest.
+
+### 2.2. Build trực tiếp từ source cho development/UAT
+
+Lệnh dưới đây không được dùng để triển khai một release production đã phê duyệt vì artifact sinh ra
+không còn là digest trong biên bản:
 
 ```bash
 docker compose up -d --build
@@ -97,11 +145,13 @@ Sau phục hồi phải chạy `migrate`, kiểm tra checksum Flyway, health và
 
 1. Sao lưu database và các volume file.
 2. Đọc [hướng dẫn SQL](sql/readme.md), chạy mọi migration trung gian còn thiếu trên bản sao dữ liệu trước.
-3. Lấy source/image phiên bản mới.
-4. Build lại và khởi động:
+3. Lấy tag, manifest, promotion record và image digest của bản đã phê duyệt theo mục 2.1.
+4. Pull cả mười image theo digest và khởi động không build lại source:
 
    ```bash
-   docker compose up -d --build
+   docker compose --env-file .env --env-file .env.release --profile tools pull \
+     mysql migrate front crawl admin caddy alertmanager pushgateway grafana backup
+   docker compose --env-file .env --env-file .env.release up -d --no-build
    ```
 
 5. Xác minh `migrate` kết thúc mã `0`, các ứng dụng healthy và không có lỗi mới:
@@ -111,7 +161,7 @@ Sau phục hồi phải chạy `migrate`, kiểm tra checksum Flyway, health và
    docker compose logs --since=10m migrate front crawl admin
    ```
 
-Image `novel-plus/migrations` dùng Flyway 13.1.0 và chỉ giữ các plugin/driver cần cho MySQL; không xóa driver riêng lẻ khi plugin `ServiceLoader` tương ứng vẫn còn. Compose chạy baseline cùng 35 migration tăng dần, từ `20260712_vi_localization.sql` đến `20260813_gamification_public_policy.sql`, sau đó validate checksum trước khi mở các ứng dụng. Không sửa migration đã phát hành, không chạy lại bằng shell loop và không dùng `novel_plus_data.sql.zip` trong image release.
+Image `novel-plus/migrations` dùng Flyway 13.1.0 và chỉ giữ các plugin/driver cần cho MySQL; không xóa driver riêng lẻ khi plugin `ServiceLoader` tương ứng vẫn còn. Compose chạy baseline cùng 39 migration tăng dần, từ `20260712_vi_localization.sql` đến `20260817_author_payout_four_eyes.sql`, sau đó validate checksum trước khi mở các ứng dụng. Không sửa migration đã phát hành, không chạy lại bằng shell loop và không dùng `novel_plus_data.sql.zip` trong image release.
 
 Migration VNPAY chủ động dừng nếu phát hiện `out_trade_no` trùng để tránh tự sửa lịch sử thanh toán. Migration sổ cái chỉ backfill số dư đầu kỳ một lần thông qua `platform_migration_history`; các migration KYC, refund, kiểm duyệt, báo cáo và editor tạo schema/audit cần thiết nhưng không tự sinh dữ liệu định danh. Các migration mới bổ sung BCrypt, thuê bao recurring, kỳ gamification đặc biệt, thưởng level, chống lạm dụng và chính sách công khai. Mọi lỗi checksum hoặc invariant phải chặn deploy để vận hành đối soát, không tự bỏ qua.
 
@@ -244,7 +294,11 @@ vật lý trước phát hành production.
 
 ## 7. Rollback
 
-Rollback image/source về phiên bản trước và chạy lại `docker compose up -d --build`. Không tự động rollback schema bằng cách chạy migration ngược. Nếu phiên bản cũ không tương thích schema mới, phục hồi database từ bản sao lưu đã kiểm chứng và phục hồi đồng bộ các volume file.
+Rollback bằng cách tải manifest/promotion record của release trước, sinh lại `.env.release`, pull đúng
+digest và chạy `docker compose --env-file .env --env-file .env.release up -d --no-build`. Không build
+lại source để giả lập image cũ. Không tự động rollback schema bằng cách chạy migration ngược. Nếu phiên
+bản cũ không tương thích schema mới, phục hồi database từ bản sao lưu đã kiểm chứng và phục hồi đồng bộ
+các volume file.
 
 Khi lỗi chỉ nằm ở VNPAY, đặt `VNPAY_ENABLED=false` rồi recreate `front` để khóa tạo giao dịch mới trong khi vẫn giữ nguyên lịch sử đơn:
 
@@ -274,9 +328,73 @@ Chạy E2E bốn theme, bài tải 500 VU và restore drill trên môi trường
 ./scripts/verify-backup-restore.ps1
 ```
 
-Workflow release phải tạo bốn image, SBOM SPDX và quét Gitleaks/Trivy. Policy image hiện chặn phát
+Workflow release phải tạo mười image, SBOM SPDX bằng Syft 1.50.0 đã pin và quét Gitleaks/Trivy. Policy image hiện chặn phát
 hiện `HIGH`/`CRITICAL`, secret và misconfiguration tương ứng; report và image digest phải được lưu cùng
 commit phát hành. Không dùng kết quả quét cũ để duyệt một image mới.
+
+`trivy-action` phải dùng commit an toàn `57a97c7e7821a5776cebc9bb87c984fa69cba8f1` và khóa binary
+immutable `v0.69.3`; không dùng action SHA đã bị gỡ hoặc `latest`. Redis và Prometheus production phải
+dùng đúng digest đã scan trong `compose.yaml`. Không thêm allowlist chỉ để mở gate phát hành.
+
+MySQL được build thành image first-party từ đúng MySQL 8.4.11 digest. Image thay gosu 1.19 bằng binary
+build tại commit `6456aaa0f3c854d199d0f037f068eb97515b7513`, Go 1.26.5 và `x/sys` 0.45.0; đồng thời loại MySQL
+Shell không được server/entrypoint sử dụng. Image MySQL phải đi qua Trivy/SBOM/attestation gate và
+Flyway/MySQL integration như các image first-party khác. Image backup dùng cùng base digest nhưng tiếp
+tục loại gosu/mysqlsh vì chỉ cần client backup/restore.
+
+Pushgateway được build thành image first-party từ tag `v1.11.3`, commit
+`e803ebd81be5867ff17a21205030611fa033af13`, bằng Go 1.26.5 và `x/text` 0.39.0. Runtime layer vẫn dùng
+đúng upstream digest để giữ `wget` cho healthcheck, nhưng binary `/bin/pushgateway` phải được thay bằng
+binary vừa build. Image này phải đi qua cùng Trivy/SBOM/attestation gate như chín image first-party còn lại.
+Volume persistence được mount tại `/pushgateway` và ghi `/pushgateway/metrics.db` để giữ UID 65534;
+không mount vào `/data` vì volume mới tại đó có owner `root:root` và làm persistence fail dù healthcheck
+vẫn xanh. Với volume development cũ được tạo trước thay đổi này, dừng stack và xóa riêng volume
+`pushgateway-data` trước khi khởi động lại; không áp dụng thao tác đó cho volume khác.
+
+Grafana được build thành image first-party từ đúng tag `v13.1.3`, commit
+`45a27d64b64a82d666b06aa5c5bb3521587edb0d` và Go 1.26.5. Patch chỉ bỏ backend Tempo không dùng;
+runtime bỏ Tempo, Elasticsearch và Zipkin, tắt plugin preinstall mặc định và xóa đúng ba thư mục này
+khỏi volume plugin cũ trước khi chạy. Novel Plus chỉ provision Prometheus. Image phải chạy UID 472,
+không được tải plugin lúc khởi động và phải qua scan, SBOM, attestation cùng smoke dashboard trước RC.
+
+Job `runtime-dependencies` phải quét đúng hai reference có digest của Redis và
+Prometheus trước khi build/push image first-party. Mỗi report JSON phải có đúng
+`ArtifactName`, schema Trivy 2, không còn `Vulnerabilities`, `Secrets` hoặc `Misconfigurations`, được ký
+provenance và lưu trong `release-evidence`. Bộ `verify-runtime-reports` phải nhận đúng hai file, không
+thiếu/thừa. Workflow promotion tải các report này vào thư mục riêng, xác minh lại nội dung và provenance;
+không trộn chúng với 40 artifact của manifest image. Nếu một dependency còn finding, RC phải dừng trước
+khi đẩy image.
+
+Chỉ tag dạng `v<phiên-bản>` mới được phép chạy job đẩy image. `workflow_dispatch` từ branch chỉ chạy
+các gate kiểm tra, không được đẩy image hoặc tạo GitHub Release. Workflow RC chỉ đẩy tag phiên bản,
+không tạo Docker tag `latest`. Sau khi mười image được đẩy và
+attest thành công, workflow tổng hợp `release-manifest.json` và `release-manifest.sha256`. Manifest
+phải khóa đúng tag, SHA commit, GitHub Actions run, mười subject image, registry digest, hash của report
+Trivy/SBOM/digest/attestation, cùng ID và URL provenance/SBOM attestation. Thiếu một image, sai checksum,
+artifact bị thay đổi hoặc tag/commit không khớp phải chặn job GitHub Release.
+
+Sau khi khóa manifest, job `release-smoke` phải sinh `.env.rc-smoke` bằng lệnh `candidate-env`, kéo và
+khởi động image theo đúng `subject@sha256` với `--no-build`, rồi kiểm tra Flyway, health, CSP, CSRF,
+Prometheus/Grafana, biên Caddy, backup mã hóa và restore drill bằng đúng image backup RC. Job phải ghi
+`rc-compose-smoke.json`, ký provenance cho biên bản này
+và đính kèm cả JSON lẫn log vào draft. Không được tạo draft nếu stack digest không qua smoke.
+
+Kiểm tra nhánh dương và các nhánh fail-closed của bộ sinh manifest trước khi tạo tag:
+
+```bash
+node --test scripts/generate-release-manifest.test.mjs
+```
+
+GitHub Release RC phải ở trạng thái draft và đính kèm toàn bộ artifact `release-evidence`. Chỉ chạy
+workflow `Quảng bá release production` sau khi biên bản ở trạng thái GO và đã cấu hình required
+reviewers cho GitHub Environment `production`. Người chạy phải nhập mã cùng SHA-256 của biên bản đã
+ký. Workflow promotion tải lại asset từ draft, xác minh manifest theo tag/commit, kiểm tra online cả
+provenance lẫn SBOM attestation của mười OCI image, đồng thời xác minh provenance/nội dung biên bản
+runtime RC khớp tag, commit và hash manifest. Hai report dependency runtime phải được tách khỏi artifact
+manifest, kiểm tra lại đúng digest/không finding và xác minh provenance từng report. Sau đó workflow mới ghi
+`production-promotion-record.json`, rồi mới
+publish và đánh dấu GitHub Release là latest. Khi triển khai hoặc rollback, luôn dùng digest trong
+manifest đã ký duyệt; hệ thống không phát hành Docker tag `latest`.
 
 Trước khi bật production, đối chiếu và ký
 [biên bản sẵn sàng production](production-readiness-acceptance.md). Tối thiểu phải có smoke VNPAY

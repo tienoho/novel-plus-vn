@@ -1,6 +1,7 @@
 package com.java2nb.novel.service.subscription;
 
 import com.java2nb.novel.FrontNovelApplication;
+import com.java2nb.novel.mapper.ReadingSubscriptionMandateMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,7 @@ class ReadingSubscriptionMySqlIntegrationTest {
     @Autowired private ReadingSubscriptionService service;
     @Autowired private JdbcTemplate jdbcTemplate;
     @Autowired private ReadingSubscriptionRenewalService renewalService;
+    @Autowired private ReadingSubscriptionMandateMapper mandateMapper;
 
     @Test
     void activationAndPeriodGrantAreAtomicAndIdempotent() {
@@ -106,6 +108,68 @@ class ReadingSubscriptionMySqlIntegrationTest {
     }
 
     @Test
+    void failedMandateReleasesOpenSlotForRetry() {
+        long suffix = Math.floorMod(System.nanoTime(), 800_000L);
+        long userId = 99_779_000_000L + suffix;
+        String firstReference = "MYSQLMANDATEFAIL" + suffix;
+        String retryReference = "MYSQLMANDATERETRY" + suffix;
+
+        assertThat(mandateMapper.insertPending(userId, firstReference,
+            "mandate_fail_" + suffix, "a".repeat(64), "MONTHLY", 1L)).isEqualTo(1);
+        ReadingSubscriptionMandateRow first =
+            mandateMapper.selectByMerchantReference(firstReference);
+        assertThat(mandateMapper.fail(first.getId(), first.getVersion())).isEqualTo(1);
+
+        assertThat(mandateMapper.insertPending(userId, retryReference,
+            "mandate_retry_" + suffix, "b".repeat(64), "MONTHLY", 1L)).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("""
+            SELECT open_user_id FROM reading_subscription_mandate
+            WHERE merchant_reference=?
+            """, Long.class, firstReference)).isNull();
+        assertThat(mandateMapper.selectByMerchantReference(retryReference).getStatus())
+            .isEqualTo("PENDING");
+    }
+
+    @Test
+    void mandateInitializationSnapshotIsImmutableAndReplayDataIsClearedOnFailure() {
+        long suffix = Math.floorMod(System.nanoTime(), 800_000L);
+        long userId = 99_778_000_000L + suffix;
+        String merchantReference = "MYSQLMANDATEIDEMP" + suffix;
+        String duplicateReference = "MYSQLMANDATEDUP" + suffix;
+        String clientRequestId = "mandate_idemp_" + suffix;
+        String requestHash = "c".repeat(64);
+
+        assertThat(mandateMapper.insertPending(userId, merchantReference,
+            clientRequestId, requestHash, "MONTHLY", 3L)).isEqualTo(1);
+        assertThat(mandateMapper.registerProviderInitialization(merchantReference,
+            "666821925535879168", "v1:encrypted-data-key")).isEqualTo(1);
+
+        ReadingSubscriptionMandateRow initialized =
+            mandateMapper.selectByClientRequestId(userId, clientRequestId);
+        assertThat(initialized.getRequestHash()).isEqualTo(requestHash);
+        assertThat(initialized.getPlanCodeSnapshot()).isEqualTo("MONTHLY");
+        assertThat(initialized.getAcceptedPlanVersion()).isEqualTo(3L);
+        assertThat(initialized.getProviderDataKeyCiphertext()).isEqualTo("v1:encrypted-data-key");
+
+        assertThatThrownBy(() -> jdbcTemplate.update("""
+            UPDATE reading_subscription_mandate
+            SET plan_code_snapshot='OTHER' WHERE id=?
+            """, initialized.getId()))
+            .isInstanceOf(org.springframework.dao.DataAccessException.class)
+            .hasMessageContaining("snapshot idempotency");
+
+        assertThat(mandateMapper.fail(initialized.getId(), initialized.getVersion())).isEqualTo(1);
+        ReadingSubscriptionMandateRow failed = mandateMapper.selectById(initialized.getId());
+        assertThat(failed.getStatus()).isEqualTo("FAILED");
+        assertThat(failed.getProviderDataKeyCiphertext()).isNull();
+
+        assertThatThrownBy(() -> mandateMapper.insertPending(userId, duplicateReference,
+            clientRequestId, requestHash, "MONTHLY", 3L))
+            .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class)
+            .hasMessageContaining("uk_rs_mandate_client_request");
+    }
+
+    @Test
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     void twoWorkersClaimExactlyOneProviderAttempt() throws Exception {
         long suffix = Math.floorMod(System.nanoTime(), 800_000L);
@@ -175,10 +239,39 @@ class ReadingSubscriptionMySqlIntegrationTest {
             assertThat(providerCharge.attemptNo()).isEqualTo(1);
             assertThat(providerCharge.amountVnd()).isEqualTo(49_000L);
             assertThat(providerCharge.providerRecurringId()).isEqualTo("666821925535879168");
-            jdbcTemplate.update("""
-                UPDATE reading_subscription_renewal_cycle
-                SET status='RETRY_WAIT', version=version+1 WHERE id=?
-                """, cycleId);
+            assertThat(renewalService.recordProviderPending(
+                cycleId, 1, "UNAVAILABLE", renewalAt))
+                .isEqualTo(ReadingSubscriptionRenewalResult.PROVIDER_PENDING);
+            Date nextQueryAt = Date.from(Instant.parse("2027-02-01T00:05:00Z"));
+            CountDownLatch queryReady = new CountDownLatch(2);
+            CountDownLatch queryGate = new CountDownLatch(1);
+            ExecutorService queryExecutor = Executors.newFixedThreadPool(2);
+            try {
+                Future<ReadingSubscriptionProviderQuery> firstQuery = queryExecutor.submit(() -> {
+                    queryReady.countDown();
+                    queryGate.await();
+                    return renewalService.claimProviderQuery(cycleId, renewalAt, nextQueryAt);
+                });
+                Future<ReadingSubscriptionProviderQuery> secondQuery = queryExecutor.submit(() -> {
+                    queryReady.countDown();
+                    queryGate.await();
+                    return renewalService.claimProviderQuery(cycleId, renewalAt, nextQueryAt);
+                });
+                queryReady.await();
+                queryGate.countDown();
+                List<ReadingSubscriptionProviderQuery> claims = java.util.Arrays.asList(
+                    firstQuery.get(), secondQuery.get());
+                assertThat(claims).filteredOn(java.util.Objects::nonNull).singleElement()
+                    .satisfies(query -> {
+                        assertThat(query.providerRequestId()).isEqualTo("NPR" + cycleId + "A1");
+                        assertThat(query.amountVnd()).isEqualTo(49_000L);
+                    });
+            } finally {
+                queryExecutor.shutdownNow();
+            }
+            assertThat(renewalService.recordProviderQueryFailure(
+                cycleId, 1, "TX_02", renewalAt))
+                .isEqualTo(ReadingSubscriptionRenewalResult.RETRY_SCHEDULED);
             Long retryVersion = jdbcTemplate.queryForObject(
                 "SELECT version FROM reading_subscription_renewal_cycle WHERE id=?",
                 Long.class, cycleId);
@@ -203,6 +296,164 @@ class ReadingSubscriptionMySqlIntegrationTest {
                 subscription.getId());
             jdbcTemplate.update("DELETE FROM user_reading_subscription WHERE id=?", subscription.getId());
             jdbcTemplate.update("DELETE FROM reading_subscription_mandate WHERE user_id=?", userId);
+            jdbcTemplate.update("DELETE FROM reading_subscription_plan WHERE id=?", active.getId());
+        }
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void twoWorkersClaimExactlyOneMandateRevocation() throws Exception {
+        long suffix = Math.floorMod(System.nanoTime(), 800_000L);
+        long userId = 99_783_000_000L + suffix;
+        String merchantReference = "MYSQLREVOKE" + suffix;
+        Date now = Date.from(Instant.parse("2027-02-01T00:00:00Z"));
+        Date leaseUntil = Date.from(Instant.parse("2027-02-01T00:01:00Z"));
+        jdbcTemplate.update("""
+            INSERT INTO reading_subscription_mandate
+                (user_id, provider, merchant_reference, provider_recurring_id,
+                 provider_token_ciphertext, status, consented_at)
+            VALUES (?, 'VNPAY_RECURRING', ?, '666821925535879168',
+                    'v1:integration-ciphertext', 'ACTIVE', NOW(3))
+            """, userId, merchantReference);
+        try {
+            assertThat(mandateMapper.requestRevocation(userId, now)).isEqualTo(1);
+            Long mandateId = jdbcTemplate.queryForObject("""
+                SELECT id FROM reading_subscription_mandate WHERE merchant_reference=?
+                """, Long.class, merchantReference);
+            assertThat(mandateMapper.selectDueRevocationIds(now, 10)).contains(mandateId);
+
+            CountDownLatch ready = new CountDownLatch(2);
+            CountDownLatch startGate = new CountDownLatch(1);
+            ExecutorService executor = Executors.newFixedThreadPool(2);
+            try {
+                Future<Integer> first = executor.submit(() -> {
+                    ready.countDown();
+                    startGate.await();
+                    return mandateMapper.claimRevocation(mandateId, now, leaseUntil);
+                });
+                Future<Integer> second = executor.submit(() -> {
+                    ready.countDown();
+                    startGate.await();
+                    return mandateMapper.claimRevocation(mandateId, now, leaseUntil);
+                });
+                ready.await();
+                startGate.countDown();
+                assertThat(List.of(first.get(), second.get())).containsExactlyInAnyOrder(1, 0);
+            } finally {
+                executor.shutdownNow();
+            }
+        assertThat(jdbcTemplate.queryForObject("""
+            SELECT revoke_attempt_count FROM reading_subscription_mandate WHERE id=?
+            """, Integer.class, mandateId)).isEqualTo(1);
+        ReadingSubscriptionMandateRow claimed = mandateMapper.selectById(mandateId);
+        assertThatThrownBy(() -> service.adminScheduleMandateRevocationRetry(
+            mandateId, claimed.getVersion(), 99L, "Worker vẫn đang giữ lease xử lý", now))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("worker");
+
+        Date adminRetryAt = leaseUntil;
+        assertThat(service.adminScheduleMandateRevocationRetry(
+            mandateId, claimed.getVersion(), 99L,
+            "Đã xác minh provider có thể nhận retry", adminRetryAt))
+            .isEqualTo(ReadingSubscriptionMandateAdminResult.RETRY_SCHEDULED);
+        assertThat(service.listMandateQueue("REVOKE_PENDING", 10))
+            .extracting(ReadingSubscriptionMandateQueueItem::getMandateId)
+            .contains(mandateId);
+        assertThat(service.listMandateAdminAudits(mandateId, 10)).singleElement()
+            .satisfies(audit -> {
+                assertThat(audit.getOperatorId()).isEqualTo(99L);
+                assertThat(audit.getAction()).isEqualTo("RETRY_SCHEDULED");
+            });
+        Long auditId = jdbcTemplate.queryForObject("""
+            SELECT id FROM reading_subscription_mandate_admin_audit
+            WHERE mandate_id=? ORDER BY id DESC LIMIT 1
+            """, Long.class, mandateId);
+        assertThatThrownBy(() -> jdbcTemplate.update("""
+            UPDATE reading_subscription_mandate_admin_audit
+            SET reason='Không được sửa' WHERE id=?
+            """, auditId)).isInstanceOf(org.springframework.dao.DataAccessException.class)
+            .hasMessageContaining("reading_subscription_mandate_admin_audit is immutable");
+
+        Date secondLease = Date.from(Instant.parse("2027-02-01T00:02:00Z"));
+        assertThat(mandateMapper.claimRevocation(mandateId, adminRetryAt, secondLease)).isEqualTo(1);
+        ReadingSubscriptionMandateRow retried = mandateMapper.selectById(mandateId);
+        assertThat(mandateMapper.markRevoked(mandateId, retried.getVersion(), adminRetryAt))
+            .isEqualTo(1);
+        assertThat(mandateMapper.markRevoked(mandateId, retried.getVersion(), adminRetryAt)).isZero();
+            assertThat(jdbcTemplate.queryForMap("""
+                SELECT status, provider_token_ciphertext, token_expire_at, open_user_id
+                FROM reading_subscription_mandate WHERE id=?
+                """, mandateId)).containsEntry("status", "REVOKED")
+                .containsEntry("provider_token_ciphertext", null)
+                .containsEntry("token_expire_at", null)
+                .containsEntry("open_user_id", null);
+        } finally {
+            jdbcTemplate.update("DELETE FROM reading_subscription_mandate WHERE user_id=?", userId);
+        }
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void queriedProviderSettlementIsIdempotent() {
+        long suffix = Math.floorMod(System.nanoTime(), 800_000L);
+        long userId = 99_782_000_000L + suffix;
+        String planCode = "QUERYSETTLE_" + suffix;
+        Date start = Date.from(Instant.parse("2027-01-01T00:00:00Z"));
+        Date renewalAt = Date.from(Instant.parse("2027-02-01T00:00:00Z"));
+        ReadingSubscriptionPlanRow draft = service.createPlan(new ReadingSubscriptionPlanCommand(
+            planCode, "Gói QueryDr MySQL", 49_000, 500L, 10, 1, 45));
+        ReadingSubscriptionPlanRow active = service.changePlanStatus(
+            draft.getId(), draft.getVersion(), "ACTIVE");
+        ReadingSubscriptionRow subscription = service.activate(new ReadingSubscriptionActivationCommand(
+            userId, planCode, start, renewalAt, "ADMIN", "mysql-query-" + suffix, "v1"));
+        jdbcTemplate.update("""
+            UPDATE user_reading_subscription
+            SET auto_renew=1, primary_funding_source='VNPAY_RECURRING',
+                fallback_funding_source='WALLET_XU', next_renewal_at=?,
+                current_period_start=?, current_period_end=?, accepted_plan_version=?,
+                price_vnd_snapshot=49000, price_xu_snapshot=500, status='ACTIVE'
+            WHERE id=?
+            """, renewalAt, start, renewalAt, active.getPlanVersion(), subscription.getId());
+        Long cycleId = null;
+        try {
+            assertThat(renewalService.prepareCycle(subscription.getId(), renewalAt, ZoneId.of("UTC")))
+                .isEqualTo(ReadingSubscriptionRenewalResult.CYCLE_CREATED);
+            cycleId = jdbcTemplate.queryForObject(
+                "SELECT id FROM reading_subscription_renewal_cycle WHERE subscription_id=?",
+                Long.class, subscription.getId());
+            assertThat(renewalService.processCycle(cycleId, renewalAt))
+                .isEqualTo(ReadingSubscriptionRenewalResult.PROVIDER_CLAIMED);
+            assertThat(renewalService.recordProviderPending(cycleId, 1, "UNAVAILABLE", renewalAt))
+                .isEqualTo(ReadingSubscriptionRenewalResult.PROVIDER_PENDING);
+            Date nextQueryAt = Date.from(Instant.parse("2027-02-01T00:05:00Z"));
+            assertThat(renewalService.claimProviderQuery(cycleId, renewalAt, nextQueryAt)).isNotNull();
+
+            assertThat(renewalService.settleProviderQuery(
+                cycleId, 1, "777821925535879168", nextQueryAt))
+                .isEqualTo(ReadingSubscriptionRenewalResult.SETTLED);
+            assertThat(renewalService.settleProviderQuery(
+                cycleId, 1, "777821925535879168", nextQueryAt))
+                .isEqualTo(ReadingSubscriptionRenewalResult.NOT_DUE);
+            assertThat(jdbcTemplate.queryForObject(
+                "SELECT status FROM reading_subscription_renewal_cycle WHERE id=?",
+                String.class, cycleId)).isEqualTo("SETTLED");
+            assertThat(jdbcTemplate.queryForObject("""
+                SELECT COUNT(*) FROM reading_subscription_renewal_attempt
+                WHERE cycle_id=? AND status='SETTLED' AND provider_transaction_id=?
+                """, Integer.class, cycleId, "777821925535879168")).isEqualTo(1);
+            assertThat(jdbcTemplate.queryForObject(
+                "SELECT current_period_end FROM user_reading_subscription WHERE id=?",
+                Date.class, subscription.getId()).getTime())
+                .isEqualTo(Date.from(Instant.parse("2027-03-01T00:00:00Z")).getTime());
+        } finally {
+            if (cycleId != null) {
+                jdbcTemplate.update(
+                    "DELETE FROM reading_subscription_renewal_attempt WHERE cycle_id=?", cycleId);
+            }
+            jdbcTemplate.update(
+                "DELETE FROM reading_subscription_renewal_cycle WHERE subscription_id=?",
+                subscription.getId());
+            jdbcTemplate.update("DELETE FROM user_reading_subscription WHERE id=?", subscription.getId());
             jdbcTemplate.update("DELETE FROM reading_subscription_plan WHERE id=?", active.getId());
         }
     }

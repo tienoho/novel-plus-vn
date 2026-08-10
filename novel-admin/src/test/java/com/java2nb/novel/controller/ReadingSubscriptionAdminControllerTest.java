@@ -31,6 +31,10 @@ class ReadingSubscriptionAdminControllerTest {
             long.class, int.class);
         assertPermission("listRenewalAudits", "novel:readingSubscription:review",
             long.class, int.class);
+        assertPermission("listMandateQueue", "novel:readingSubscription:review",
+            String.class, int.class);
+        assertPermission("listMandateAudits", "novel:readingSubscription:review",
+            long.class, int.class);
         assertAudited("createPlan", "novel:readingSubscription:config",
             String.class, String.class, long.class, Long.class, long.class, int.class, int.class);
         assertAudited("updatePlan", "novel:readingSubscription:config",
@@ -45,6 +49,8 @@ class ReadingSubscriptionAdminControllerTest {
         assertAudited("sendPurchaseToRefund", "novel:readingSubscription:review",
             long.class, long.class, String.class);
         assertAudited("retryRenewal", "novel:readingSubscription:review",
+            long.class, long.class, String.class);
+        assertAudited("retryMandateRevocation", "novel:readingSubscription:review",
             long.class, long.class, String.class);
     }
 

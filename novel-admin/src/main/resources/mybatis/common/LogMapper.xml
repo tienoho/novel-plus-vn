@@ -21,8 +21,11 @@
 		  		  <if test="gmtCreate != null and gmtCreate != ''"> and gmt_create = #{gmtCreate} </if>
 		  		</where>
         <choose>
-            <when test="sort != null and sort.trim() != ''">
-                order by ${sort} ${order}
+            <when test="sort == 'gmt_create' and order == 'asc'">
+                order by gmt_create asc
+            </when>
+            <when test="sort == 'gmt_create'">
+                order by gmt_create desc
             </when>
 			<otherwise>
                 order by id desc

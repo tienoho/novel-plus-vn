@@ -15,6 +15,7 @@ param(
     [switch]$SkipImageBuild,
     [switch]$SkipNpmInstall,
     [switch]$SkipBrowserInstall,
+    [switch]$CheckoutPreflightOnly,
     [switch]$KeepEnvironment
 )
 
@@ -121,7 +122,8 @@ $managedEnvironment = @(
     'VNPAY_ENABLED', 'VNPAY_TMN_CODE', 'VNPAY_RETURN_URL',
     'VNPAY_RECONCILIATION_ENABLED', 'VNPAY_SMOKE_BASE_URL', 'VNPAY_SMOKE_USERNAME',
     'VNPAY_SMOKE_PASSWORD', 'VNPAY_SMOKE_REPORT_PATH', 'VNPAY_SMOKE_TMN_CODE',
-    'VNPAY_SMOKE_AMOUNT_VND', 'VNPAY_SANDBOX_CARD_NUMBER', 'VNPAY_SANDBOX_CARD_HOLDER',
+    'VNPAY_SMOKE_AMOUNT_VND', 'VNPAY_SMOKE_MODE', 'VNPAY_SMOKE_EXPECTED_RETURN_URL',
+    'VNPAY_SANDBOX_CARD_NUMBER', 'VNPAY_SANDBOX_CARD_HOLDER',
     'VNPAY_SANDBOX_CARD_DATE', 'VNPAY_SANDBOX_OTP'
 )
 $previousEnvironment = @{}
@@ -158,6 +160,8 @@ $env:VNPAY_SMOKE_PASSWORD = $readerPassword
 $env:VNPAY_SMOKE_REPORT_PATH = $reportPath
 $env:VNPAY_SMOKE_TMN_CODE = $TmnCode
 $env:VNPAY_SMOKE_AMOUNT_VND = [string]$AmountVnd
+$env:VNPAY_SMOKE_MODE = if ($CheckoutPreflightOnly) { 'checkout-preflight' } else { 'full' }
+$env:VNPAY_SMOKE_EXPECTED_RETURN_URL = $env:VNPAY_RETURN_URL
 
 try {
     if (-not $SkipNpmInstall) {
@@ -200,9 +204,21 @@ try {
     $outTradeNo = [long]$report.outTradeNo
     $balanceAfter = Invoke-MySqlScalar "SELECT account_balance FROM user WHERE id=$readerId"
     $walletBalance = Invoke-MySqlScalar "SELECT available_balance FROM wallet_account WHERE owner_type='USER' AND owner_id=$readerId AND account_type='READER_XU'"
-    $orderCount = Invoke-MySqlScalar "SELECT COUNT(*) FROM order_pay WHERE out_trade_no=$outTradeNo AND pay_channel=4 AND pay_status=1 AND total_amount=$AmountVnd AND account_amount=$expectedXu"
     $ledgerCount = Invoke-MySqlScalar "SELECT COUNT(*) FROM ledger_transaction WHERE idempotency_key='VNPAY_TOP_UP:$outTradeNo'"
     $zeroSumMismatch = Invoke-MySqlScalar "SELECT COUNT(*) FROM (SELECT ledger_transaction_id FROM wallet_entry GROUP BY ledger_transaction_id HAVING SUM(amount)<>0) mismatch"
+    if ($CheckoutPreflightOnly) {
+        $pendingOrderCount = Invoke-MySqlScalar "SELECT COUNT(*) FROM order_pay WHERE out_trade_no=$outTradeNo AND pay_channel=4 AND pay_status=2 AND total_amount=$AmountVnd AND account_amount=$expectedXu"
+        if ($report.stage -ne 'CHECKOUT_PREFLIGHT' -or -not $report.checkoutUrlVerified -or
+            -not $report.tmnCodeVerified -or -not $report.returnUrlVerified -or
+            $balanceAfter -ne $balanceBefore -or $walletBalance -ne $balanceBefore -or
+            $pendingOrderCount -ne 1 -or $ledgerCount -ne 0 -or $zeroSumMismatch -ne 0) {
+            throw 'Assertion checkout-preflight VNPAY Sandbox thất bại.'
+        }
+        Write-Output 'Checkout-preflight Sandbox đạt: URL đúng và đơn vẫn pending, chưa cộng Xu/chưa ghi ledger.'
+        Write-Output "Báo cáo: $reportPath"
+        return
+    }
+    $orderCount = Invoke-MySqlScalar "SELECT COUNT(*) FROM order_pay WHERE out_trade_no=$outTradeNo AND pay_channel=4 AND pay_status=1 AND total_amount=$AmountVnd AND account_amount=$expectedXu"
     if ($balanceAfter -ne $balanceBefore + $expectedXu -or `
         $walletBalance -ne $balanceAfter -or `
         $orderCount -ne 1 -or $ledgerCount -ne 1 -or $zeroSumMismatch -ne 0) {

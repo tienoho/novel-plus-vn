@@ -93,9 +93,9 @@ public class CrawlController {
         Pattern pattern = Pattern.compile(rule);
         Matcher matcher = pattern.matcher(html);
         boolean isFind = matcher.find();
-        resultMap.put("是否匹配",isFind);
+        resultMap.put("matched", isFind);
         if(isFind){
-            resultMap.put("匹配结果",matcher.group(1));
+            resultMap.put("matchResult", matcher.group(1));
         }
        // resultMap.put("url",url);
         return RestResult.ok(resultMap);

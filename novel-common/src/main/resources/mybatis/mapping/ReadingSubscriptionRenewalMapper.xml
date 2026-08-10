@@ -65,6 +65,11 @@
         WHERE status IN ('DUE', 'RETRY_WAIT') AND next_attempt_at&lt;=#{now}
         ORDER BY next_attempt_at ASC, id ASC LIMIT #{limit}
     </select>
+    <select id="selectProviderPendingCycleIds" resultType="java.lang.Long">
+        SELECT id FROM reading_subscription_renewal_cycle
+        WHERE status='PROVIDER_PENDING' AND next_attempt_at&lt;=#{now}
+        ORDER BY next_attempt_at ASC, id ASC LIMIT #{limit}
+    </select>
     <select id="countCyclesByStatus" resultType="long">
         SELECT COUNT(*) FROM reading_subscription_renewal_cycle WHERE status=#{status}
     </select>
@@ -114,6 +119,22 @@
         LEFT JOIN reading_subscription_mandate m
           ON m.user_id=c.user_id AND m.provider='VNPAY_RECURRING' AND m.status='ACTIVE'
         WHERE c.id=#{cycleId} AND c.status='PROCESSING'
+        LIMIT 1
+    </select>
+    <update id="claimProviderQuery">
+        UPDATE reading_subscription_renewal_cycle
+        SET next_attempt_at=#{nextQueryAt}, version=version+1
+        WHERE id=#{cycleId} AND status='PROVIDER_PENDING' AND next_attempt_at&lt;=#{now}
+    </update>
+    <select id="selectProviderQuery"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionProviderQuery">
+        SELECT c.id AS cycleId, a.attempt_no AS attemptNo,
+               a.provider_request_id AS providerRequestId,
+               c.price_vnd_snapshot AS amountVnd, a.started_at AS merchantDate
+        FROM reading_subscription_renewal_cycle c
+        JOIN reading_subscription_renewal_attempt a
+          ON a.cycle_id=c.id AND a.attempt_no=c.attempt_count AND a.status='UNKNOWN'
+        WHERE c.id=#{cycleId} AND c.status='PROVIDER_PENDING'
         LIMIT 1
     </select>
     <update id="markAttemptSettled">
@@ -171,6 +192,29 @@
         SET status='SETTLED', settled_source='VNPAY_RECURRING',
             settled_reference=#{reference}, settled_at=#{now}, version=version+1
         WHERE id=#{cycleId} AND version=#{expectedVersion} AND status='PROCESSING'
+    </update>
+    <update id="markUnknownProviderAttemptSettled">
+        UPDATE reading_subscription_renewal_attempt
+        SET status='SETTLED', provider_transaction_id=#{reference}, completed_at=#{now},
+            version=version+1
+        WHERE cycle_id=#{cycleId} AND attempt_no=#{attemptNo} AND status='UNKNOWN'
+    </update>
+    <update id="markPendingProviderCycleSettled">
+        UPDATE reading_subscription_renewal_cycle
+        SET status='SETTLED', settled_source='VNPAY_RECURRING',
+            settled_reference=#{reference}, settled_at=#{now}, version=version+1
+        WHERE id=#{cycleId} AND version=#{expectedVersion} AND status='PROVIDER_PENDING'
+    </update>
+    <update id="markUnknownProviderAttemptFailed">
+        UPDATE reading_subscription_renewal_attempt
+        SET status='FAILED', response_code=#{responseCode}, completed_at=#{now},
+            version=version+1
+        WHERE cycle_id=#{cycleId} AND attempt_no=#{attemptNo} AND status='UNKNOWN'
+    </update>
+    <update id="scheduleProviderQueryRetry">
+        UPDATE reading_subscription_renewal_cycle
+        SET status='RETRY_WAIT', next_attempt_at=#{nextAttemptAt}, version=version+1
+        WHERE id=#{cycleId} AND version=#{expectedVersion} AND status='PROVIDER_PENDING'
     </update>
     <update id="markAttemptFailed">
         UPDATE reading_subscription_renewal_attempt

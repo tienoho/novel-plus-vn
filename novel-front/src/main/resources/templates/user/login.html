@@ -70,16 +70,16 @@
     $("#btnLogin").click(function () {
         var username = $("#txtUName").val();
         if(username.isBlank()){
-            $("#LabErr").html(loginMessages.phoneRequired);
+            $("#LabErr").text(loginMessages.phoneRequired);
             return;
         }
         if(!username.isPhone()){
-            $("#LabErr").html(loginMessages.phoneInvalid);
+            $("#LabErr").text(loginMessages.phoneInvalid);
             return;
         }
         var password = $("#txtPassword").val();
         if(password.isBlank()){
-            $("#LabErr").html(loginMessages.passwordRequired);
+            $("#LabErr").text(loginMessages.passwordRequired);
             return;
         }
         $.ajax({

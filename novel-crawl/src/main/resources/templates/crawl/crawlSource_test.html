@@ -113,9 +113,9 @@
             success: function (data) {
                 if (data.code == 200) {
                     var displayResult = {};
-                    displayResult[crawlMessages.matchStatus] = data.data['是否匹配'];
-                    if (Object.prototype.hasOwnProperty.call(data.data, '匹配结果')) {
-                        displayResult[crawlMessages.matchResult] = data.data['匹配结果'];
+                    displayResult[crawlMessages.matchStatus] = data.data.matched;
+                    if (Object.prototype.hasOwnProperty.call(data.data, 'matchResult')) {
+                        displayResult[crawlMessages.matchResult] = data.data.matchResult;
                     }
                     $("#resultMap").val(JSON.stringify(displayResult));
                 } else {

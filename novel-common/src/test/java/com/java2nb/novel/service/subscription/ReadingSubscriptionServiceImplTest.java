@@ -1,6 +1,7 @@
 package com.java2nb.novel.service.subscription;
 
 import com.java2nb.novel.mapper.ReadingSubscriptionMapper;
+import com.java2nb.novel.mapper.ReadingSubscriptionMandateMapper;
 import com.java2nb.novel.mapper.ReadingSubscriptionPurchaseMapper;
 import com.java2nb.novel.service.entitlement.ReadingTicketPostResult;
 import com.java2nb.novel.service.entitlement.ReadingTicketService;
@@ -28,6 +29,7 @@ import static org.mockito.Mockito.when;
 
 class ReadingSubscriptionServiceImplTest {
     private ReadingSubscriptionMapper mapper;
+    private ReadingSubscriptionMandateMapper mandateMapper;
     private ReadingSubscriptionPurchaseMapper purchaseMapper;
     private ReadingTicketService ticketService;
     private ReadingSubscriptionServiceImpl service;
@@ -37,9 +39,11 @@ class ReadingSubscriptionServiceImplTest {
     @BeforeEach
     void setUp() {
         mapper = mock(ReadingSubscriptionMapper.class);
+        mandateMapper = mock(ReadingSubscriptionMandateMapper.class);
         purchaseMapper = mock(ReadingSubscriptionPurchaseMapper.class);
         ticketService = mock(ReadingTicketService.class);
-        service = new ReadingSubscriptionServiceImpl(mapper, purchaseMapper, ticketService);
+        service = new ReadingSubscriptionServiceImpl(mapper, mandateMapper, purchaseMapper,
+            ticketService);
     }
 
     @Test
@@ -237,6 +241,55 @@ class ReadingSubscriptionServiceImplTest {
             eq("REFUND_PENDING"), eq(91L), eq("Khách hàng yêu cầu hoàn tiền"), eq(3L), any());
     }
 
+    @Test
+    void cancelAtPeriodEndQueuesActiveVnpayMandateRevocationAtomically() {
+        ReadingSubscriptionRow current = subscription();
+        ReadingSubscriptionRow cancelled = subscription();
+        cancelled.setStatus("CANCEL_AT_PERIOD_END");
+        cancelled.setVersion(4L);
+        when(mapper.selectSubscriptionForUserForUpdate(51L, 11L)).thenReturn(current);
+        when(mandateMapper.requestRevocation(eq(11L), any())).thenReturn(1);
+        when(mapper.cancelAtPeriodEnd(eq(51L), eq(11L), eq(3L), any())).thenReturn(1);
+        when(mapper.selectCurrentSubscriptionByUserId(11L)).thenReturn(cancelled);
+
+        assertThat(service.cancelAtPeriodEnd(11L, 51L, 3L)).isSameAs(cancelled);
+
+        verify(mandateMapper).requestRevocation(eq(11L), any());
+        verify(mapper).cancelAtPeriodEnd(eq(51L), eq(11L), eq(3L), any());
+    }
+
+    @Test
+    void adminMandateRetryRequiresExpiredLeaseAndWritesImmutableAuditInput() {
+        ReadingSubscriptionMandateRow mandate = mandate();
+        Date now = Date.from(Instant.parse("2027-02-01T00:05:00Z"));
+        when(mandateMapper.selectByIdForUpdate(71L)).thenReturn(mandate);
+        when(mandateMapper.adminScheduleRevocationRetry(71L, 4L, now)).thenReturn(1);
+        when(mandateMapper.insertMandateAdminAudit(71L, 11L, 91L,
+            "RETRY_SCHEDULED", "REVOKE_PENDING", "REVOKE_PENDING",
+            "Đã xác minh provider có thể nhận retry", now)).thenReturn(1);
+
+        assertThat(service.adminScheduleMandateRevocationRetry(71L, 4L, 91L,
+            "Đã xác minh provider có thể nhận retry", now))
+            .isEqualTo(ReadingSubscriptionMandateAdminResult.RETRY_SCHEDULED);
+        verify(mandateMapper).insertMandateAdminAudit(71L, 11L, 91L,
+            "RETRY_SCHEDULED", "REVOKE_PENDING", "REVOKE_PENDING",
+            "Đã xác minh provider có thể nhận retry", now);
+    }
+
+    @Test
+    void adminMandateRetryCannotStealActiveWorkerLease() {
+        ReadingSubscriptionMandateRow mandate = mandate();
+        mandate.setRevokeLeaseUntil(Date.from(Instant.parse("2027-02-01T00:10:00Z")));
+        Date now = Date.from(Instant.parse("2027-02-01T00:05:00Z"));
+        when(mandateMapper.selectByIdForUpdate(71L)).thenReturn(mandate);
+
+        assertThatThrownBy(() -> service.adminScheduleMandateRevocationRetry(
+            71L, 4L, 91L, "Yêu cầu retry khi worker đang chạy", now))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("worker");
+        verify(mandateMapper, never()).adminScheduleRevocationRetry(anyLong(), anyLong(), any());
+    }
+
     private ReadingSubscriptionPlanRow plan() {
         ReadingSubscriptionPlanRow row = new ReadingSubscriptionPlanRow();
         row.setId(7L);
@@ -299,6 +352,15 @@ class ReadingSubscriptionServiceImplTest {
         row.setStatus("PAID_REVIEW");
         row.setSettledAt(start);
         row.setVersion(2L);
+        return row;
+    }
+
+    private ReadingSubscriptionMandateRow mandate() {
+        ReadingSubscriptionMandateRow row = new ReadingSubscriptionMandateRow();
+        row.setId(71L);
+        row.setUserId(11L);
+        row.setStatus("REVOKE_PENDING");
+        row.setVersion(4L);
         return row;
     }
 }

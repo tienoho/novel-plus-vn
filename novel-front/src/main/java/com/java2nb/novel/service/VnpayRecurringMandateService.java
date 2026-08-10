@@ -1,6 +1,7 @@
 package com.java2nb.novel.service;
 
 import com.java2nb.novel.core.config.VnpayRecurringProperties;
+import com.java2nb.novel.core.utils.ContentHashUtil;
 import com.java2nb.novel.mapper.ReadingSubscriptionMandateMapper;
 import com.java2nb.novel.mapper.ReadingSubscriptionMapper;
 import com.java2nb.novel.service.finance.PiiCryptoService;
@@ -47,11 +48,24 @@ public class VnpayRecurringMandateService {
 
     public VnpayRecurringMandateInitialization create(long userId, String planCode,
                                                        long acceptedPlanVersion,
+                                                       String clientRequestId,
                                                        String ipAddress, String userAgent) {
         if (!properties.isConfigured() || !piiCryptoService.isConfigured()) {
             throw new VnpayRecurringUnavailableException("VNPAY Recurring chưa được cấu hình an toàn");
         }
-        ReadingSubscriptionPlanRow plan = subscriptionMapper.selectActivePlanByCode(planCode);
+        String normalizedPlanCode = normalizePlanCode(planCode);
+        String normalizedRequestId = normalizeClientRequestId(clientRequestId);
+        if (userId <= 0 || acceptedPlanVersion <= 0) {
+            throw new IllegalArgumentException("Yêu cầu khởi tạo mandate không hợp lệ");
+        }
+        String requestHash = ContentHashUtil.sha256Hex("VNPAY_RECURRING_MANDATE|" + userId + '|'
+            + normalizedRequestId + '|' + normalizedPlanCode + '|' + acceptedPlanVersion);
+        ReadingSubscriptionMandateRow replay = mandateMapper.selectByClientRequestId(
+            userId, normalizedRequestId);
+        if (replay != null) {
+            return replayInitialization(replay, requestHash);
+        }
+        ReadingSubscriptionPlanRow plan = subscriptionMapper.selectActivePlanByCode(normalizedPlanCode);
         if (plan == null || plan.getPlanVersion() == null || plan.getPlanVersion() != acceptedPlanVersion
             || plan.getPriceVnd() == null || plan.getPriceVnd() <= 0
             || plan.getPeriodMonths() == null || plan.getPeriodMonths() <= 0) {
@@ -61,8 +75,13 @@ public class VnpayRecurringMandateService {
         LocalDateTime now = LocalDateTime.now(zoneId);
         String merchantReference = merchantReference(userId, now);
         try {
-            mandateMapper.insertPending(userId, merchantReference);
+            mandateMapper.insertPending(userId, merchantReference, normalizedRequestId, requestHash,
+                normalizedPlanCode, acceptedPlanVersion);
         } catch (DataIntegrityViolationException exception) {
+            replay = mandateMapper.selectByClientRequestId(userId, normalizedRequestId);
+            if (replay != null) {
+                return replayInitialization(replay, requestHash);
+            }
             throw new IllegalStateException("Tài khoản đã có ủy quyền VNPAY đang mở", exception);
         }
 
@@ -72,17 +91,64 @@ public class VnpayRecurringMandateService {
             normalizeIp(ipAddress), normalizeUserAgent(userAgent));
         try {
             VnpayRecurringMandateInitialization initialization = client.initializeMandate(command);
-            if (mandateMapper.registerProviderTransaction(merchantReference,
-                initialization.providerRecurringId()) != 1) {
+            String encryptedDataKey = piiCryptoService.encrypt(initialization.dataKey());
+            if (mandateMapper.registerProviderInitialization(merchantReference,
+                initialization.providerRecurringId(), encryptedDataKey) != 1) {
                 throw new VnpayRecurringUnavailableException("Không thể ghi nhận giao dịch VNPAY Recurring");
             }
             return initialization;
-        } catch (VnpayRecurringRejectedException exception) {
+        } catch (RuntimeException exception) {
+            failPendingMandate(merchantReference, exception);
+            throw exception;
+        }
+    }
+
+    public VnpayRecurringMandateState getState(long userId) {
+        if (userId <= 0) {
+            throw new IllegalArgumentException("User mandate không hợp lệ");
+        }
+        ReadingSubscriptionMandateRow row = mandateMapper.selectOpenByUser(userId);
+        return row == null
+            ? new VnpayRecurringMandateState(properties.isConfigured(), "NONE", null, null, null)
+            : new VnpayRecurringMandateState(properties.isConfigured(), row.getStatus(),
+                row.getClientRequestId(), row.getPlanCodeSnapshot(), row.getAcceptedPlanVersion());
+    }
+
+    private VnpayRecurringMandateInitialization replayInitialization(
+        ReadingSubscriptionMandateRow row, String expectedRequestHash) {
+        if (!expectedRequestHash.equals(row.getRequestHash())) {
+            throw new IllegalStateException("Mã yêu cầu mandate đã được dùng cho nội dung khác");
+        }
+        if ("FAILED".equals(row.getStatus())) {
+            throw new VnpayRecurringUnavailableException(
+                "Lần khởi tạo mandate trước đã thất bại; cần dùng mã yêu cầu mới");
+        }
+        if (!"PENDING".equals(row.getStatus())) {
+            throw new IllegalStateException("Mandate không còn ở trạng thái khởi tạo");
+        }
+        if (row.getProviderRecurringId() == null || row.getProviderRecurringId().isBlank()
+            || row.getProviderDataKeyCiphertext() == null
+            || row.getProviderDataKeyCiphertext().isBlank()) {
+            throw new IllegalStateException("Yêu cầu mandate đang được xử lý");
+        }
+        String dataKey = piiCryptoService.decrypt(row.getProviderDataKeyCiphertext());
+        if (dataKey == null || dataKey.isBlank()) {
+            throw new VnpayRecurringUnavailableException("Dữ liệu replay mandate không hợp lệ");
+        }
+        return new VnpayRecurringMandateInitialization(row.getMerchantReference(),
+            row.getProviderRecurringId(), properties.getPayUrl(), properties.getTmnCode(), dataKey);
+    }
+
+    private void failPendingMandate(String merchantReference, RuntimeException originalFailure) {
+        try {
             ReadingSubscriptionMandateRow row = mandateMapper.selectByMerchantReference(merchantReference);
-            if (row != null) {
+            if (row != null && "PENDING".equals(row.getStatus())) {
                 mandateMapper.fail(row.getId(), row.getVersion());
             }
-            throw exception;
+        } catch (RuntimeException cleanupFailure) {
+            if (cleanupFailure != originalFailure) {
+                originalFailure.addSuppressed(cleanupFailure);
+            }
         }
     }
 
@@ -154,6 +220,22 @@ public class VnpayRecurringMandateService {
 
     private String requestId() {
         return String.valueOf(System.currentTimeMillis()) + String.format("%04d", RANDOM.nextInt(10_000));
+    }
+
+    private String normalizePlanCode(String value) {
+        String normalized = value == null ? "" : value.trim();
+        if (!normalized.matches("[A-Za-z0-9_-]{2,32}")) {
+            throw new IllegalArgumentException("Mã gói mandate không hợp lệ");
+        }
+        return normalized;
+    }
+
+    private String normalizeClientRequestId(String value) {
+        String normalized = value == null ? "" : value.trim();
+        if (!normalized.matches("[A-Za-z0-9_-]{8,64}")) {
+            throw new IllegalArgumentException("Mã yêu cầu mandate không hợp lệ");
+        }
+        return normalized;
     }
 
     private String normalizeIp(String value) {

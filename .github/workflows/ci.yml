@@ -62,6 +62,9 @@ jobs:
       - name: Kiểm tra i18n, JavaScript và HTML
         run: node scripts/verify-i18n.mjs
 
+      - name: Kiểm tra manifest release và nhánh fail-closed
+        run: node --test scripts/generate-release-manifest.test.mjs
+
       - name: Kiểm tra auth sink và CSP
         shell: pwsh
         run: ./scripts/verify-csp.ps1 -FailOnBlocker
@@ -70,12 +73,16 @@ jobs:
         shell: pwsh
         run: ./scripts/verify-gamification.ps1 -ConfigOnly
 
+      - name: Chạy Flyway, MySQL integration và concurrency
+        shell: pwsh
+        run: ./scripts/verify-gamification.ps1 -StopAfter
+
       - name: Kiểm tra cấu hình Prometheus và rule cảnh báo
         run: >-
           docker run --rm
           -v "${{ github.workspace }}/deploy/observability:/etc/prometheus:ro"
           --entrypoint /bin/promtool
-          quay.io/prometheus/prometheus:v3.11.3
+          quay.io/prometheus/prometheus:v3.13.2@sha256:508729e0e2d18e11fd742a5a5ca70e557b940a93948c3c95fd0123a6fd538b69
           check config /etc/prometheus/prometheus.yml
 
       - name: Smoke Flyway, CSP, CSRF và observability trên Compose
@@ -110,9 +117,25 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
+      - name: Tự kiểm tra Gitleaks không silent-pass
+        shell: bash
+        run: |
+          set +e
+          control="$(openssl rand -base64 48)"
+          printf '%s = "%s"\n' 'api_key' "$control" | \
+            docker run --rm -i \
+              zricethezav/gitleaks:v8.30.0@sha256:691af3c7c5a48b16f187ce3446d5f194838f91238f27270ed36eef6359a574d9 \
+              stdin --no-banner --redact --exit-code 17
+          status=$?
+          set -e
+          if [ "$status" -ne 17 ]; then
+            echo "Gitleaks positive control không phát hiện fixture tổng hợp (exit=$status)." >&2
+            exit 1
+          fi
       - name: Quét secret
         uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
         env:
+          GITLEAKS_VERSION: '8.30.0'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   codeql:
@@ -175,6 +198,15 @@ jobs:
           - image: alertmanager
             dockerfile: deploy/observability/alertmanager/Dockerfile
             target: ''
+          - image: pushgateway
+            dockerfile: deploy/observability/pushgateway/Dockerfile
+            target: ''
+          - image: mysql
+            dockerfile: deploy/mysql/Dockerfile
+            target: ''
+          - image: grafana
+            dockerfile: deploy/observability/grafana/Dockerfile
+            target: ''
     steps:
       - name: Lấy mã nguồn
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -195,8 +227,9 @@ jobs:
           cache-to: type=gha,mode=max,scope=ci-${{ matrix.image }}
 
       - name: Quét CVE và cấu hình image
-        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
         with:
+          version: v0.69.3
           image-ref: novel-plus/${{ matrix.image }}:ci
           format: table
           exit-code: '1'
@@ -209,6 +242,7 @@ jobs:
         with:
           image: novel-plus/${{ matrix.image }}:ci
           format: spdx-json
+          syft-version: '1.50.0'
           artifact-name: sbom-${{ matrix.image }}.spdx.json
 
   playwright-e2e:

@@ -3,7 +3,8 @@ param(
     [string]$EnvFile = '.env.uat',
     [ValidateRange(60, 1800)]
     [int]$TimeoutSeconds = 900,
-    [switch]$SkipImageBuild
+    [switch]$SkipImageBuild,
+    [switch]$SkipNpmInstall
 )
 
 $ErrorActionPreference = 'Stop'
@@ -89,3 +90,5 @@ foreach ($service in @('front', 'crawl', 'admin', 'alertmanager', 'grafana', 'ca
 
 & "$PSScriptRoot/preflight-vnpay-uat.ps1" -EnvFile $EnvFile -TimeoutSeconds $TimeoutSeconds
 if ($LASTEXITCODE -ne 0) { throw 'Preflight URL VNPAY UAT thất bại.' }
+& "$PSScriptRoot/preflight-vnpay-checkout.ps1" -EnvFile $EnvFile -SkipNpmInstall:$SkipNpmInstall
+if ($LASTEXITCODE -ne 0) { throw 'Preflight checkout VNPAY UAT thất bại.' }

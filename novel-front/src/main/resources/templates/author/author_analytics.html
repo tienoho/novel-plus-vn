@@ -91,6 +91,7 @@
 
 <script src="/javascript/jquery-1.8.0.min.js" type="text/javascript"></script>
 <script src="/layui/layui.all.js" type="text/javascript"></script>
+<script src="/javascript/safe-dom.js?v=1" type="text/javascript"></script>
 <script src="/javascript/common.js?v=5" type="text/javascript"></script>
 <script type="text/javascript" th:inline="javascript">
     const analyticsMessages = {
@@ -100,7 +101,7 @@
         minutes: /*[[#{author.analytics.minutes}]]*/ 'phút',
         noName: /*[[#{author.analytics.untitled}]]*/ 'Chương chưa đặt tên'
     };
-    var bookId = Number(getSearchString('bookId'));
+    var bookId = NovelSafeDom.positiveId(getSearchString('bookId'));
     var pageSize = 20;
 
     function dateValue(date) {
@@ -108,10 +109,6 @@
         var month = ('0' + (date.getMonth() + 1)).slice(-2);
         var day = ('0' + date.getDate()).slice(-2);
         return year + '-' + month + '-' + day;
-    }
-
-    function escapeHtml(value) {
-        return $('<div/>').text(value == null ? '' : value).html();
     }
 
     function formatDuration(seconds) {
@@ -163,21 +160,22 @@
                 return;
             }
             var data = response.data || {list: [], total: 0};
-            var rows = '';
+            var fragment = document.createDocumentFragment();
             $.each(data.list || [], function (_, chapter) {
-                rows += '<tr class="book_list">' +
-                    '<td class="chapter">' + escapeHtml(chapter.indexName || analyticsMessages.noName) + '</td>' +
-                    '<td class="goread">' + (chapter.readers || 0) + '</td>' +
-                    '<td class="goread">' + (chapter.completionRate || 0) + '%</td>' +
-                    '<td class="goread">' + (chapter.nextChapterRetentionRate || 0) + '%</td>' +
-                    '<td class="goread">' + (chapter.averageProgress || 0) + '%</td>' +
-                    '<td class="goread">' + formatDuration(chapter.averageDurationSeconds) + '</td>' +
-                    '<td class="goread">' + (chapter.purchaseCount || 0) + '</td>' +
-                    '<td class="goread">' + (chapter.grossRevenueXu || 0) + ' Xu / ' +
-                        (chapter.authorRevenueXu || 0) + ' Xu</td></tr>';
+                var row = NovelSafeDom.element('tr', 'book_list');
+                row.appendChild(NovelSafeDom.element('td', 'chapter', chapter.indexName || analyticsMessages.noName));
+                row.appendChild(NovelSafeDom.element('td', 'goread', chapter.readers || 0));
+                row.appendChild(NovelSafeDom.element('td', 'goread', (chapter.completionRate || 0) + '%'));
+                row.appendChild(NovelSafeDom.element('td', 'goread', (chapter.nextChapterRetentionRate || 0) + '%'));
+                row.appendChild(NovelSafeDom.element('td', 'goread', (chapter.averageProgress || 0) + '%'));
+                row.appendChild(NovelSafeDom.element('td', 'goread', formatDuration(chapter.averageDurationSeconds)));
+                row.appendChild(NovelSafeDom.element('td', 'goread', chapter.purchaseCount || 0));
+                row.appendChild(NovelSafeDom.element('td', 'goread', (chapter.grossRevenueXu || 0) + ' Xu / ' +
+                    (chapter.authorRevenueXu || 0) + ' Xu'));
+                fragment.appendChild(row);
             });
-            $('#chapterAnalytics').html(rows);
-            $('#analyticsEmpty').toggle(!rows);
+            document.getElementById('chapterAnalytics').replaceChildren(fragment);
+            $('#analyticsEmpty').toggle(!(data.list || []).length);
             layui.laypage.render({
                 elem: 'analyticsPager', count: data.total || 0, curr: data.page || page,
                 limit: data.limit || pageSize,

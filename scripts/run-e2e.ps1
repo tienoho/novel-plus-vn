@@ -14,12 +14,21 @@ param(
 $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $e2eRoot = Join-Path $repoRoot "e2e"
+$authDir = Join-Path $e2eRoot ".auth"
 $secretDir = Join-Path ([System.IO.Path]::GetTempPath()) "$ProjectName-secrets"
 $resolvedTemp = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath())
 $resolvedSecret = [System.IO.Path]::GetFullPath($secretDir)
+$resolvedE2e = [System.IO.Path]::GetFullPath($e2eRoot).TrimEnd(
+    [System.IO.Path]::DirectorySeparatorChar,
+    [System.IO.Path]::AltDirectorySeparatorChar
+) + [System.IO.Path]::DirectorySeparatorChar
+$resolvedAuth = [System.IO.Path]::GetFullPath($authDir)
 
 if (-not $resolvedSecret.StartsWith($resolvedTemp, [System.StringComparison]::OrdinalIgnoreCase)) {
     throw "Thư mục secret E2E phải nằm trong thư mục tạm của hệ điều hành."
+}
+if (-not $resolvedAuth.StartsWith($resolvedE2e, [System.StringComparison]::OrdinalIgnoreCase)) {
+    throw "Thư mục auth E2E phải nằm trong thư mục e2e của repository."
 }
 if (-not (Test-Path -LiteralPath (Join-Path $e2eRoot "fixtures/seed.sql"))) {
     throw "Thiếu fixture SQL E2E."
@@ -272,6 +281,9 @@ finally {
     }
     if (Test-Path -LiteralPath $resolvedSecret) {
         Remove-Item -LiteralPath $resolvedSecret -Recurse -Force
+    }
+    if (Test-Path -LiteralPath $resolvedAuth) {
+        Remove-Item -LiteralPath $resolvedAuth -Recurse -Force
     }
     foreach ($name in $managedEnvironment) {
         [Environment]::SetEnvironmentVariable($name, $previousEnvironment[$name], "Process")

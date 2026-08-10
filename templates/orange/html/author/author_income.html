@@ -132,23 +132,18 @@
                 if (data.code == 200) {
                     var bookList = data.data.list;
                     if (bookList.length > 0) {
-                        var bookListHtml = "";
+                        var incomeRows = document.createDocumentFragment();
                         for (var i = 0; i < bookList.length; i++) {
                             var book = bookList[i];
-                            bookListHtml += (" <tr class=\"book_list\" >\n" +
-                                "                            <td class=\"goread\">\n" +
-                                "                                " + book.incomeMonth + "</td>\n" +
-                                "                            <td class=\"goread\" >"
-                                + book.preTaxIncome / 100 + "</td>\n" +
-                                "                            <td class=\"goread\">\n" +
-                                "                                " + book.afterTaxIncome / 100 + "\n" +
-                                "                            </td>\n" +
-                                "                            <td class=\"goread\">" + (book.payStatus == 1 ? paidText : pendingText) +
-                                "                            </td>\n" +
-
-                                " </tr>");
+                            var row = NovelSafeDom.element("tr", "book_list");
+                            row.appendChild(NovelSafeDom.element("td", "goread", book.incomeMonth));
+                            row.appendChild(NovelSafeDom.element("td", "goread", Number(book.preTaxIncome) / 100));
+                            row.appendChild(NovelSafeDom.element("td", "goread", Number(book.afterTaxIncome) / 100));
+                            row.appendChild(NovelSafeDom.element("td", "goread",
+                                Number(book.payStatus) === 1 ? paidText : pendingText));
+                            incomeRows.appendChild(row);
                         }
-                        $("#bookList").html(bookListHtml);
+                        document.getElementById("bookList").replaceChildren(incomeRows);
 
                         layui.use('laypage', function () {
                             var laypage = layui.laypage;

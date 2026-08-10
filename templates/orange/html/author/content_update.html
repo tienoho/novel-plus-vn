@@ -297,14 +297,14 @@
 
         var indexName = $("#bookIndex").val();
         if(!indexName){
-            $("#LabErr").html(chapterNameRequiredText);
+            $("#LabErr").text(chapterNameRequiredText);
             lock = false;
             return;
         }
 
         var content = $("#bookContent").val();
         if(!content){
-            $("#LabErr").html(chapterContentRequiredText);
+            $("#LabErr").text(chapterContentRequiredText);
             lock = false;
             return;
         }

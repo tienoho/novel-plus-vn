@@ -122,6 +122,33 @@ public class ReadingSubscriptionAdminController extends BaseController {
     }
 
     @ResponseBody
+    @GetMapping("/mandates")
+    @RequiresPermissions("novel:readingSubscription:review")
+    public R listMandateQueue(@RequestParam(defaultValue = "REVOKE_PENDING") String status,
+                              @RequestParam(defaultValue = "50") int limit) {
+        return R.ok().put("data", service.listMandateQueue(status, limit));
+    }
+
+    @ResponseBody
+    @GetMapping("/mandates/{mandateId}/audits")
+    @RequiresPermissions("novel:readingSubscription:review")
+    public R listMandateAudits(@PathVariable long mandateId,
+                               @RequestParam(defaultValue = "50") int limit) {
+        return R.ok().put("data", service.listMandateAdminAudits(mandateId, limit));
+    }
+
+    @ResponseBody
+    @PostMapping("/mandates/retry")
+    @RequiresPermissions("novel:readingSubscription:review")
+    @Log("Lên lịch thử lại thu hồi ủy quyền VNPAY Recurring")
+    public R retryMandateRevocation(@RequestParam long mandateId,
+                                    @RequestParam long expectedVersion,
+                                    @RequestParam String reason) {
+        return R.ok().put("data", service.adminScheduleMandateRevocationRetry(
+            mandateId, expectedVersion, getUserId(), reason, new Date()));
+    }
+
+    @ResponseBody
     @PostMapping("/plans/create")
     @RequiresPermissions("novel:readingSubscription:config")
     @Log("Tạo gói thuê bao Vé đọc")

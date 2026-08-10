@@ -97,12 +97,12 @@
                     $("#imgLogo").attr("src", data.data.userPhoto);
                 }
                 if (data.data.nickName) {
-                    $("#my_name").html(data.data.nickName);
+                    $("#my_name").text(data.data.nickName);
                 } else {
-                    $("#my_name").html(data.data.username);
+                    $("#my_name").text(data.data.username);
                 }
 
-                $("#accountBalance").html(data.data.accountBalance);
+                $("#accountBalance").text(data.data.accountBalance);
 
             } else if (data.code == 1001) {
                 // Phiên đăng nhập đã hết hạn.
@@ -127,29 +127,9 @@
             if (data.code == 200) {
                 var bookShelfList = data.data.list;
                 if (bookShelfList.length > 0) {
-                    var bookShelfListHtml = "";
-                    for (var i = 0; i < bookShelfList.length; i++) {
-                        var book = bookShelfList[i];
-                        bookShelfListHtml += (" <tr class=\"book_list\" vals=\"291\">\n" +
-                            "                            <td class=\"style bookclass\">\n" +
-                            "                                <a href=\"/book/bookclass.html?c=" + book.catId + "\" >[" + book.catName + "]</a>\n" +
-                            "                            </td>\n" +
-                            "                            <td class=\"name\">\n" +
-                            "                                <a href=\"/book/" + book.bookId + ".html\">\n" +
-                            "                                    " + book.bookName + "</a>\n" +
-                            "                            </td>\n" +
-                            "                            <td class=\"chapter\" valsc=\"291|2037554|1\">\n" +
-                            "<a href='/book/" + book.bookId + "/" + book.lastIndexId + ".html'>" + book.lastIndexName + "</a>" +
-                            "                            </td>\n" +
-                            "                            <td class=\"time\">\n" +
-                            "                                " + book.lastIndexUpdateTime + "\n" +
-                            "                            </td>\n" +
-                            "                            <td class=\"goread\">\n" +
-                            "<a href='/book/" + book.bookId + "/" + book.preContentId + ".html'>" + continueReadingText + "</a>" +
-                            "                            </td>\n" +
-                            "                        </tr>");
-                    }
-                    $("#bookShelfList").html(bookShelfListHtml);
+                    novelRenderBookTable("bookShelfList", bookShelfList, {
+                        continueText: continueReadingText
+                    });
                 }
 
             } else {

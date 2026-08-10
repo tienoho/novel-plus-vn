@@ -91,13 +91,27 @@
                         THEN ABS(CHAR_LENGTH(book_name_search) - CHAR_LENGTH(#{keyword}))
                         ELSE ABS(CHAR_LENGTH(author_name_search) - CHAR_LENGTH(#{keyword}))
                     END ASC
-                <if test="sort != null">
-                    , ${sort} DESC
-                </if>
+                <choose>
+                    <when test="sort == 'last_index_update_time'">
+                        , last_index_update_time DESC
+                    </when>
+                    <when test="sort == 'word_count'">
+                        , word_count DESC
+                    </when>
+                    <when test="sort == 'visit_count'">
+                        , visit_count DESC
+                    </when>
+                </choose>
                 , visit_count DESC
             </when>
-            <when test="sort != null">
-                ORDER BY ${sort} DESC
+            <when test="sort == 'last_index_update_time'">
+                ORDER BY last_index_update_time DESC
+            </when>
+            <when test="sort == 'word_count'">
+                ORDER BY word_count DESC
+            </when>
+            <when test="sort == 'visit_count'">
+                ORDER BY visit_count DESC
             </when>
         </choose>
     </select>
@@ -118,9 +132,17 @@
         <include refid="fuzzySearchFilters"/>
         ORDER BY MATCH(book_name_search, author_name_search)
                      AGAINST(#{params.keyword} IN NATURAL LANGUAGE MODE) DESC
-        <if test="params.sort != null">
-            , ${params.sort} DESC
-        </if>
+        <choose>
+            <when test="params.sort == 'last_index_update_time'">
+                , last_index_update_time DESC
+            </when>
+            <when test="params.sort == 'word_count'">
+                , word_count DESC
+            </when>
+            <when test="params.sort == 'visit_count'">
+                , visit_count DESC
+            </when>
+        </choose>
         , visit_count DESC
         LIMIT #{limit}
     </select>

@@ -65,10 +65,6 @@ function allowTokens(files, tokens) {
 }
 
 allowTokens([
-    "novel-crawl/src/main/java/com/java2nb/novel/controller/CrawlController.java",
-    "novel-crawl/src/main/resources/templates/crawl/crawlSource_test.html"
-], ["是否匹配", "匹配结果"]);
-allowTokens([
     "novel-crawl/src/main/java/com/java2nb/novel/core/crawl/CrawlParser.java"
 ], ["正在手打中"]);
 allowTokens([

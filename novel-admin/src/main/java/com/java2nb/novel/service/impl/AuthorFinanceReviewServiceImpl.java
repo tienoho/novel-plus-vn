@@ -145,8 +145,9 @@ public class AuthorFinanceReviewServiceImpl implements AuthorFinanceReviewServic
     public void markProcessing(long id, long expectedVersion, long actorId) {
         AuthorWithdrawalReviewDO withdrawal = requireWithdrawal(id);
         requireState(withdrawal, "APPROVED", expectedVersion);
+        requireDifferentApprover(withdrawal, actorId);
         if (dao.markWithdrawalProcessing(id, expectedVersion, actorId) != 1) {
-            throw new IllegalStateException("Yêu cầu rút đã được xử lý đồng thời");
+            throw new IllegalStateException("Yêu cầu rút đã thay đổi hoặc vi phạm nguyên tắc bốn mắt");
         }
         auditWithdrawal(withdrawal, "PROCESSING_STARTED", "PROCESSING", actorId, null);
     }
@@ -156,12 +157,13 @@ public class AuthorFinanceReviewServiceImpl implements AuthorFinanceReviewServic
     public void markPaid(long id, long expectedVersion, String providerReference, long actorId) {
         AuthorWithdrawalReviewDO withdrawal = requireWithdrawal(id);
         requireState(withdrawal, "PROCESSING", expectedVersion);
+        requireExecutor(withdrawal, actorId);
         String reference = providerReference == null ? "" : providerReference.trim();
         if (reference.length() < 3 || reference.length() > 128) {
             throw new IllegalArgumentException("Mã tham chiếu chuyển khoản không hợp lệ");
         }
         if (dao.requestWithdrawalSettlement(id, expectedVersion, actorId, reference) != 1) {
-            throw new IllegalStateException("Yêu cầu rút đã được xử lý đồng thời");
+            throw new IllegalStateException("Yêu cầu rút đã thay đổi hoặc vi phạm nguyên tắc bốn mắt");
         }
         auditWithdrawal(withdrawal, "PAYMENT_RECORDED", "SETTLEMENT_PENDING", actorId, reference);
     }
@@ -171,6 +173,7 @@ public class AuthorFinanceReviewServiceImpl implements AuthorFinanceReviewServic
     public void markFailed(long id, long expectedVersion, String reason, long actorId) {
         AuthorWithdrawalReviewDO withdrawal = requireWithdrawal(id);
         requireState(withdrawal, "PROCESSING", expectedVersion);
+        requireExecutor(withdrawal, actorId);
         requestRelease(withdrawal, expectedVersion, "FAILED", requireReason(reason), actorId,
             "PAYMENT_FAILED");
     }
@@ -253,6 +256,22 @@ public class AuthorFinanceReviewServiceImpl implements AuthorFinanceReviewServic
     private void requireState(AuthorWithdrawalReviewDO withdrawal, String status, long expectedVersion) {
         if (!status.equals(withdrawal.getStatus()) || withdrawal.getVersion() != expectedVersion) {
             throw new IllegalStateException("Trạng thái hoặc phiên bản yêu cầu rút đã thay đổi");
+        }
+    }
+
+    private void requireDifferentApprover(AuthorWithdrawalReviewDO withdrawal, long actorId) {
+        if (withdrawal.getApprovedBy() == null) {
+            throw new IllegalStateException("Yêu cầu rút chưa có người duyệt được ghi nhận");
+        }
+        if (withdrawal.getApprovedBy() == actorId) {
+            throw new IllegalStateException("Người thực hiện payout phải khác người duyệt");
+        }
+    }
+
+    private void requireExecutor(AuthorWithdrawalReviewDO withdrawal, long actorId) {
+        requireDifferentApprover(withdrawal, actorId);
+        if (withdrawal.getExecutedBy() == null || withdrawal.getExecutedBy() != actorId) {
+            throw new IllegalStateException("Chỉ người thực hiện payout đã nhận xử lý mới được ghi kết quả");
         }
     }
 
