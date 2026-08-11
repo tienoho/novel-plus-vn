@@ -22,4 +22,5 @@ public class ReadingHeartbeatReceiptRow {
     private String requestHash;
     private Date heartbeatAt;
     private String policyVersion;
+    private Long runtimeConfigRevision;
 }

@@ -171,7 +171,11 @@ class GamificationPackagingTest {
         assertThat(flywayImage)
             .describedAs("migration phải có version duy nhất trong image Flyway")
             .contains("COPY --chmod=0444 doc/sql/20260729_gamification_monthly_ticket.sql "
-                + "/flyway/sql/V2026072901__gamification_monthly_ticket.sql");
+                + "/flyway/sql/V2026072901__gamification_monthly_ticket.sql")
+            .contains("COPY --chmod=0444 doc/sql/20260818_gamification_runtime_config.sql "
+                + "/flyway/sql/V2026081801__gamification_runtime_config.sql")
+            .contains("COPY --chmod=0444 doc/sql/20260819_gamification_dynamic_config_p1_hardening.sql "
+                + "/flyway/sql/V2026081901__gamification_dynamic_config_p1_hardening.sql");
         assertThat(compose)
             .contains("dockerfile: deploy/flyway/Dockerfile")
             .contains("migrate:", "condition: service_completed_successfully");
@@ -219,7 +223,8 @@ class GamificationPackagingTest {
         assertThat(controller)
             .contains("requireUser(request).getId()")
             .contains("@RateLimit")
-            .contains("hashIdentifier(\"IP\", IpUtil.getRealIp(request))");
+            .contains("identifierHasher.hash(\"IP\", IpUtil.getRealIp(request)")
+            .contains("config.getVoteIpHashKeyId()");
         assertThat(request).doesNotContain("userId", "authorId");
         assertThat(mapper)
             .contains("tryConsumeDailyQuota")
@@ -338,22 +343,80 @@ class GamificationPackagingTest {
     }
 
     @Test
-    void composePassesGamificationConfigurationIntoApplications() throws Exception {
+    void composePassesOnlyGamificationBootstrapConfigurationIntoApplications() throws Exception {
         String compose = read("compose.yaml");
+        String frontYml = read("novel-front/src/main/resources/application.yml");
         String adminYml = read("novel-admin/src/main/resources/application.yml");
 
         for (String variable : new String[]{
-            "GAMIFICATION_POLICY_VERSION", "GAMIFICATION_ZONE_ID",
-            "GAMIFICATION_TICKET_ENABLED", "GAMIFICATION_TICKET_LOT_DAYS",
-            "GAMIFICATION_TICKET_MAX_GRANT_BATCH", "GAMIFICATION_VOTE_ENABLED",
-            "GAMIFICATION_VOTE_IP_HASH_SALT", "GAMIFICATION_JOB_LEASE_SECONDS"}) {
+            "GAMIFICATION_CONFIG_SOURCE", "GAMIFICATION_CONFIG_REFRESH_MS",
+            "GAMIFICATION_CONFIG_MAX_STALE_MS", "GAMIFICATION_FORCE_DISABLE",
+            "GAMIFICATION_VOTE_IP_HASH_KEY_ID"}) {
             assertThat(compose)
-                .describedAs("compose phải truyền biến %s vào container ứng dụng", variable)
+                .describedAs("compose phải truyền bootstrap %s vào container ứng dụng", variable)
                 .contains(variable + ": ${" + variable + ":-");
         }
+        assertThat(compose)
+            .contains("GAMIFICATION_VOTE_IP_HASH_SALT_FILE: /run/secrets/gamification_vote_ip_hash_salt")
+            .contains("gamification_vote_ip_hash_salt:")
+            .doesNotContain("GAMIFICATION_POLICY_VERSION:")
+            .doesNotContain("GAMIFICATION_EVENT_ENABLED:")
+            .doesNotContain("GAMIFICATION_VOTE_IP_HASH_SALT:")
+            .doesNotContain("GAMIFICATION_JOB_BATCH_SIZE:");
+        assertThat(frontYml).doesNotContain("GAMIFICATION_VOTE_IP_HASH_SALT");
+        for (String variable : new String[]{
+            "GAMIFICATION_POLICY_VERSION", "GAMIFICATION_ZONE_ID",
+            "GAMIFICATION_EVENT_ENABLED", "GAMIFICATION_EVENT_DRAIN_BATCH",
+            "GAMIFICATION_EVENT_DRAIN_DELAY_MS", "GAMIFICATION_EVENT_MAX_ATTEMPT",
+            "GAMIFICATION_TICKET_ENABLED", "GAMIFICATION_TICKET_LOT_DAYS",
+            "GAMIFICATION_TICKET_GRANT_ON_TOPUP", "GAMIFICATION_TICKET_EXPIRY_CRON",
+            "GAMIFICATION_TICKET_EXPIRY_BATCH", "GAMIFICATION_TICKET_MAX_GRANT_BATCH",
+            "GAMIFICATION_VOTE_ENABLED", "GAMIFICATION_VOTE_ALLOW_CRAWLED",
+            "GAMIFICATION_VOTE_MAX_PER_REQUEST", "GAMIFICATION_VOTE_MAX_VOTES_DAY",
+            "GAMIFICATION_VOTE_MAX_TICKETS_DAY", "GAMIFICATION_VOTE_MAX_PER_BOOK",
+            "GAMIFICATION_VOTE_MAX_LOTS", "GAMIFICATION_QUEST_ENABLED",
+            "GAMIFICATION_QUEST_REPLY_ENABLED", "GAMIFICATION_HEARTBEAT_INTERVAL",
+            "GAMIFICATION_HEARTBEAT_MAX_MIN", "GAMIFICATION_REALM_ENABLED",
+            "GAMIFICATION_REALM_AFFECTS_BENEFITS", "GAMIFICATION_REALM_COOLDOWN_HOURS",
+            "GAMIFICATION_SEASON_ENABLED", "GAMIFICATION_SEASON_CLOSE_CRON",
+            "GAMIFICATION_SEASON_DRAIN_SECONDS", "GAMIFICATION_SEASON_RESUME_DELAY_MS",
+            "GAMIFICATION_SEASON_AUTO_FINALIZE", "GAMIFICATION_SEASON_REVIEW_HOURS",
+            "GAMIFICATION_REWARD_ENABLED", "GAMIFICATION_REWARD_CLAIM_WINDOW_DAYS",
+            "GAMIFICATION_REWARD_RELEASE_CRON", "GAMIFICATION_JOB_LEASE_SECONDS",
+            "GAMIFICATION_JOB_BATCH_SIZE"}) {
+            assertThat(frontYml).contains("${" + variable + ":");
+            assertThat(adminYml).contains("${" + variable + ":");
+        }
+        assertThat(frontYml).doesNotContain("GAMIFICATION_QUEST_READ_MINUTES");
         assertThat(adminYml)
-            .contains("${GAMIFICATION_TICKET_LOT_DAYS:60}")
-            .contains("${GAMIFICATION_TICKET_MAX_GRANT_BATCH:1000}");
+            .doesNotContain("GAMIFICATION_QUEST_READ_MINUTES")
+            .doesNotContain("GAMIFICATION_VOTE_IP_HASH_SALT");
+    }
+
+    @Test
+    void databaseConfigCutoverIsObservableAndAlerted() throws Exception {
+        String provider = read("novel-common/src/main/java/com/java2nb/novel/service/gamification/config/DatabaseBackedGamificationConfigProvider.java");
+        String activation = read("novel-common/src/main/java/com/java2nb/novel/service/gamification/config/GamificationConfigActivationWorker.java");
+        String scheduler = read("novel-front/src/main/java/com/java2nb/novel/core/schedule/GamificationDynamicScheduler.java");
+        String alerts = read("deploy/observability/rules/novel-plus-alerts.yml");
+        String dashboard = read("deploy/observability/grafana/dashboards/novel-plus-overview.json");
+
+        assertThat(provider)
+            .contains("gamification.config.revision", "gamification.config.snapshot.age.seconds")
+            .contains("gamification.config.refresh.failures", "gamification.config.source");
+        assertThat(activation).contains("gamification.config.activation.failures");
+        assertThat(scheduler)
+            .contains("gamification.scheduler.revision")
+            .contains("gamification.scheduler.reschedule.failures");
+        assertThat(alerts)
+            .contains("NovelGamificationConfigRevisionDrift")
+            .contains("NovelGamificationConfigStale")
+            .contains("NovelGamificationConfigRefreshFailed")
+            .contains("NovelGamificationConfigActivationFailed")
+            .contains("NovelGamificationSchedulerRescheduleFailed");
+        assertThat(dashboard)
+            .contains("Revision cấu hình gamification")
+            .contains("Tuổi snapshot gamification");
     }
 
     @Test

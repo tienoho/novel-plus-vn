@@ -39,7 +39,8 @@ public class GamificationEventRecorderImpl implements GamificationEventRecorder 
             || !Objects.equals(existing.getBookId(), requested.bookId())
             || !Objects.equals(existing.getLocalDate(), requested.localDate())
             || !Objects.equals(existing.getPayloadHash(), requested.payloadHash())
-            || !Objects.equals(existing.getPolicyVersion(), requested.policyVersion())) {
+            || !Objects.equals(existing.getPolicyVersion(), requested.policyVersion())
+            || !Objects.equals(existing.getRuntimeConfigRevision(), requested.runtimeConfigRevision())) {
             throw new IllegalStateException("Khóa nguồn sự kiện gamification đã được dùng cho nội dung khác");
         }
     }

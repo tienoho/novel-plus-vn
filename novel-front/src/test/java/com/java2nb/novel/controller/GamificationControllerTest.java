@@ -1,7 +1,6 @@
 package com.java2nb.novel.controller;
 
 import com.java2nb.novel.core.bean.UserDetails;
-import com.java2nb.novel.core.config.GamificationProperties;
 import com.java2nb.novel.core.i18n.Messages;
 import com.java2nb.novel.dto.gamification.RealmUpdateRequest;
 import com.java2nb.novel.service.gamification.GamificationProfileRow;
@@ -15,6 +14,8 @@ import com.java2nb.novel.service.gamification.QuestProgressRow;
 import com.java2nb.novel.service.gamification.QuestClaimRow;
 import com.java2nb.novel.service.gamification.QuestClaimResult;
 import com.java2nb.novel.service.gamification.TicketAccountRow;
+import com.java2nb.novel.service.gamification.config.GamificationConfigProvider;
+import com.java2nb.novel.service.gamification.config.GamificationConfigSnapshot;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,7 +36,8 @@ import static org.mockito.Mockito.times;
 class GamificationControllerTest {
 
     private GamificationProgressService service;
-    private GamificationProperties properties;
+    private GamificationConfigProvider configProvider;
+    private GamificationConfigSnapshot config;
     private UserDetails user;
     private Messages messages;
     private GamificationCheckInService checkInService;
@@ -44,15 +46,16 @@ class GamificationControllerTest {
     @BeforeEach
     void setUp() {
         service = mock(GamificationProgressService.class);
-        properties = new GamificationProperties();
-        properties.getRealm().setEnabled(true);
-        properties.getEvent().setEnabled(true);
-        properties.getQuest().setEnabled(true);
+        configProvider = mock(GamificationConfigProvider.class);
+        config = GamificationConfigSnapshot.bootstrapDisabled().toBuilder()
+            .realmEnabled(true).eventEnabled(true).questEnabled(true).build();
+        when(configProvider.current()).thenReturn(config);
+        when(configProvider.currentForWrite()).thenReturn(config);
         messages = mock(Messages.class);
         checkInService = mock(GamificationCheckInService.class);
         user = mock(UserDetails.class);
         when(user.getId()).thenReturn(11L);
-        controller = new GamificationController(service, properties, messages,
+        controller = new GamificationController(service, configProvider, messages,
             checkInService,
             Clock.fixed(Instant.parse("2026-07-30T03:00:00Z"), ZoneOffset.UTC)) {
             @Override
@@ -81,7 +84,7 @@ class GamificationControllerTest {
         GamificationProfileSnapshot snapshot = new GamificationProfileSnapshot(updated, 1_000L);
         Date changedAt = Date.from(Instant.parse("2026-07-30T03:00:00Z"));
         when(service.updateRealm(11L, "TIEN_PHONG", 4L, changedAt,
-            properties.resolveZoneId(), 24, "v1")).thenReturn(result);
+            java.time.ZoneId.of(config.getZoneId()), 24, "v1")).thenReturn(result);
         when(service.getProfileSnapshot(11L, "v1")).thenReturn(snapshot);
 
         var response = controller.updateRealm(new RealmUpdateRequest("TIEN_PHONG", 4L),
@@ -90,7 +93,7 @@ class GamificationControllerTest {
         assertThat(response.getData().profile().realmCode()).isEqualTo("TIEN_PHONG");
         assertThat(response.getData().profile().nextLevelExp()).isEqualTo(1_000L);
         verify(service).updateRealm(11L, "TIEN_PHONG", 4L, changedAt,
-            properties.resolveZoneId(), 24, "v1");
+            java.time.ZoneId.of(config.getZoneId()), 24, "v1");
     }
 
     @Test
@@ -104,7 +107,7 @@ class GamificationControllerTest {
         row.setTargetCount(30);
         row.setCompletedAt(new Date());
         Date observedAt = Date.from(Instant.parse("2026-07-30T03:00:00Z"));
-        when(service.listQuests(11L, java.time.LocalDate.of(2026, 7, 30), observedAt))
+        when(service.listQuests(11L, java.time.LocalDate.of(2026, 7, 30), observedAt, "v1"))
             .thenReturn(List.of(row));
         when(messages.get("quest.dailyReading")).thenReturn("Đọc truyện đủ 30 phút");
 
@@ -128,7 +131,8 @@ class GamificationControllerTest {
         var expected = new com.java2nb.novel.service.gamification.QuestClaimCommand(11L,
             "DAILY_READING", java.time.LocalDate.of(2026, 7, 30),
             Date.from(Instant.parse("2026-07-30T03:00:00Z")),
-            properties.resolveZoneId(), 60, "v1", "v1");
+            java.time.ZoneId.of(config.getZoneId()), 60, "v1", "v1",
+            config.getRuntimeRevision());
         when(service.claimQuest(expected)).thenReturn(result);
 
         var response = controller.claimQuest("DAILY_READING", new MockHttpServletRequest());
@@ -145,7 +149,7 @@ class GamificationControllerTest {
         when(movingClock.instant()).thenReturn(beforeMidnight,
             Instant.parse("2026-07-30T17:00:01Z"));
         GamificationController movingController = new GamificationController(
-            service, properties, messages, checkInService, movingClock) {
+            service, configProvider, messages, checkInService, movingClock) {
             @Override
             protected UserDetails getUserDetails(HttpServletRequest request) {
                 return user;
@@ -160,7 +164,8 @@ class GamificationControllerTest {
             new GamificationProfileSnapshot(profile("NHAP_MON", 5L), 500L), 0L, false);
         var expected = new com.java2nb.novel.service.gamification.QuestClaimCommand(11L,
             "DAILY_READING", java.time.LocalDate.of(2026, 7, 30), Date.from(beforeMidnight),
-            properties.resolveZoneId(), 60, "v1", "v1");
+            java.time.ZoneId.of(config.getZoneId()), 60, "v1", "v1",
+            config.getRuntimeRevision());
         when(service.claimQuest(expected)).thenReturn(result);
 
         movingController.claimQuest("DAILY_READING", new MockHttpServletRequest());
@@ -187,7 +192,7 @@ class GamificationControllerTest {
         CheckInOutcome outcome = new CheckInOutcome(
             new CheckInResult(checkedInProfile, "CHECKIN:11:2026-07-30", false),
             reward, nextCheckIn);
-        when(checkInService.checkIn(11L)).thenReturn(outcome);
+        when(checkInService.checkIn(11L, config)).thenReturn(outcome);
 
         var response = controller.checkIn(new MockHttpServletRequest());
 
@@ -199,7 +204,7 @@ class GamificationControllerTest {
         assertThat(response.getData().ticketBalance()).isEqualTo(5L);
         assertThat(response.getData().nextCheckIn()).isEqualTo(nextCheckIn);
         assertThat(response.getData().alreadyCheckedIn()).isFalse();
-        verify(checkInService).checkIn(11L);
+        verify(checkInService).checkIn(11L, config);
     }
 
     private GamificationProfileRow profile(String realm, long version) {

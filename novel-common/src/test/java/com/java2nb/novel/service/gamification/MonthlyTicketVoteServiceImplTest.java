@@ -82,6 +82,8 @@ class MonthlyTicketVoteServiceImplTest {
         postedVote.setUserId(USER_ID);
         postedVote.setTicketCount(4L);
         postedVote.setClientRequestId(CLIENT_REQUEST_ID);
+        postedVote.setSourceHashKeyId("v1");
+        postedVote.setRuntimeConfigRevision(7L);
 
         rankCounter = new TicketRankCounterRow();
         rankCounter.setSeasonId(SEASON_ID);
@@ -102,7 +104,8 @@ class MonthlyTicketVoteServiceImplTest {
         when(mapper.selectLedgerByIdempotencyKey(anyString())).thenReturn(ledger);
         when(mapper.debitAccount(71L, 4L, 4L)).thenReturn(1);
         when(mapper.insertVote(anyLong(), anyLong(), anyLong(), anyLong(), anyLong(), anyLong(),
-            anyString(), anyString(), anyString(), anyString(), anyString(), anyString())).thenReturn(1);
+            anyString(), anyString(), anyString(), anyString(), anyString(), anyString(),
+            anyString(), anyLong())).thenReturn(1);
         when(mapper.insertRankVoterIgnore(SEASON_ID, BOOK_ID, USER_ID)).thenReturn(1);
         // MySQL có thể trả 2 cho nhánh UPDATE của ON DUPLICATE KEY; service phải chấp nhận > 0.
         when(mapper.upsertRankCounter(anyLong(), anyLong(), anyLong(), anyInt(), any(Date.class)))
@@ -144,7 +147,8 @@ class MonthlyTicketVoteServiceImplTest {
             .hasMessageContaining("không khớp");
         verify(mapper, never()).debitAccount(anyLong(), anyLong(), anyLong());
         verify(mapper, never()).insertVote(anyLong(), anyLong(), anyLong(), anyLong(), anyLong(),
-            anyLong(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
+            anyLong(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString(),
+            anyString(), anyLong());
     }
 
     @Test
@@ -208,6 +212,8 @@ class MonthlyTicketVoteServiceImplTest {
 
     @Test
     void replayReturnsPreviousResultWithoutConsumingQuotaAgain() {
+        postedVote.setSourceHashKeyId("rotated-key");
+        postedVote.setRuntimeConfigRevision(6L);
         when(mapper.selectVoteByUserClientRequest(USER_ID, CLIENT_REQUEST_ID)).thenReturn(postedVote);
         account.setAvailableBalance(6L);
 
@@ -241,7 +247,7 @@ class MonthlyTicketVoteServiceImplTest {
 
     private TicketVoteCommand command(int count) {
         return new TicketVoteCommand(USER_ID, BOOK_ID, SEASON_ID, count, CLIENT_REQUEST_ID,
-            IP_HASH, "d".repeat(64), NOW, LOCAL_DATE);
+            IP_HASH, "d".repeat(64), "v1", NOW, LOCAL_DATE, 7L);
     }
 
     private TicketLotRow lot(long id, long remaining, long version) {

@@ -306,6 +306,9 @@ class ProductionDeploymentPackagingTest {
             .contains("FROM docker.io/library/golang:1.26.5-bookworm@sha256:6c5605ab3a9a9fb3c4eafe5b3d63cdbf3881caf113262b67862547b54a9db599 AS builder")
             .contains("GRAFANA_VERSION=13.1.3")
             .contains("GRAFANA_COMMIT=45a27d64b64a82d666b06aa5c5bb3521587edb0d")
+            .contains("GRAFANA_GO_BUILD_PARALLELISM=2")
+            .contains("GOMAXPROCS=${GRAFANA_GO_BUILD_PARALLELISM}")
+            .contains("GOFLAGS=-p=${GRAFANA_GO_BUILD_PARALLELISM}")
             .contains("test \"$(git -C /src rev-parse HEAD)\" = \"${GRAFANA_COMMIT}\"")
             .contains("git apply --check /tmp/grafana-no-tempo.patch")
             .contains("gen -tags oss -gen_tags '(!enterprise && !pro)' ./pkg/server")
@@ -387,9 +390,12 @@ class ProductionDeploymentPackagingTest {
     }
 
     @Test
-    void authorPayoutFourEyesMigrationIsPackagedLast() throws Exception {
+    void authorPayoutFourEyesAndGamificationConfigMigrationsArePackagedInOrder() throws Exception {
         assertThat(read("deploy/flyway/Dockerfile"))
-            .contains("V2026081701__author_payout_four_eyes.sql");
+            .containsSubsequence(
+                "V2026081701__author_payout_four_eyes.sql",
+                "V2026081801__gamification_runtime_config.sql",
+                "V2026081901__gamification_dynamic_config_p1_hardening.sql");
         assertThat(read("doc/sql/20260817_author_payout_four_eyes.sql"))
             .contains("approved_by")
             .contains("executed_by")
@@ -400,13 +406,19 @@ class ProductionDeploymentPackagingTest {
 
     @Test
     void e2eRunnerAlwaysRemovesBrowserCredentialState() throws Exception {
+        assertThat(read("compose.e2e.yaml"))
+            .contains("depends_on: !override")
+            .contains("front:", "admin:", "crawl:");
+        assertThat(read("scripts/run-e2e.ps1"))
+            .contains("@(\"front\", \"crawl\", \"admin\", \"caddy\")")
+            .doesNotContain("@(\"front\", \"crawl\", \"admin\", \"alertmanager\"");
         assertThat(read("scripts/run-e2e.ps1"))
             .contains("$authDir = Join-Path $e2eRoot \".auth\"")
             .contains("$resolvedAuth.StartsWith($resolvedE2e")
             .contains("if (Test-Path -LiteralPath $resolvedAuth)")
             .contains("Remove-Item -LiteralPath $resolvedAuth -Recurse -Force");
         assertThat(read(".gitignore")).contains("e2e/.auth/");
-        assertThat(read(".dockerignore")).contains("e2e/.auth");
+        assertThat(read(".dockerignore")).contains("e2e/.auth", "tmp");
     }
 
     private String read(String relativePath) throws Exception {

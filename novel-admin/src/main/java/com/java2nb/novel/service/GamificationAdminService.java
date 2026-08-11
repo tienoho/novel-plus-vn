@@ -59,10 +59,6 @@ public interface GamificationAdminService {
 
     List<Map<String, Object>> listPublicPolicies(Map<String, Object> params);
     int countPublicPolicies(Map<String, Object> params);
-    com.java2nb.novel.service.gamification.GamificationPublicPolicyRow createPublicPolicy(
-        String policyVersion, String title, String contentText, long actorId);
-    com.java2nb.novel.service.gamification.GamificationPublicPolicyRow publishPublicPolicy(
-        long policyId, long expectedVersion, long actorId);
 
     RewardCampaignRow calculateRewardCampaign(long seasonId, long budgetXu, String sharesBps);
     RewardCampaignRow approveRewardCampaign(long campaignId, long actorId);

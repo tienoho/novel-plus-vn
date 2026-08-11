@@ -1,6 +1,5 @@
 package com.java2nb.novel.service.impl;
 
-import com.java2nb.novel.config.GamificationAdminSettings;
 import com.java2nb.novel.dao.GamificationAdminDao;
 import com.java2nb.novel.service.GamificationAdminService;
 import com.java2nb.novel.service.gamification.MonthlyTicketService;
@@ -23,8 +22,8 @@ import com.java2nb.novel.service.gamification.QuestCampaignRow;
 import com.java2nb.novel.service.gamification.QuestRewardCommand;
 import com.java2nb.novel.service.gamification.TicketRiskService;
 import com.java2nb.novel.service.gamification.TicketRiskReviewRow;
-import com.java2nb.novel.service.gamification.GamificationPublicPolicyService;
-import com.java2nb.novel.service.gamification.GamificationPublicPolicyRow;
+import com.java2nb.novel.service.gamification.config.GamificationConfigProvider;
+import com.java2nb.novel.service.gamification.config.GamificationConfigSnapshot;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -46,8 +45,7 @@ public class GamificationAdminServiceImpl implements GamificationAdminService {
     private final QuestCampaignConfigService questCampaignConfigService;
     private final GamificationProgressService progressService;
     private final TicketRiskService ticketRiskService;
-    private final GamificationPublicPolicyService publicPolicyService;
-    private final GamificationAdminSettings settings;
+    private final GamificationConfigProvider configProvider;
     private final Clock clock;
     private final String ownerInstance;
 
@@ -59,11 +57,10 @@ public class GamificationAdminServiceImpl implements GamificationAdminService {
                                          QuestCampaignConfigService questCampaignConfigService,
                                          GamificationProgressService progressService,
                                          TicketRiskService ticketRiskService,
-                                         GamificationPublicPolicyService publicPolicyService,
-                                         GamificationAdminSettings settings) {
+                                         GamificationConfigProvider configProvider) {
         this(dao, monthlyTicketService, monthlyRankingService, authorRewardService,
-            questCampaignConfigService, progressService, ticketRiskService, publicPolicyService,
-            settings, Clock.systemUTC(),
+            questCampaignConfigService, progressService, ticketRiskService, configProvider,
+            Clock.systemUTC(),
             "admin-season-" + UUID.randomUUID());
     }
 
@@ -74,8 +71,7 @@ public class GamificationAdminServiceImpl implements GamificationAdminService {
                                   QuestCampaignConfigService questCampaignConfigService,
                                   GamificationProgressService progressService,
                                   TicketRiskService ticketRiskService,
-                                  GamificationPublicPolicyService publicPolicyService,
-                                  GamificationAdminSettings settings, Clock clock,
+                                  GamificationConfigProvider configProvider, Clock clock,
                                  String ownerInstance) {
         this.dao = dao;
         this.monthlyTicketService = monthlyTicketService;
@@ -84,8 +80,7 @@ public class GamificationAdminServiceImpl implements GamificationAdminService {
         this.questCampaignConfigService = questCampaignConfigService;
         this.progressService = progressService;
         this.ticketRiskService = ticketRiskService;
-        this.publicPolicyService = publicPolicyService;
-        this.settings = settings;
+        this.configProvider = configProvider;
         this.clock = clock;
         this.ownerInstance = ownerInstance;
     }
@@ -174,13 +169,14 @@ public class GamificationAdminServiceImpl implements GamificationAdminService {
     public TicketPostResult grant(long userId, long amount, String clientRequestId,
                                   long effectiveAtMillis, String reason, long actorId,
                                   boolean canAdjust) {
-        if (!settings.getTicket().isEnabled() || !settings.isConfigured()) {
+        GamificationConfigSnapshot config = configProvider.currentForWrite();
+        if (!config.isTicketEnabled()) {
             throw new IllegalStateException("Tính năng Ngọn Đuốc chưa được bật hoặc cấu hình chưa hợp lệ");
         }
         if (userId <= 0 || actorId <= 0 || amount <= 0) {
             throw new IllegalArgumentException("Người dùng, quản trị viên và số Đuốc phải hợp lệ");
         }
-        if (amount > settings.getTicket().getMaxGrantPerBatch() && !canAdjust) {
+        if (amount > config.getTicketMaxGrantPerBatch() && !canAdjust) {
             throw new SecurityException("Cấp vượt hạn mức cần quyền novel:gamification:adjust");
         }
         String requestId = normalizeRequestId(clientRequestId);
@@ -192,12 +188,12 @@ public class GamificationAdminServiceImpl implements GamificationAdminService {
             throw new IllegalArgumentException("Thời điểm cấp Ngọn Đuốc nằm ngoài cửa sổ cho phép");
         }
         Instant expireAt = effectiveAt.plus(Duration.ofDays(
-            settings.getTicket().getLotValidityDays()));
+            config.getTicketLotValidityDays()));
         String sourceRef = "ADMIN:" + requestId;
         String idempotencyKey = "ADMIN_GRANT:" + requestId + ':' + userId;
         return monthlyTicketService.grant(new TicketGrantCommand(userId, amount, "ADMIN_GRANT",
             sourceRef, idempotencyKey, Date.from(effectiveAt), Date.from(expireAt), "ADMIN",
-            actorId, normalizedReason, settings.getPolicyVersion()));
+            actorId, normalizedReason, config.getPolicyVersion(), config.getRuntimeRevision()));
     }
 
     @Override
@@ -215,10 +211,10 @@ public class GamificationAdminServiceImpl implements GamificationAdminService {
 
     @Override
     public SeasonPhaseResult retrySeason(long seasonId, long actorId) {
-        requireSeasonOperation(seasonId, actorId);
+        GamificationConfigSnapshot config = requireSeasonOperation(seasonId, actorId);
         return monthlyRankingService.retrySnapshot(seasonId, ownerInstance, Date.from(clock.instant()),
-            settings.getSeason().getCloseDrainSeconds(), settings.getJob().getLeaseSeconds(),
-            settings.getJob().getBatchSize());
+            config.getSeasonCloseDrainSeconds(), config.getJobLeaseSeconds(),
+            config.getJobBatchSize());
     }
 
     @Override
@@ -240,14 +236,16 @@ public class GamificationAdminServiceImpl implements GamificationAdminService {
     public MonthlySeasonRow createSpecialSeason(String periodCode, String seasonType,
                                                 long startAtMillis, long endAtMillis,
                                                 long voteCutoffAtMillis, long actorId) {
-        if (!settings.getSeason().isEnabled() || !settings.isConfigured() || actorId <= 0) {
+        GamificationConfigSnapshot config = configProvider.currentForWrite();
+        if (!config.isSeasonEnabled() || actorId <= 0) {
             throw new IllegalStateException(
                 "Kỳ xếp hạng Ngọn Đuốc chưa được bật, cấu hình chưa hợp lệ hoặc thiếu quản trị viên");
         }
         return monthlyRankingService.createSpecialSeason(periodCode, seasonType,
             Date.from(Instant.ofEpochMilli(startAtMillis)), Date.from(Instant.ofEpochMilli(endAtMillis)),
-            Date.from(Instant.ofEpochMilli(voteCutoffAtMillis)), settings.resolveZoneId(),
-            settings.getPolicyVersion());
+            Date.from(Instant.ofEpochMilli(voteCutoffAtMillis)),
+            java.time.ZoneId.of(config.getZoneId()), config.getPolicyVersion(),
+            config.getRuntimeRevision());
     }
 
     @Override
@@ -288,40 +286,28 @@ public class GamificationAdminServiceImpl implements GamificationAdminService {
     }
 
     @Override
-    public GamificationPublicPolicyRow createPublicPolicy(String policyVersion, String title,
-                                                          String contentText, long actorId) {
-        return publicPolicyService.createDraft(policyVersion, title, contentText, actorId);
-    }
-
-    @Override
-    public GamificationPublicPolicyRow publishPublicPolicy(long policyId, long expectedVersion,
-                                                           long actorId) {
-        return publicPolicyService.publish(policyId, expectedVersion, actorId,
-            Date.from(clock.instant()));
-    }
-
-    @Override
     public GamificationProfileRow moderateTickerVisibility(long userId, boolean hide, String reason,
                                                             long actorId) {
-        if (!settings.isConfigured() || userId <= 0 || actorId <= 0) {
+        GamificationConfigSnapshot config = configProvider.currentForWrite();
+        if (userId <= 0 || actorId <= 0) {
             throw new IllegalArgumentException("Yêu cầu kiểm duyệt bảng chạy không hợp lệ");
         }
         return progressService.adminSetTickerOptOut(userId, hide, actorId, reason,
-            settings.getPolicyVersion());
+            config.getPolicyVersion());
     }
 
     @Override
     public RewardCampaignRow calculateRewardCampaign(long seasonId, long budgetXu, String sharesBps) {
-        if (!settings.isConfigured()) {
-            throw new IllegalStateException("Cấu hình gamification chưa hợp lệ");
-        }
+        GamificationConfigSnapshot config = configProvider.currentForWrite();
         return authorRewardService.calculateAllocations(new RewardCampaignCommand(
-            seasonId, budgetXu, parseShares(sharesBps), settings.getPolicyVersion()));
+            seasonId, budgetXu, parseShares(sharesBps), config.getPolicyVersion(),
+            config.getRuntimeRevision()));
     }
 
     @Override
     public RewardCampaignRow approveRewardCampaign(long campaignId, long actorId) {
-        if (!settings.isConfigured() || actorId <= 0) {
+        configProvider.currentForWrite();
+        if (actorId <= 0) {
             throw new IllegalArgumentException("Yêu cầu duyệt campaign không hợp lệ");
         }
         return authorRewardService.approveCampaign(campaignId, actorId, Date.from(clock.instant()));
@@ -329,18 +315,20 @@ public class GamificationAdminServiceImpl implements GamificationAdminService {
 
     @Override
     public int postRewardCampaign(long campaignId) {
-        if (!settings.getReward().isEnabled() || !settings.isConfigured()) {
+        GamificationConfigSnapshot config = configProvider.currentForWrite();
+        if (!config.isRewardEnabled()) {
             throw new IllegalStateException("Chức năng ghi thưởng tác giả chưa được bật");
         }
         int posted = 0;
         while (true) {
             List<Long> ids = authorRewardService.listApprovedAllocationIds(
-                campaignId, settings.getJob().getBatchSize());
+                campaignId, config.getJobBatchSize());
             if (ids.isEmpty()) {
                 return posted;
             }
             for (Long id : ids) {
-                authorRewardService.postPendingReward(id, Date.from(clock.instant()));
+                authorRewardService.postPendingReward(id, Date.from(clock.instant()),
+                    config.getRewardClaimWindowDays());
                 posted++;
             }
         }
@@ -348,20 +336,19 @@ public class GamificationAdminServiceImpl implements GamificationAdminService {
 
     @Override
     public AuthorRewardAllocationRow clawbackReward(long allocationId, String reason, long actorId) {
-        if (!settings.isConfigured()) {
-            throw new IllegalStateException("Cấu hình gamification chưa hợp lệ");
-        }
+        configProvider.currentForWrite();
         return authorRewardService.clawback(allocationId, actorId, reason,
-            Date.from(clock.instant()), settings.getReward().getClaimWindowDays());
+            Date.from(clock.instant()));
     }
 
     @Override
     public QuestCampaignRow createQuestCampaign(String campaignCode, long startAtMillis,
                                                  long endAtMillis, long actorId) {
         requireConfigActor(actorId);
+        GamificationConfigSnapshot config = configProvider.currentForWrite();
         return questCampaignConfigService.createDraft(new QuestCampaignDraftCommand(campaignCode,
             Date.from(Instant.ofEpochMilli(startAtMillis)), Date.from(Instant.ofEpochMilli(endAtMillis)),
-            settings.getPolicyVersion()));
+            config.getPolicyVersion()));
     }
 
     @Override
@@ -403,17 +390,20 @@ public class GamificationAdminServiceImpl implements GamificationAdminService {
         return List.copyOf(shares);
     }
 
-    private void requireSeasonOperation(long seasonId, long actorId) {
-        if (!settings.getSeason().isEnabled() || !settings.isConfigured()) {
+    private GamificationConfigSnapshot requireSeasonOperation(long seasonId, long actorId) {
+        GamificationConfigSnapshot config = configProvider.currentForWrite();
+        if (!config.isSeasonEnabled()) {
             throw new IllegalStateException("Kỳ xếp hạng Ngọn Đuốc chưa được bật hoặc cấu hình chưa hợp lệ");
         }
         if (seasonId <= 0 || actorId <= 0) {
             throw new IllegalArgumentException("Kỳ xếp hạng và quản trị viên phải hợp lệ");
         }
+        return config;
     }
 
     private void requireConfigActor(long actorId) {
-        if (!settings.isConfigured() || actorId <= 0) {
+        configProvider.currentForWrite();
+        if (actorId <= 0) {
             throw new IllegalArgumentException("Quản trị viên hoặc cấu hình gamification không hợp lệ");
         }
     }

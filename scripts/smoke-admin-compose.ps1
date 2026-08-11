@@ -252,6 +252,7 @@ $secretNames = @(
     "jwt_secret",
     "cache_manager_password",
     "pii_encryption_key",
+    "gamification_vote_ip_hash_salt",
     "admin_bootstrap_password",
     "crawler_admin_password",
     "backup_encryption_password",

@@ -1,12 +1,13 @@
 package com.java2nb.novel.core.schedule;
 
-import com.java2nb.novel.core.config.GamificationProperties;
 import com.java2nb.novel.core.observability.NovelBusinessMetrics;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import com.java2nb.novel.mapper.GamificationProgressMapper;
 import com.java2nb.novel.service.gamification.EventProcessResult;
 import com.java2nb.novel.service.impl.GamificationEventFailureWriter;
 import com.java2nb.novel.service.impl.GamificationEventProcessor;
+import com.java2nb.novel.service.gamification.config.GamificationConfigProvider;
+import com.java2nb.novel.service.gamification.config.GamificationConfigSnapshot;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -26,7 +27,7 @@ class GamificationEventDrainScheduleTest {
     private static final Instant NOW = Instant.parse("2026-07-30T03:00:00Z");
     private static final Date NOW_DATE = Date.from(NOW);
 
-    private GamificationProperties properties;
+    private GamificationConfigProvider configProvider;
     private GamificationProgressMapper mapper;
     private GamificationEventProcessor processor;
     private GamificationEventFailureWriter failureWriter;
@@ -34,14 +35,15 @@ class GamificationEventDrainScheduleTest {
 
     @BeforeEach
     void setUp() {
-        properties = new GamificationProperties();
-        properties.getEvent().setEnabled(true);
-        properties.getQuest().setEnabled(true);
+        configProvider = mock(GamificationConfigProvider.class);
+        when(configProvider.currentForWrite()).thenReturn(
+            GamificationConfigSnapshot.bootstrapDisabled().toBuilder()
+                .eventEnabled(true).questEnabled(true).build());
         mapper = mock(GamificationProgressMapper.class);
         processor = mock(GamificationEventProcessor.class);
         failureWriter = mock(GamificationEventFailureWriter.class);
         NovelBusinessMetrics metrics = new NovelBusinessMetrics(new SimpleMeterRegistry());
-        schedule = new GamificationEventDrainSchedule(properties, mapper, processor, failureWriter,
+        schedule = new GamificationEventDrainSchedule(configProvider, mapper, processor, failureWriter,
             metrics, Clock.fixed(NOW, ZoneOffset.UTC));
     }
 
@@ -71,7 +73,8 @@ class GamificationEventDrainScheduleTest {
 
     @Test
     void doesNothingWhenQuestProcessingIsDisabled() {
-        properties.getQuest().setEnabled(false);
+        when(configProvider.currentForWrite()).thenReturn(
+            GamificationConfigSnapshot.bootstrapDisabled().toBuilder().eventEnabled(true).build());
 
         schedule.drain();
 

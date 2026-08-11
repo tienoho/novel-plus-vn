@@ -21,13 +21,33 @@ Tên kỹ thuật trong bảng, lớp Java và khóa i18n giữ nguyên tiếng 
 
 Đổi tên hiển thị về sau chỉ là sửa file `.properties`, không phải migration.
 
-## Cờ tính năng
+## Nguồn cấu hình runtime
 
-Toàn bộ nằm dưới `novel.gamification` trong `novel-front/src/main/resources/application.yml`, đặt qua biến môi trường (xem `.env.example`). **Mọi cờ mặc định tắt.**
+Nguồn sự thật production là snapshot có kiểu dữ liệu trong bảng `gamification_runtime_config`.
+`novel-front`, `novel-admin` và worker dùng chung `GamificationConfigProvider`; mỗi request/job chụp
+`provider.current()` đúng một lần và giữ revision đó đến hết transaction. Thay đổi ACTIVE được poll
+mỗi 2 giây và không cần restart ứng dụng.
 
-`novel-admin` đọc cùng cấu hình ticket, season và job để màn cấp Đuốc cùng các thao tác
-close/pause/retry/finalize dùng đúng một chính sách. Hai ứng dụng không được cấu hình hạn dùng,
-drain, lease hoặc batch size khác nhau.
+ENV chỉ còn hai vai trò: bootstrap/cutover và nguồn đối chiếu trong `DB_SHADOW`. Sáu biến được phép
+truyền vào container là:
+
+```text
+GAMIFICATION_CONFIG_SOURCE=ENV|DB_SHADOW|DB
+GAMIFICATION_CONFIG_REFRESH_MS=2000
+GAMIFICATION_CONFIG_MAX_STALE_MS=60000
+GAMIFICATION_FORCE_DISABLE=false
+GAMIFICATION_VOTE_IP_HASH_KEY_ID=v1
+GAMIFICATION_VOTE_IP_HASH_SALT_FILE=/run/secrets/gamification_vote_ip_hash_salt
+```
+
+Salt hash IP nằm trong Docker secret, không vào database, API, HTML, log hoặc audit. Database chỉ
+lưu `vote_ip_hash_key_id`; vote bị khóa nếu key ID không khớp secret đang mount. Last-known-good vẫn
+phục vụ API đọc khi refresh lỗi, nhưng đường ghi fail-closed khi snapshot stale quá giới hạn.
+
+**Mọi cờ trong revision bootstrap mặc định tắt.** Bốn cờ không có hành vi policy v1
+`TICKET_GRANT_ON_TOPUP`, `QUEST_REPLY_ENABLED`, `REALM_AFFECTS_BENEFITS` và
+`SEASON_AUTO_FINALIZE` luôn bị khóa `false`. Mục tiêu đọc thuộc
+`quest_definition.target_count`, không còn là runtime setting.
 
 | Cờ | Bật thì cho phép | Phụ thuộc |
 |---|---|---|
@@ -39,7 +59,8 @@ drain, lease hoặc batch size khác nhau.
 | `realm.enabled` | Đổi cảnh giới | cần `quest.enabled` |
 | `reward.enabled` | Tính và ghi thưởng tác giả | cần `season.enabled` |
 
-`GamificationProperties` ghi log `GAMIFY-CONFIG` lúc khởi động nếu phát hiện tổ hợp vô lý, ví dụ bật trả thưởng mà chưa bật kỳ xếp hạng.
+`GamificationConfigValidator` từ chối cron/zone/ngưỡng hoặc quan hệ phụ thuộc không hợp lệ trước khi
+submit/activate. Không có trường hợp âm thầm bỏ qua giá trị ENV trái policy v1.
 
 ### Thứ tự bật an toàn
 
@@ -49,13 +70,20 @@ EVENT -> TICKET -> VOTE -> SEASON -> (shadow mode một kỳ đầy đủ) -> QU
 
 **Không bật `reward.enabled` trước khi shadow mode xác nhận xếp hạng khớp truy vấn nguồn.** Xem mục Shadow mode bên dưới.
 
-## Tắt tính năng và rollback
+## Lifecycle, hiệu lực và rollback
 
-Rollback **chỉ bằng cờ tính năng**. Kho mã không có tiền lệ down-migration và sẽ không tạo tiền lệ ở đây.
+Revision đi qua `DRAFT → PENDING_APPROVAL → APPROVED → SCHEDULED → ACTIVE → ARCHIVED`, kèm
+`REJECTED/CANCELLED`. Snapshot bất biến sau submit; muốn sửa phải clone thành draft mới. Thay đổi
+rủi ro cao bắt buộc người tạo và người duyệt khác nhau. Backend tự phân loại diff:
 
-Tắt một cờ sẽ dừng đường ghi tương ứng nhưng **không** xóa dữ liệu: sổ cái Ngọn Đuốc, lot, vote và snapshot đều giữ nguyên. Bật lại thì trạng thái tiếp tục từ chỗ cũ.
+- `IMMEDIATE`: tuning worker/cron/delay và tắt feature;
+- `NEXT_DAY`: quota/heartbeat theo ngày;
+- `NEXT_SEASON`: zone, policy, eligibility, vote limit và luật kinh tế.
 
-Bảng và dữ liệu không bao giờ bị xóa khi rollback, để không mất khả năng kiểm toán.
+Tắt khẩn cấp dùng `GAMIFICATION_FORCE_DISABLE=true`; nó luôn thắng database, chỉ khóa đường ghi và
+không sửa dữ liệu. Rollback ứng dụng dùng `GAMIFICATION_CONFIG_SOURCE=ENV` rồi restart. Rollback
+cấu hình phải clone revision cũ thành **revision mới** và đi qua đúng approval; tuyệt đối không
+UPDATE bản ACTIVE/ARCHIVED cũ, xóa audit hoặc chạy down-migration.
 
 ## Mã cảnh báo
 
@@ -85,6 +113,8 @@ Mã nằm ở **đầu** thông điệp để cấu hình grep phía thu thập 
 | `novel:gamification:finalize` | Chốt kỳ, chụp snapshot, tạm dừng và chạy lại job |
 | `novel:gamification:reward` | Duyệt chiến dịch thưởng và ghi thưởng |
 | `novel:gamification:adjust` | Bút toán đảo, thu hồi, sửa lệch, cấp vượt hạn mức, hủy kỳ |
+| `novel:gamification:settings:view/edit/approve/activate` | Xem, tạo draft, phê duyệt và hẹn runtime revision |
+| `novel:gamification:policy:view/edit/approve/publish` | Xem, soạn, phê duyệt và phát hành policy bundle |
 
 Quyền cấp phiếu, quyền chốt kỳ và quyền duyệt tiền được tách nhau để giữ nguyên tắc bốn mắt: người chốt kỳ không phải người duyệt tiền.
 
@@ -92,10 +122,11 @@ Quyền cấp phiếu, quyền chốt kỳ và quyền duyệt tiền được t
 
 ### Cấp Ngọn Đuốc thủ công
 
-1. Bật `GAMIFICATION_TICKET_ENABLED=true` cho cả front và admin sau khi migration đã chạy.
+1. Trong **Cấu hình Gamification**, clone ACTIVE, bật `ticketEnabled`, submit, phê duyệt và hẹn
+   revision sau khi migration đã chạy.
 2. Mở **Gamification** trong trang quản trị bằng quyền `novel:gamification:view`.
 3. Người cấp cần `novel:gamification:grant`; nhập mã người dùng, số Đuốc và lý do từ 10 đến 255 ký tự.
-4. Lệnh vượt `GAMIFICATION_TICKET_MAX_GRANT_BATCH` còn cần quyền
+4. Lệnh vượt `ticketMaxGrantPerBatch` của ACTIVE revision còn cần quyền
    `novel:gamification:adjust`.
 5. Nếu trình duyệt báo không xác định được kết quả do lỗi mạng, bấm lại trên cùng trang. Giao diện
    giữ nguyên request ID, thời điểm hiệu lực và payload để ledger trả `ALREADY_POSTED` thay vì cấp
@@ -106,25 +137,24 @@ admin chỉ đọc báo cáo; nó không có câu lệnh ghi trực tiếp vào 
 
 ### Job đóng Đuốc hết hạn
 
-- Cron lấy từ `GAMIFICATION_TICKET_EXPIRY_CRON`, mặc định 03:20 theo
-  `GAMIFICATION_ZONE_ID`.
+- Cron lấy từ `ticketExpiryCron` của ACTIVE revision, mặc định 03:20 theo `zoneId`.
 - Mỗi ngày có đúng một claim `LOT_EXPIRY/DATE/yyyy-MM-dd` trong `scheduled_job_run`.
 - Job lấy danh sách theo `user_id`; mỗi người dùng được xử lý trong một transaction riêng với thứ
   tự khóa account trước, lot sau. Sau mỗi người dùng, job ghi checkpoint và heartbeat.
-- Instance khác chỉ tiếp quản khi heartbeat cũ hơn `GAMIFICATION_JOB_LEASE_SECONDS`; job đã
+- Instance khác chỉ tiếp quản khi heartbeat cũ hơn `jobLeaseSeconds`; job đã
   `SUCCEEDED` không được chạy lại.
 - Khi account không đủ bao phủ các lot hết hạn, transaction dừng và phát
   `GAMIFY-ALERT-001`; không tự sửa projection hoặc cho số dư âm.
 
 ### Kỳ xếp hạng và snapshot tháng
 
-- Vòng duy trì chạy theo `GAMIFICATION_SEASON_RESUME_DELAY_MS` (mặc định 30 giây), tạo lười kỳ
+- Vòng duy trì chạy theo `seasonResumeDelayMs` (mặc định 30 giây), tạo lười kỳ
   `REGULAR` hiện tại và tự claim kỳ cũ đã qua cutoff. Vì vậy ứng dụng khởi động lại sau khi lỡ cron
   đầu tháng vẫn tự phục hồi.
-- Biên tháng được tính ở Java với `Clock` và `GAMIFICATION_ZONE_ID`, rồi lưu `zone_id`, `start_at`,
+- Biên tháng được tính ở Java với `Clock` và `zoneId` của revision, rồi lưu `zone_id`, `start_at`,
   `end_at`, `vote_cutoff_at`; SQL nghiệp vụ không dùng `NOW()` hoặc `CURDATE()`.
 - State machine: `OPEN → CLOSING → REVIEW → FINALIZED → REWARDED`. Sau khi claim CLOSING, hệ
-  thống chờ `GAMIFICATION_SEASON_DRAIN_SECONDS` để transaction vote đang chạy kết thúc.
+  thống chờ `seasonCloseDrainSeconds` để transaction vote đang chạy kết thúc.
 - Snapshot luôn tổng hợp từ `monthly_ticket_vote`, không lấy `monthly_rank_counter`. Thứ tự là
   `total_tickets DESC`, `distinct_voter_count DESC`, `last_vote_at ASC`, `book_id ASC`.
 - Mỗi batch entry và checkpoint được commit trong cùng transaction `REQUIRES_NEW`. Job lỗi giữ
@@ -175,19 +205,40 @@ theo mã.
 bật sau shadow mode và phê duyệt vận hành; không thao tác trực tiếp bằng SQL để thay thế service.
 Kiểm tra trực quan đầy đủ trên bốn theme được thực hiện cùng cổng M7.
 
-## Shadow mode
+## Cutover `ENV → DB_SHADOW → DB`
 
-*Chưa triển khai — điền ở mốc M9.*
+1. Giữ `GAMIFICATION_CONFIG_SOURCE=ENV`, mở **Cấu hình Gamification** và chọn **Import ENV**.
+   `source_hash` làm thao tác import idempotent.
+2. Rà soát diff, submit, dùng tài khoản thứ hai phê duyệt rồi schedule revision. Không bật feature
+   mới trong revision cutover đầu tiên.
+3. Chuyển một instance sang `DB_SHADOW`. Hành vi vẫn theo ENV; metric
+   `gamification_config_shadow_diff_keys` phải về 0. Giá trị `-1` nghĩa là không đọc/validate được
+   snapshot DB: instance vẫn phục vụ bằng ENV nhưng cutover phải dừng cho đến khi metric refresh
+   failure ngừng tăng và phép so sánh trở lại 0.
+4. Theo dõi revision, tuổi snapshot, refresh/activation/scheduler error ít nhất một chu kỳ vận hành.
+5. Chuyển một front instance sang `DB`, chạy regression đọc/ghi, sau đó chuyển front/admin/crawl còn
+   lại. `max(gamification_config_revision)-min(gamification_config_revision)` phải bằng 0.
+6. Khi ổn định, xóa 38 biến runtime cũ khỏi file deploy; vẫn giữ sáu bootstrap control và salt file.
+
+Nếu DB snapshot lỗi hoặc stale, chuyển source về `ENV` và restart. Không sửa trực tiếp bảng config.
+Riêng `DB_SHADOW`, lỗi DB không được làm mất snapshot ENV; nguồn `DB` vẫn fail-closed nếu chưa từng
+có last-known-good và khóa đường ghi khi snapshot quá stale.
 
 Nguyên tắc: bật `season.enabled` và `vote.enabled`, giữ `reward.enabled` tắt, chạy trọn một kỳ, rồi so sánh snapshot xếp hạng với một truy vấn SQL nguồn **viết độc lập** — không tái sử dụng mapper của ứng dụng. Nếu tái dùng mapper thì một lỗi trong mapper sẽ tự xác nhận chính nó.
 
 ## Migration
 
-Toàn bộ schema nằm trong một migration duy nhất: `doc/sql/20260729_gamification_monthly_ticket.sql`.
+Schema nền gamification bắt đầu tại `doc/sql/20260729_gamification_monthly_ticket.sql`; các lần mở
+rộng kỳ đặc biệt, level reward, risk/public policy và runtime config tiếp tục bằng migration tăng dần.
+`doc/sql/20260818_gamification_runtime_config.sql` tạo snapshot/audit DB, policy bundle version hóa,
+trigger bất biến, backfill `policy_version`, `runtime_config_revision` và `release_eligible_at`.
+`doc/sql/20260819_gamification_dynamic_config_p1_hardening.sql` khóa state transition, giữ public policy
+theo đúng phiên bản runtime, ngăn chuyển dữ liệu vào policy đã phát hành và giới hạn throughput cấu hình.
 
-Migration này phải được khai báo ở **hai chỗ** trong `compose.yaml`: vòng lặp `for migration in ...` của service `migrate`, và danh sách `volumes`. Thiếu một trong hai là lỗi thầm lặng — container khởi động bình thường nhưng bảng không được tạo.
-
-Migration chạy lại được an toàn nhờ `CREATE TABLE IF NOT EXISTS` và bảng `platform_migration_history` cho các bước chỉ được chạy một lần.
+Image `novel-migrations` đóng gói hai migration này thành `V2026081801__gamification_runtime_config.sql`
+và `V2026081901__gamification_dynamic_config_p1_hardening.sql`. Compose chạy Flyway migrate rồi validate trước khi
+front/admin/crawl được khởi động; không còn shell loop hoặc volume mount SQL rời. Không sửa checksum
+migration đã phát hành và không UPDATE/DELETE audit để rollback.
 
 ### Nghiệm thu MySQL và concurrency
 
@@ -210,9 +261,9 @@ nhánh chính với credential MySQL tạm thời. Release không được coi l
 
 ## Xử lý event và tiến độ nhiệm vụ
 
-`GamificationEventDrainSchedule` chỉ chạy khi đồng thời bật `event.enabled`, `quest.enabled` và
-cấu hình vượt qua `GamificationProperties.isConfigured()`. Mỗi lượt lấy tối đa
-`event.drain-batch-size` event `PENDING` có `attempt < event.max-attempt`, theo thứ tự `id` tăng dần.
+`GamificationEventDrainSchedule` chỉ chạy khi ACTIVE revision đồng thời bật `eventEnabled`,
+`questEnabled` và đã qua `GamificationConfigValidator`. Mỗi lượt lấy tối đa
+`eventDrainBatchSize` event `PENDING` có `attempt < eventMaxAttempt`, theo thứ tự `id` tăng dần.
 
 Mỗi event được xử lý trong transaction `REQUIRES_NEW`:
 
@@ -234,7 +285,7 @@ worker chạy lại trả `NOT_OWNER`, và event không có quest tương ứng 
 ### Danh sách và nhận thưởng nhiệm vụ
 
 - `GET /user/gamification/quests` dùng danh tính từ JWT/cookie. Không truyền ngày thì server lấy
-  ngày theo `GAMIFICATION_ZONE_ID`; tham số `date` chỉ dùng để xem tiến độ, không dùng để claim.
+  ngày theo `zoneId` của revision; tham số `date` chỉ dùng để xem tiến độ, không dùng để claim.
 - `POST /user/gamification/quests/{questCode}/claim` luôn claim chu kỳ hiện tại theo một snapshot
   `Instant` duy nhất. Client không được gửi `userId`, ngày, reward hoặc idempotency key.
 - Service khóa `user_quest_progress ... FOR UPDATE`, xác minh đủ `target_count`, rồi ghi EXP ledger,
@@ -276,7 +327,7 @@ sửa `user_exp_ledger` và `quest_claim`.
 
 - `POST /user/gamification/check-in` không nhận body hoặc `userId`; danh tính luôn lấy từ phiên đăng
   nhập. Endpoint chỉ hoạt động khi đồng thời bật `event.enabled` và `quest.enabled`.
-- Service chụp đúng một `Instant`, tính ngày theo `GAMIFICATION_ZONE_ID`, khóa profile rồi cập nhật
+- Service chụp đúng một `Instant`, tính ngày theo `zoneId` của revision, khóa profile rồi cập nhật
   `last_checkin_date`, streak hiện tại, longest streak và version trong transaction nguồn.
 - Lần đầu bắt đầu streak 1; ngày kế tiếp tăng một; bỏ ngày thì reset về 1. Cùng ngày trả
   `alreadyCheckedIn=true`; ngày cũ hơn lịch sử bị từ chối. Phiên bản v1 không bù ngày.

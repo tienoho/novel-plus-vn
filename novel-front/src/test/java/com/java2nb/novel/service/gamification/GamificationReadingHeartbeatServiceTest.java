@@ -1,9 +1,9 @@
 package com.java2nb.novel.service.gamification;
 
-import com.java2nb.novel.core.config.GamificationProperties;
 import com.java2nb.novel.mapper.GamificationProgressMapper;
 import com.java2nb.novel.service.impl.GamificationEventFailureWriter;
 import com.java2nb.novel.service.impl.GamificationEventProcessor;
+import com.java2nb.novel.service.gamification.config.GamificationConfigSnapshot;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -33,7 +33,7 @@ class GamificationReadingHeartbeatServiceTest {
     private GamificationProgressMapper mapper;
     private GamificationEventProcessor processor;
     private GamificationEventFailureWriter failureWriter;
-    private GamificationProperties properties;
+    private GamificationConfigSnapshot config;
     private Clock clock;
     private GamificationReadingHeartbeatService service;
 
@@ -43,11 +43,11 @@ class GamificationReadingHeartbeatServiceTest {
         mapper = mock(GamificationProgressMapper.class);
         processor = mock(GamificationEventProcessor.class);
         failureWriter = mock(GamificationEventFailureWriter.class);
-        properties = new GamificationProperties();
+        config = GamificationConfigSnapshot.bootstrapDisabled();
         clock = mock(Clock.class);
         when(clock.instant()).thenReturn(NOW, NOW.plusSeconds(1));
         service = new GamificationReadingHeartbeatService(
-            writer, mapper, processor, failureWriter, properties, clock);
+            writer, mapper, processor, failureWriter, clock);
     }
 
     @Test
@@ -61,7 +61,7 @@ class GamificationReadingHeartbeatServiceTest {
         when(mapper.selectEventBySourceKey(SOURCE_KEY)).thenReturn(event);
         when(processor.process(51L, HEARTBEAT_AT, 10)).thenReturn(EventProcessResult.PROCESSED);
 
-        ReadingHeartbeatResult result = service.record(11L, input);
+        ReadingHeartbeatResult result = service.record(11L, input, config);
 
         assertThat(result).isSameAs(written);
         verify(clock, times(1)).instant();
@@ -81,7 +81,7 @@ class GamificationReadingHeartbeatServiceTest {
         IllegalStateException failure = new IllegalStateException("quest failed");
         when(processor.process(51L, HEARTBEAT_AT, 10)).thenThrow(failure);
 
-        assertThatThrownBy(() -> service.record(11L, input)).isSameAs(failure);
+        assertThatThrownBy(() -> service.record(11L, input, config)).isSameAs(failure);
 
         verify(failureWriter).record(51L, HEARTBEAT_AT, failure, 10);
     }
@@ -93,7 +93,7 @@ class GamificationReadingHeartbeatServiceTest {
             60, 1, false, 2, false, List.of(SOURCE_KEY)));
         when(mapper.selectEventBySourceKey(SOURCE_KEY)).thenReturn(null);
 
-        assertThatThrownBy(() -> service.record(11L, input))
+        assertThatThrownBy(() -> service.record(11L, input, config))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("event phút đọc");
 
@@ -110,7 +110,7 @@ class GamificationReadingHeartbeatServiceTest {
         when(mapper.selectEventBySourceKey(SOURCE_KEY)).thenReturn(event(51L));
         when(processor.process(51L, HEARTBEAT_AT, 10)).thenReturn(EventProcessResult.SKIPPED);
 
-        assertThatThrownBy(() -> service.record(11L, input))
+        assertThatThrownBy(() -> service.record(11L, input, config))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("nhiệm vụ đọc");
     }
@@ -123,7 +123,8 @@ class GamificationReadingHeartbeatServiceTest {
     private ReadingHeartbeatCommand command(ReadingHeartbeatInput input) {
         return new ReadingHeartbeatCommand(11L, input.sessionId(), input.bookId(),
             input.bookIndexId(), input.sequence(), input.activeSeconds(), HEARTBEAT_AT,
-            LocalDate.of(2026, 7, 30), properties.resolveZoneId(), 60, 180, "v1");
+            LocalDate.of(2026, 7, 30), java.time.ZoneId.of(config.getZoneId()), 60, 180, "v1",
+            config.getRuntimeRevision());
     }
 
     private GamificationEventRow event(long id) {

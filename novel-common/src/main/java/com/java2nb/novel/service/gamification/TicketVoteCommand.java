@@ -12,8 +12,10 @@ public record TicketVoteCommand(
     String clientRequestId,
     String sourceIpHash,
     String sourceDeviceHash,
+    String sourceHashKeyId,
     Date occurredAt,
-    LocalDate localDate
+    LocalDate localDate,
+    long runtimeConfigRevision
 ) {
 
     public TicketVoteCommand {
@@ -29,10 +31,16 @@ public record TicketVoteCommand(
         if (sourceDeviceHash == null || !sourceDeviceHash.matches("[0-9a-f]{64}")) {
             throw new IllegalArgumentException("Hash thiết bị thắp đuốc không hợp lệ");
         }
+        if (sourceHashKeyId == null || sourceHashKeyId.isBlank() || sourceHashKeyId.length() > 64) {
+            throw new IllegalArgumentException("Mã khóa băm định danh không hợp lệ");
+        }
         if (occurredAt == null || localDate == null) {
             throw new IllegalArgumentException("Thiếu thời điểm nghiệp vụ khi thắp đuốc");
         }
         occurredAt = new Date(occurredAt.getTime());
+        if (runtimeConfigRevision <= 0) {
+            throw new IllegalArgumentException("Revision cấu hình gamification không hợp lệ");
+        }
     }
 
     @Override

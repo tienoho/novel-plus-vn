@@ -15,6 +15,7 @@ $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $e2eRoot = Join-Path $repoRoot "e2e"
 $authDir = Join-Path $e2eRoot ".auth"
+$adminSessionDir = Join-Path $authDir "admin-sessions"
 $secretDir = Join-Path ([System.IO.Path]::GetTempPath()) "$ProjectName-secrets"
 $resolvedTemp = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath())
 $resolvedSecret = [System.IO.Path]::GetFullPath($secretDir)
@@ -108,6 +109,63 @@ function Invoke-Npm([string[]]$Arguments) {
     }
 }
 
+function Resolve-Maven {
+    if (-not [string]::IsNullOrWhiteSpace($env:MAVEN_CMD)) {
+        return $env:MAVEN_CMD
+    }
+    $command = Get-Command "mvn.cmd" -ErrorAction SilentlyContinue
+    if ($null -ne $command) {
+        return $command.Source
+    }
+    throw "Không tìm thấy Maven để tạo session fixture Admin E2E; hãy đặt MAVEN_CMD."
+}
+
+function Initialize-AdminSessions {
+    $maven = Resolve-Maven
+    New-Item -ItemType Directory -Force -Path $adminSessionDir | Out-Null
+    & $maven -q -pl novel-admin -am `
+        "-Dtest=AdminE2eSessionFixtureTest" `
+        "-Dsurefire.failIfNoSpecifiedTests=false" `
+        "-Dadmin.e2e.session.fixture=true" `
+        "-Dadmin.e2e.session.outputDir=$adminSessionDir" test
+    if ($LASTEXITCODE -ne 0) {
+        throw "Không thể tạo Shiro session fixture cho Admin E2E."
+    }
+
+    $sessionIds = @{}
+    Get-Content -LiteralPath (Join-Path $adminSessionDir "sessions.properties") | ForEach-Object {
+        $parts = $_ -split "=", 2
+        if ($parts.Count -eq 2) {
+            $sessionIds[$parts[0]] = $parts[1]
+        }
+    }
+    if ([string]::IsNullOrWhiteSpace($sessionIds.maker) `
+        -or [string]::IsNullOrWhiteSpace($sessionIds.checker)) {
+        throw "Session fixture Admin E2E không trả đủ maker/checker."
+    }
+
+    $redisContainer = "$ProjectName-redis-1"
+    $redisPassword = [System.IO.File]::ReadAllText(
+        (Join-Path $secretDir "redis_password")
+    ).Trim()
+    foreach ($actor in @("maker", "checker")) {
+        $containerFile = "/tmp/$actor.session"
+        & docker cp (Join-Path $adminSessionDir "$actor.session") "${redisContainer}:$containerFile"
+        if ($LASTEXITCODE -ne 0) {
+            throw "Không thể copy session $actor vào Redis E2E."
+        }
+        $redisKey = "shiro_redis_session:$($sessionIds[$actor])"
+        & docker exec -e "REDISCLI_AUTH=$redisPassword" $redisContainer sh -ec `
+            'redis-cli -x SET "$1" < "$2" >/dev/null && redis-cli EXPIRE "$1" 1800 >/dev/null' `
+            sh $redisKey $containerFile
+        if ($LASTEXITCODE -ne 0) {
+            throw "Không thể nạp session $actor vào Redis E2E."
+        }
+    }
+    $env:E2E_ADMIN_MAKER_SESSION = $sessionIds.maker
+    $env:E2E_ADMIN_CHECKER_SESSION = $sessionIds.checker
+}
+
 $secretNames = @(
     "mysql_root_password",
     "mysql_app_password",
@@ -115,6 +173,7 @@ $secretNames = @(
     "jwt_secret",
     "cache_manager_password",
     "pii_encryption_key",
+    "gamification_vote_ip_hash_salt",
     "admin_bootstrap_password",
     "crawler_admin_password",
     "backup_encryption_password",
@@ -131,11 +190,11 @@ $managedEnvironment = @(
     "SECRETS_DIR", "MYSQL_HOST_PORT", "CADDY_HTTP_PORT", "CADDY_HTTPS_PORT",
     "NOVEL_DOMAIN", "NOVEL_ADMIN_DOMAIN", "NOVEL_CRAWL_DOMAIN", "NOVEL_GRAFANA_DOMAIN",
     "ALERTMANAGER_ALLOW_HTTP", "CADDY_RATE_LIMIT_REQUESTS", "CADDY_WRITE_RATE_LIMIT_REQUESTS",
-    "NOVEL_THEME", "CRAWLER_ADMIN_USERNAME",
-    "GAMIFICATION_POLICY_VERSION", "GAMIFICATION_TICKET_ENABLED", "GAMIFICATION_VOTE_ENABLED",
-    "GAMIFICATION_SEASON_ENABLED", "GAMIFICATION_VOTE_IP_HASH_SALT", "READING_TICKET_ENABLED",
+    "NOVEL_THEME", "CRAWLER_ADMIN_USERNAME", "GAMIFICATION_CONFIG_SOURCE",
+    "GAMIFICATION_VOTE_IP_HASH_KEY_ID", "READING_TICKET_ENABLED",
     "PLAYWRIGHT_BASE_URL", "PLAYWRIGHT_ADMIN_URL", "PLAYWRIGHT_CRAWL_URL",
-    "E2E_CRAWLER_USERNAME", "E2E_CRAWLER_PASSWORD", "E2E_THEME"
+    "E2E_CRAWLER_USERNAME", "E2E_CRAWLER_PASSWORD", "E2E_ADMIN_MAKER_SESSION",
+    "E2E_ADMIN_CHECKER_SESSION", "E2E_THEME"
 )
 $previousEnvironment = @{}
 foreach ($name in $managedEnvironment) {
@@ -179,11 +238,8 @@ $env:ALERTMANAGER_ALLOW_HTTP = "true"
 $env:CADDY_RATE_LIMIT_REQUESTS = "10000"
 $env:CADDY_WRITE_RATE_LIMIT_REQUESTS = "2000"
 $env:CRAWLER_ADMIN_USERNAME = "admin"
-$env:GAMIFICATION_POLICY_VERSION = "v1"
-$env:GAMIFICATION_TICKET_ENABLED = "true"
-$env:GAMIFICATION_VOTE_ENABLED = "true"
-$env:GAMIFICATION_SEASON_ENABLED = "true"
-$env:GAMIFICATION_VOTE_IP_HASH_SALT = "e2e-vote-hash-salt-2026-at-least-32-characters"
+$env:GAMIFICATION_CONFIG_SOURCE = "DB"
+$env:GAMIFICATION_VOTE_IP_HASH_KEY_ID = "v1"
 $env:READING_TICKET_ENABLED = "true"
 $env:PLAYWRIGHT_BASE_URL = "https://localhost:$CaddyHttpsHostPort"
 $env:PLAYWRIGHT_ADMIN_URL = "https://admin.localhost:$CaddyHttpsHostPort"
@@ -231,11 +287,12 @@ try {
     if (-not $SkipImageBuild) {
         $applicationArguments += "--build"
     }
-    $applicationArguments += @("front", "crawl", "admin", "alertmanager", "prometheus", "grafana", "caddy")
+    $applicationArguments += @("front", "crawl", "admin", "caddy")
     Invoke-Compose $applicationArguments
-    foreach ($service in @("front", "crawl", "admin", "alertmanager", "prometheus", "grafana", "caddy")) {
+    foreach ($service in @("front", "crawl", "admin", "caddy")) {
         Wait-ServiceHealthy $service
     }
+    Initialize-AdminSessions
 
     foreach ($theme in $Themes) {
         $env:NOVEL_THEME = $theme

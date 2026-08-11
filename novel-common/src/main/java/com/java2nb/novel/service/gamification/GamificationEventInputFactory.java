@@ -15,14 +15,16 @@ public final class GamificationEventInputFactory {
 
     public static GamificationEventInput create(String eventType, String sourceKey, long userId,
                                                  Long bookId, Date occurredAt, String payloadJson,
-                                                 ZoneId zoneId, String policyVersion) {
+                                                 ZoneId zoneId, String policyVersion,
+                                                 long runtimeConfigRevision) {
         Date eventTime = new Date(occurredAt.getTime());
         LocalDate localDate = Instant.ofEpochMilli(eventTime.getTime()).atZone(zoneId).toLocalDate();
         String canonical = eventType + '|' + sourceKey + '|' + userId + '|'
             + (bookId == null ? "" : bookId) + '|' + localDate + '|'
-            + (payloadJson == null ? "" : payloadJson) + '|' + policyVersion;
+            + (payloadJson == null ? "" : payloadJson) + '|' + policyVersion + '|'
+            + runtimeConfigRevision;
         return new GamificationEventInput(eventType, sourceKey, userId, bookId, eventTime, localDate,
-            sha256(canonical), payloadJson, policyVersion);
+            sha256(canonical), payloadJson, policyVersion, runtimeConfigRevision);
     }
 
     private static String sha256(String value) {

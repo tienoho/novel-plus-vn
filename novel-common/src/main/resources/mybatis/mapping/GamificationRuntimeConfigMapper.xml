@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.java2nb.novel.mapper.GamificationRuntimeConfigMapper">
+    <sql id="columns">
+        id, revision_no AS revisionNo, revision_code AS revisionCode,
+        source_revision_id AS sourceRevisionId, source_hash AS sourceHash, status,
+        activation_class AS activationClass, high_risk AS highRisk,
+        policy_version AS policyVersion, zone_id AS zoneId,
+        event_enabled AS eventEnabled, event_drain_batch_size AS eventDrainBatchSize,
+        event_drain_delay_ms AS eventDrainDelayMs, event_max_attempt AS eventMaxAttempt,
+        ticket_enabled AS ticketEnabled, ticket_lot_validity_days AS ticketLotValidityDays,
+        ticket_expiry_cron AS ticketExpiryCron,
+        ticket_expiry_batch_size AS ticketExpiryBatchSize,
+        ticket_max_grant_per_batch AS ticketMaxGrantPerBatch,
+        vote_enabled AS voteEnabled, vote_allow_crawled_books AS voteAllowCrawledBooks,
+        vote_ip_hash_key_id AS voteIpHashKeyId,
+        vote_max_tickets_per_request AS voteMaxTicketsPerRequest,
+        vote_max_votes_per_day AS voteMaxVotesPerDay,
+        vote_max_tickets_per_day AS voteMaxTicketsPerDay,
+        vote_max_tickets_per_book_season AS voteMaxTicketsPerBookPerSeason,
+        vote_max_lots_per_spend AS voteMaxLotsPerSpend,
+        quest_enabled AS questEnabled,
+        quest_heartbeat_interval_seconds AS questHeartbeatIntervalSeconds,
+        quest_heartbeat_max_minutes_day AS questHeartbeatMaxMinutesPerDay,
+        realm_enabled AS realmEnabled, realm_change_cooldown_hours AS realmChangeCooldownHours,
+        season_enabled AS seasonEnabled, season_close_cron AS seasonCloseCron,
+        season_close_drain_seconds AS seasonCloseDrainSeconds,
+        season_resume_delay_ms AS seasonResumeDelayMs,
+        season_review_window_hours AS seasonReviewWindowHours,
+        reward_enabled AS rewardEnabled, reward_claim_window_days AS rewardClaimWindowDays,
+        reward_release_cron AS rewardReleaseCron, job_lease_seconds AS jobLeaseSeconds,
+        job_batch_size AS jobBatchSize, config_hash AS configHash, created_by AS createdBy,
+        submitted_by AS submittedBy, approved_by AS approvedBy, scheduled_by AS scheduledBy,
+        activated_by AS activatedBy, change_reason AS changeReason,
+        submitted_at AS submittedAt, approved_at AS approvedAt, effective_at AS effectiveAt,
+        activated_at AS activatedAt, archived_at AS archivedAt, version,
+        create_time AS createTime, update_time AS updateTime
+    </sql>
+
+    <select id="selectActive"
+            resultType="com.java2nb.novel.service.gamification.config.GamificationRuntimeConfigRow">
+        SELECT <include refid="columns"/>
+        FROM gamification_runtime_config WHERE status = 'ACTIVE' LIMIT 1
+    </select>
+
+    <select id="selectById"
+            resultType="com.java2nb.novel.service.gamification.config.GamificationRuntimeConfigRow">
+        SELECT <include refid="columns"/>
+        FROM gamification_runtime_config WHERE id = #{id} LIMIT 1
+    </select>
+
+    <select id="lockById"
+            resultType="com.java2nb.novel.service.gamification.config.GamificationRuntimeConfigRow">
+        SELECT <include refid="columns"/>
+        FROM gamification_runtime_config WHERE id = #{id} FOR UPDATE
+    </select>
+
+    <select id="selectBySourceHash"
+            resultType="com.java2nb.novel.service.gamification.config.GamificationRuntimeConfigRow">
+        SELECT <include refid="columns"/>
+        FROM gamification_runtime_config WHERE source_hash = #{sourceHash} LIMIT 1
+    </select>
+
+    <select id="lockDueScheduled"
+            resultType="com.java2nb.novel.service.gamification.config.GamificationRuntimeConfigRow">
+        SELECT <include refid="columns"/>
+        FROM gamification_runtime_config
+        WHERE status = 'SCHEDULED' AND effective_at &lt;= #{now}
+        ORDER BY effective_at, id LIMIT 1 FOR UPDATE SKIP LOCKED
+    </select>
+
+    <select id="selectHistory"
+            resultType="com.java2nb.novel.service.gamification.config.GamificationRuntimeConfigRow">
+        SELECT <include refid="columns"/>
+        FROM gamification_runtime_config ORDER BY revision_no DESC LIMIT #{limit}
+    </select>
+
+    <select id="selectNextRevisionNo" resultType="long">
+        SELECT COALESCE(MAX(revision_no), 0) + 1 FROM gamification_runtime_config
+    </select>
+
+    <select id="isPolicyPublished" resultType="boolean">
+        SELECT COUNT(*) &gt; 0 FROM gamification_policy_bundle
+        WHERE policy_version = #{policyVersion} AND status = 'PUBLISHED'
+    </select>
+
+    <select id="selectActiveReadingQuestTarget" resultType="integer">
+        SELECT MAX(target_count) FROM quest_definition
+        WHERE policy_version = #{policyVersion} AND active = 1
+          AND event_type = 'READING_MINUTE_VERIFIED'
+    </select>
+
+    <select id="hasPublishedPublicPolicy" resultType="boolean">
+        SELECT COUNT(*) &gt; 0 FROM gamification_public_policy
+        WHERE policy_version = #{policyVersion} AND status = 'PUBLISHED'
+    </select>
+
+    <select id="hasApprovedRewardCampaign" resultType="boolean">
+        SELECT COUNT(*) &gt; 0 FROM reward_fund_campaign
+        WHERE policy_version = #{policyVersion} AND status = 'APPROVED' AND enabled = 1
+          AND budget_xu &gt; 0 AND structure_json IS NOT NULL
+    </select>
+
+    <select id="selectLatestOpenSeasonEnd" resultType="java.util.Date">
+        SELECT MAX(end_at) FROM monthly_ticket_season WHERE status = 'OPEN'
+    </select>
+
+    <insert id="insertDraft" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO gamification_runtime_config
+        (revision_no, revision_code, source_revision_id, source_hash, status,
+         activation_class, high_risk, policy_version, zone_id,
+         event_enabled, event_drain_batch_size, event_drain_delay_ms, event_max_attempt,
+         ticket_enabled, ticket_lot_validity_days, ticket_expiry_cron,
+         ticket_expiry_batch_size, ticket_max_grant_per_batch,
+         vote_enabled, vote_allow_crawled_books, vote_ip_hash_key_id,
+         vote_max_tickets_per_request, vote_max_votes_per_day, vote_max_tickets_per_day,
+         vote_max_tickets_per_book_season, vote_max_lots_per_spend,
+         quest_enabled, quest_heartbeat_interval_seconds, quest_heartbeat_max_minutes_day,
+         realm_enabled, realm_change_cooldown_hours, season_enabled, season_close_cron,
+         season_close_drain_seconds, season_resume_delay_ms, season_review_window_hours,
+         reward_enabled, reward_claim_window_days, reward_release_cron,
+         job_lease_seconds, job_batch_size, config_hash, created_by, change_reason, version)
+        VALUES
+        (#{revisionNo}, #{revisionCode}, #{sourceRevisionId}, #{sourceHash}, 'DRAFT',
+         'IMMEDIATE', 0, #{policyVersion}, #{zoneId},
+         #{eventEnabled}, #{eventDrainBatchSize}, #{eventDrainDelayMs}, #{eventMaxAttempt},
+         #{ticketEnabled}, #{ticketLotValidityDays}, #{ticketExpiryCron},
+         #{ticketExpiryBatchSize}, #{ticketMaxGrantPerBatch},
+         #{voteEnabled}, #{voteAllowCrawledBooks}, #{voteIpHashKeyId},
+         #{voteMaxTicketsPerRequest}, #{voteMaxVotesPerDay}, #{voteMaxTicketsPerDay},
+         #{voteMaxTicketsPerBookPerSeason}, #{voteMaxLotsPerSpend},
+         #{questEnabled}, #{questHeartbeatIntervalSeconds}, #{questHeartbeatMaxMinutesPerDay},
+         #{realmEnabled}, #{realmChangeCooldownHours}, #{seasonEnabled}, #{seasonCloseCron},
+         #{seasonCloseDrainSeconds}, #{seasonResumeDelayMs}, #{seasonReviewWindowHours},
+         #{rewardEnabled}, #{rewardClaimWindowDays}, #{rewardReleaseCron},
+         #{jobLeaseSeconds}, #{jobBatchSize}, #{configHash}, #{createdBy}, #{changeReason}, 0)
+    </insert>
+
+    <update id="saveDraft">
+        UPDATE gamification_runtime_config
+        SET policy_version = #{row.policyVersion}, zone_id = #{row.zoneId},
+            event_enabled = #{row.eventEnabled},
+            event_drain_batch_size = #{row.eventDrainBatchSize},
+            event_drain_delay_ms = #{row.eventDrainDelayMs},
+            event_max_attempt = #{row.eventMaxAttempt},
+            ticket_enabled = #{row.ticketEnabled},
+            ticket_lot_validity_days = #{row.ticketLotValidityDays},
+            ticket_expiry_cron = #{row.ticketExpiryCron},
+            ticket_expiry_batch_size = #{row.ticketExpiryBatchSize},
+            ticket_max_grant_per_batch = #{row.ticketMaxGrantPerBatch},
+            vote_enabled = #{row.voteEnabled},
+            vote_allow_crawled_books = #{row.voteAllowCrawledBooks},
+            vote_ip_hash_key_id = #{row.voteIpHashKeyId},
+            vote_max_tickets_per_request = #{row.voteMaxTicketsPerRequest},
+            vote_max_votes_per_day = #{row.voteMaxVotesPerDay},
+            vote_max_tickets_per_day = #{row.voteMaxTicketsPerDay},
+            vote_max_tickets_per_book_season = #{row.voteMaxTicketsPerBookPerSeason},
+            vote_max_lots_per_spend = #{row.voteMaxLotsPerSpend},
+            quest_enabled = #{row.questEnabled},
+            quest_heartbeat_interval_seconds = #{row.questHeartbeatIntervalSeconds},
+            quest_heartbeat_max_minutes_day = #{row.questHeartbeatMaxMinutesPerDay},
+            realm_enabled = #{row.realmEnabled},
+            realm_change_cooldown_hours = #{row.realmChangeCooldownHours},
+            season_enabled = #{row.seasonEnabled}, season_close_cron = #{row.seasonCloseCron},
+            season_close_drain_seconds = #{row.seasonCloseDrainSeconds},
+            season_resume_delay_ms = #{row.seasonResumeDelayMs},
+            season_review_window_hours = #{row.seasonReviewWindowHours},
+            reward_enabled = #{row.rewardEnabled},
+            reward_claim_window_days = #{row.rewardClaimWindowDays},
+            reward_release_cron = #{row.rewardReleaseCron},
+            job_lease_seconds = #{row.jobLeaseSeconds}, job_batch_size = #{row.jobBatchSize},
+            config_hash = #{row.configHash}, change_reason = #{row.changeReason},
+            version = version + 1
+        WHERE id = #{row.id} AND status = 'DRAFT' AND version = #{expectedVersion}
+    </update>
+
+    <update id="submit">
+        UPDATE gamification_runtime_config
+        SET status = 'PENDING_APPROVAL', activation_class = #{activationClass},
+            high_risk = #{highRisk}, submitted_by = #{operatorId}, submitted_at = #{submittedAt},
+            change_reason = #{reason}, version = version + 1
+        WHERE id = #{id} AND status = 'DRAFT' AND version = #{expectedVersion}
+    </update>
+
+    <update id="approve">
+        UPDATE gamification_runtime_config
+        SET status = 'APPROVED', approved_by = #{operatorId}, approved_at = #{approvedAt},
+            version = version + 1
+        WHERE id = #{id} AND status = 'PENDING_APPROVAL' AND version = #{expectedVersion}
+    </update>
+
+    <update id="reject">
+        UPDATE gamification_runtime_config
+        SET status = 'REJECTED', change_reason = #{reason}, version = version + 1
+        WHERE id = #{id} AND status = 'PENDING_APPROVAL' AND version = #{expectedVersion}
+    </update>
+
+    <update id="schedule">
+        UPDATE gamification_runtime_config
+        SET status = 'SCHEDULED', scheduled_by = #{operatorId}, effective_at = #{effectiveAt},
+            change_reason = #{reason}, version = version + 1
+        WHERE id = #{id} AND status = 'APPROVED' AND version = #{expectedVersion}
+    </update>
+
+    <update id="cancel">
+        UPDATE gamification_runtime_config
+        SET status = 'CANCELLED', change_reason = #{reason}, version = version + 1
+        WHERE id = #{id} AND status = 'SCHEDULED' AND version = #{expectedVersion}
+    </update>
+
+    <update id="archiveActive">
+        UPDATE gamification_runtime_config
+        SET status = 'ARCHIVED', archived_at = #{archivedAt}, version = version + 1
+        WHERE id = #{id} AND status = 'ACTIVE' AND version = #{expectedVersion}
+    </update>
+
+    <update id="activateScheduled">
+        UPDATE gamification_runtime_config
+        SET status = 'ACTIVE', activated_by = #{operatorId}, activated_at = #{activatedAt},
+            version = version + 1
+        WHERE id = #{id} AND status = 'SCHEDULED' AND version = #{expectedVersion}
+    </update>
+
+    <insert id="insertAudit">
+        INSERT INTO gamification_runtime_config_audit
+        (config_id, event_type, from_status, to_status, operator_id, reason,
+         before_hash, after_hash, diff_json)
+        VALUES (#{configId}, #{eventType}, #{fromStatus}, #{toStatus}, #{operatorId}, #{reason},
+                #{beforeHash}, #{afterHash}, #{diffJson})
+    </insert>
+</mapper>

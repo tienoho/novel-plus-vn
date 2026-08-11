@@ -4,6 +4,7 @@ import lombok.Data;
 
 @Data
 public class QuestDefinitionRow {
+    private String policyVersion;
     private String questCode;
     private String eventType;
     private String periodType;

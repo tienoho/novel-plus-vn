@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:include="include :: header"></head>
+<body class="gray-bg">
+<main class="wrapper wrapper-content" id="gamificationSettingsApp">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="ibox">
+                <div class="ibox-title">
+                    <h5 th:text="#{admin.gamification.settings.title}">Cấu hình Gamification</h5>
+                    <div class="ibox-tools">
+                        <a href="/novel/gamification/policy-studio" class="btn btn-primary btn-xs"
+                           shiro:hasPermission="novel:gamification:policy:view"
+                           th:text="#{admin.gamification.policyStudio.title}">Bộ policy Gamification</a>
+                        <a href="/novel/gamification" class="btn btn-default btn-xs"
+                           th:text="#{admin.gamification.settings.back}">Quay lại vận hành</a>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <div class="row" aria-live="polite">
+                        <div class="col-sm-3"><strong th:text="#{admin.gamification.settings.revision}">Revision</strong><p id="activeRevision">—</p></div>
+                        <div class="col-sm-3"><strong th:text="#{admin.gamification.settings.source}">Nguồn</strong><p id="activeSource">—</p></div>
+                        <div class="col-sm-3"><strong th:text="#{admin.gamification.settings.secret}">Secret hash IP</strong><p id="secretStatus">—</p></div>
+                        <div class="col-sm-3"><strong th:text="#{admin.gamification.settings.effective}">Hiệu lực</strong><p id="activeEffective">—</p></div>
+                    </div>
+                    <div class="btn-group" shiro:hasPermission="novel:gamification:settings:edit">
+                        <button id="cloneActiveButton" class="btn btn-primary" type="button"
+                                th:text="#{admin.gamification.settings.clone}">Tạo draft từ ACTIVE</button>
+                        <button id="importEnvButton" class="btn btn-warning" type="button"
+                                th:text="#{admin.gamification.settings.importEnv}">Import ENV</button>
+                    </div>
+                    <p id="settingsNotice" class="help-block" role="status"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="ibox">
+                <div class="ibox-title"><h5 th:text="#{admin.gamification.settings.editor}">Runtime settings</h5></div>
+                <div class="ibox-content">
+                    <div class="row" aria-live="polite">
+                        <div class="col-sm-3"><strong th:text="#{admin.gamification.settings.selectedRevision}">Revision đang xem</strong><p id="selectedRevision">—</p></div>
+                        <div class="col-sm-2"><strong th:text="#{admin.gamification.settings.status}">Trạng thái</strong><p id="selectedStatus">—</p></div>
+                        <div class="col-sm-2"><strong th:text="#{admin.gamification.settings.createdBy}">Người tạo</strong><p id="selectedCreatedBy">—</p></div>
+                        <div class="col-sm-2"><strong th:text="#{admin.gamification.settings.approvedBy}">Người duyệt</strong><p id="selectedApprovedBy">—</p></div>
+                        <div class="col-sm-3"><strong th:text="#{admin.gamification.settings.selectedEffective}">Hiệu lực dự kiến</strong><p id="selectedEffective">—</p></div>
+                    </div>
+                    <form id="settingsForm">
+                        <div id="settingsGroups" class="row"></div>
+                        <div class="form-group">
+                            <label for="changeReason" th:text="#{admin.gamification.settings.reason}">Lý do thay đổi</label>
+                            <textarea id="changeReason" class="form-control" minlength="10" maxlength="500" required></textarea>
+                        </div>
+                        <button id="saveDraftButton" type="submit" class="btn btn-primary"
+                                shiro:hasPermission="novel:gamification:settings:edit"
+                                th:text="#{admin.gamification.settings.save}">Lưu draft</button>
+                        <button id="submitButton" type="button" class="btn btn-success"
+                                shiro:hasPermission="novel:gamification:settings:edit"
+                                th:text="#{admin.gamification.settings.submit}">Gửi duyệt</button>
+                        <button id="approveButton" type="button" class="btn btn-info"
+                                shiro:hasPermission="novel:gamification:settings:approve"
+                                th:text="#{admin.gamification.settings.approve}">Phê duyệt</button>
+                        <button id="rejectButton" type="button" class="btn btn-danger"
+                                shiro:hasPermission="novel:gamification:settings:approve"
+                                th:text="#{admin.gamification.settings.reject}">Từ chối</button>
+                        <button id="scheduleButton" type="button" class="btn btn-warning"
+                                shiro:hasPermission="novel:gamification:settings:activate"
+                                th:text="#{admin.gamification.settings.schedule}">Hẹn kích hoạt</button>
+                        <button id="cancelButton" type="button" class="btn btn-danger"
+                                shiro:hasPermission="novel:gamification:settings:activate"
+                                th:text="#{admin.gamification.settings.cancel}">Hủy lịch kích hoạt</button>
+                        <button id="rollbackButton" type="button" class="btn btn-default"
+                                shiro:hasPermission="novel:gamification:settings:activate"
+                                th:text="#{admin.gamification.settings.rollback}">Tạo draft rollback</button>
+                    </form>
+                    <hr>
+                    <h5 th:text="#{admin.gamification.settings.lockedFlags}">Cờ khóa theo policy v1</h5>
+                    <div class="row">
+                        <label class="col-sm-6"><input type="checkbox" disabled> TICKET_GRANT_ON_TOPUP</label>
+                        <label class="col-sm-6"><input type="checkbox" disabled> QUEST_REPLY_ENABLED</label>
+                        <label class="col-sm-6"><input type="checkbox" disabled> REALM_AFFECTS_BENEFITS</label>
+                        <label class="col-sm-6"><input type="checkbox" disabled> SEASON_AUTO_FINALIZE</label>
+                    </div>
+                    <p class="help-block" th:text="#{admin.gamification.settings.lockedHelp}">
+                        Các cờ này không có hành vi production trong policy v1 và luôn bị khóa false.
+                    </p>
+                    <p class="help-block" th:text="#{admin.gamification.settings.voteRelation}">
+                        Giới hạn ngày và mỗi truyện không được thấp hơn giới hạn mỗi yêu cầu.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="ibox">
+                <div class="ibox-title"><h5 th:text="#{admin.gamification.settings.diff}">Diff và mức hiệu lực</h5></div>
+                <div class="ibox-content">
+                    <p><strong id="activationClass">—</strong></p>
+                    <p id="earliestEffective" class="help-block"></p>
+                    <div class="table-responsive">
+                        <table class="table table-condensed">
+                            <thead><tr>
+                                <th th:text="#{admin.gamification.settings.diffField}">Trường</th>
+                                <th th:text="#{admin.gamification.settings.diffBefore}">Đang áp dụng</th>
+                                <th th:text="#{admin.gamification.settings.diffAfter}">Đề xuất</th>
+                            </tr></thead>
+                            <tbody id="diffKeys"></tbody>
+                        </table>
+                    </div>
+                    <h5 th:text="#{admin.gamification.settings.cronPreview}">Năm lần chạy tiếp theo</h5>
+                    <select id="cronSelector" class="form-control">
+                        <option value="ticketExpiryCron">ticketExpiryCron</option>
+                        <option value="seasonCloseCron">seasonCloseCron</option>
+                        <option value="rewardReleaseCron">rewardReleaseCron</option>
+                    </select>
+                    <ol id="cronPreview"></ol>
+                </div>
+            </div>
+            <div class="ibox">
+                <div class="ibox-title"><h5 th:text="#{admin.gamification.settings.approvalQueue}">Hàng đợi phê duyệt</h5></div>
+                <div class="ibox-content table-responsive">
+                    <table class="table table-striped table-condensed">
+                        <thead><tr>
+                            <th th:text="#{admin.gamification.settings.revision}">Revision</th>
+                            <th th:text="#{admin.gamification.settings.createdBy}">Người tạo</th>
+                            <th th:text="#{admin.gamification.settings.risk}">Mức rủi ro</th>
+                            <th></th>
+                        </tr></thead>
+                        <tbody id="approvalQueue"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="ibox">
+                <div class="ibox-title"><h5 th:text="#{admin.gamification.settings.history}">Lịch sử revision</h5></div>
+                <div class="ibox-content">
+                    <table class="table table-striped table-condensed">
+                        <thead><tr><th th:text="#{admin.gamification.settings.revision}">Revision</th><th th:text="#{admin.gamification.settings.status}">Trạng thái</th><th></th></tr></thead>
+                        <tbody id="revisionHistory"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div th:include="include :: footer"></div>
+<script th:inline="javascript" th:attr="nonce=${cspNonce}">
+window.GamificationSettingsI18n = {
+    requestFailed: /*[[#{admin.gamification.settings.requestFailed}]]*/ 'Không thể thực hiện yêu cầu',
+    success: /*[[#{admin.gamification.settings.success}]]*/ 'Thao tác thành công',
+    reasonPrompt: /*[[#{admin.gamification.settings.reasonPrompt}]]*/ 'Nhập lý do (10–500 ký tự)',
+    schedulePrompt: /*[[#{admin.gamification.settings.schedulePrompt}]]*/ 'Nhập thời điểm kích hoạt theo ISO, ví dụ 2026-08-11T00:00',
+    ready: /*[[#{admin.gamification.settings.ready}]]*/ 'Sẵn sàng',
+    notReady: /*[[#{admin.gamification.settings.notReady}]]*/ 'Chưa sẵn sàng',
+    view: /*[[#{admin.gamification.settings.view}]]*/ 'Xem',
+    highRisk: /*[[#{admin.gamification.settings.highRisk}]]*/ 'Rủi ro cao',
+    normalRisk: /*[[#{admin.gamification.settings.normalRisk}]]*/ 'Điều chỉnh thông thường',
+    makerWarning: /*[[#{admin.gamification.settings.makerWarning}]]*/ 'Người tạo không được tự phê duyệt',
+    range: /*[[#{admin.gamification.settings.range}]]*/ 'Khoảng hợp lệ: {min}–{max}',
+    earliest: /*[[#{admin.gamification.settings.earliest}]]*/ 'Sớm nhất: {time}',
+    scheduleTooEarly: /*[[#{admin.gamification.settings.scheduleTooEarly}]]*/ 'Thời điểm đã chọn sớm hơn ranh giới hiệu lực',
+    emptyQueue: /*[[#{admin.gamification.settings.emptyQueue}]]*/ 'Không có revision chờ duyệt',
+    enabled: /*[[#{admin.gamification.settings.enabled}]]*/ 'Bật',
+    disabled: /*[[#{admin.gamification.settings.disabled}]]*/ 'Tắt',
+    currentUserId: /*[[${currentUserId}]]*/ null,
+    statuses: {
+        DRAFT: /*[[#{admin.gamification.status.DRAFT}]]*/ 'Bản nháp',
+        PENDING_APPROVAL: /*[[#{admin.gamification.status.PENDING_APPROVAL}]]*/ 'Chờ phê duyệt',
+        APPROVED: /*[[#{admin.gamification.status.APPROVED}]]*/ 'Đã phê duyệt',
+        SCHEDULED: /*[[#{admin.gamification.status.SCHEDULED}]]*/ 'Đã hẹn kích hoạt',
+        ACTIVE: /*[[#{admin.gamification.status.ACTIVE}]]*/ 'Đang áp dụng',
+        ARCHIVED: /*[[#{admin.gamification.status.ARCHIVED}]]*/ 'Đã lưu trữ',
+        REJECTED: /*[[#{admin.gamification.status.REJECTED}]]*/ 'Đã từ chối',
+        CANCELLED: /*[[#{admin.gamification.status.CANCELLED}]]*/ 'Đã hủy'
+    },
+    activationClasses: {
+        IMMEDIATE: /*[[#{admin.gamification.activation.IMMEDIATE}]]*/ 'Áp dụng ngay',
+        NEXT_DAY: /*[[#{admin.gamification.activation.NEXT_DAY}]]*/ 'Áp dụng từ ngày kế tiếp',
+        NEXT_SEASON: /*[[#{admin.gamification.activation.NEXT_SEASON}]]*/ 'Áp dụng từ kỳ kế tiếp'
+    },
+    fields: {
+        policyVersion: /*[[#{admin.gamification.settings.field.policyVersion}]]*/ 'Phiên bản policy',
+        zoneId: /*[[#{admin.gamification.settings.field.zoneId}]]*/ 'Múi giờ nghiệp vụ',
+        eventEnabled: /*[[#{admin.gamification.settings.field.eventEnabled}]]*/ 'Bật thu nhận sự kiện',
+        eventDrainBatchSize: /*[[#{admin.gamification.settings.field.eventDrainBatchSize}]]*/ 'Số event mỗi lượt',
+        eventDrainDelayMs: /*[[#{admin.gamification.settings.field.eventDrainDelayMs}]]*/ 'Khoảng nghỉ drain event',
+        eventMaxAttempt: /*[[#{admin.gamification.settings.field.eventMaxAttempt}]]*/ 'Số lần thử event tối đa',
+        ticketEnabled: /*[[#{admin.gamification.settings.field.ticketEnabled}]]*/ 'Bật Ngọn Đuốc',
+        ticketLotValidityDays: /*[[#{admin.gamification.settings.field.ticketLotValidityDays}]]*/ 'Thời hạn lot Đuốc',
+        ticketExpiryCron: /*[[#{admin.gamification.settings.field.ticketExpiryCron}]]*/ 'Lịch hết hạn Đuốc',
+        ticketExpiryBatchSize: /*[[#{admin.gamification.settings.field.ticketExpiryBatchSize}]]*/ 'Số lot hết hạn mỗi lượt',
+        ticketMaxGrantPerBatch: /*[[#{admin.gamification.settings.field.ticketMaxGrantPerBatch}]]*/ 'Đuốc cấp tối đa mỗi batch',
+        voteEnabled: /*[[#{admin.gamification.settings.field.voteEnabled}]]*/ 'Bật bỏ phiếu',
+        voteAllowCrawledBooks: /*[[#{admin.gamification.settings.field.voteAllowCrawledBooks}]]*/ 'Cho phép truyện crawler',
+        voteIpHashKeyId: /*[[#{admin.gamification.settings.field.voteIpHashKeyId}]]*/ 'Mã khóa băm định danh',
+        voteMaxTicketsPerRequest: /*[[#{admin.gamification.settings.field.voteMaxTicketsPerRequest}]]*/ 'Đuốc tối đa mỗi yêu cầu',
+        voteMaxVotesPerDay: /*[[#{admin.gamification.settings.field.voteMaxVotesPerDay}]]*/ 'Lượt vote tối đa mỗi ngày',
+        voteMaxTicketsPerDay: /*[[#{admin.gamification.settings.field.voteMaxTicketsPerDay}]]*/ 'Đuốc tối đa mỗi ngày',
+        voteMaxTicketsPerBookPerSeason: /*[[#{admin.gamification.settings.field.voteMaxTicketsPerBookPerSeason}]]*/ 'Đuốc tối đa mỗi truyện/kỳ',
+        voteMaxLotsPerSpend: /*[[#{admin.gamification.settings.field.voteMaxLotsPerSpend}]]*/ 'Lot tối đa mỗi lần tiêu',
+        questEnabled: /*[[#{admin.gamification.settings.field.questEnabled}]]*/ 'Bật nhiệm vụ',
+        questHeartbeatIntervalSeconds: /*[[#{admin.gamification.settings.field.questHeartbeatIntervalSeconds}]]*/ 'Chu kỳ heartbeat đọc',
+        questHeartbeatMaxMinutesPerDay: /*[[#{admin.gamification.settings.field.questHeartbeatMaxMinutesPerDay}]]*/ 'Phút đọc tối đa mỗi ngày',
+        realmEnabled: /*[[#{admin.gamification.settings.field.realmEnabled}]]*/ 'Bật cảnh giới',
+        realmChangeCooldownHours: /*[[#{admin.gamification.settings.field.realmChangeCooldownHours}]]*/ 'Thời gian chờ đổi cảnh giới',
+        seasonEnabled: /*[[#{admin.gamification.settings.field.seasonEnabled}]]*/ 'Bật kỳ xếp hạng',
+        seasonCloseCron: /*[[#{admin.gamification.settings.field.seasonCloseCron}]]*/ 'Lịch đóng kỳ',
+        seasonCloseDrainSeconds: /*[[#{admin.gamification.settings.field.seasonCloseDrainSeconds}]]*/ 'Thời gian drain khi đóng kỳ',
+        seasonResumeDelayMs: /*[[#{admin.gamification.settings.field.seasonResumeDelayMs}]]*/ 'Khoảng nghỉ tiếp tục snapshot',
+        seasonReviewWindowHours: /*[[#{admin.gamification.settings.field.seasonReviewWindowHours}]]*/ 'Cửa sổ rà soát kỳ',
+        rewardEnabled: /*[[#{admin.gamification.settings.field.rewardEnabled}]]*/ 'Bật quỹ thưởng',
+        rewardClaimWindowDays: /*[[#{admin.gamification.settings.field.rewardClaimWindowDays}]]*/ 'Thời gian chờ nhận thưởng',
+        rewardReleaseCron: /*[[#{admin.gamification.settings.field.rewardReleaseCron}]]*/ 'Lịch giải phóng thưởng',
+        jobLeaseSeconds: /*[[#{admin.gamification.settings.field.jobLeaseSeconds}]]*/ 'Thời hạn lease worker',
+        jobBatchSize: /*[[#{admin.gamification.settings.field.jobBatchSize}]]*/ 'Kích thước batch worker'
+    },
+    units: {
+        count: /*[[#{admin.gamification.settings.unit.count}]]*/ 'Giá trị nguyên dương',
+        milliseconds: /*[[#{admin.gamification.settings.unit.milliseconds}]]*/ 'Đơn vị: mili giây',
+        seconds: /*[[#{admin.gamification.settings.unit.seconds}]]*/ 'Đơn vị: giây',
+        minutes: /*[[#{admin.gamification.settings.unit.minutes}]]*/ 'Đơn vị: phút',
+        hours: /*[[#{admin.gamification.settings.unit.hours}]]*/ 'Đơn vị: giờ',
+        days: /*[[#{admin.gamification.settings.unit.days}]]*/ 'Đơn vị: ngày',
+        cron: /*[[#{admin.gamification.settings.unit.cron}]]*/ 'Biểu thức Spring cron',
+        zone: /*[[#{admin.gamification.settings.unit.zone}]]*/ 'Mã múi giờ IANA',
+        keyId: /*[[#{admin.gamification.settings.unit.keyId}]]*/ 'Chỉ lưu mã khóa'
+    },
+    groups: {
+        common: /*[[#{admin.gamification.settings.group.common}]]*/ 'Chung',
+        event: /*[[#{admin.gamification.settings.group.event}]]*/ 'Event',
+        ticket: /*[[#{admin.gamification.settings.group.ticket}]]*/ 'Ngọn Đuốc',
+        vote: /*[[#{admin.gamification.settings.group.vote}]]*/ 'Bỏ phiếu',
+        quest: /*[[#{admin.gamification.settings.group.quest}]]*/ 'Nhiệm vụ',
+        realm: /*[[#{admin.gamification.settings.group.realm}]]*/ 'Cảnh giới',
+        season: /*[[#{admin.gamification.settings.group.season}]]*/ 'Kỳ xếp hạng',
+        reward: /*[[#{admin.gamification.settings.group.reward}]]*/ 'Quỹ thưởng',
+        worker: /*[[#{admin.gamification.settings.group.worker}]]*/ 'Worker'
+    }
+};
+window.GamificationSettingsPermissions = {edit:false, approve:false, activate:false};
+</script>
+<script shiro:hasPermission="novel:gamification:settings:edit" th:attr="nonce=${cspNonce}">window.GamificationSettingsPermissions.edit=true;</script>
+<script shiro:hasPermission="novel:gamification:settings:approve" th:attr="nonce=${cspNonce}">window.GamificationSettingsPermissions.approve=true;</script>
+<script shiro:hasPermission="novel:gamification:settings:activate" th:attr="nonce=${cspNonce}">window.GamificationSettingsPermissions.activate=true;</script>
+<script src="/js/appjs/novel/gamification/settings.js"></script>
+</body>
+</html>

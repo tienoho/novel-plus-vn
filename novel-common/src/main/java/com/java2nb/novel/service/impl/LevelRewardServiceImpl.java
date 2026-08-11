@@ -55,7 +55,8 @@ public class LevelRewardServiceImpl implements LevelRewardService {
             policy.getTicketValidityDays(), ChronoUnit.DAYS));
         monthlyTicketService.grant(new TicketGrantCommand(event.getUserId(),
             policy.getTicketAmount(), "LEVEL_UP", "LEVEL:" + level, idempotencyKey,
-            effectiveAt, expireAt, "SYSTEM", null, null, event.getPolicyVersion()));
+            effectiveAt, expireAt, "SYSTEM", null, null, event.getPolicyVersion(),
+            event.getRuntimeConfigRevision()));
         TicketLedgerRow ledger = monthlyTicketMapper.selectLedgerByIdempotencyKey(idempotencyKey);
         if (ledger == null) {
             throw new IllegalStateException("Không đọc được bút toán Đuốc thưởng level");
@@ -74,7 +75,9 @@ public class LevelRewardServiceImpl implements LevelRewardService {
     private int validateAndReadLevel(GamificationEventRow event) {
         if (event.getId() == null || event.getId() <= 0 || event.getUserId() == null
             || event.getUserId() <= 0 || event.getOccurredAt() == null
-            || event.getPolicyVersion() == null || event.getPolicyVersion().isBlank()) {
+            || event.getPolicyVersion() == null || event.getPolicyVersion().isBlank()
+            || event.getRuntimeConfigRevision() == null
+            || event.getRuntimeConfigRevision() <= 0) {
             throw new IllegalStateException("Event level-up thiếu dữ liệu bắt buộc");
         }
         Matcher matcher = LEVEL_PAYLOAD.matcher(Objects.toString(event.getPayloadJson(), ""));

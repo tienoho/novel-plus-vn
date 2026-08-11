@@ -17,7 +17,8 @@ const IGNORED_DIRECTORIES = new Set([
     "node_modules",
     "playwright-report",
     "target",
-    "test-results"
+    "test-results",
+    "tmp"
 ]);
 
 const wholeFileAllowRules = [

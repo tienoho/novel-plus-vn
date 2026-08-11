@@ -13,6 +13,7 @@ public class RewardCampaignRow {
     private Long budgetXu;
     private String structureJson;
     private String policyVersion;
+    private Long runtimeConfigRevision;
     private Long approvedBy;
     private Date approvedAt;
     private Long version;

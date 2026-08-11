@@ -17,5 +17,7 @@ public class TicketLotRow {
     private Date effectiveAt;
     private Date expireAt;
     private String status;
+    private String policyVersion;
+    private Long runtimeConfigRevision;
     private Long version;
 }

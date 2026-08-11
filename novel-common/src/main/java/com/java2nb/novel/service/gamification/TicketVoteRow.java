@@ -18,6 +18,9 @@ public class TicketVoteRow {
     private String clientRequestId;
     private String sourceIpHash;
     private String sourceDeviceHash;
+    private String sourceHashKeyId;
+    private String policyVersion;
+    private Long runtimeConfigRevision;
     private String status;
     private Date createTime;
 }

@@ -87,9 +87,10 @@
     <insert id="insertLot">
         INSERT INTO monthly_ticket_lot
             (user_id, source_type, source_ref, granted_amount, remaining_amount, grant_ledger_id,
-             effective_at, expire_at, status, policy_version)
+             effective_at, expire_at, status, policy_version, runtime_config_revision)
         VALUES (#{userId}, #{sourceType}, #{sourceRef}, #{grantedAmount}, #{grantedAmount},
-                #{grantLedgerId}, #{effectiveAt}, #{expireAt}, 'ACTIVE', #{policyVersion})
+                #{grantLedgerId}, #{effectiveAt}, #{expireAt}, 'ACTIVE', #{policyVersion},
+                #{runtimeConfigRevision})
     </insert>
 
     <update id="creditAccount">
@@ -113,6 +114,8 @@
                effective_at     AS effectiveAt,
                expire_at        AS expireAt,
                status,
+               policy_version AS policyVersion,
+               runtime_config_revision AS runtimeConfigRevision,
                version
         FROM monthly_ticket_lot
         WHERE user_id = #{userId}
@@ -161,6 +164,8 @@
                effective_at     AS effectiveAt,
                expire_at        AS expireAt,
                status,
+               policy_version AS policyVersion,
+               runtime_config_revision AS runtimeConfigRevision,
                version
         FROM monthly_ticket_lot
         WHERE user_id = #{userId}
@@ -257,6 +262,9 @@
         client_request_id AS clientRequestId,
         source_ip_hash AS sourceIpHash,
         source_device_hash AS sourceDeviceHash,
+        source_hash_key_id AS sourceHashKeyId,
+        policy_version AS policyVersion,
+        runtime_config_revision AS runtimeConfigRevision,
         status,
         create_time      AS createTime
     </sql>
@@ -319,6 +327,8 @@
                effective_at     AS effectiveAt,
                expire_at        AS expireAt,
                status,
+               policy_version AS policyVersion,
+               runtime_config_revision AS runtimeConfigRevision,
                version
         FROM monthly_ticket_lot
         WHERE user_id = #{userId}
@@ -366,10 +376,12 @@
         INSERT INTO monthly_ticket_vote
             (season_id, book_id, author_id, user_id, ticket_count, ledger_id,
              idempotency_key, request_hash, client_request_id, status,
-             source_ip_hash, source_device_hash, policy_version)
+             source_ip_hash, source_device_hash, source_hash_key_id, policy_version,
+             runtime_config_revision)
         VALUES (#{seasonId}, #{bookId}, #{authorId}, #{userId}, #{ticketCount}, #{ledgerId},
                 #{idempotencyKey}, #{requestHash}, #{clientRequestId}, 'VALID',
-                #{sourceIpHash}, #{sourceDeviceHash}, #{policyVersion})
+                #{sourceIpHash}, #{sourceDeviceHash}, #{sourceHashKeyId}, #{policyVersion},
+                #{runtimeConfigRevision})
     </insert>
 
     <insert id="insertRankVoterIgnore">
@@ -549,11 +561,12 @@
                a.allocation_no,
                a.author_id,
                a.amount_xu,
-               a.posted_at
+               a.posted_at,
+               a.release_eligible_at
         FROM author_reward_allocation a
         WHERE a.status = 'POSTED_PENDING'
-          AND (a.posted_at IS NULL
-            OR a.posted_at &lt; #{claimCutoff})
+          AND (a.release_eligible_at IS NULL
+            OR a.release_eligible_at &lt;= #{releaseAt})
     </select>
 
     <!--

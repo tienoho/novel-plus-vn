@@ -1,11 +1,11 @@
 package com.java2nb.novel.core.schedule;
 
-import com.java2nb.novel.core.config.GamificationProperties;
 import com.java2nb.novel.service.gamification.MonthlyRankingService;
 import com.java2nb.novel.service.gamification.MonthlySeasonRow;
+import com.java2nb.novel.service.gamification.config.GamificationConfigProvider;
+import com.java2nb.novel.service.gamification.config.GamificationConfigSnapshot;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.Clock;
@@ -19,33 +19,30 @@ public class MonthlyTicketSeasonSchedule {
 
     private static final int SEASON_SCAN_LIMIT = 100;
 
-    private final GamificationProperties properties;
+    private final GamificationConfigProvider configProvider;
     private final MonthlyRankingService monthlyRankingService;
     private final Clock clock;
     private final String ownerInstance;
 
     @Autowired
-    public MonthlyTicketSeasonSchedule(GamificationProperties properties,
+    public MonthlyTicketSeasonSchedule(GamificationConfigProvider configProvider,
                                        MonthlyRankingService monthlyRankingService) {
-        this(properties, monthlyRankingService, Clock.systemUTC(),
+        this(configProvider, monthlyRankingService, Clock.systemUTC(),
             "season-" + UUID.randomUUID());
     }
 
-    MonthlyTicketSeasonSchedule(GamificationProperties properties,
+    MonthlyTicketSeasonSchedule(GamificationConfigProvider configProvider,
                                 MonthlyRankingService monthlyRankingService,
                                 Clock clock, String ownerInstance) {
-        this.properties = properties;
+        this.configProvider = configProvider;
         this.monthlyRankingService = monthlyRankingService;
         this.clock = clock;
         this.ownerInstance = ownerInstance;
     }
 
-    @Scheduled(
-        cron = "${novel.gamification.season.close-cron:0 5 0 1 * ?}",
-        zone = "${novel.gamification.zone-id:Asia/Ho_Chi_Minh}"
-    )
     public void closeDueSeasons() {
-        if (!isEnabled()) {
+        GamificationConfigSnapshot config = configProvider.currentForWrite();
+        if (!config.isSeasonEnabled()) {
             return;
         }
         Date now = Date.from(clock.instant());
@@ -64,24 +61,21 @@ public class MonthlyTicketSeasonSchedule {
         }
     }
 
-    @Scheduled(
-        fixedDelayString = "${novel.gamification.season.resume-delay-ms:30000}",
-        initialDelayString = "${novel.gamification.season.resume-delay-ms:30000}"
-    )
     public void maintainAndResume() {
-        if (!isEnabled()) {
+        GamificationConfigSnapshot config = configProvider.currentForWrite();
+        if (!config.isSeasonEnabled()) {
             return;
         }
         Date now = Date.from(clock.instant());
         monthlyRankingService.ensureRegularSeason(
-            now, properties.resolveZoneId(), properties.getPolicyVersion());
+            now, java.time.ZoneId.of(config.getZoneId()), config.getPolicyVersion(),
+            config.getRuntimeRevision());
         claimDueSeasons(now);
         for (MonthlySeasonRow season : monthlyRankingService.listClosingSeasons(SEASON_SCAN_LIMIT)) {
             try {
                 monthlyRankingService.buildSnapshot(season.getId(), ownerInstance, now,
-                    properties.getSeason().getCloseDrainSeconds(),
-                    properties.getJob().getLeaseSeconds(),
-                    properties.getJob().getBatchSize());
+                    config.getSeasonCloseDrainSeconds(), config.getJobLeaseSeconds(),
+                    config.getJobBatchSize());
             } catch (RuntimeException exception) {
                 log.error("GAMIFY-ALERT-005 snapshot kỳ Ngọn Đuốc thất bại: seasonId={}",
                     season.getId(), exception);
@@ -89,7 +83,4 @@ public class MonthlyTicketSeasonSchedule {
         }
     }
 
-    private boolean isEnabled() {
-        return properties.getSeason().isEnabled() && properties.isConfigured();
-    }
 }

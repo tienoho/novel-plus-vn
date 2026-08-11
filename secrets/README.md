@@ -8,6 +8,7 @@ Tạo tám tệp không có phần mở rộng trong thư mục này trước kh
 - `jwt_secret`
 - `cache_manager_password`
 - `pii_encryption_key`
+- `gamification_vote_ip_hash_salt`: salt riêng tối thiểu 32 ký tự, khớp với `GAMIFICATION_VOTE_IP_HASH_KEY_ID`; không dùng chung JWT, Redis hoặc database.
 - `admin_bootstrap_password`
 - `crawler_admin_password`
 - `backup_encryption_password`

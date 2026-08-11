@@ -47,6 +47,7 @@ class LevelRewardServiceImplTest {
         event.setLocalDate(LocalDate.of(2026, 8, 1));
         event.setPayloadJson("{\"level\":3}");
         event.setPolicyVersion("reward-v2");
+        event.setRuntimeConfigRevision(7L);
 
         policy = new LevelRewardPolicyRow();
         policy.setPolicyVersion("reward-v2");
@@ -85,6 +86,7 @@ class LevelRewardServiceImplTest {
         assertThat(command.getValue().sourceType()).isEqualTo("LEVEL_UP");
         assertThat(command.getValue().amount()).isEqualTo(2L);
         assertThat(command.getValue().idempotencyKey()).isEqualTo("LEVEL_UP:11:3:reward-v2");
+        assertThat(command.getValue().runtimeConfigRevision()).isEqualTo(7L);
         assertThat(command.getValue().expireAt()).isEqualTo(
             Date.from(Instant.parse("2026-09-30T00:00:00Z")));
     }
@@ -111,5 +113,15 @@ class LevelRewardServiceImplTest {
         assertThatThrownBy(() -> service.apply(event))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("không khớp");
+    }
+
+    @Test
+    void rejectsEventWithoutRuntimeRevisionBeforePostingReward() {
+        event.setRuntimeConfigRevision(null);
+
+        assertThatThrownBy(() -> service.apply(event))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("thiếu dữ liệu bắt buộc");
+        verify(monthlyTicketService, never()).grant(org.mockito.ArgumentMatchers.any());
     }
 }

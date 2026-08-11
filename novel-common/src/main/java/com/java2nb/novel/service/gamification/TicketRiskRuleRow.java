@@ -4,6 +4,7 @@ import lombok.Data;
 
 @Data
 public class TicketRiskRuleRow {
+    private String policyVersion;
     private String ruleCode;
     private String metricName;
     private Long thresholdValue;

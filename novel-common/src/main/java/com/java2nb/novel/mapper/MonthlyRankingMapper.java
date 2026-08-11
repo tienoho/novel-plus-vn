@@ -20,7 +20,8 @@ public interface MonthlyRankingMapper {
                                   @Param("startAt") Date startAt,
                                   @Param("endAt") Date endAt,
                                   @Param("voteCutoffAt") Date voteCutoffAt,
-                                  @Param("policyVersion") String policyVersion);
+                                  @Param("policyVersion") String policyVersion,
+                                  @Param("runtimeConfigRevision") long runtimeConfigRevision);
 
     int insertSpecialSeasonIgnore(@Param("periodCode") String periodCode,
                                   @Param("seasonType") String seasonType,
@@ -28,7 +29,8 @@ public interface MonthlyRankingMapper {
                                   @Param("startAt") Date startAt,
                                   @Param("endAt") Date endAt,
                                   @Param("voteCutoffAt") Date voteCutoffAt,
-                                  @Param("policyVersion") String policyVersion);
+                                  @Param("policyVersion") String policyVersion,
+                                  @Param("runtimeConfigRevision") long runtimeConfigRevision);
 
     MonthlySeasonRow selectSeasonByPeriod(@Param("periodCode") String periodCode);
 

@@ -23,7 +23,8 @@ public interface AuthorRewardMapper {
     int insertCampaign(@Param("periodCode") String periodCode,
                        @Param("budgetXu") long budgetXu,
                        @Param("structureJson") String structureJson,
-                       @Param("policyVersion") String policyVersion);
+                       @Param("policyVersion") String policyVersion,
+                       @Param("runtimeConfigRevision") long runtimeConfigRevision);
 
     RewardCampaignRow selectCampaignByPeriod(@Param("periodCode") String periodCode);
 
@@ -50,9 +51,10 @@ public interface AuthorRewardMapper {
 
     int markPostedPending(@Param("allocationId") long allocationId,
                           @Param("expectedVersion") long expectedVersion,
-                          @Param("postedAt") Date postedAt);
+                          @Param("postedAt") Date postedAt,
+                          @Param("releaseEligibleAt") Date releaseEligibleAt);
 
-    List<Long> selectMaturedAllocationIds(@Param("postedBefore") Date postedBefore,
+    List<Long> selectMaturedAllocationIds(@Param("releaseAt") Date releaseAt,
                                            @Param("limit") int limit);
 
     int markReleased(@Param("allocationId") long allocationId,

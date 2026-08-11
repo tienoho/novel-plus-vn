@@ -113,6 +113,9 @@ function Initialize-ComposeSecrets {
         jwt_secret = Get-SecretSetting -Name 'JWT_SECRET' -FileName 'jwt_secret'
         cache_manager_password = Get-SecretSetting -Name 'CACHE_MANAGER_PASSWORD' -FileName 'cache_manager_password'
         pii_encryption_key = Get-SecretSetting -Name 'PII_ENCRYPTION_KEY' -FileName 'pii_encryption_key'
+        gamification_vote_ip_hash_salt = Get-SecretSetting -Name 'GAMIFICATION_VOTE_IP_HASH_SALT' `
+            -FileName 'gamification_vote_ip_hash_salt' `
+            -DefaultValue 'integration-gamification-vote-ip-hash-salt-2026'
         admin_bootstrap_password = Get-SecretSetting -Name 'ADMIN_BOOTSTRAP_PASSWORD' -FileName 'admin_bootstrap_password'
         crawler_admin_password = Get-SecretSetting -Name 'CRAWLER_ADMIN_PASSWORD' -FileName 'crawler_admin_password'
         backup_encryption_password = Get-SecretSetting -Name 'BACKUP_ENCRYPTION_PASSWORD' `

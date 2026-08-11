@@ -82,7 +82,8 @@ public class ReadingHeartbeatWriter {
     static String requestHash(ReadingHeartbeatCommand command) {
         return ContentHashUtil.sha256Hex(command.userId() + "|" + command.sessionId() + "|"
             + command.bookId() + "|" + command.bookIndexId() + "|" + command.sequence() + "|"
-            + command.activeSeconds() + "|" + command.policyVersion());
+            + command.activeSeconds() + "|" + command.policyVersion() + "|"
+            + command.runtimeConfigRevision());
     }
 
     private void validate(ReadingHeartbeatCommand command) {
@@ -94,6 +95,7 @@ public class ReadingHeartbeatWriter {
             || command.intervalSeconds() <= 0 || command.maxMinutesPerDay() <= 0
             || command.policyVersion() == null || command.policyVersion().isBlank()
             || command.policyVersion().length() > 32
+            || command.runtimeConfigRevision() <= 0
             || command.activeSeconds() > Math.multiplyExact(command.intervalSeconds(), 2)
             || (command.sequence() == 0 && command.activeSeconds() != 0)
             || !command.heartbeatAt().toInstant().atZone(command.zoneId()).toLocalDate()
@@ -170,6 +172,7 @@ public class ReadingHeartbeatWriter {
         row.setRequestHash(requestHash);
         row.setHeartbeatAt(command.heartbeatAt());
         row.setPolicyVersion(command.policyVersion());
+        row.setRuntimeConfigRevision(command.runtimeConfigRevision());
         return row;
     }
 
@@ -183,7 +186,7 @@ public class ReadingHeartbeatWriter {
             eventRecorder.ingest(GamificationEventInputFactory.create(
                 "READING_MINUTE_VERIFIED", sourceKey, command.userId(), command.bookId(),
                 command.heartbeatAt(), "{\"minuteBucket\":" + minuteBucket + '}',
-                command.zoneId(), command.policyVersion()));
+                command.zoneId(), command.policyVersion(), command.runtimeConfigRevision()));
             sourceKeys.add(sourceKey);
         }
         return sourceKeys;
@@ -195,7 +198,8 @@ public class ReadingHeartbeatWriter {
             || !Objects.equals(receipt.getBookId(), command.bookId())
             || !Objects.equals(receipt.getBookIndexId(), command.bookIndexId())
             || !Objects.equals(receipt.getActiveSeconds(), command.activeSeconds())
-            || !Objects.equals(receipt.getRequestHash(), requestHash)) {
+            || !Objects.equals(receipt.getRequestHash(), requestHash)
+            || !Objects.equals(receipt.getRuntimeConfigRevision(), command.runtimeConfigRevision())) {
             throw new BusinessException(ResponseStatus.GAMIFICATION_IDEMPOTENCY_CONFLICT);
         }
         int firstMinute = receipt.getFirstMinuteBucket() == null ? 0 : receipt.getFirstMinuteBucket();

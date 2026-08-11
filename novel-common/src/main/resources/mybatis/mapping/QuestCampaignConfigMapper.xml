@@ -34,20 +34,24 @@
     </select>
 
     <select id="countQuest" resultType="int">
-        SELECT COUNT(*) FROM quest_definition WHERE quest_code = #{questCode} AND active = 1
+        SELECT COUNT(*) FROM quest_definition
+        WHERE quest_code = #{questCode} AND policy_version = #{policyVersion} AND active = 1
     </select>
 
     <delete id="deleteRewardTypes">
-        DELETE FROM quest_reward WHERE campaign_code = #{campaignCode} AND quest_code = #{questCode}
+        DELETE FROM quest_reward
+        WHERE campaign_code = #{campaignCode} AND quest_code = #{questCode}
+          AND policy_version = #{policyVersion}
     </delete>
 
     <insert id="insertReward">
-        INSERT INTO quest_reward (quest_code, campaign_code, reward_type, amount)
-        VALUES (#{questCode}, #{campaignCode}, #{rewardType}, #{amount})
+        INSERT INTO quest_reward (policy_version, quest_code, campaign_code, reward_type, amount)
+        VALUES (#{policyVersion}, #{questCode}, #{campaignCode}, #{rewardType}, #{amount})
     </insert>
 
     <select id="countRewards" resultType="int">
-        SELECT COUNT(*) FROM quest_reward WHERE campaign_code = #{campaignCode}
+        SELECT COUNT(*) FROM quest_reward
+        WHERE campaign_code = #{campaignCode} AND policy_version = #{policyVersion}
     </select>
 
     <select id="countOverlappingActive" resultType="int">

@@ -1,6 +1,5 @@
 package com.java2nb.novel.service.impl;
 
-import com.java2nb.novel.config.GamificationAdminSettings;
 import com.java2nb.novel.dao.GamificationAdminDao;
 import com.java2nb.novel.service.gamification.MonthlyTicketService;
 import com.java2nb.novel.service.gamification.MonthlyRankingService;
@@ -19,8 +18,8 @@ import com.java2nb.novel.service.gamification.QuestCampaignRow;
 import com.java2nb.novel.service.gamification.QuestRewardCommand;
 import com.java2nb.novel.service.gamification.TicketRiskService;
 import com.java2nb.novel.service.gamification.TicketRiskReviewRow;
-import com.java2nb.novel.service.gamification.GamificationPublicPolicyRow;
-import com.java2nb.novel.service.gamification.GamificationPublicPolicyService;
+import com.java2nb.novel.service.gamification.config.GamificationConfigProvider;
+import com.java2nb.novel.service.gamification.config.GamificationConfigSnapshot;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -49,25 +48,22 @@ class GamificationAdminServiceImplTest {
     private QuestCampaignConfigService questCampaignConfigService;
     private GamificationProgressService progressService;
     private TicketRiskService ticketRiskService;
-    private GamificationPublicPolicyService publicPolicyService;
     private GamificationAdminServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        GamificationAdminSettings settings = new GamificationAdminSettings();
-        settings.getTicket().setEnabled(true);
-        settings.getSeason().setEnabled(true);
-        settings.getReward().setEnabled(true);
+        GamificationConfigProvider configProvider = provider(
+            GamificationConfigSnapshot.bootstrapDisabled().toBuilder()
+                .ticketEnabled(true).seasonEnabled(true).rewardEnabled(true).build());
         monthlyTicketService = mock(MonthlyTicketService.class);
         monthlyRankingService = mock(MonthlyRankingService.class);
         authorRewardService = mock(AuthorRewardService.class);
         questCampaignConfigService = mock(QuestCampaignConfigService.class);
         progressService = mock(GamificationProgressService.class);
         ticketRiskService = mock(TicketRiskService.class);
-        publicPolicyService = mock(GamificationPublicPolicyService.class);
         service = new GamificationAdminServiceImpl(mock(GamificationAdminDao.class),
             monthlyTicketService, monthlyRankingService, authorRewardService,
-            questCampaignConfigService, progressService, ticketRiskService, publicPolicyService, settings,
+            questCampaignConfigService, progressService, ticketRiskService, configProvider,
             Clock.fixed(NOW, ZoneOffset.UTC), "admin-season-test");
     }
 
@@ -156,12 +152,11 @@ class GamificationAdminServiceImplTest {
 
     @Test
     void rewardPostingRespectsKillSwitch() {
-        GamificationAdminSettings disabled = new GamificationAdminSettings();
+        GamificationConfigProvider disabled = provider(GamificationConfigSnapshot.bootstrapDisabled());
         GamificationAdminServiceImpl disabledService = new GamificationAdminServiceImpl(
             mock(GamificationAdminDao.class), monthlyTicketService, monthlyRankingService,
             authorRewardService, questCampaignConfigService, progressService, ticketRiskService,
-            publicPolicyService, disabled,
-            Clock.fixed(NOW, ZoneOffset.UTC), "admin-test");
+            disabled, Clock.fixed(NOW, ZoneOffset.UTC), "admin-test");
 
         assertThatThrownBy(() -> disabledService.postRewardCampaign(501L))
             .isInstanceOf(IllegalStateException.class)
@@ -205,7 +200,8 @@ class GamificationAdminServiceImplTest {
         season.setSeasonType("ANNIVERSARY");
         when(monthlyRankingService.createSpecialSeason(
             org.mockito.ArgumentMatchers.eq("ky-ky-niem-2026"), org.mockito.ArgumentMatchers.eq("ANNIVERSARY"),
-            any(), any(), any(), any(), org.mockito.ArgumentMatchers.eq("v1")))
+            any(), any(), any(), any(), org.mockito.ArgumentMatchers.eq("v1"),
+            org.mockito.ArgumentMatchers.eq(1L)))
             .thenReturn(season);
 
         MonthlySeasonRow result = service.createSpecialSeason("ky-ky-niem-2026", "ANNIVERSARY",
@@ -218,12 +214,11 @@ class GamificationAdminServiceImplTest {
 
     @Test
     void specialSeasonCreationRespectsSeasonKillSwitch() {
-        GamificationAdminSettings disabled = new GamificationAdminSettings();
+        GamificationConfigProvider disabled = provider(GamificationConfigSnapshot.bootstrapDisabled());
         GamificationAdminServiceImpl disabledService = new GamificationAdminServiceImpl(
             mock(GamificationAdminDao.class), monthlyTicketService, monthlyRankingService,
             authorRewardService, questCampaignConfigService, progressService, ticketRiskService,
-            publicPolicyService, disabled,
-            Clock.fixed(NOW, ZoneOffset.UTC), "admin-test");
+            disabled, Clock.fixed(NOW, ZoneOffset.UTC), "admin-test");
 
         assertThatThrownBy(() -> disabledService.createSpecialSeason("ky-ky-niem-2026", "ANNIVERSARY",
             NOW.toEpochMilli(), NOW.plusSeconds(3600).toEpochMilli(),
@@ -257,28 +252,9 @@ class GamificationAdminServiceImplTest {
             "Đã xác minh hoạt động hợp lệ", 9L)).isSameAs(approved);
     }
 
-    @Test
-    void delegatesPublicPolicyCreationWithAuthenticatedAdmin() {
-        GamificationPublicPolicyRow draft = new GamificationPublicPolicyRow();
-        draft.setId(81L);
-        when(publicPolicyService.createDraft("v2", "Luật chơi v2",
-            "Nội dung luật chơi đủ dài để phát hành công khai cho độc giả trên nền tảng.", 9L))
-            .thenReturn(draft);
-
-        assertThat(service.createPublicPolicy("v2", "Luật chơi v2",
-            "Nội dung luật chơi đủ dài để phát hành công khai cho độc giả trên nền tảng.", 9L))
-            .isSameAs(draft);
-    }
-
-    @Test
-    void delegatesPublicPolicyPublishWithServerTimeAndOptimisticVersion() {
-        GamificationPublicPolicyRow published = new GamificationPublicPolicyRow();
-        published.setId(81L);
-        published.setStatus("PUBLISHED");
-        when(publicPolicyService.publish(81L, 3L, 9L, java.util.Date.from(NOW)))
-            .thenReturn(published);
-
-        assertThat(service.publishPublicPolicy(81L, 3L, 9L)).isSameAs(published);
-        verify(publicPolicyService).publish(81L, 3L, 9L, java.util.Date.from(NOW));
+    private GamificationConfigProvider provider(GamificationConfigSnapshot snapshot) {
+        GamificationConfigProvider provider = mock(GamificationConfigProvider.class);
+        when(provider.currentForWrite()).thenReturn(snapshot);
+        return provider;
     }
 }

@@ -24,7 +24,8 @@ public record TicketGrantCommand(
     String operatorType,
     Long operatorId,
     String reason,
-    String policyVersion
+    String policyVersion,
+    long runtimeConfigRevision
 ) {
 
     private static final Set<String> SOURCE_TYPES = Set.of(
@@ -67,6 +68,9 @@ public record TicketGrantCommand(
         }
         if (policyVersion == null || policyVersion.isBlank() || policyVersion.length() > 32) {
             throw new IllegalArgumentException("Thiếu phiên bản chính sách gamification");
+        }
+        if (runtimeConfigRevision <= 0) {
+            throw new IllegalArgumentException("Revision cấu hình gamification không hợp lệ");
         }
     }
 

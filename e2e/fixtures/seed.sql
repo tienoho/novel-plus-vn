@@ -2,6 +2,74 @@
 -- không được copy vào image migration hoặc chạy trên database production.
 SET NAMES utf8mb4;
 
+-- Tài khoản checker chỉ tồn tại trong database Playwright. Phiên đăng nhập được tạo trực tiếp
+-- trong Redis bởi AdminE2eSessionFixtureTest; CAPTCHA production không bị tắt hoặc đi đường vòng.
+INSERT INTO `sys_user`
+    (`user_id`, `username`, `name`, `password`, `must_change_password`, `dept_id`, `status`,
+     `user_id_create`, `gmt_create`, `gmt_modified`)
+SELECT 990102, 'e2e-checker', 'Người duyệt E2E', '!session-fixture-only!', 0, 14, 1,
+       1, NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM `sys_user` WHERE `user_id` = 990102);
+
+INSERT INTO `sys_user_role` (`user_id`, `role_id`)
+SELECT 990102, 1
+WHERE NOT EXISTS (
+    SELECT 1 FROM `sys_user_role` WHERE `user_id` = 990102 AND `role_id` = 1
+);
+
+-- E2E dùng chính provider DB production-like. Revision bootstrap production vẫn fail-closed;
+-- fixture riêng này chỉ bật các luồng Đuốc/vote/season mà Playwright cần kiểm tra.
+UPDATE `gamification_runtime_config`
+SET `status` = 'ARCHIVED', `archived_at` = NOW(3), `version` = `version` + 1
+WHERE `status` = 'ACTIVE' AND `revision_code` <> 'e2e-enabled';
+
+INSERT INTO `gamification_runtime_config`
+    (`revision_no`, `revision_code`, `source_revision_id`, `status`, `activation_class`, `high_risk`,
+     `policy_version`, `zone_id`,
+     `event_enabled`, `event_drain_batch_size`, `event_drain_delay_ms`, `event_max_attempt`,
+     `ticket_enabled`, `ticket_lot_validity_days`, `ticket_expiry_cron`,
+     `ticket_expiry_batch_size`, `ticket_max_grant_per_batch`,
+     `vote_enabled`, `vote_allow_crawled_books`, `vote_ip_hash_key_id`,
+     `vote_max_tickets_per_request`, `vote_max_votes_per_day`, `vote_max_tickets_per_day`,
+     `vote_max_tickets_per_book_season`, `vote_max_lots_per_spend`,
+     `quest_enabled`, `quest_heartbeat_interval_seconds`, `quest_heartbeat_max_minutes_day`,
+     `realm_enabled`, `realm_change_cooldown_hours`,
+     `season_enabled`, `season_close_cron`, `season_close_drain_seconds`,
+     `season_resume_delay_ms`, `season_review_window_hours`,
+     `reward_enabled`, `reward_claim_window_days`, `reward_release_cron`,
+     `job_lease_seconds`, `job_batch_size`, `config_hash`,
+     `created_by`, `submitted_by`, `approved_by`, `activated_by`, `change_reason`,
+     `submitted_at`, `approved_at`, `effective_at`, `activated_at`)
+SELECT
+    9000001, 'e2e-enabled', 1, 'ACTIVE', 'NEXT_SEASON', 1, 'v1', 'Asia/Ho_Chi_Minh',
+    0, 200, 15000, 10,
+    1, 60, '0 20 3 * * ?', 500, 1000,
+    1, 0, 'v1', 10, 20, 50, 100, 50,
+    0, 60, 180, 0, 24,
+    1, '0 5 0 1 * ?', 60, 30000, 72,
+    0, 7, '0 40 3 * * ?', 300, 500,
+    SHA2('novel-plus-e2e-gamification-config-v1', 256),
+    1, 1, 2, 2, 'Revision chỉ dùng cho Playwright E2E',
+    NOW(3), NOW(3), NOW(3), NOW(3)
+WHERE NOT EXISTS (
+    SELECT 1 FROM `gamification_runtime_config` WHERE `revision_code` = 'e2e-enabled'
+);
+
+UPDATE `gamification_runtime_config`
+SET `status` = 'ACTIVE', `archived_at` = NULL, `version` = `version` + 1
+WHERE `revision_code` = 'e2e-enabled' AND `status` <> 'ACTIVE';
+
+INSERT INTO `gamification_runtime_config_audit`
+    (`config_id`, `event_type`, `from_status`, `to_status`, `operator_id`, `reason`, `after_hash`)
+SELECT `id`, 'E2E_ACTIVATED', NULL, 'ACTIVE', 2,
+       'Revision chỉ dùng cho Playwright E2E', `config_hash`
+FROM `gamification_runtime_config` config
+WHERE config.`revision_code` = 'e2e-enabled'
+  AND NOT EXISTS (
+      SELECT 1 FROM `gamification_runtime_config_audit` audit
+      WHERE audit.`config_id` = config.`id` AND audit.`event_type` = 'E2E_ACTIVATED'
+  );
+
 SET @book_id := 990000000000000001;
 SET @author_id := 990000000000000002;
 SET @vote_author_id := 990000000000000003;

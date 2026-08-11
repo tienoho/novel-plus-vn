@@ -47,6 +47,8 @@
 37. Các migration `20260810`–`20260813` hoàn thiện kỳ đặc biệt, level reward, chống lạm dụng và chính sách gamification công khai.
 38. Các migration `20260814`–`20260816` bổ sung thu hồi, quản trị và idempotency mandate VNPAY Recurring.
 39. `20260817_author_payout_four_eyes.sql` lưu riêng người duyệt/người thực hiện, thêm check constraint maker-checker và tách quyền approve/execute. Yêu cầu legacy thiếu actor phase bị fail-closed để đối soát thủ công.
+40. `20260818_gamification_runtime_config.sql` tạo typed runtime snapshot, audit append-only, policy bundle version hóa và trigger bất biến; backfill revision/policy cho lịch sử gamification, chụp `release_eligible_at`, seed `v1-bootstrap` tắt toàn bộ cờ và thêm menu/quyền Policy Studio. Salt hash IP không được lưu trong migration hoặc database.
+41. `20260819_gamification_dynamic_config_p1_hardening.sql` khóa state transition runtime/policy, giữ luật công khai theo từng policy version, ngăn chuyển dữ liệu policy vào phiên bản đã phát hành và siết giới hạn throughput/job batch. Migration phục hồi các luật đã bị archive nhưng chỉ khi policy bundle tương ứng vẫn ở trạng thái `PUBLISHED`.
 
 ## Nâng cấp database đang hoạt động
 

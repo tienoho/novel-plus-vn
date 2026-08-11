@@ -1,9 +1,9 @@
 package com.java2nb.novel.service.gamification;
 
-import com.java2nb.novel.core.config.GamificationProperties;
 import com.java2nb.novel.mapper.GamificationProgressMapper;
 import com.java2nb.novel.service.impl.GamificationEventFailureWriter;
 import com.java2nb.novel.service.impl.GamificationEventProcessor;
+import com.java2nb.novel.service.gamification.config.GamificationConfigSnapshot;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,61 +20,60 @@ public class GamificationReadingHeartbeatService {
     private final GamificationProgressMapper mapper;
     private final GamificationEventProcessor processor;
     private final GamificationEventFailureWriter failureWriter;
-    private final GamificationProperties properties;
     private final Clock clock;
 
     @Autowired
     public GamificationReadingHeartbeatService(ReadingHeartbeatWriter writer,
                                                GamificationProgressMapper mapper,
                                                GamificationEventProcessor processor,
-                                               GamificationEventFailureWriter failureWriter,
-                                               GamificationProperties properties) {
-        this(writer, mapper, processor, failureWriter, properties, Clock.systemUTC());
+                                               GamificationEventFailureWriter failureWriter) {
+        this(writer, mapper, processor, failureWriter, Clock.systemUTC());
     }
 
     GamificationReadingHeartbeatService(ReadingHeartbeatWriter writer,
                                         GamificationProgressMapper mapper,
                                         GamificationEventProcessor processor,
-                                        GamificationEventFailureWriter failureWriter,
-                                        GamificationProperties properties, Clock clock) {
+                                        GamificationEventFailureWriter failureWriter, Clock clock) {
         this.writer = writer;
         this.mapper = mapper;
         this.processor = processor;
         this.failureWriter = failureWriter;
-        this.properties = properties;
         this.clock = clock;
     }
 
-    public ReadingHeartbeatResult record(long userId, ReadingHeartbeatInput input) {
+    public ReadingHeartbeatResult record(long userId, ReadingHeartbeatInput input,
+                                         GamificationConfigSnapshot config) {
         Instant now = clock.instant();
         Date heartbeatAt = Date.from(now);
-        ZoneId zoneId = properties.resolveZoneId();
+        ZoneId zoneId = ZoneId.of(config.getZoneId());
         LocalDate localDate = LocalDate.ofInstant(now, zoneId);
         ReadingHeartbeatResult result = writer.record(new ReadingHeartbeatCommand(
             userId, input.sessionId(), input.bookId(), input.bookIndexId(), input.sequence(),
             input.activeSeconds(), heartbeatAt, localDate, zoneId,
-            properties.getQuest().getHeartbeatIntervalSeconds(),
-            properties.getQuest().getHeartbeatMaxMinutesPerDay(), properties.getPolicyVersion()));
+            config.getQuestHeartbeatIntervalSeconds(),
+            config.getQuestHeartbeatMaxMinutesPerDay(), config.getPolicyVersion(),
+            config.getRuntimeRevision()));
         for (String sourceKey : result.eventSourceKeys()) {
-            processEvent(sourceKey, heartbeatAt);
+            processEvent(sourceKey, heartbeatAt, config);
         }
         return result;
     }
 
-    private void processEvent(String sourceKey, Date processedAt) {
+    private void processEvent(String sourceKey, Date processedAt,
+                              GamificationConfigSnapshot config) {
         GamificationEventRow event = mapper.selectEventBySourceKey(sourceKey);
         if (event == null) {
             throw new IllegalStateException("Không tìm thấy event phút đọc vừa ghi");
         }
         try {
             EventProcessResult processResult = processor.process(event.getId(), processedAt,
-                properties.getEvent().getMaxAttempt());
+                config.getEventMaxAttempt());
             if (processResult == EventProcessResult.SKIPPED) {
                 throw new IllegalStateException("Event phút đọc không khớp nhiệm vụ đọc đang hoạt động");
             }
         } catch (RuntimeException exception) {
             failureWriter.record(event.getId(), processedAt, exception,
-                properties.getEvent().getMaxAttempt());
+                config.getEventMaxAttempt());
             throw exception;
         }
     }

@@ -1,9 +1,9 @@
 package com.java2nb.novel.service.gamification;
 
-import com.java2nb.novel.core.config.GamificationProperties;
 import com.java2nb.novel.mapper.GamificationProgressMapper;
 import com.java2nb.novel.service.impl.GamificationEventFailureWriter;
 import com.java2nb.novel.service.impl.GamificationEventProcessor;
+import com.java2nb.novel.service.gamification.config.GamificationConfigSnapshot;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -35,7 +35,7 @@ class GamificationCheckInServiceTest {
     private GamificationProgressMapper mapper;
     private GamificationEventProcessor eventProcessor;
     private GamificationEventFailureWriter failureWriter;
-    private GamificationProperties properties;
+    private GamificationConfigSnapshot config;
     private Clock clock;
     private GamificationCheckInService service;
 
@@ -45,11 +45,11 @@ class GamificationCheckInServiceTest {
         mapper = mock(GamificationProgressMapper.class);
         eventProcessor = mock(GamificationEventProcessor.class);
         failureWriter = mock(GamificationEventFailureWriter.class);
-        properties = new GamificationProperties();
+        config = GamificationConfigSnapshot.bootstrapDisabled();
         clock = mock(Clock.class);
         when(clock.instant()).thenReturn(NOW, Instant.parse("2026-07-30T17:00:01Z"));
         service = new GamificationCheckInService(progressService, mapper, eventProcessor,
-            failureWriter, properties, clock);
+            failureWriter, clock);
     }
 
     @Test
@@ -58,13 +58,14 @@ class GamificationCheckInServiceTest {
         GamificationEventRow event = event();
         QuestClaimResult reward = reward(false);
         when(progressService.checkIn(USER_ID, LOCAL_DATE, CHECKED_AT,
-            properties.resolveZoneId(), "v1", "v1")).thenReturn(checkIn);
+            java.time.ZoneId.of(config.getZoneId()), "v1", "v1",
+            config.getRuntimeRevision())).thenReturn(checkIn);
         when(mapper.selectEventBySourceKey(SOURCE_KEY)).thenReturn(event);
         when(eventProcessor.process(EVENT_ID, CHECKED_AT, 10))
             .thenReturn(EventProcessResult.PROCESSED);
         when(progressService.claimQuest(claimCommand())).thenReturn(reward);
 
-        CheckInOutcome outcome = service.checkIn(USER_ID);
+        CheckInOutcome outcome = service.checkIn(USER_ID, config);
 
         assertThat(outcome.checkIn()).isSameAs(checkIn);
         assertThat(outcome.reward()).isSameAs(reward);
@@ -78,13 +79,14 @@ class GamificationCheckInServiceTest {
     @Test
     void replaysClaimWhenAnotherRequestAlreadyProcessedEvent() {
         when(progressService.checkIn(USER_ID, LOCAL_DATE, CHECKED_AT,
-            properties.resolveZoneId(), "v1", "v1")).thenReturn(checkIn(true));
+            java.time.ZoneId.of(config.getZoneId()), "v1", "v1",
+            config.getRuntimeRevision())).thenReturn(checkIn(true));
         when(mapper.selectEventBySourceKey(SOURCE_KEY)).thenReturn(event());
         when(eventProcessor.process(EVENT_ID, CHECKED_AT, 10))
             .thenReturn(EventProcessResult.NOT_OWNER);
         when(progressService.claimQuest(claimCommand())).thenReturn(reward(true));
 
-        CheckInOutcome outcome = service.checkIn(USER_ID);
+        CheckInOutcome outcome = service.checkIn(USER_ID, config);
 
         assertThat(outcome.checkIn().alreadyCheckedIn()).isTrue();
         assertThat(outcome.reward().alreadyClaimed()).isTrue();
@@ -95,11 +97,12 @@ class GamificationCheckInServiceTest {
     void recordsProcessorFailureAndDoesNotClaimReward() {
         IllegalStateException failure = new IllegalStateException("processor failed");
         when(progressService.checkIn(USER_ID, LOCAL_DATE, CHECKED_AT,
-            properties.resolveZoneId(), "v1", "v1")).thenReturn(checkIn(false));
+            java.time.ZoneId.of(config.getZoneId()), "v1", "v1",
+            config.getRuntimeRevision())).thenReturn(checkIn(false));
         when(mapper.selectEventBySourceKey(SOURCE_KEY)).thenReturn(event());
         when(eventProcessor.process(EVENT_ID, CHECKED_AT, 10)).thenThrow(failure);
 
-        assertThatThrownBy(() -> service.checkIn(USER_ID)).isSameAs(failure);
+        assertThatThrownBy(() -> service.checkIn(USER_ID, config)).isSameAs(failure);
 
         verify(failureWriter).record(EVENT_ID, CHECKED_AT, failure, 10);
         verify(progressService, never()).claimQuest(claimCommand());
@@ -108,10 +111,11 @@ class GamificationCheckInServiceTest {
     @Test
     void failsClosedWhenEventIsMissing() {
         when(progressService.checkIn(USER_ID, LOCAL_DATE, CHECKED_AT,
-            properties.resolveZoneId(), "v1", "v1")).thenReturn(checkIn(false));
+            java.time.ZoneId.of(config.getZoneId()), "v1", "v1",
+            config.getRuntimeRevision())).thenReturn(checkIn(false));
         when(mapper.selectEventBySourceKey(SOURCE_KEY)).thenReturn(null);
 
-        assertThatThrownBy(() -> service.checkIn(USER_ID))
+        assertThatThrownBy(() -> service.checkIn(USER_ID, config))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("Không tìm thấy event điểm danh");
 
@@ -122,12 +126,13 @@ class GamificationCheckInServiceTest {
     @Test
     void failsClosedWhenEventMatchesNoActiveQuest() {
         when(progressService.checkIn(USER_ID, LOCAL_DATE, CHECKED_AT,
-            properties.resolveZoneId(), "v1", "v1")).thenReturn(checkIn(false));
+            java.time.ZoneId.of(config.getZoneId()), "v1", "v1",
+            config.getRuntimeRevision())).thenReturn(checkIn(false));
         when(mapper.selectEventBySourceKey(SOURCE_KEY)).thenReturn(event());
         when(eventProcessor.process(EVENT_ID, CHECKED_AT, 10))
             .thenReturn(EventProcessResult.SKIPPED);
 
-        assertThatThrownBy(() -> service.checkIn(USER_ID))
+        assertThatThrownBy(() -> service.checkIn(USER_ID, config))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("không khớp nhiệm vụ đang hoạt động");
 
@@ -159,7 +164,8 @@ class GamificationCheckInServiceTest {
 
     private QuestClaimCommand claimCommand() {
         return new QuestClaimCommand(USER_ID, "DAILY_CHECK_IN", LOCAL_DATE, CHECKED_AT,
-            properties.resolveZoneId(), 60, "v1", "v1");
+            java.time.ZoneId.of(config.getZoneId()), 60, "v1", "v1",
+            config.getRuntimeRevision());
     }
 
     private GamificationProfileRow profile() {

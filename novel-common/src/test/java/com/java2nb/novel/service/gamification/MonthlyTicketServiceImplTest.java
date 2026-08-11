@@ -57,7 +57,7 @@ class MonthlyTicketServiceImplTest {
         when(mapper.lockAccountByUserId(USER_ID)).thenReturn(account);
         when(mapper.selectAccount(USER_ID)).thenReturn(account);
         when(mapper.insertLot(anyLong(), anyString(), anyString(), anyLong(), anyLong(), any(), any(),
-            anyString())).thenReturn(1);
+            anyString(), anyLong())).thenReturn(1);
         when(mapper.creditAccount(anyLong(), anyLong(), anyLong())).thenReturn(1);
         when(mapper.insertLedger(anyString(), anyLong(), anyString(), anyLong(), anyLong(), anyString(),
             anyString(), anyString(), anyString(), any(), any(), any(), anyString(), any(), any(),
@@ -85,7 +85,7 @@ class MonthlyTicketServiceImplTest {
 
     private TicketGrantCommand grantOf(long amount, String idempotencyKey) {
         return new TicketGrantCommand(USER_ID, amount, "CHECK_IN", "2026-08-01", idempotencyKey,
-            EFFECTIVE_AT, EXPIRE_AT, "SYSTEM", null, null, "v1");
+            EFFECTIVE_AT, EXPIRE_AT, "SYSTEM", null, null, "v1", 7L);
     }
 
     @Test
@@ -94,7 +94,7 @@ class MonthlyTicketServiceImplTest {
             .isEqualTo(TicketPostResult.POSTED);
 
         verify(mapper).insertLot(eq(USER_ID), eq("CHECK_IN"), eq("2026-08-01"), eq(5L), eq(901L),
-            eq(EFFECTIVE_AT), eq(EXPIRE_AT), eq("v1"));
+            eq(EFFECTIVE_AT), eq(EXPIRE_AT), eq("v1"), eq(7L));
         verify(mapper).creditAccount(77L, 0L, 5L);
     }
 
@@ -107,7 +107,7 @@ class MonthlyTicketServiceImplTest {
 
         // Đúng một lô và đúng một lần cộng số dư, dù đã gọi hai lần.
         verify(mapper).insertLot(anyLong(), anyString(), anyString(), anyLong(), anyLong(), any(),
-            any(), anyString());
+            any(), anyString(), anyLong());
         verify(mapper).creditAccount(anyLong(), anyLong(), anyLong());
     }
 
@@ -127,7 +127,7 @@ class MonthlyTicketServiceImplTest {
         // Mô phỏng một giao dịch song song commit ngay sau đường nhanh: INSERT ném lỗi trùng khoá,
         // và lúc đọc lại thì bản ghi của giao dịch kia đã hiện diện.
         TicketGrantCommand command = new TicketGrantCommand(USER_ID, 3L, "ADMIN_GRANT", "batch-9",
-            key, EFFECTIVE_AT, EXPIRE_AT, "ADMIN", 12L, "bù sự cố", "v1");
+            key, EFFECTIVE_AT, EXPIRE_AT, "ADMIN", 12L, "bù sự cố", "v1", 7L);
         TicketLedgerRow winner = new TicketLedgerRow();
         winner.setId(902L);
         winner.setUserId(USER_ID);
@@ -152,7 +152,7 @@ class MonthlyTicketServiceImplTest {
         assertThat(service.grant(command)).isEqualTo(TicketPostResult.ALREADY_POSTED);
 
         verify(mapper, never()).insertLot(anyLong(), anyString(), anyString(), anyLong(), anyLong(),
-            any(), any(), anyString());
+            any(), any(), anyString(), anyLong());
         verify(mapper, never()).creditAccount(anyLong(), anyLong(), anyLong());
     }
 
@@ -186,7 +186,7 @@ class MonthlyTicketServiceImplTest {
     @Test
     void grantCommandRejectsAdminOperationsWithoutAccountability() {
         assertThatThrownBy(() -> new TicketGrantCommand(USER_ID, 1L, "ADMIN_GRANT", "batch-1",
-            "ADMIN_GRANT:batch-1:4401", EFFECTIVE_AT, EXPIRE_AT, "ADMIN", null, null, "v1"))
+            "ADMIN_GRANT:batch-1:4401", EFFECTIVE_AT, EXPIRE_AT, "ADMIN", null, null, "v1", 7L))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("người thực hiện và lý do");
     }
@@ -194,7 +194,7 @@ class MonthlyTicketServiceImplTest {
     @Test
     void grantCommandRejectsAnInvalidValidityWindow() {
         assertThatThrownBy(() -> new TicketGrantCommand(USER_ID, 1L, "CHECK_IN", "2026-08-01",
-            "CHECKIN:4401:2026-08-01", EXPIRE_AT, EFFECTIVE_AT, "SYSTEM", null, null, "v1"))
+            "CHECKIN:4401:2026-08-01", EXPIRE_AT, EFFECTIVE_AT, "SYSTEM", null, null, "v1", 7L))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("Khoảng hiệu lực");
     }
@@ -203,9 +203,9 @@ class MonthlyTicketServiceImplTest {
     void reusingAKeyWithDifferentAuditDetailsIsRejected() {
         String key = "ADMIN_GRANT:batch-10:4401";
         TicketGrantCommand original = new TicketGrantCommand(USER_ID, 3L, "ADMIN_GRANT", "batch-10",
-            key, EFFECTIVE_AT, EXPIRE_AT, "ADMIN", 12L, "bù sự cố", "v1");
+            key, EFFECTIVE_AT, EXPIRE_AT, "ADMIN", 12L, "bù sự cố", "v1", 7L);
         TicketGrantCommand changedReason = new TicketGrantCommand(USER_ID, 3L, "ADMIN_GRANT", "batch-10",
-            key, EFFECTIVE_AT, EXPIRE_AT, "ADMIN", 12L, "thay lý do", "v1");
+            key, EFFECTIVE_AT, EXPIRE_AT, "ADMIN", 12L, "thay lý do", "v1", 7L);
 
         assertThat(service.grant(original)).isEqualTo(TicketPostResult.POSTED);
         assertThatThrownBy(() -> service.grant(changedReason))
@@ -219,7 +219,7 @@ class MonthlyTicketServiceImplTest {
         Date mutableExpireAt = new Date(EXPIRE_AT.getTime());
         TicketGrantCommand command = new TicketGrantCommand(USER_ID, 1L, "CHECK_IN", "2026-08-01",
             "CHECKIN:4401:2026-08-05", mutableEffectiveAt, mutableExpireAt,
-            "SYSTEM", null, null, "v1");
+            "SYSTEM", null, null, "v1", 7L);
 
         mutableEffectiveAt.setTime(0L);
         mutableExpireAt.setTime(1L);

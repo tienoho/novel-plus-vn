@@ -77,7 +77,7 @@ class GamificationProgressServiceImplTest {
         realm.setActive(true);
         GamificationProfileRow updated = profile("TIEN_PHONG", 5L, changedAt);
         when(mapper.lockProfile(11L)).thenReturn(locked);
-        when(mapper.selectRealm("TIEN_PHONG")).thenReturn(realm);
+        when(mapper.selectRealm("TIEN_PHONG", "v1")).thenReturn(realm);
         when(mapper.updateRealm(11L, "TIEN_PHONG", changedAt, 4L)).thenReturn(1);
         when(mapper.insertProfileAudit(11L, "REALM", "NHAP_MON", "TIEN_PHONG",
             "USER", 11L, "Người dùng đổi cảnh giới")).thenReturn(1);
@@ -108,7 +108,7 @@ class GamificationProgressServiceImplTest {
         realm.setMinLevel(1);
         realm.setActive(true);
         when(mapper.lockProfile(11L)).thenReturn(profile);
-        when(mapper.selectRealm("TIEN_PHONG")).thenReturn(realm);
+        when(mapper.selectRealm("TIEN_PHONG", "v1")).thenReturn(realm);
 
         assertThatThrownBy(() -> service.updateRealm(11L, "TIEN_PHONG", 4L,
             Date.from(Instant.parse("2026-07-29T18:00:00Z")),
@@ -120,7 +120,7 @@ class GamificationProgressServiceImplTest {
     void appliesDailyWeeklyAndOneTimeQuestPeriodsFromEventLocalDate() {
         Date occurredAt = Date.from(Instant.parse("2027-01-01T03:00:00Z"));
         GamificationEventRow event = event("CHAPTER_PURCHASED", LocalDate.of(2027, 1, 1), occurredAt);
-        when(mapper.selectActiveQuestsByEventType("CHAPTER_PURCHASED")).thenReturn(List.of(
+        when(mapper.selectActiveQuestsByEventType("CHAPTER_PURCHASED", "v1")).thenReturn(List.of(
             quest("DAILY_PAID_CHAPTER", "DAILY", 1),
             quest("WEEKLY_PAID_CHAPTER", "WEEKLY", 2),
             quest("FIRST_PAID_CHAPTER", "ONE_TIME", 1)
@@ -139,7 +139,7 @@ class GamificationProgressServiceImplTest {
     @Test
     void rejectsUnsupportedQuestPeriodBeforeWritingProgress() {
         GamificationEventRow event = event("CHAPTER_PURCHASED", LocalDate.of(2026, 7, 30), new Date());
-        when(mapper.selectActiveQuestsByEventType("CHAPTER_PURCHASED"))
+        when(mapper.selectActiveQuestsByEventType("CHAPTER_PURCHASED", "v1"))
             .thenReturn(List.of(quest("BROKEN_QUEST", "MONTHLY", 1)));
 
         assertThatThrownBy(() -> service.applyEvent(event))
@@ -158,7 +158,7 @@ class GamificationProgressServiceImplTest {
         when(mapper.updateCheckIn(11L, 4L, localDate, 1, 1)).thenReturn(1);
 
         CheckInResult result = service.checkIn(11L, localDate, checkedAt,
-            ZoneId.of("Asia/Ho_Chi_Minh"), "v1", "v1");
+            ZoneId.of("Asia/Ho_Chi_Minh"), "v1", "v1", 7L);
 
         assertThat(result.alreadyCheckedIn()).isFalse();
         assertThat(result.sourceKey()).isEqualTo("CHECKIN:11:2026-07-30");
@@ -188,7 +188,7 @@ class GamificationProgressServiceImplTest {
         when(mapper.updateCheckIn(11L, 4L, localDate, 5, 5)).thenReturn(1);
 
         CheckInResult result = service.checkIn(11L, localDate, checkedAt,
-            ZoneId.of("Asia/Ho_Chi_Minh"), "v1", "v1");
+            ZoneId.of("Asia/Ho_Chi_Minh"), "v1", "v1", 7L);
 
         assertThat(result.profile().getCheckinStreak()).isEqualTo(5);
         assertThat(result.profile().getLongestStreak()).isEqualTo(5);
@@ -206,7 +206,7 @@ class GamificationProgressServiceImplTest {
         when(mapper.updateCheckIn(11L, 4L, localDate, 1, 7)).thenReturn(1);
 
         CheckInResult result = service.checkIn(11L, localDate, checkedAt,
-            ZoneId.of("Asia/Ho_Chi_Minh"), "v1", "v1");
+            ZoneId.of("Asia/Ho_Chi_Minh"), "v1", "v1", 7L);
 
         assertThat(result.profile().getCheckinStreak()).isEqualTo(1);
         assertThat(result.profile().getLongestStreak()).isEqualTo(7);
@@ -223,7 +223,7 @@ class GamificationProgressServiceImplTest {
         when(mapper.lockProfile(11L)).thenReturn(profile);
 
         CheckInResult result = service.checkIn(11L, localDate, checkedAt,
-            ZoneId.of("Asia/Ho_Chi_Minh"), "v1", "v1");
+            ZoneId.of("Asia/Ho_Chi_Minh"), "v1", "v1", 7L);
 
         assertThat(result.alreadyCheckedIn()).isTrue();
         assertThat(result.profile()).isSameAs(profile);
@@ -239,7 +239,7 @@ class GamificationProgressServiceImplTest {
         Date checkedAt = Date.from(Instant.parse("2026-07-30T17:00:00Z"));
 
         assertThatThrownBy(() -> service.checkIn(11L, LocalDate.of(2026, 7, 30), checkedAt,
-            ZoneId.of("Asia/Ho_Chi_Minh"), "v1", "v1"))
+            ZoneId.of("Asia/Ho_Chi_Minh"), "v1", "v1", 7L))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("Ngày hoặc chính sách điểm danh không hợp lệ");
 
@@ -254,7 +254,7 @@ class GamificationProgressServiceImplTest {
         when(mapper.lockProfile(11L)).thenReturn(profile);
 
         assertThatThrownBy(() -> service.checkIn(11L, LocalDate.of(2026, 7, 29), checkedAt,
-            ZoneId.of("Asia/Ho_Chi_Minh"), "v1", "v1"))
+            ZoneId.of("Asia/Ho_Chi_Minh"), "v1", "v1", 7L))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("cũ hơn lịch sử hồ sơ");
 
@@ -270,11 +270,11 @@ class GamificationProgressServiceImplTest {
         QuestProgressRow row = new QuestProgressRow();
         row.setQuestCode("DAILY_PAID_CHAPTER");
         Date observedAt = Date.from(Instant.parse("2027-01-01T03:00:00Z"));
-        when(mapper.selectActiveQuestCampaigns(observedAt)).thenReturn(List.of());
-        when(mapper.selectQuestProgress(11L, "2027-01-01", "2026-W53", "DEFAULT"))
+        when(mapper.selectActiveQuestCampaigns(observedAt, "v1")).thenReturn(List.of());
+        when(mapper.selectQuestProgress(11L, "2027-01-01", "2026-W53", "DEFAULT", "v1"))
             .thenReturn(List.of(row));
 
-        assertThat(service.listQuests(11L, LocalDate.of(2027, 1, 1), observedAt))
+        assertThat(service.listQuests(11L, LocalDate.of(2027, 1, 1), observedAt, "v1"))
             .containsExactly(row);
     }
 
@@ -284,22 +284,22 @@ class GamificationProgressServiceImplTest {
         QuestCampaignRow campaign = campaign("TET_2027", "v2");
         QuestProgressRow row = new QuestProgressRow();
         row.setQuestCode("DAILY_PAID_CHAPTER");
-        when(mapper.selectActiveQuestCampaigns(observedAt)).thenReturn(List.of(campaign));
-        when(mapper.selectQuestProgress(11L, "2027-01-01", "2026-W53", "TET_2027"))
+        when(mapper.selectActiveQuestCampaigns(observedAt, "v2")).thenReturn(List.of(campaign));
+        when(mapper.selectQuestProgress(11L, "2027-01-01", "2026-W53", "TET_2027", "v2"))
             .thenReturn(List.of(row));
 
-        assertThat(service.listQuests(11L, LocalDate.of(2027, 1, 1), observedAt))
+        assertThat(service.listQuests(11L, LocalDate.of(2027, 1, 1), observedAt, "v2"))
             .containsExactly(row);
     }
 
     @Test
     void rejectsOverlappingActiveQuestCampaigns() {
         Date observedAt = Date.from(Instant.parse("2027-01-01T03:00:00Z"));
-        when(mapper.selectActiveQuestCampaigns(observedAt)).thenReturn(List.of(
+        when(mapper.selectActiveQuestCampaigns(observedAt, "v2")).thenReturn(List.of(
             campaign("TET_2027", "v2"), campaign("NEW_YEAR_2027", "v2")));
 
         assertThatThrownBy(() -> service.listQuests(
-            11L, LocalDate.of(2027, 1, 1), observedAt))
+            11L, LocalDate.of(2027, 1, 1), observedAt, "v2"))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("chồng lấn");
     }
@@ -332,16 +332,16 @@ class GamificationProgressServiceImplTest {
         next.setMinExp(300L);
         TicketAccountRow account = new TicketAccountRow();
         account.setAvailableBalance(4L);
-        when(mapper.selectQuestByCode("DAILY_READING")).thenReturn(quest);
+        when(mapper.selectQuestByCode("DAILY_READING", "v2")).thenReturn(quest);
         when(mapper.selectQuestClaim(11L, "DAILY_READING", "2026-07-30"))
             .thenReturn(null, null, claim);
         when(mapper.lockQuestProgress(11L, "DAILY_READING", "2026-07-30"))
             .thenReturn(progress);
-        when(mapper.selectActiveQuestCampaigns(claimedAt))
+        when(mapper.selectActiveQuestCampaigns(claimedAt, "v2"))
             .thenReturn(List.of(campaign("SUMMER_2026", "v2")));
-        when(mapper.selectQuestRewardSummary("DAILY_READING", "SUMMER_2026"))
+        when(mapper.selectQuestRewardSummary("DAILY_READING", "SUMMER_2026", "v2"))
             .thenReturn(new QuestRewardSummary(0L, 1L));
-        when(mapper.selectQuestRewardSummary("DAILY_READING", "DEFAULT"))
+        when(mapper.selectQuestRewardSummary("DAILY_READING", "DEFAULT", "v2"))
             .thenReturn(new QuestRewardSummary(20L, 0L));
         when(mapper.lockProfile(11L)).thenReturn(profile);
         when(mapper.selectLevelRuleForExp("v1", 110L)).thenReturn(levelRule);
@@ -362,7 +362,7 @@ class GamificationProgressServiceImplTest {
         when(monthlyTicketService.getOrCreateAccount(11L)).thenReturn(account);
         QuestClaimCommand command = new QuestClaimCommand(11L, "DAILY_READING",
             LocalDate.of(2026, 7, 30), claimedAt, ZoneId.of("Asia/Ho_Chi_Minh"), 60,
-            "v1", "v1");
+            "v1", "v2", 7L);
 
         QuestClaimResult result = service.claimQuest(command);
 
@@ -391,7 +391,7 @@ class GamificationProgressServiceImplTest {
         QuestClaimRow claim = new QuestClaimRow();
         claim.setQuestCode("DAILY_PAID_CHAPTER");
         claim.setPeriodKey("2026-07-30");
-        when(mapper.selectQuestByCode("DAILY_PAID_CHAPTER")).thenReturn(quest);
+        when(mapper.selectQuestByCode("DAILY_PAID_CHAPTER", "v1")).thenReturn(quest);
         when(mapper.selectQuestClaim(11L, "DAILY_PAID_CHAPTER", "2026-07-30"))
             .thenReturn(claim);
         when(mapper.selectProfile(11L)).thenReturn(profile(null, 1L, null));
@@ -401,7 +401,7 @@ class GamificationProgressServiceImplTest {
 
         QuestClaimResult result = service.claimQuest(new QuestClaimCommand(11L,
             "DAILY_PAID_CHAPTER", LocalDate.of(2026, 7, 30), new Date(),
-            ZoneId.of("Asia/Ho_Chi_Minh"), 60, "v1", "v1"));
+            ZoneId.of("Asia/Ho_Chi_Minh"), 60, "v1", "v1", 7L));
 
         assertThat(result.alreadyClaimed()).isTrue();
         verify(mapper, never()).lockQuestProgress(11L, "DAILY_PAID_CHAPTER", "2026-07-30");
@@ -415,13 +415,13 @@ class GamificationProgressServiceImplTest {
         QuestProgressRow progress = new QuestProgressRow();
         progress.setCurrentCount(0);
         progress.setTargetCount(1);
-        when(mapper.selectQuestByCode("DAILY_PAID_CHAPTER")).thenReturn(quest);
+        when(mapper.selectQuestByCode("DAILY_PAID_CHAPTER", "v1")).thenReturn(quest);
         when(mapper.lockQuestProgress(11L, "DAILY_PAID_CHAPTER", "2026-07-30"))
             .thenReturn(progress);
 
         assertThatThrownBy(() -> service.claimQuest(new QuestClaimCommand(11L,
             "DAILY_PAID_CHAPTER", LocalDate.of(2026, 7, 30), new Date(),
-            ZoneId.of("Asia/Ho_Chi_Minh"), 60, "v1", "v1")))
+            ZoneId.of("Asia/Ho_Chi_Minh"), 60, "v1", "v1", 7L)))
             .isInstanceOf(BusinessException.class);
     }
 
@@ -431,6 +431,7 @@ class GamificationProgressServiceImplTest {
         event.setEventType(eventType);
         event.setLocalDate(localDate);
         event.setOccurredAt(occurredAt);
+        event.setPolicyVersion("v1");
         return event;
     }
 

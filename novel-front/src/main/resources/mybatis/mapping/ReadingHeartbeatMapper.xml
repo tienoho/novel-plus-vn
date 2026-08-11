@@ -38,12 +38,14 @@
         <result column="request_hash" property="requestHash"/>
         <result column="heartbeat_at" property="heartbeatAt"/>
         <result column="policy_version" property="policyVersion"/>
+        <result column="runtime_config_revision" property="runtimeConfigRevision"/>
     </resultMap>
 
     <select id="selectReceipt" resultMap="receipt">
         SELECT id, session_id, user_id, book_id, book_index_id, sequence_no,
                active_seconds, accepted_seconds, daily_seconds_after, first_minute_bucket,
-               event_count, local_date, request_hash, heartbeat_at, policy_version
+               event_count, local_date, request_hash, heartbeat_at, policy_version,
+               runtime_config_revision
         FROM reading_heartbeat_receipt
         WHERE session_id = #{sessionId} AND sequence_no = #{sequenceNo}
         LIMIT 1
@@ -106,13 +108,14 @@
         INSERT INTO reading_heartbeat_receipt
             (session_id, user_id, book_id, book_index_id, sequence_no,
              active_seconds, accepted_seconds, daily_seconds_after, first_minute_bucket,
-             event_count, local_date, request_hash, heartbeat_at, policy_version)
+             event_count, local_date, request_hash, heartbeat_at, policy_version,
+             runtime_config_revision)
         VALUES
             (#{receipt.sessionId}, #{receipt.userId}, #{receipt.bookId}, #{receipt.bookIndexId},
              #{receipt.sequenceNo}, #{receipt.activeSeconds}, #{receipt.acceptedSeconds},
              #{receipt.dailySecondsAfter}, #{receipt.firstMinuteBucket}, #{receipt.eventCount},
              #{receipt.localDate}, #{receipt.requestHash}, #{receipt.heartbeatAt},
-             #{receipt.policyVersion})
+             #{receipt.policyVersion}, #{receipt.runtimeConfigRevision})
     </insert>
 
 </mapper>

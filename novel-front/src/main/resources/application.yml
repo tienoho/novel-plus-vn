@@ -50,8 +50,6 @@ novel:
     vote:
       enabled: ${GAMIFICATION_VOTE_ENABLED:false}
       allow-crawled-books: ${GAMIFICATION_VOTE_ALLOW_CRAWLED:false}
-      # Muối riêng để hash IP phục vụ fraud review; bắt buộc tối thiểu 32 ký tự khi bật vote.
-      ip-hash-salt: ${GAMIFICATION_VOTE_IP_HASH_SALT:disabled}
       max-tickets-per-request: ${GAMIFICATION_VOTE_MAX_PER_REQUEST:10}
       max-votes-per-day: ${GAMIFICATION_VOTE_MAX_VOTES_DAY:20}
       max-tickets-per-day: ${GAMIFICATION_VOTE_MAX_TICKETS_DAY:50}
@@ -60,7 +58,6 @@ novel:
     quest:
       enabled: ${GAMIFICATION_QUEST_ENABLED:false}
       reply-quest-enabled: ${GAMIFICATION_QUEST_REPLY_ENABLED:false}
-      reading-minutes-target: ${GAMIFICATION_QUEST_READ_MINUTES:30}
       heartbeat-interval-seconds: ${GAMIFICATION_HEARTBEAT_INTERVAL:60}
       heartbeat-max-minutes-per-day: ${GAMIFICATION_HEARTBEAT_MAX_MIN:180}
     realm:

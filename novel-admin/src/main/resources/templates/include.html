@@ -26,7 +26,7 @@
 <div th:fragment="footer">
 	<script src="/js/jquery.min.js?v=2.1.4"></script>
 	<script src="/js/csrf.js"></script>
-	<script th:inline="javascript">
+	<script th:inline="javascript" th:attr="nonce=${cspNonce}">
 		window.AdminI18n = Object.assign(window.AdminI18n || {}, {
 			add: /*[[#{common.add}]]*/ 'Thêm',
 			edit: /*[[#{common.edit}]]*/ 'Sửa',

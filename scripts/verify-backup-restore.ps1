@@ -96,6 +96,7 @@ try {
         jwt_secret = Get-SecretValue -EnvironmentName 'JWT_SECRET' -FileName 'jwt_secret'
         cache_manager_password = Get-SecretValue -EnvironmentName 'CACHE_MANAGER_PASSWORD' -FileName 'cache_manager_password'
         pii_encryption_key = Get-SecretValue -EnvironmentName 'PII_ENCRYPTION_KEY' -FileName 'pii_encryption_key'
+        gamification_vote_ip_hash_salt = 'integration-gamification-vote-ip-hash-salt-2026'
         admin_bootstrap_password = Get-SecretValue -EnvironmentName 'ADMIN_BOOTSTRAP_PASSWORD' -FileName 'admin_bootstrap_password'
         crawler_admin_password = Get-SecretValue -EnvironmentName 'CRAWLER_ADMIN_PASSWORD' -FileName 'crawler_admin_password'
         backup_encryption_password = Get-SecretValue -EnvironmentName 'BACKUP_ENCRYPTION_PASSWORD' `

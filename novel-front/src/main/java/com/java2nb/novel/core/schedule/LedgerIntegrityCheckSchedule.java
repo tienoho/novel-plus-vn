@@ -1,6 +1,5 @@
 package com.java2nb.novel.core.schedule;
 
-import com.java2nb.novel.core.config.GamificationProperties;
 import com.java2nb.novel.core.observability.NovelBusinessMetrics;
 import com.java2nb.novel.core.observability.NovelBusinessMetrics.GamificationQueue;
 import com.java2nb.novel.core.observability.NovelBusinessMetrics.LedgerCheck;
@@ -8,6 +7,8 @@ import com.java2nb.novel.mapper.MonthlyTicketMapper;
 import com.java2nb.novel.mapper.MonthlyRankingMapper;
 import com.java2nb.novel.mapper.WalletLedgerMapper;
 import com.java2nb.novel.service.gamification.MonthlyRankDriftRow;
+import com.java2nb.novel.service.gamification.config.GamificationConfigProvider;
+import com.java2nb.novel.service.gamification.config.GamificationConfigSnapshot;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -26,7 +27,7 @@ public class LedgerIntegrityCheckSchedule {
     private final WalletLedgerMapper walletLedgerMapper;
     private final MonthlyTicketMapper monthlyTicketMapper;
     private final MonthlyRankingMapper monthlyRankingMapper;
-    private final GamificationProperties gamificationProperties;
+    private final GamificationConfigProvider configProvider;
     private final NovelBusinessMetrics metrics;
     private final Clock clock;
 
@@ -34,28 +35,29 @@ public class LedgerIntegrityCheckSchedule {
     public LedgerIntegrityCheckSchedule(WalletLedgerMapper walletLedgerMapper,
                                         MonthlyTicketMapper monthlyTicketMapper,
                                         MonthlyRankingMapper monthlyRankingMapper,
-                                        GamificationProperties gamificationProperties,
+                                        GamificationConfigProvider configProvider,
                                         NovelBusinessMetrics metrics) {
-        this(walletLedgerMapper, monthlyTicketMapper, monthlyRankingMapper, gamificationProperties,
+        this(walletLedgerMapper, monthlyTicketMapper, monthlyRankingMapper, configProvider,
             metrics, Clock.systemUTC());
     }
 
     LedgerIntegrityCheckSchedule(WalletLedgerMapper walletLedgerMapper,
                                  MonthlyTicketMapper monthlyTicketMapper,
                                  MonthlyRankingMapper monthlyRankingMapper,
-                                 GamificationProperties gamificationProperties,
+                                 GamificationConfigProvider configProvider,
                                  NovelBusinessMetrics metrics,
                                  Clock clock) {
         this.walletLedgerMapper = walletLedgerMapper;
         this.monthlyTicketMapper = monthlyTicketMapper;
         this.monthlyRankingMapper = monthlyRankingMapper;
-        this.gamificationProperties = gamificationProperties;
+        this.configProvider = configProvider;
         this.metrics = metrics;
         this.clock = clock;
     }
 
     @Scheduled(cron = "${ledger.integrity.cron:0 0 3 * * ?}") // Hàng ngày vào 03:00 AM
     public void runLedgerIntegrityAudit() {
+        GamificationConfigSnapshot config = configProvider.current();
         log.info("Bắt đầu kiểm tra tự động toàn vẹn sổ cái kép và projection số dư...");
 
         List<Map<String, Object>> nonZeroSumTxs = walletLedgerMapper.checkZeroSumLedger();
@@ -76,26 +78,27 @@ public class LedgerIntegrityCheckSchedule {
             log.info("Kiểm tra projection số dư người dùng: HOÀN HẢO (0% sai lệch)");
         }
 
-        logGamificationAudit();
+        logGamificationAudit(config);
     }
 
     public boolean performAuditCheck() {
+        GamificationConfigSnapshot config = configProvider.current();
         List<Map<String, Object>> nonZeroSumTxs = walletLedgerMapper.checkZeroSumLedger();
         List<Map<String, Object>> mismatches = walletLedgerMapper.checkProjectionMismatch();
         List<Map<String, Object>> ticketDrift = monthlyTicketMapper.checkAccountLotDrift();
         List<Map<String, Object>> allocationImbalance = monthlyTicketMapper.checkAllocationImbalance();
         List<Map<String, Object>> orphanLots = monthlyTicketMapper.checkOrphanLots();
         List<Map<String, Object>> stuckJobs = monthlyTicketMapper.checkStuckJobs(
-            jobLeaseCutoff(), reviewWindowCutoff());
+            jobLeaseCutoff(config), reviewWindowCutoff(config));
         List<Map<String, Object>> pendingRewards = monthlyTicketMapper.checkPendingRewards(
-            claimWindowCutoff());
+            Date.from(clock.instant()));
         boolean rankConsistent = monthlyRankingMapper.checkRankCounterDrift(null).isEmpty();
         return nonZeroSumTxs.isEmpty() && mismatches.isEmpty() && ticketDrift.isEmpty()
             && allocationImbalance.isEmpty() && orphanLots.isEmpty() && stuckJobs.isEmpty()
             && pendingRewards.isEmpty() && rankConsistent;
     }
 
-    private void logGamificationAudit() {
+    private void logGamificationAudit(GamificationConfigSnapshot config) {
         List<Map<String, Object>> ticketDrift = monthlyTicketMapper.checkAccountLotDrift();
         List<Map<String, Object>> allocationImbalance = monthlyTicketMapper.checkAllocationImbalance();
         List<Map<String, Object>> orphanLots = monthlyTicketMapper.checkOrphanLots();
@@ -112,12 +115,13 @@ public class LedgerIntegrityCheckSchedule {
         }
 
         List<Map<String, Object>> stuckRows = monthlyTicketMapper.checkStuckJobs(
-            jobLeaseCutoff(), reviewWindowCutoff());
+            jobLeaseCutoff(config), reviewWindowCutoff(config));
         List<Map<String, Object>> staleJobs = stuckRows.stream()
             .filter(row -> "STALE_JOB".equals(row.get("alert_type"))).toList();
         List<Map<String, Object>> reviewOverdue = stuckRows.stream()
             .filter(row -> "REVIEW_OVERDUE".equals(row.get("alert_type"))).toList();
-        List<Map<String, Object>> pendingRewards = monthlyTicketMapper.checkPendingRewards(claimWindowCutoff());
+        List<Map<String, Object>> pendingRewards = monthlyTicketMapper.checkPendingRewards(
+            Date.from(clock.instant()));
         metrics.setGamificationQueue(GamificationQueue.STALE_JOBS, staleJobs.size());
         metrics.setGamificationQueue(GamificationQueue.REVIEW_OVERDUE, reviewOverdue.size());
         metrics.setGamificationQueue(GamificationQueue.PENDING_REWARDS, pendingRewards.size());
@@ -131,18 +135,13 @@ public class LedgerIntegrityCheckSchedule {
      * bằng TIMESTAMPADD với tham số động — bộ phân tích SQL của ShardingSphere hiểu nhầm tên đơn
      * vị thời gian (SECOND/HOUR/DAY) thành tên cột khi giá trị đi kèm là một bind parameter.
      */
-    private Date jobLeaseCutoff() {
-        return Date.from(Instant.now(clock).minusSeconds(gamificationProperties.getJob().getLeaseSeconds()));
+    private Date jobLeaseCutoff(GamificationConfigSnapshot config) {
+        return Date.from(Instant.now(clock).minusSeconds(config.getJobLeaseSeconds()));
     }
 
-    private Date reviewWindowCutoff() {
+    private Date reviewWindowCutoff(GamificationConfigSnapshot config) {
         return Date.from(Instant.now(clock)
-            .minusSeconds(gamificationProperties.getSeason().getReviewWindowHours() * 3600L));
-    }
-
-    private Date claimWindowCutoff() {
-        return Date.from(Instant.now(clock)
-            .minusSeconds(gamificationProperties.getReward().getClaimWindowDays() * 86400L));
+            .minusSeconds(config.getSeasonReviewWindowHours() * 3600L));
     }
 
     private void logRows(String alertCode, String description, List<Map<String, Object>> rows) {

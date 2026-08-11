@@ -111,7 +111,8 @@ function Invoke-MySqlScalar([string]$Sql) {
 
 $secretNames = @(
     'mysql_root_password', 'mysql_app_password', 'redis_password', 'jwt_secret',
-    'cache_manager_password', 'pii_encryption_key', 'admin_bootstrap_password',
+    'cache_manager_password', 'pii_encryption_key', 'gamification_vote_ip_hash_salt',
+    'admin_bootstrap_password',
     'crawler_admin_password', 'backup_encryption_password', 'vnpay_hash_secret',
     'vnpay_recurring_password', 'vnpay_recurring_client_secret',
     'vnpay_recurring_hash_secret', 'vietqr_webhook_secret',

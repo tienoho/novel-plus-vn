@@ -20,7 +20,8 @@ public record GamificationEventInput(
     LocalDate localDate,
     String payloadHash,
     String payloadJson,
-    String policyVersion
+    String policyVersion,
+    long runtimeConfigRevision
 ) {
 
     public GamificationEventInput {
@@ -42,6 +43,9 @@ public record GamificationEventInput(
         }
         if (policyVersion == null || policyVersion.isBlank() || policyVersion.length() > 32) {
             throw new IllegalArgumentException("Phiên bản chính sách gamification không hợp lệ");
+        }
+        if (runtimeConfigRevision <= 0) {
+            throw new IllegalArgumentException("Revision cấu hình gamification không hợp lệ");
         }
     }
 

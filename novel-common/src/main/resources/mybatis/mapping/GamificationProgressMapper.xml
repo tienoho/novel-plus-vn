@@ -6,10 +6,11 @@
     <insert id="insertEventIgnore">
         INSERT IGNORE INTO gamification_event
             (event_type, source_key, user_id, book_id, occurred_at, local_date,
-             payload_hash, payload, status, attempt, policy_version)
+             payload_hash, payload, status, attempt, policy_version, runtime_config_revision)
         VALUES (#{event.eventType}, #{event.sourceKey}, #{event.userId}, #{event.bookId},
                 #{event.occurredAt}, #{event.localDate}, #{event.payloadHash},
-                #{event.payloadJson}, 'PENDING', 0, #{event.policyVersion})
+                #{event.payloadJson}, 'PENDING', 0, #{event.policyVersion},
+                #{event.runtimeConfigRevision})
     </insert>
 
     <select id="selectEventBySourceKey"
@@ -28,6 +29,7 @@
                processed_at  AS processedAt,
                error_message AS errorMessage,
                policy_version AS policyVersion,
+               runtime_config_revision AS runtimeConfigRevision,
                version,
                create_time   AS createTime
         FROM gamification_event
@@ -57,7 +59,9 @@
                book_id AS bookId, occurred_at AS occurredAt, local_date AS localDate,
                payload_hash AS payloadHash, payload AS payloadJson, status, attempt,
                processed_at AS processedAt, error_message AS errorMessage,
-               policy_version AS policyVersion, version, create_time AS createTime
+               policy_version AS policyVersion,
+               runtime_config_revision AS runtimeConfigRevision,
+               version, create_time AS createTime
         FROM gamification_event
         WHERE id = #{eventId}
         LIMIT 1
@@ -105,6 +109,7 @@
                target_count AS targetCount, name_key AS nameKey, sort_no AS sortNo, active
         FROM quest_definition
         WHERE event_type = #{eventType}
+          AND policy_version = #{policyVersion}
           AND active = 1
         ORDER BY sort_no ASC, quest_code ASC
     </select>
@@ -134,6 +139,7 @@
                status, policy_version AS policyVersion
         FROM quest_campaign
         WHERE status = 'ACTIVE'
+          AND policy_version = #{policyVersion}
           AND start_at &lt;= #{observedAt}
           AND end_at &gt; #{observedAt}
         ORDER BY start_at DESC, campaign_code ASC
@@ -158,18 +164,22 @@
                c.create_time AS claimedAt,
                 COALESCE((SELECT SUM(r.amount) FROM quest_reward r
                           WHERE r.quest_code = q.quest_code
+                            AND r.policy_version = #{policyVersion}
                             AND r.campaign_code = #{campaignCode}
                             AND r.reward_type = 'EXP'),
                          (SELECT SUM(r.amount) FROM quest_reward r
                           WHERE r.quest_code = q.quest_code
+                            AND r.policy_version = #{policyVersion}
                             AND r.campaign_code = 'DEFAULT'
                             AND r.reward_type = 'EXP'), 0) AS expReward,
                 COALESCE((SELECT SUM(r.amount) FROM quest_reward r
                           WHERE r.quest_code = q.quest_code
+                            AND r.policy_version = #{policyVersion}
                             AND r.campaign_code = #{campaignCode}
                             AND r.reward_type = 'TICKET'),
                          (SELECT SUM(r.amount) FROM quest_reward r
                           WHERE r.quest_code = q.quest_code
+                            AND r.policy_version = #{policyVersion}
                             AND r.campaign_code = 'DEFAULT'
                             AND r.reward_type = 'TICKET'), 0) AS ticketReward
         FROM quest_definition q
@@ -190,6 +200,7 @@
                   ELSE 'ALL'
               END
         WHERE q.active = 1
+          AND q.policy_version = #{policyVersion}
         ORDER BY q.sort_no ASC, q.quest_code ASC
     </select>
 
@@ -199,6 +210,7 @@
                target_count AS targetCount, name_key AS nameKey, sort_no AS sortNo, active
         FROM quest_definition
         WHERE quest_code = #{questCode}
+          AND policy_version = #{policyVersion}
         LIMIT 1
     </select>
 
@@ -235,6 +247,7 @@
         FROM quest_reward
         WHERE quest_code = #{questCode}
           AND campaign_code = #{campaignCode}
+          AND policy_version = #{policyVersion}
     </select>
 
     <insert id="insertExpLedger">
@@ -381,6 +394,7 @@
                active
         FROM realm_catalog
         WHERE realm_code = #{realmCode}
+          AND policy_version = #{policyVersion}
         LIMIT 1
     </select>
 

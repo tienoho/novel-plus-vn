@@ -1,7 +1,6 @@
 package com.java2nb.novel.service.gamification;
 
 import com.java2nb.novel.FrontNovelApplication;
-import com.java2nb.novel.core.config.GamificationProperties;
 import com.java2nb.novel.mapper.GamificationProgressMapper;
 import com.java2nb.novel.mapper.MonthlyTicketMapper;
 import com.java2nb.novel.service.impl.GamificationEventFailureWriter;
@@ -72,9 +71,6 @@ class GamificationMySqlIntegrationTest {
     private GamificationEventFailureWriter gamificationEventFailureWriter;
 
     @Autowired
-    private GamificationProperties gamificationProperties;
-
-    @Autowired
     private ReadingHeartbeatWriter readingHeartbeatWriter;
 
     @Autowired
@@ -82,64 +78,6 @@ class GamificationMySqlIntegrationTest {
 
     @Autowired
     private TicketRiskService ticketRiskService;
-
-    @Autowired
-    private GamificationPublicPolicyService gamificationPublicPolicyService;
-
-    @Test
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    void publicPolicyPublishKeepsOnePublishedVersionAndImmutableAudit() {
-        long suffix = Math.floorMod(System.nanoTime(), 900_000);
-        String policyVersion = "policy-it-" + suffix;
-        String staleVersion = "policy-stale-" + suffix;
-        String content = "Nội dung luật chơi integration test mô tả thời hạn Đuốc, cách xếp hạng, "
-            + "đối soát thưởng và cơ chế chống lạm dụng cho toàn bộ độc giả trên nền tảng.";
-        Date publishedAt = new Date();
-
-        GamificationPublicPolicyRow draft = gamificationPublicPolicyService.createDraft(
-            policyVersion, "Luật chơi integration test", content, 1L);
-        GamificationPublicPolicyRow published = gamificationPublicPolicyService.publish(
-            draft.getId(), draft.getVersion(), 1L, publishedAt);
-
-        assertThat(published.getStatus()).isEqualTo("PUBLISHED");
-        assertThat(published.getContentText()).isEqualTo(content);
-        assertThat(jdbcTemplate.queryForObject(
-            "SELECT COUNT(*) FROM gamification_public_policy WHERE status='PUBLISHED'",
-            Integer.class)).isEqualTo(1);
-        assertThat(jdbcTemplate.queryForObject("""
-            SELECT COUNT(*) FROM gamification_public_policy_audit
-            WHERE policy_id=? AND event_type IN ('CREATED', 'PUBLISHED')
-            """, Integer.class, draft.getId())).isEqualTo(2);
-
-        assertThatThrownBy(() -> jdbcTemplate.update(
-            "UPDATE gamification_public_policy SET content_text='changed' WHERE id=?",
-            draft.getId()))
-            .isInstanceOf(DataAccessException.class)
-            .hasMessageContaining("published gamification policy content is immutable");
-
-        GamificationPublicPolicyRow stale = gamificationPublicPolicyService.createDraft(
-            staleVersion, "Luật chơi stale integration", content, 1L);
-        assertThatThrownBy(() -> gamificationPublicPolicyService.publish(
-            stale.getId(), stale.getVersion() + 1, 1L, publishedAt))
-            .isInstanceOf(IllegalStateException.class)
-            .hasMessageContaining("version");
-        assertThat(jdbcTemplate.queryForObject(
-            "SELECT status FROM gamification_public_policy WHERE id=?", String.class, stale.getId()))
-            .isEqualTo("DRAFT");
-
-        assertThatThrownBy(() -> jdbcTemplate.update("""
-            INSERT INTO gamification_public_policy
-                (policy_version, title, content_text, status, published_by, published_at)
-            VALUES (?, 'Bản phát hành trùng', ?, 'PUBLISHED', 1, NOW(3))
-            """, "policy-duplicate-" + suffix, content))
-            .isInstanceOf(DataAccessException.class);
-        assertThatThrownBy(() -> jdbcTemplate.update("""
-            UPDATE gamification_public_policy_audit SET event_type='CHANGED'
-            WHERE policy_id=? LIMIT 1
-            """, draft.getId()))
-            .isInstanceOf(DataAccessException.class)
-            .hasMessageContaining("gamification_public_policy_audit is immutable");
-    }
 
     @Test
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
@@ -303,10 +241,10 @@ class GamificationMySqlIntegrationTest {
         for (long userId : List.of(firstUser, secondUser)) {
             service.grant(new TicketGrantCommand(userId, 1, "ADMIN_GRANT",
                 "risk-it-" + suffix + '-' + index, "ADMIN_GRANT:risk-it:" + userId,
-                start, end, "ADMIN", 1L, "risk integration test", "v1"));
+                start, end, "ADMIN", 1L, "risk integration test", "v1", 1L));
             service.castVote(new TicketVoteCommand(userId, bookId, seasonId, 1,
-                "risk-vote-" + suffix + '-' + index, ipHash, deviceHash, now,
-                LocalDate.of(2026, 8, 1)), ticketPolicy);
+                "risk-vote-" + suffix + '-' + index, ipHash, deviceHash, "v1", now,
+                LocalDate.of(2026, 8, 1), 1L), ticketPolicy);
             index++;
         }
         jdbcTemplate.update("""
@@ -362,7 +300,7 @@ class GamificationMySqlIntegrationTest {
             VALUES (?, 'DAILY_READING', '2027-01-01', 30, 30, ?)
             """, userId, claimedAt);
         QuestClaimCommand command = new QuestClaimCommand(userId, "DAILY_READING", localDate,
-            claimedAt, ZoneId.of("Asia/Ho_Chi_Minh"), 60, "v1", "v1");
+            claimedAt, ZoneId.of("Asia/Ho_Chi_Minh"), 60, "v1", "v1", 1L);
 
         QuestClaimResult first = gamificationProgressService.claimQuest(command);
         QuestClaimResult replay = gamificationProgressService.claimQuest(command);
@@ -410,11 +348,12 @@ class GamificationMySqlIntegrationTest {
         String sourceKey = "CHECKIN:" + userId + ":2027-01-01";
         GamificationCheckInService checkInService = new GamificationCheckInService(
             gamificationProgressService, gamificationProgressMapper, gamificationEventProcessor,
-            gamificationEventFailureWriter, gamificationProperties,
-            Clock.fixed(now, ZoneOffset.UTC));
+            gamificationEventFailureWriter, Clock.fixed(now, ZoneOffset.UTC));
+        var config = com.java2nb.novel.service.gamification.config.GamificationConfigSnapshot
+            .bootstrapDisabled();
 
-        CheckInOutcome first = checkInService.checkIn(userId);
-        CheckInOutcome replay = checkInService.checkIn(userId);
+        CheckInOutcome first = checkInService.checkIn(userId, config);
+        CheckInOutcome replay = checkInService.checkIn(userId, config);
 
         assertThat(first.checkIn().alreadyCheckedIn()).isFalse();
         assertThat(first.checkIn().profile().getCheckinStreak()).isEqualTo(1);
@@ -464,11 +403,13 @@ class GamificationMySqlIntegrationTest {
         ReadingHeartbeatInput minute = new ReadingHeartbeatInput(
             sessionId, bookId, chapterId, 1, 60);
 
-        ReadingHeartbeatResult opened = heartbeatService(startedAt).record(userId, start);
+        var config = com.java2nb.novel.service.gamification.config.GamificationConfigSnapshot
+            .bootstrapDisabled();
+        ReadingHeartbeatResult opened = heartbeatService(startedAt).record(userId, start, config);
         ReadingHeartbeatResult credited = heartbeatService(startedAt.plusSeconds(60))
-            .record(userId, minute);
+            .record(userId, minute, config);
         ReadingHeartbeatResult replay = heartbeatService(startedAt.plusSeconds(90))
-            .record(userId, minute);
+            .record(userId, minute, config);
 
         assertThat(opened.acceptedSeconds()).isZero();
         assertThat(credited.acceptedSeconds()).isEqualTo(60);
@@ -539,24 +480,24 @@ class GamificationMySqlIntegrationTest {
         jdbcTemplate.update("""
             INSERT INTO quest_campaign
                 (campaign_code, start_at, end_at, status, policy_version)
-            VALUES ('MYSQL_IT_CAMPAIGN', ?, ?, 'ACTIVE', 'v2')
+            VALUES ('MYSQL_IT_CAMPAIGN', ?, ?, 'ACTIVE', 'v1')
             """, startAt, endAt);
 
-        assertThat(gamificationProgressMapper.selectActiveQuestCampaigns(startAt))
+        assertThat(gamificationProgressMapper.selectActiveQuestCampaigns(startAt, "v1"))
             .extracting(QuestCampaignRow::getCampaignCode)
             .containsExactly("MYSQL_IT_CAMPAIGN");
-        assertThat(gamificationProgressMapper.selectActiveQuestCampaigns(endAt)).isEmpty();
+        assertThat(gamificationProgressMapper.selectActiveQuestCampaigns(endAt, "v1")).isEmpty();
 
         Date overlapStartAt = Date.from(Instant.parse("2098-01-15T00:00:00Z"));
         Date overlapObservedAt = Date.from(Instant.parse("2098-01-16T00:00:00Z"));
         jdbcTemplate.update("""
             INSERT INTO quest_campaign
                 (campaign_code, start_at, end_at, status, policy_version)
-            VALUES ('MYSQL_IT_CAMPAIGN_OVERLAP', ?, ?, 'ACTIVE', 'v2')
+            VALUES ('MYSQL_IT_CAMPAIGN_OVERLAP', ?, ?, 'ACTIVE', 'v1')
             """, overlapStartAt, endAt);
 
         assertThatThrownBy(() -> gamificationProgressService.listQuests(
-            USER_ID, LocalDate.of(2098, 1, 16), overlapObservedAt))
+            USER_ID, LocalDate.of(2098, 1, 16), overlapObservedAt, "v1"))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("chồng lấn");
     }
@@ -603,12 +544,12 @@ class GamificationMySqlIntegrationTest {
 
         assertThat(service.grant(new TicketGrantCommand(USER_ID, 5, "ADMIN_GRANT", "mysql-it",
             "ADMIN_GRANT:mysql-it:" + USER_ID, new Date(now.getTime() - 60_000),
-            new Date(now.getTime() + 86_400_000), "ADMIN", 1L, "integration test", "v1")))
+            new Date(now.getTime() + 86_400_000), "ADMIN", 1L, "integration test", "v1", 1L)))
             .isEqualTo(TicketPostResult.POSTED);
 
         TicketVoteResult result = service.castVote(new TicketVoteCommand(USER_ID, BOOK_ID, seasonId, 3,
-            "mysql-it-request-1", "b".repeat(64), "c".repeat(64), now,
-            LocalDate.of(2026, 8, 15)), policy);
+            "mysql-it-request-1", "b".repeat(64), "c".repeat(64), "v1", now,
+            LocalDate.of(2026, 8, 15), 1L), policy);
 
         assertThat(result.status()).isEqualTo(TicketPostResult.POSTED);
         assertThat(result.availableBalance()).isEqualTo(2);
@@ -651,18 +592,18 @@ class GamificationMySqlIntegrationTest {
         MonthlySeasonRow special = monthlyRankingService.createSpecialSeason(
             "le-hoi-doc-sach-2099", "FESTIVAL", sharedStart,
             new Date(now.getTime() + 86_400_000), new Date(now.getTime() + 43_200_000),
-            ZoneId.of("Asia/Ho_Chi_Minh"), "v1");
+            ZoneId.of("Asia/Ho_Chi_Minh"), "v1", 1L);
         TicketPolicy policy = new TicketPolicy("v1", 60, 10, 20, 50, 100, 50, false);
         service.grant(new TicketGrantCommand(USER_ID, 2, "ADMIN_GRANT", "parallel-season-it",
             "ADMIN_GRANT:parallel-season-it:" + USER_ID, new Date(now.getTime() - 60_000),
-            new Date(now.getTime() + 86_400_000), "ADMIN", 1L, "integration test", "v1"));
+            new Date(now.getTime() + 86_400_000), "ADMIN", 1L, "integration test", "v1", 1L));
 
         service.castVote(new TicketVoteCommand(USER_ID, BOOK_ID, regularSeasonId, 1,
-            "parallel-regular", "d".repeat(64), "e".repeat(64), now,
-            LocalDate.of(2026, 8, 15)), policy);
+            "parallel-regular", "d".repeat(64), "e".repeat(64), "v1", now,
+            LocalDate.of(2026, 8, 15), 1L), policy);
         service.castVote(new TicketVoteCommand(USER_ID, BOOK_ID, special.getId(), 1,
-            "parallel-special", "d".repeat(64), "e".repeat(64), now,
-            LocalDate.of(2026, 8, 15)), policy);
+            "parallel-special", "d".repeat(64), "e".repeat(64), "v1", now,
+            LocalDate.of(2026, 8, 15), 1L), policy);
 
         assertThat(jdbcTemplate.queryForObject("""
             SELECT total_tickets FROM monthly_rank_counter WHERE season_id=? AND book_id=?
@@ -681,7 +622,7 @@ class GamificationMySqlIntegrationTest {
 
         assertThat(service.grant(new TicketGrantCommand(USER_ID, 5, "ADMIN_GRANT", "expiry-it",
             "ADMIN_GRANT:expiry-it:" + USER_ID, effectiveAt, expireAt,
-            "ADMIN", 1L, "integration expiry test", "v1")))
+            "ADMIN", 1L, "integration expiry test", "v1", 1L)))
             .isEqualTo(TicketPostResult.POSTED);
 
         TicketExpiryResult expiry = service.expireDueLots(
@@ -750,10 +691,10 @@ class GamificationMySqlIntegrationTest {
 
         RewardCampaignRow campaign = authorRewardService.calculateAllocations(
             new RewardCampaignCommand(seasonId, 101L,
-                List.of(new RewardShareRule(1, 10_000)), "v1"));
+                List.of(new RewardShareRule(1, 10_000)), "v1", 1L));
         authorRewardService.approveCampaign(campaign.getId(), 9L, now);
         long allocationId = authorRewardService.listApprovedAllocationIds(campaign.getId(), 10).get(0);
-        assertThat(authorRewardService.postPendingReward(allocationId, now).getStatus())
+        assertThat(authorRewardService.postPendingReward(allocationId, now, 7).getStatus())
             .isEqualTo("POSTED_PENDING");
         AuthorRewardAllocationRow visibleReward = authorRewardService.listAuthorRewards(authorId, 10).get(0);
         assertThat(visibleReward.getPeriodCode()).isEqualTo("2199-01");
@@ -761,7 +702,7 @@ class GamificationMySqlIntegrationTest {
         assertThat(visibleReward.getAmountXu()).isEqualTo(101L);
         assertThat(visibleReward.getStatus()).isEqualTo("POSTED_PENDING");
         assertThat(authorRewardService.clawback(allocationId, 9L,
-            "Thu hồi theo kết quả khiếu nại", now, 7).getStatus()).isEqualTo("CLAWED_BACK");
+            "Thu hồi theo kết quả khiếu nại", now).getStatus()).isEqualTo("CLAWED_BACK");
 
         assertThat(jdbcTemplate.queryForList("""
             SELECT tx.id
@@ -789,10 +730,11 @@ class GamificationMySqlIntegrationTest {
         Date cutoff = Date.from(Instant.parse("2199-09-07T00:00:00Z"));
 
         MonthlySeasonRow created = monthlyRankingService.createSpecialSeason(
-            "ky-ky-niem-2199", "ANNIVERSARY", start, end, cutoff, ZoneId.of("Asia/Ho_Chi_Minh"), "v1");
+            "ky-ky-niem-2199", "ANNIVERSARY", start, end, cutoff,
+            ZoneId.of("Asia/Ho_Chi_Minh"), "v1", 1L);
         MonthlySeasonRow replay = monthlyRankingService.createSpecialSeason(
             "ky-ky-niem-2199", "ANNIVERSARY", start, end, cutoff,
-            ZoneId.of("Asia/Ho_Chi_Minh"), "v1");
+            ZoneId.of("Asia/Ho_Chi_Minh"), "v1", 1L);
 
         assertThat(created.getSeasonType()).isEqualTo("ANNIVERSARY");
         assertThat(replay.getId()).isEqualTo(created.getId());
@@ -804,7 +746,8 @@ class GamificationMySqlIntegrationTest {
             WHERE period_code=? AND season_type='REGULAR'
             """, Integer.class, "ky-ky-niem-2199")).isZero();
         assertThatThrownBy(() -> monthlyRankingService.createSpecialSeason(
-            "ky-ky-niem-2199-2", "REGULAR", start, end, cutoff, ZoneId.of("Asia/Ho_Chi_Minh"), "v1"))
+            "ky-ky-niem-2199-2", "REGULAR", start, end, cutoff,
+            ZoneId.of("Asia/Ho_Chi_Minh"), "v1", 1L))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -857,8 +800,7 @@ class GamificationMySqlIntegrationTest {
     private GamificationReadingHeartbeatService heartbeatService(Instant now) {
         return new GamificationReadingHeartbeatService(readingHeartbeatWriter,
             gamificationProgressMapper, gamificationEventProcessor,
-            gamificationEventFailureWriter, gamificationProperties,
-            Clock.fixed(now, ZoneOffset.UTC));
+            gamificationEventFailureWriter, Clock.fixed(now, ZoneOffset.UTC));
     }
 
     private void seedReadableChapter(long userId, long authorId, long bookId, long chapterId,

@@ -4,12 +4,16 @@ Trạng thái: **đang hiệu lực**. Mã phiên bản: `v1`.
 
 Tài liệu này chốt sáu quyết định kinh tế và chống lạm dụng mà [gamified-universe-plan.md](../gamified-universe-plan.md) để mở. Không được viết code tài chính hoặc chạy migration production khi chưa có tài liệu này.
 
-Mọi bản ghi season, campaign, lot, bút toán và allocation đều lưu cột `policy_version`. Đổi chính sách nghĩa là phát hành `v2` và áp cho các bản ghi mới; **không sửa lịch sử đã chốt theo `v1`**.
+Mọi bản ghi season, campaign, lot, bút toán và allocation đều lưu cột `policy_version` cùng
+`runtime_config_revision` khi phù hợp. Policy được quản lý bằng `gamification_policy_bundle`; bản đã
+`PUBLISHED` và dữ liệu con bất biến. Đổi chính sách nghĩa là clone draft `v2`, maker-checker rồi phát
+hành và áp cho bản ghi mới; **không sửa lịch sử đã chốt theo `v1`**.
 
 ## Nguyên tắc bao trùm
 
 1. Ngọn Đuốc **không phải tài sản tài chính**. Nó không đổi ngược thành Xu hay tiền, không chuyển nhượng, và **không có trạng thái nợ**. Đây là khác biệt cố ý so với ví Xu độc giả (ví Xu cho phép số dư âm trong tình huống chargeback).
-2. Mọi ngưỡng kinh tế đều là cấu hình hoặc dữ liệu trong bảng. Không hard-code trong service.
+2. Mọi ngưỡng kinh tế đều là typed runtime snapshot hoặc dữ liệu policy trong bảng. Không hard-code
+   trong service và không đọc lại ENV sau cutover DB.
 3. Mọi thao tác sai được sửa bằng **sự kiện đảo**, không sửa và không xóa lịch sử.
 4. Mọi tính năng mặc định **TẮT**. Bật từng cờ theo lộ trình rollout.
 
@@ -177,7 +181,7 @@ Nhiệm vụ hằng ngày dựa trên trả lời bình luận (`book_comment_re
 **Bộ nhiệm vụ hằng ngày v1** gồm ba nguồn sự kiện tự động và đáng tin cậy:
 
 1. Điểm danh.
-2. Đọc đủ số phút đã được máy chủ xác minh (`quest.reading-minutes-target`, mặc định 30).
+2. Đọc đủ số phút đã được máy chủ xác minh (`quest_definition.target_count`, mặc định 30).
 3. Mua hoặc đọc chương trả phí.
 
 ### Bình luận bị gỡ sau khi đã nhận thưởng
@@ -202,22 +206,26 @@ Nhiệm vụ hằng ngày dựa trên trả lời bình luận (`book_comment_re
 
 ---
 
-## Ánh xạ quyết định sang khóa cấu hình
+## Ánh xạ quyết định sang Runtime settings và Policy Studio
 
-Tất cả nằm dưới tiền tố `novel.gamification` trong `novel-front/src/main/resources/application.yml`.
+Runtime production lấy từ ACTIVE revision trong database. `application.yml` chỉ giữ giá trị ENV cho
+bootstrap/`DB_SHADOW`; quản trị viên thay đổi bằng **Cấu hình Gamification** và **Bộ policy**.
+Luật chơi công khai là một phần của policy bundle: chỉ được soạn, duyệt và phát hành qua **Bộ
+policy (Policy Studio)**. Trang vận hành chỉ đọc lịch sử luật đã phát hành; không còn endpoint publish
+độc lập có thể đi vòng maker-checker.
 
 | Quyết định | Khóa | Mặc định |
 |---|---|---|
-| QĐ-1 nguồn cấp | `ticket.grant-on-top-up-enabled` | `false` |
-| QĐ-1 hạn dùng | `ticket.lot-validity-days` | `60` |
-| QĐ-1 giới hạn | `vote.max-votes-per-day`, `vote.max-tickets-per-day`, `vote.max-tickets-per-book-per-season` | `20`, `50`, `100` |
-| QĐ-2 quỹ thưởng | `reward.enabled` | `false` |
-| QĐ-2 cửa sổ khiếu nại | `reward.claim-window-days` | `7` |
-| QĐ-3 cảnh giới | `realm.affects-benefits`, `realm.change-cooldown-hours` | `false`, `24` |
-| QĐ-5 truyện crawl | `vote.allow-crawled-books` | `false` |
-| QĐ-6 nhiệm vụ trả lời | `quest.reply-quest-enabled` | `false` |
-| QĐ-6 mục tiêu đọc | `quest.reading-minutes-target` | `30` |
-| Chốt kỳ tự động | `season.auto-finalize` | `false` |
+| QĐ-1 nguồn cấp | Cờ khóa `TICKET_GRANT_ON_TOPUP` | `false`, không chỉnh được ở v1 |
+| QĐ-1 hạn dùng | `ticketLotValidityDays` | `60` |
+| QĐ-1 giới hạn | `voteMaxVotesPerDay`, `voteMaxTicketsPerDay`, `voteMaxTicketsPerBookPerSeason` | `20`, `50`, `100` |
+| QĐ-2 quỹ thưởng | `rewardEnabled` | `false` |
+| QĐ-2 cửa sổ khiếu nại | `rewardClaimWindowDays`; allocation chụp `release_eligible_at` | `7` |
+| QĐ-3 cảnh giới | Cờ khóa `REALM_AFFECTS_BENEFITS`; `realmChangeCooldownHours` | `false`, `24` |
+| QĐ-5 truyện crawl | `voteAllowCrawledBooks` | `false` |
+| QĐ-6 nhiệm vụ trả lời | Cờ khóa `QUEST_REPLY_ENABLED` | `false` |
+| QĐ-6 mục tiêu đọc | `quest_definition.target_count` trong policy bundle | `30` |
+| Chốt kỳ tự động | Cờ khóa `SEASON_AUTO_FINALIZE` | `false` |
 
 Phiên bản chính sách hiện hành nằm ở `novel.gamification.policy-version`, giá trị `v1`. Giá trị này được ghi vào mọi bản ghi mới.
 

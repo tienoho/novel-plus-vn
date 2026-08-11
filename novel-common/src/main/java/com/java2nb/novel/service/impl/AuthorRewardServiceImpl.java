@@ -50,7 +50,7 @@ public class AuthorRewardServiceImpl implements AuthorRewardService {
         }
         try {
             authorRewardMapper.insertCampaign(season.getPeriodCode(), command.budgetXu(),
-                structureJson, command.policyVersion());
+                structureJson, command.policyVersion(), command.runtimeConfigRevision());
         } catch (DuplicateKeyException exception) {
             existing = authorRewardMapper.selectCampaignByPeriod(season.getPeriodCode());
             if (existing == null) {
@@ -97,6 +97,7 @@ public class AuthorRewardServiceImpl implements AuthorRewardService {
             allocation.setStatus(duplicateAuthor ? "SKIPPED_DUPLICATE_AUTHOR" : "CALCULATED");
             allocation.setReason(duplicateAuthor ? "Tác giả đã nhận giải cao hơn trong cùng kỳ" : null);
             allocation.setPolicyVersion(command.policyVersion());
+            allocation.setRuntimeConfigRevision(command.runtimeConfigRevision());
             if (authorRewardMapper.insertAllocation(allocation) != 1) {
                 throw new IllegalStateException("Không thể ghi phân bổ thưởng tác giả");
             }
@@ -154,7 +155,8 @@ public class AuthorRewardServiceImpl implements AuthorRewardService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public AuthorRewardAllocationRow postPendingReward(long allocationId, Date postedAt) {
+    public AuthorRewardAllocationRow postPendingReward(long allocationId, Date postedAt,
+                                                        int claimWindowDays) {
         AuthorRewardAllocationRow allocation = lockAllocation(allocationId);
         if ("POSTED_PENDING".equals(allocation.getStatus())) {
             return allocation;
@@ -163,10 +165,16 @@ public class AuthorRewardServiceImpl implements AuthorRewardService {
             throw new IllegalStateException("Phân bổ chưa sẵn sàng để ghi thưởng pending");
         }
         Objects.requireNonNull(postedAt, "Thiếu thời điểm ghi thưởng pending");
+        if (claimWindowDays <= 0) {
+            throw new IllegalArgumentException("Cửa sổ khiếu nại thưởng không hợp lệ");
+        }
+        Date releaseEligibleAt = Date.from(postedAt.toInstant()
+            .plus(Duration.ofDays(claimWindowDays)));
         String key = "MONTHLY_AUTHOR_REWARD:" + allocation.getAllocationNo();
         walletLedgerService.creditAuthorRewardPending(allocation.getAuthorId(), allocation.getAmountXu(),
             allocation.getAllocationNo(), key, "Thưởng xếp hạng Ngọn Đuốc tháng");
-        if (authorRewardMapper.markPostedPending(allocationId, allocation.getVersion(), postedAt) != 1) {
+        if (authorRewardMapper.markPostedPending(allocationId, allocation.getVersion(), postedAt,
+            releaseEligibleAt) != 1) {
             throw new IllegalStateException("Phân bổ thưởng đã được cập nhật đồng thời");
         }
         return requireAllocation(allocationId);
@@ -201,8 +209,8 @@ public class AuthorRewardServiceImpl implements AuthorRewardService {
     @Transactional(rollbackFor = Exception.class)
     @Override
     public AuthorRewardAllocationRow clawback(long allocationId, long operatorId, String reason,
-                                              Date clawedBackAt, int claimWindowDays) {
-        if (operatorId <= 0 || clawedBackAt == null || claimWindowDays <= 0) {
+                                              Date clawedBackAt) {
+        if (operatorId <= 0 || clawedBackAt == null) {
             throw new IllegalArgumentException("Yêu cầu thu hồi thưởng không hợp lệ");
         }
         String normalizedReason = normalizeReason(reason);
@@ -210,12 +218,11 @@ public class AuthorRewardServiceImpl implements AuthorRewardService {
         if ("CLAWED_BACK".equals(allocation.getStatus())) {
             return allocation;
         }
-        if (!"POSTED_PENDING".equals(allocation.getStatus()) || allocation.getPostedAt() == null) {
+        if (!"POSTED_PENDING".equals(allocation.getStatus())
+            || allocation.getReleaseEligibleAt() == null) {
             throw new IllegalStateException("Chỉ được thu hồi thưởng đang trong cửa sổ khiếu nại");
         }
-        Date claimDeadline = Date.from(allocation.getPostedAt().toInstant()
-            .plus(Duration.ofDays(claimWindowDays)));
-        if (clawedBackAt.after(claimDeadline)) {
+        if (clawedBackAt.after(allocation.getReleaseEligibleAt())) {
             throw new IllegalStateException("Đã hết cửa sổ thu hồi thưởng tự động");
         }
         String originalKey = "MONTHLY_AUTHOR_REWARD:" + allocation.getAllocationNo();
@@ -300,7 +307,8 @@ public class AuthorRewardServiceImpl implements AuthorRewardService {
                                           String structureJson) {
         if (!Objects.equals(existing.getBudgetXu(), command.budgetXu())
             || !Objects.equals(existing.getStructureJson(), structureJson)
-            || !Objects.equals(existing.getPolicyVersion(), command.policyVersion())) {
+            || !Objects.equals(existing.getPolicyVersion(), command.policyVersion())
+            || !Objects.equals(existing.getRuntimeConfigRevision(), command.runtimeConfigRevision())) {
             throw new IllegalStateException("Campaign của kỳ đã tồn tại với cấu hình khác");
         }
     }

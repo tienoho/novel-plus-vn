@@ -40,18 +40,19 @@ public class QuestCampaignConfigServiceImpl implements QuestCampaignConfigServic
         if (!"DRAFT".equals(campaign.getStatus())) {
             throw new IllegalStateException("Chỉ campaign DRAFT mới được sửa reward");
         }
-        if (mapper.countQuest(command.questCode()) != 1) {
+        if (mapper.countQuest(command.questCode(), campaign.getPolicyVersion()) != 1) {
             throw new IllegalArgumentException("Nhiệm vụ không tồn tại hoặc đã tắt");
         }
-        mapper.deleteRewardTypes(campaign.getCampaignCode(), command.questCode());
+        mapper.deleteRewardTypes(campaign.getCampaignCode(), command.questCode(),
+            campaign.getPolicyVersion());
         if (command.expAmount() > 0
             && mapper.insertReward(campaign.getCampaignCode(), command.questCode(),
-            "EXP", command.expAmount()) != 1) {
+            campaign.getPolicyVersion(), "EXP", command.expAmount()) != 1) {
             throw new IllegalStateException("Không thể lưu reward EXP");
         }
         if (command.ticketAmount() > 0
             && mapper.insertReward(campaign.getCampaignCode(), command.questCode(),
-            "TICKET", command.ticketAmount()) != 1) {
+            campaign.getPolicyVersion(), "TICKET", command.ticketAmount()) != 1) {
             throw new IllegalStateException("Không thể lưu reward Đuốc");
         }
     }
@@ -72,7 +73,7 @@ public class QuestCampaignConfigServiceImpl implements QuestCampaignConfigServic
         if (!campaign.getEndAt().after(activatedAt)) {
             throw new IllegalStateException("Campaign đã hết cửa sổ kích hoạt");
         }
-        if (mapper.countRewards(campaign.getCampaignCode()) <= 0) {
+        if (mapper.countRewards(campaign.getCampaignCode(), campaign.getPolicyVersion()) <= 0) {
             throw new IllegalStateException("Campaign chưa có reward");
         }
         if (mapper.countOverlappingActive(campaignId, campaign.getStartAt(), campaign.getEndAt()) > 0) {

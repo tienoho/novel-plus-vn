@@ -1,15 +1,15 @@
 package com.java2nb.novel.core.schedule;
 
-import com.java2nb.novel.core.config.GamificationProperties;
 import com.java2nb.novel.core.observability.NovelBusinessMetrics;
 import com.java2nb.novel.core.observability.NovelBusinessMetrics.GamificationQueue;
 import com.java2nb.novel.core.observability.NovelBusinessMetrics.Outcome;
 import com.java2nb.novel.mapper.GamificationProgressMapper;
 import com.java2nb.novel.service.impl.GamificationEventFailureWriter;
 import com.java2nb.novel.service.impl.GamificationEventProcessor;
+import com.java2nb.novel.service.gamification.config.GamificationConfigProvider;
+import com.java2nb.novel.service.gamification.config.GamificationConfigSnapshot;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.Clock;
@@ -18,7 +18,7 @@ import java.util.Date;
 @Component
 @Slf4j
 public class GamificationEventDrainSchedule {
-    private final GamificationProperties properties;
+    private final GamificationConfigProvider configProvider;
     private final GamificationProgressMapper mapper;
     private final GamificationEventProcessor processor;
     private final GamificationEventFailureWriter failureWriter;
@@ -26,21 +26,21 @@ public class GamificationEventDrainSchedule {
     private final Clock clock;
 
     @Autowired
-    public GamificationEventDrainSchedule(GamificationProperties properties,
+    public GamificationEventDrainSchedule(GamificationConfigProvider configProvider,
                                           GamificationProgressMapper mapper,
                                           GamificationEventProcessor processor,
                                           GamificationEventFailureWriter failureWriter,
                                           NovelBusinessMetrics metrics) {
-        this(properties, mapper, processor, failureWriter, metrics, Clock.systemUTC());
+        this(configProvider, mapper, processor, failureWriter, metrics, Clock.systemUTC());
     }
 
-    GamificationEventDrainSchedule(GamificationProperties properties,
+    GamificationEventDrainSchedule(GamificationConfigProvider configProvider,
                                    GamificationProgressMapper mapper,
                                    GamificationEventProcessor processor,
                                    GamificationEventFailureWriter failureWriter,
                                    NovelBusinessMetrics metrics,
                                    Clock clock) {
-        this.properties = properties;
+        this.configProvider = configProvider;
         this.mapper = mapper;
         this.processor = processor;
         this.failureWriter = failureWriter;
@@ -48,17 +48,16 @@ public class GamificationEventDrainSchedule {
         this.clock = clock;
     }
 
-    @Scheduled(fixedDelayString = "${novel.gamification.event.drain-delay-ms:15000}")
     public void drain() {
-        if (!properties.getEvent().isEnabled() || !properties.getQuest().isEnabled()
-            || !properties.isConfigured()) {
+        GamificationConfigSnapshot config = configProvider.currentForWrite();
+        if (!config.isEventEnabled() || !config.isQuestEnabled()) {
             return;
         }
-        int maxAttempt = properties.getEvent().getMaxAttempt();
+        int maxAttempt = config.getEventMaxAttempt();
         metrics.setGamificationQueue(GamificationQueue.PENDING_EVENTS,
             mapper.countPendingEvents(maxAttempt));
         for (Long eventId : mapper.selectPendingEventIds(
-            properties.getEvent().getDrainBatchSize(), maxAttempt)) {
+            config.getEventDrainBatchSize(), maxAttempt)) {
             Date now = Date.from(clock.instant());
             try {
                 switch (processor.process(eventId, now, maxAttempt)) {

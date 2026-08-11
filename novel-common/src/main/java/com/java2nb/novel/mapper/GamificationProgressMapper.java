@@ -52,7 +52,8 @@ public interface GamificationProgressMapper {
                            @Param("errorMessage") String errorMessage,
                            @Param("maxAttempt") int maxAttempt);
 
-    List<QuestDefinitionRow> selectActiveQuestsByEventType(@Param("eventType") String eventType);
+    List<QuestDefinitionRow> selectActiveQuestsByEventType(@Param("eventType") String eventType,
+                                                           @Param("policyVersion") String policyVersion);
 
     int insertQuestProgressIgnore(@Param("userId") long userId,
                                   @Param("questCode") String questCode,
@@ -64,14 +65,17 @@ public interface GamificationProgressMapper {
                                @Param("periodKey") String periodKey,
                                @Param("completedAt") java.util.Date completedAt);
 
-    List<QuestCampaignRow> selectActiveQuestCampaigns(@Param("observedAt") java.util.Date observedAt);
+    List<QuestCampaignRow> selectActiveQuestCampaigns(@Param("observedAt") java.util.Date observedAt,
+                                                       @Param("policyVersion") String policyVersion);
 
     List<QuestProgressRow> selectQuestProgress(@Param("userId") long userId,
                                                @Param("dailyKey") String dailyKey,
                                                @Param("weeklyKey") String weeklyKey,
-                                               @Param("campaignCode") String campaignCode);
+                                               @Param("campaignCode") String campaignCode,
+                                               @Param("policyVersion") String policyVersion);
 
-    QuestDefinitionRow selectQuestByCode(@Param("questCode") String questCode);
+    QuestDefinitionRow selectQuestByCode(@Param("questCode") String questCode,
+                                         @Param("policyVersion") String policyVersion);
 
     QuestProgressRow lockQuestProgress(@Param("userId") long userId,
                                        @Param("questCode") String questCode,
@@ -82,7 +86,8 @@ public interface GamificationProgressMapper {
                                    @Param("periodKey") String periodKey);
 
     QuestRewardSummary selectQuestRewardSummary(@Param("questCode") String questCode,
-                                                 @Param("campaignCode") String campaignCode);
+                                                 @Param("campaignCode") String campaignCode,
+                                                 @Param("policyVersion") String policyVersion);
 
     int insertExpLedger(@Param("userId") long userId,
                         @Param("sourceKey") String sourceKey,
@@ -146,7 +151,8 @@ public interface GamificationProgressMapper {
 
     GamificationProfileRow lockProfile(@Param("userId") long userId);
 
-    RealmCatalogRow selectRealm(@Param("realmCode") String realmCode);
+    RealmCatalogRow selectRealm(@Param("realmCode") String realmCode,
+                                @Param("policyVersion") String policyVersion);
 
     LevelRuleRow selectNextLevelRule(@Param("ruleVersion") String ruleVersion,
                                      @Param("totalExp") long totalExp);

@@ -50,6 +50,8 @@ COPY --chmod=0444 doc/sql/20260814_reading_subscription_mandate_revocation.sql /
 COPY --chmod=0444 doc/sql/20260815_reading_subscription_mandate_admin.sql /flyway/sql/V2026081501__reading_subscription_mandate_admin.sql
 COPY --chmod=0444 doc/sql/20260816_reading_subscription_mandate_idempotency.sql /flyway/sql/V2026081601__reading_subscription_mandate_idempotency.sql
 COPY --chmod=0444 doc/sql/20260817_author_payout_four_eyes.sql /flyway/sql/V2026081701__author_payout_four_eyes.sql
+COPY --chmod=0444 doc/sql/20260818_gamification_runtime_config.sql /flyway/sql/V2026081801__gamification_runtime_config.sql
+COPY --chmod=0444 doc/sql/20260819_gamification_dynamic_config_p1_hardening.sql /flyway/sql/V2026081901__gamification_dynamic_config_p1_hardening.sql
 
 COPY --chmod=0555 deploy/flyway/entrypoint.sh /usr/local/bin/novel-flyway
 

@@ -6,7 +6,7 @@ import java.util.Date;
 
 public record QuestClaimCommand(long userId, String questCode, LocalDate localDate, Date claimedAt,
                                 ZoneId zoneId, int ticketValidityDays, String ruleVersion,
-                                String policyVersion) {
+                                String policyVersion, long runtimeConfigRevision) {
     public QuestClaimCommand {
         if (userId <= 0 || questCode == null || questCode.isBlank() || questCode.length() > 48) {
             throw new IllegalArgumentException("Chủ thể hoặc mã nhiệm vụ không hợp lệ");
@@ -17,6 +17,9 @@ public record QuestClaimCommand(long userId, String questCode, LocalDate localDa
         if (ruleVersion == null || ruleVersion.isBlank() || ruleVersion.length() > 32
             || policyVersion == null || policyVersion.isBlank() || policyVersion.length() > 32) {
             throw new IllegalArgumentException("Phiên bản luật hoặc chính sách nhiệm vụ không hợp lệ");
+        }
+        if (runtimeConfigRevision <= 0) {
+            throw new IllegalArgumentException("Revision cấu hình gamification không hợp lệ");
         }
         claimedAt = new Date(claimedAt.getTime());
     }
