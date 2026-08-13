@@ -2,7 +2,7 @@
 SET NAMES utf8mb4;
 
 UPDATE `friend_link`
-SET `link_name` = 'Novel Plus nguồn mở'
+SET `link_name` = 'Khởi Thư nguồn mở'
 WHERE `id` = 5
   AND `link_url` = 'https://novel.xxyopen.com'
   AND `link_name` = '小说精品屋';

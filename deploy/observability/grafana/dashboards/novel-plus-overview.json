@@ -59,15 +59,39 @@
       "targets": [{"expr": "novel_gamification_queue", "legendFormat": "{{state}}", "refId": "A"}],
       "title": "Hàng đợi gamification",
       "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "novel-prometheus"},
+      "fieldConfig": {"defaults": {"decimals": 0}, "overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+      "id": 7,
+      "targets": [
+        {"expr": "gamification_config_revision", "legendFormat": "{{application}} / config", "refId": "A"},
+        {"expr": "gamification_scheduler_revision", "legendFormat": "{{application}} / scheduler", "refId": "B"}
+      ],
+      "title": "Revision cấu hình gamification",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "novel-prometheus"},
+      "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+      "id": 8,
+      "targets": [
+        {"expr": "gamification_config_snapshot_age_seconds", "legendFormat": "{{application}} / age", "refId": "A"},
+        {"expr": "gamification_config_max_stale_seconds", "legendFormat": "{{application}} / max stale", "refId": "B"}
+      ],
+      "title": "Tuổi snapshot gamification",
+      "type": "timeseries"
     }
   ],
   "refresh": "30s",
   "schemaVersion": 41,
-  "tags": ["novel-plus", "production"],
+  "tags": ["khoi-thu", "production"],
   "templating": {"list": []},
   "time": {"from": "now-6h", "to": "now"},
   "timezone": "browser",
-  "title": "Novel Plus - Tổng quan vận hành",
-  "uid": "novel-plus-overview",
+  "title": "Khởi Thư - Tổng quan vận hành",
+  "uid": "khoi-thu-overview",
   "version": 1
 }

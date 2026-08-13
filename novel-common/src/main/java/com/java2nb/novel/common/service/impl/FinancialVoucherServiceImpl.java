@@ -63,7 +63,8 @@ public class FinancialVoucherServiceImpl implements FinancialVoucherService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public FinancialVoucherDO createRechargeReceipt(String orderNo, String payerName, String payerTaxCode, long grossAmountVnd) {
+    public FinancialVoucherDO createRechargeReceipt(String orderNo, String payerName, String payerTaxCode,
+            long grossAmountVnd) {
         FinancialVoucherDO existing = voucherDao.selectByReference("ORDER_PAY", orderNo);
         if (existing != null) {
             return existing;
@@ -97,7 +98,8 @@ public class FinancialVoucherServiceImpl implements FinancialVoucherService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public FinancialVoucherDO createPayoutVoucher(long withdrawalId, String payeeName, String payeeTaxCode, long grossAmountVnd, long withheldTaxVnd) {
+    public FinancialVoucherDO createPayoutVoucher(long withdrawalId, String payeeName, String payeeTaxCode,
+            long grossAmountVnd, long withheldTaxVnd) {
         String refId = String.valueOf(withdrawalId);
         FinancialVoucherDO existing = voucherDao.selectByReference("AUTHOR_WITHDRAWAL_REQUEST", refId);
         if (existing != null) {
@@ -193,27 +195,29 @@ public class FinancialVoucherServiceImpl implements FinancialVoucherService {
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.forLanguageTag("vi-VN"));
         dateFormat.setTimeZone(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
 
-        String title = "RECHARGE_RECEIPT".equals(voucher.getVoucherType()) ?
-                "BIÊN NHẬN NẠP XU" : "PHIẾU CHI THU NHẬP TÁC GIẢ";
+        String title = "RECHARGE_RECEIPT".equals(voucher.getVoucherType()) ? "BIÊN NHẬN NẠP XU"
+                : "PHIẾU CHI THU NHẬP TÁC GIẢ";
         String taxLabel = "RECHARGE_RECEIPT".equals(voucher.getVoucherType())
-                ? "Thuế GTGT" : "Thuế TNCN đã khấu trừ";
+                ? "Thuế GTGT"
+                : "Thuế TNCN đã khấu trừ";
 
         String contentText = String.format(
                 "Số chứng từ: %s\n" +
-                "Ngày phát hành: %s\n" +
-                "Trạng thái: %s\n" +
-                "----------------------------------------\n" +
-                "Người trả: %s (MST: %s)\n" +
-                "Người nhận: %s (MST: %s)\n" +
-                "Tham chiếu: %s (ID: %s)\n" +
-                "----------------------------------------\n" +
-                "Tổng tiền: %s VND\n" +
-                "%s: %s VND\n" +
-                "Thực nhận: %s VND\n" +
-                "----------------------------------------\n" +
-                "Mã kiểm tra: %s\n",
+                        "Ngày phát hành: %s\n" +
+                        "Trạng thái: %s\n" +
+                        "----------------------------------------\n" +
+                        "Người trả: %s (MST: %s)\n" +
+                        "Người nhận: %s (MST: %s)\n" +
+                        "Tham chiếu: %s (ID: %s)\n" +
+                        "----------------------------------------\n" +
+                        "Tổng tiền: %s VND\n" +
+                        "%s: %s VND\n" +
+                        "Thực nhận: %s VND\n" +
+                        "----------------------------------------\n" +
+                        "Mã kiểm tra: %s\n",
                 voucher.getVoucherNo(),
-                voucher.getIssuedAt() != null ? dateFormat.format(voucher.getIssuedAt()) : dateFormat.format(new Date()),
+                voucher.getIssuedAt() != null ? dateFormat.format(voucher.getIssuedAt())
+                        : dateFormat.format(new Date()),
                 voucher.getStatus(),
                 voucher.getPayerName(), voucher.getPayerTaxCode(),
                 voucher.getPayeeName(), voucher.getPayeeTaxCode(),
@@ -221,8 +225,8 @@ public class FinancialVoucherServiceImpl implements FinancialVoucherService {
                 numberFormat.format(voucher.getGrossAmountVnd()),
                 taxLabel, numberFormat.format(voucher.getTaxAmountVnd()),
                 numberFormat.format(voucher.getNetAmountVnd()),
-                computeSha256(voucher.getVoucherNo() + "|" + voucher.getGrossAmountVnd() + "|" + voucher.getNetAmountVnd())
-        );
+                computeSha256(
+                        voucher.getVoucherNo() + "|" + voucher.getGrossAmountVnd() + "|" + voucher.getNetAmountVnd()));
 
         return generatePdfFromText(title, contentText);
     }
@@ -242,7 +246,8 @@ public class FinancialVoucherServiceImpl implements FinancialVoucherService {
             baos.write(0xBB);
             baos.write(0xBF);
 
-            writer.println("Voucher No,Voucher Type,Ref Type,Ref ID,Payer Name,Payer Tax Code,Payee Name,Payee Tax Code,Gross Amount (VND),Tax Amount (VND),Net Amount (VND),Status,Issued At");
+            writer.println(
+                    "Voucher No,Voucher Type,Ref Type,Ref ID,Payer Name,Payer Tax Code,Payee Name,Payee Tax Code,Gross Amount (VND),Tax Amount (VND),Net Amount (VND),Status,Issued At");
 
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             sdf.setTimeZone(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
@@ -261,8 +266,7 @@ public class FinancialVoucherServiceImpl implements FinancialVoucherService {
                         v.getTaxAmountVnd() != null ? v.getTaxAmountVnd() : 0,
                         v.getNetAmountVnd() != null ? v.getNetAmountVnd() : 0,
                         escapeCsv(v.getStatus()),
-                        v.getIssuedAt() != null ? sdf.format(v.getIssuedAt()) : ""
-                );
+                        v.getIssuedAt() != null ? sdf.format(v.getIssuedAt()) : "");
             }
             writer.flush();
         } catch (Exception e) {
@@ -314,7 +318,8 @@ public class FinancialVoucherServiceImpl implements FinancialVoucherService {
     }
 
     private String escapeCsv(String str) {
-        if (str == null) return "";
+        if (str == null)
+            return "";
         return str.replace("\"", "\"\"");
     }
 
@@ -325,7 +330,8 @@ public class FinancialVoucherServiceImpl implements FinancialVoucherService {
             StringBuilder hexString = new StringBuilder();
             for (byte b : hash) {
                 String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) hexString.append('0');
+                if (hex.length() == 1)
+                    hexString.append('0');
                 hexString.append(hex);
             }
             return hexString.toString();
@@ -336,9 +342,9 @@ public class FinancialVoucherServiceImpl implements FinancialVoucherService {
 
     private byte[] generatePdfFromText(String title, String bodyText) {
         try (PDDocument document = new PDDocument();
-             InputStream regularInput = requireFont(REGULAR_FONT);
-             InputStream boldInput = requireFont(BOLD_FONT);
-             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+                InputStream regularInput = requireFont(REGULAR_FONT);
+                InputStream boldInput = requireFont(BOLD_FONT);
+                ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             PDFont regular = PDType0Font.load(document, regularInput, true);
             PDFont bold = PDType0Font.load(document, boldInput, true);
             List<String> lines = new ArrayList<>();
@@ -372,7 +378,7 @@ public class FinancialVoucherServiceImpl implements FinancialVoucherService {
 
             PDDocumentInformation information = new PDDocumentInformation();
             information.setTitle(title);
-            information.setProducer("Novel Plus");
+            information.setProducer("Khởi Thư");
             document.setDocumentInformation(information);
             document.save(output);
             return output.toByteArray();

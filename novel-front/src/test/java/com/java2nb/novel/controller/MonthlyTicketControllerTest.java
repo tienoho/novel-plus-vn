@@ -1,7 +1,6 @@
 package com.java2nb.novel.controller;
 
 import com.java2nb.novel.core.bean.UserDetails;
-import com.java2nb.novel.core.config.GamificationProperties;
 import com.java2nb.novel.core.utils.DeviceCookieService;
 import com.java2nb.novel.core.exception.BusinessException;
 import com.java2nb.novel.dto.gamification.MonthlyTicketVoteRequest;
@@ -20,6 +19,9 @@ import com.java2nb.novel.service.gamification.TicketRiskService;
 import com.java2nb.novel.service.gamification.TicketBookSummary;
 import com.java2nb.novel.service.gamification.TicketVoteCommand;
 import com.java2nb.novel.service.gamification.TicketVoteResult;
+import com.java2nb.novel.service.gamification.config.GamificationConfigProvider;
+import com.java2nb.novel.service.gamification.config.GamificationConfigSnapshot;
+import com.java2nb.novel.service.gamification.config.GamificationIdentifierHasher;
 import io.github.xxyopen.model.resp.RestResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,7 +55,8 @@ class MonthlyTicketControllerTest {
     private MonthlyRankingService rankingService;
     private BookService bookService;
     private UserService userService;
-    private GamificationProperties properties;
+    private GamificationConfigProvider configProvider;
+    private GamificationIdentifierHasher identifierHasher;
     private TicketRiskService ticketRiskService;
     private DeviceCookieService deviceCookieService;
     private MonthlyTicketController controller;
@@ -64,11 +67,13 @@ class MonthlyTicketControllerTest {
         rankingService = mock(MonthlyRankingService.class);
         bookService = mock(BookService.class);
         userService = mock(UserService.class);
-        properties = new GamificationProperties();
-        properties.getTicket().setEnabled(true);
-        properties.getVote().setEnabled(true);
-        properties.getSeason().setEnabled(true);
-        properties.getVote().setIpHashSalt("0123456789abcdef0123456789abcdef");
+        configProvider = mock(GamificationConfigProvider.class);
+        GamificationConfigSnapshot config = GamificationConfigSnapshot.bootstrapDisabled().toBuilder()
+            .ticketEnabled(true).voteEnabled(true).seasonEnabled(true).build();
+        when(configProvider.current()).thenReturn(config);
+        when(configProvider.currentForWrite()).thenReturn(config);
+        identifierHasher = mock(GamificationIdentifierHasher.class);
+        when(identifierHasher.hash(any(), any(), any())).thenReturn("a".repeat(64));
         ticketRiskService = mock(TicketRiskService.class);
         deviceCookieService = mock(DeviceCookieService.class);
         when(deviceCookieService.resolve(any(), any()))
@@ -79,7 +84,8 @@ class MonthlyTicketControllerTest {
         UserDetails details = mock(UserDetails.class);
         when(details.getId()).thenReturn(USER_ID);
         controller = new MonthlyTicketController(ticketService, rankingService, bookService,
-            userService, properties, ticketRiskService, deviceCookieService, FIXED_CLOCK) {
+            userService, configProvider, ticketRiskService, deviceCookieService, identifierHasher,
+            FIXED_CLOCK) {
             @Override
             protected UserDetails getUserDetails(jakarta.servlet.http.HttpServletRequest request) {
                 return details;
@@ -167,7 +173,8 @@ class MonthlyTicketControllerTest {
 
     @Test
     void disabledFeatureStopsBeforeReadingBookOrWritingLedger() {
-        properties.getVote().setEnabled(false);
+        when(configProvider.currentForWrite()).thenReturn(
+            GamificationConfigSnapshot.bootstrapDisabled().toBuilder().ticketEnabled(true).build());
 
         assertThatThrownBy(() -> controller.castVote(BOOK_ID,
             new MonthlyTicketVoteRequest(9L, 1, "request-00000002"),

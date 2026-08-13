@@ -1,5 +1,5 @@
 groups:
-  - name: novel-plus-availability
+  - name: khoi-thu-availability
     rules:
       - alert: NovelServiceDown
         expr: up{job=~"novel-(front|admin|crawl)"} == 0
@@ -7,7 +7,7 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: "Dịch vụ Novel Plus không được scrape"
+          summary: "Dịch vụ Khởi Thư không được scrape"
           description: "{{ $labels.job }} đã down hoặc endpoint metric không truy cập được trong 2 phút."
 
       - alert: NovelHttpErrorRateHigh
@@ -46,7 +46,7 @@ groups:
           summary: "Pool kết nối database gần cạn"
           description: "{{ $labels.application }}/{{ $labels.pool }} dùng trên 85% kết nối trong 5 phút."
 
-  - name: novel-plus-finance
+  - name: khoi-thu-finance
     rules:
       - alert: NovelPaymentFailures
         expr: increase(novel_payment_operations_total{outcome=~"failed|unavailable"}[10m]) > 0
@@ -111,7 +111,7 @@ groups:
           summary: "Không nhận được trạng thái Flyway"
           description: "Pushgateway không có metric kết quả migration trong 10 phút."
 
-  - name: novel-plus-gamification
+  - name: khoi-thu-gamification
     rules:
       - alert: NovelGamificationBacklogHigh
         expr: novel_gamification_queue{state="pending_events"} > 500
@@ -130,3 +130,48 @@ groups:
         annotations:
           summary: "Gamification có reward/job cần xử lý"
           description: "Hàng đợi {{ $labels.state }} còn {{ $value }} bản ghi."
+
+      - alert: NovelGamificationConfigRevisionDrift
+        expr: max(gamification_config_revision) - min(gamification_config_revision) > 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Revision cấu hình gamification lệch giữa các instance"
+          description: "Các ứng dụng không cùng sử dụng một runtime revision trong ít nhất 5 phút."
+
+      - alert: NovelGamificationConfigStale
+        expr: gamification_config_snapshot_age_seconds > gamification_config_max_stale_seconds
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Snapshot cấu hình gamification đã stale"
+          description: "{{ $labels.application }}/{{ $labels.instance }} đã khóa đường ghi gamification."
+
+      - alert: NovelGamificationConfigRefreshFailed
+        expr: increase(gamification_config_refresh_failures_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Refresh cấu hình gamification thất bại"
+          description: "{{ $labels.application }} có lỗi refresh snapshot trong 5 phút gần nhất."
+
+      - alert: NovelGamificationConfigActivationFailed
+        expr: increase(gamification_config_activation_failures_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Kích hoạt revision gamification thất bại"
+          description: "Worker không thể kích hoạt revision đến hạn; kiểm tra audit và khóa database."
+
+      - alert: NovelGamificationSchedulerRescheduleFailed
+        expr: increase(gamification_scheduler_reschedule_failures_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Đăng ký lại lịch gamification thất bại"
+          description: "{{ $labels.application }} chưa áp dụng được cron/delay của revision mới."

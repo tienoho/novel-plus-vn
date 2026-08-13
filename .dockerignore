@@ -12,4 +12,5 @@ e2e/.auth
 e2e/node_modules
 e2e/playwright-report
 e2e/test-results
+tmp
 doc/sql/novel_plus_data.sql.zip

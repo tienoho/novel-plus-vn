@@ -8,6 +8,7 @@
         period_code AS periodCode,
         status,
         policy_version AS policyVersion,
+        runtime_config_revision AS runtimeConfigRevision,
         snapshot_id AS snapshotId,
         finalized_by AS finalizedBy,
         version
@@ -45,8 +46,10 @@
 
     <insert id="insertCampaign">
         INSERT INTO reward_fund_campaign
-            (period_code, status, enabled, budget_xu, structure_json, policy_version)
-        VALUES (#{periodCode}, 'DRAFT', 0, #{budgetXu}, #{structureJson}, #{policyVersion})
+            (period_code, status, enabled, budget_xu, structure_json, policy_version,
+             runtime_config_revision)
+        VALUES (#{periodCode}, 'DRAFT', 0, #{budgetXu}, #{structureJson}, #{policyVersion},
+                #{runtimeConfigRevision})
     </insert>
 
     <sql id="campaignColumns">
@@ -57,6 +60,7 @@
         budget_xu AS budgetXu,
         structure_json AS structureJson,
         policy_version AS policyVersion,
+        runtime_config_revision AS runtimeConfigRevision,
         approved_by AS approvedBy,
         approved_at AS approvedAt,
         version
@@ -81,10 +85,11 @@
     <insert id="insertAllocation">
         INSERT INTO author_reward_allocation
             (allocation_no, campaign_id, season_id, snapshot_id, book_id, author_id,
-             rank_no, amount_xu, rounding_adjustment_xu, status, reason, policy_version)
+             rank_no, amount_xu, rounding_adjustment_xu, status, reason, policy_version,
+             runtime_config_revision)
         VALUES (#{allocationNo}, #{campaignId}, #{seasonId}, #{snapshotId}, #{bookId},
                 #{authorId}, #{rankNo}, #{amountXu}, #{roundingAdjustmentXu}, #{status},
-                #{reason}, #{policyVersion})
+                #{reason}, #{policyVersion}, #{runtimeConfigRevision})
     </insert>
 
     <update id="approveCampaign">
@@ -143,10 +148,12 @@
         rounding_adjustment_xu AS roundingAdjustmentXu,
         status,
         posted_at AS postedAt,
+        release_eligible_at AS releaseEligibleAt,
         released_at AS releasedAt,
         clawed_back_at AS clawedBackAt,
         reason,
         policy_version AS policyVersion,
+        runtime_config_revision AS runtimeConfigRevision,
         version
     </sql>
 
@@ -170,6 +177,7 @@
         UPDATE author_reward_allocation
         SET status = 'POSTED_PENDING',
             posted_at = #{postedAt},
+            release_eligible_at = #{releaseEligibleAt},
             version = version + 1
         WHERE id = #{allocationId}
           AND status = 'APPROVED'
@@ -181,8 +189,8 @@
         SELECT id
         FROM author_reward_allocation
         WHERE status = 'POSTED_PENDING'
-          AND posted_at &lt;= #{postedBefore}
-        ORDER BY posted_at ASC, id ASC
+          AND release_eligible_at &lt;= #{releaseAt}
+        ORDER BY release_eligible_at ASC, id ASC
         LIMIT #{limit}
     </select>
 

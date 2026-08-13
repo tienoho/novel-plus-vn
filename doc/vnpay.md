@@ -1,6 +1,6 @@
 # Tích hợp và vận hành VNPAY
 
-Novel Plus dùng giao thức VNPAY 2.1.0 với HMAC-SHA512. VNPAY là kênh tạo giao dịch mới duy nhất trong giao diện; mã kênh lưu tại `order_pay.pay_channel` là `4`. Dữ liệu đơn của Alipay/WeChat cũ chỉ được giữ để đối soát lịch sử và không còn endpoint tạo giao dịch mới.
+Khởi Thư dùng giao thức VNPAY 2.1.0 với HMAC-SHA512. VNPAY là kênh tạo giao dịch mới duy nhất trong giao diện; mã kênh lưu tại `order_pay.pay_channel` là `4`. Dữ liệu đơn của Alipay/WeChat cũ chỉ được giữ để đối soát lịch sử và không còn endpoint tạo giao dịch mới.
 
 ## 1. Luồng xử lý
 
@@ -128,7 +128,7 @@ lại theo thời điểm truy vấn. Đặc tả QueryDr chính thức có bả
 | `pay_status` | `0`: thất bại, `1`: thành công, `2`: chờ thanh toán |
 | `total_amount` | Số tiền VND của đơn |
 | `account_amount` | Số Xu đã chốt khi tạo đơn |
-| `out_trade_no` | Mã đơn duy nhất phía Novel Plus |
+| `out_trade_no` | Mã đơn duy nhất phía Khởi Thư |
 | `trade_no` | Mã giao dịch phía VNPAY sau xác nhận |
 
 Migration [sql/20260716_vnpay_hardening.sql](sql/20260716_vnpay_hardening.sql) thêm `account_amount`, unique index `uk_order_pay_out_trade_no` và index `idx_order_pay_vnpay_reconcile`. Migration có thể chạy lại và sẽ dừng nếu dữ liệu cũ có mã đơn trùng.
@@ -186,7 +186,7 @@ chuyển `SUCCESS`, lần replay của harness trả `02`, số Xu tăng đúng,
 sổ cái kép cân bằng. Dừng UAT nhưng giữ dữ liệu bằng:
 
 ```powershell
-docker compose --env-file .env.uat -p novel-plus-uat `
+docker compose --env-file .env.uat -p khoi-thu-uat `
   -f compose.yaml -f compose.e2e.yaml down
 ```
 

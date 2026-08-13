@@ -1,5 +1,5 @@
 {
-	email {$CADDY_ACME_EMAIL:ops@example.com}
+	email {$CADDY_ACME_EMAIL:admin@khoithu.vn}
 	admin off
 	log {
 		output stdout

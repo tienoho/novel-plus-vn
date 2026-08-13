@@ -34,10 +34,6 @@ class GamificationAdminControllerTest {
         assertPermission("listQuestCampaigns", "novel:gamification:view", Map.class);
         assertPermission("listQuestRewards", "novel:gamification:view", Map.class);
         assertPermission("listPublicPolicies", "novel:gamification:config", Map.class);
-        assertPermission("createPublicPolicy", "novel:gamification:config",
-            String.class, String.class, String.class);
-        assertPermission("publishPublicPolicy", "novel:gamification:config",
-            long.class, long.class);
         assertPermission("createQuestCampaign", "novel:gamification:config",
             String.class, long.class, long.class);
         assertPermission("saveQuestReward", "novel:gamification:config",

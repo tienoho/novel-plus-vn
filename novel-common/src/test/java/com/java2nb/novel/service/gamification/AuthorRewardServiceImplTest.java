@@ -51,7 +51,7 @@ class AuthorRewardServiceImplTest {
             ArgumentCaptor.forClass(AuthorRewardAllocationRow.class);
         when(mapper.insertAllocation(captor.capture())).thenReturn(1);
 
-        service.calculateAllocations(new RewardCampaignCommand(SEASON_ID, 101L, shares, "v1"));
+        service.calculateAllocations(new RewardCampaignCommand(SEASON_ID, 101L, shares, "v1", 7L));
 
         List<AuthorRewardAllocationRow> allocations = captor.getAllValues();
         assertThat(allocations).hasSize(7);
@@ -75,7 +75,7 @@ class AuthorRewardServiceImplTest {
             ArgumentCaptor.forClass(AuthorRewardAllocationRow.class);
         when(mapper.insertAllocation(captor.capture())).thenReturn(1);
 
-        service.calculateAllocations(new RewardCampaignCommand(SEASON_ID, 100L, shares, "v1"));
+        service.calculateAllocations(new RewardCampaignCommand(SEASON_ID, 100L, shares, "v1", 7L));
 
         AuthorRewardAllocationRow duplicate = captor.getAllValues().get(1);
         assertThat(duplicate.getStatus()).isEqualTo("SKIPPED_DUPLICATE_AUTHOR");
@@ -104,12 +104,14 @@ class AuthorRewardServiceImplTest {
         AuthorRewardAllocationRow posted = allocation("POSTED_PENDING");
         posted.setPostedAt(NOW);
         when(mapper.lockAllocationById(801L)).thenReturn(approved);
-        when(mapper.markPostedPending(801L, 3L, NOW)).thenReturn(1);
+        Date releaseEligibleAt = Date.from(NOW.toInstant().plusSeconds(7L * 86_400));
+        when(mapper.markPostedPending(801L, 3L, NOW, releaseEligibleAt)).thenReturn(1);
         when(mapper.selectAllocationById(801L)).thenReturn(posted);
 
-        AuthorRewardAllocationRow result = service.postPendingReward(801L, NOW);
+        AuthorRewardAllocationRow result = service.postPendingReward(801L, NOW, 7);
 
         assertThat(result.getStatus()).isEqualTo("POSTED_PENDING");
+        verify(mapper).markPostedPending(801L, 3L, NOW, releaseEligibleAt);
         verify(walletLedgerService).creditAuthorRewardPending(22L, 200L,
             "2026-08:101:1:22", "MONTHLY_AUTHOR_REWARD:2026-08:101:1:22",
             "Thưởng xếp hạng Ngọn Đuốc tháng");
@@ -118,14 +120,15 @@ class AuthorRewardServiceImplTest {
     @Test
     void clawbackUsesTheExistingLedgerReversalOnlyInsideClaimWindow() {
         AuthorRewardAllocationRow pending = allocation("POSTED_PENDING");
-        pending.setPostedAt(Date.from(NOW.toInstant().minusSeconds(86_400L)));
+        pending.setPostedAt(Date.from(NOW.toInstant().minusSeconds(10L * 86_400L)));
+        pending.setReleaseEligibleAt(Date.from(NOW.toInstant().plusSeconds(86_400L)));
         AuthorRewardAllocationRow clawed = allocation("CLAWED_BACK");
         when(mapper.lockAllocationById(801L)).thenReturn(pending);
         when(mapper.markClawedBack(801L, 3L, NOW,
             "ADMIN:9:Thu hồi do kết quả khiếu nại")).thenReturn(1);
         when(mapper.selectAllocationById(801L)).thenReturn(clawed);
 
-        service.clawback(801L, 9L, "Thu hồi do kết quả khiếu nại", NOW, 7);
+        service.clawback(801L, 9L, "Thu hồi do kết quả khiếu nại", NOW);
 
         verify(walletLedgerService).reverseTransaction(
             "MONTHLY_AUTHOR_REWARD:2026-08:101:1:22", "MONTHLY_AUTHOR_REWARD_CLAWBACK",
@@ -152,7 +155,8 @@ class AuthorRewardServiceImplTest {
         MonthlySeasonRow season = finalizedSeason();
         when(mapper.selectSeasonForReward(SEASON_ID)).thenReturn(season);
         when(mapper.selectCampaignByPeriod("2026-08")).thenReturn(null, campaign("DRAFT"));
-        when(mapper.insertCampaign(anyString(), anyLong(), anyString(), anyString())).thenReturn(1);
+        when(mapper.insertCampaign(anyString(), anyLong(), anyString(), anyString(), anyLong()))
+            .thenReturn(1);
         when(mapper.selectSnapshotRewardRows(SNAPSHOT_ID, shares.size())).thenReturn(ranks);
     }
 

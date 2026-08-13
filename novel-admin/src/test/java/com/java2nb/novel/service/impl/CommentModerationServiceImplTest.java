@@ -1,10 +1,11 @@
 package com.java2nb.novel.service.impl;
 
-import com.java2nb.novel.config.GamificationAdminSettings;
 import com.java2nb.novel.entity.BookComment;
 import com.java2nb.novel.mapper.BookCommentMapper;
 import com.java2nb.novel.service.gamification.GamificationEventInput;
 import com.java2nb.novel.service.gamification.GamificationEventRecorder;
+import com.java2nb.novel.service.gamification.config.GamificationConfigProvider;
+import com.java2nb.novel.service.gamification.config.GamificationConfigSnapshot;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.mockito.ArgumentCaptor;
@@ -27,22 +28,22 @@ class CommentModerationServiceImplTest {
     void productionConstructorIsExplicitlyAutowiredBecauseTestConstructorAlsoExists() throws Exception {
         assertThat(CommentModerationServiceImpl.class.getConstructor(
             BookCommentMapper.class, GamificationEventRecorder.class,
-            GamificationAdminSettings.class).getAnnotation(Autowired.class)).isNotNull();
+            GamificationConfigProvider.class).getAnnotation(Autowired.class)).isNotNull();
     }
 
     @Test
     void emitsOnceOnlyWhenCommentTransitionsToApproved() {
         BookCommentMapper mapper = mock(BookCommentMapper.class);
         GamificationEventRecorder recorder = mock(GamificationEventRecorder.class);
-        GamificationAdminSettings settings = new GamificationAdminSettings();
-        settings.getEvent().setEnabled(true);
+        GamificationConfigProvider configProvider = enabledProvider();
         BookComment comment = new BookComment();
         comment.setId(7L);
         comment.setBookId(8L);
         comment.setCreateUserId(9L);
         when(mapper.selectByPrimaryKey(7L)).thenReturn(Optional.of(comment));
         when(mapper.update(any(org.mybatis.dynamic.sql.update.UpdateDSLCompleter.class))).thenReturn(1);
-        CommentModerationServiceImpl service = new CommentModerationServiceImpl(mapper, recorder, settings,
+        CommentModerationServiceImpl service = new CommentModerationServiceImpl(mapper, recorder,
+            configProvider,
             Clock.fixed(Instant.parse("2026-07-29T18:00:00Z"), ZoneOffset.UTC));
 
         assertThat(service.batchAudit(new Long[]{7L, 7L}, (byte) 1)).isEqualTo(1);
@@ -58,15 +59,22 @@ class CommentModerationServiceImplTest {
     void retryOrRejectionDoesNotEmitEvent() {
         BookCommentMapper mapper = mock(BookCommentMapper.class);
         GamificationEventRecorder recorder = mock(GamificationEventRecorder.class);
-        GamificationAdminSettings settings = new GamificationAdminSettings();
-        settings.getEvent().setEnabled(true);
+        GamificationConfigProvider configProvider = enabledProvider();
         BookComment comment = new BookComment();
         when(mapper.selectByPrimaryKey(7L)).thenReturn(Optional.of(comment));
         when(mapper.update(any(org.mybatis.dynamic.sql.update.UpdateDSLCompleter.class))).thenReturn(0);
-        CommentModerationServiceImpl service = new CommentModerationServiceImpl(mapper, recorder, settings);
+        CommentModerationServiceImpl service = new CommentModerationServiceImpl(mapper, recorder,
+            configProvider);
 
         assertThat(service.batchAudit(new Long[]{7L}, (byte) 1)).isZero();
         assertThat(service.batchAudit(new Long[]{7L}, (byte) 2)).isZero();
         verify(recorder, never()).ingest(any());
+    }
+
+    private GamificationConfigProvider enabledProvider() {
+        GamificationConfigProvider provider = mock(GamificationConfigProvider.class);
+        when(provider.currentForWrite()).thenReturn(
+            GamificationConfigSnapshot.bootstrapDisabled().toBuilder().eventEnabled(true).build());
+        return provider;
     }
 }

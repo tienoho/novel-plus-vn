@@ -7,12 +7,15 @@ import com.java2nb.common.utils.HttpServletUtils;
 import com.java2nb.common.utils.R;
 import com.java2nb.common.utils.Messages;
 import com.java2nb.common.utils.ShiroUtils;
+import com.java2nb.novel.service.gamification.config.GamificationConfigConflictException;
 import com.java2nb.system.domain.UserDO;
 import org.apache.shiro.authz.AuthorizationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.ModelAndView;
@@ -44,6 +47,14 @@ public class CommonExceptionHandler {
     public R handleDuplicateKeyException(DuplicateKeyException e) {
         logger.error(e.getMessage(), e);
         return R.error(messages.get("error.duplicateRecord"));
+    }
+
+    @ExceptionHandler(GamificationConfigConflictException.class)
+    public ResponseEntity<R> handleGamificationConfigConflict(
+        GamificationConfigConflictException exception) {
+        logger.warn(exception.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+            .body(R.error(HttpStatus.CONFLICT.value(), exception.getMessage()));
     }
 
     @ExceptionHandler(org.springframework.web.servlet.NoHandlerFoundException.class)

@@ -31,13 +31,13 @@ class VnpayRecurringClientTest {
         properties.setClientSecret("a-secure-client-secret");
         properties.setTmnCode("VNPAYREC");
         properties.setHashSecret("0123456789abcdef0123456789abcdef");
-        properties.setReturnUrl("https://example.com/return");
-        properties.setCancelUrl("https://example.com/cancel");
+        properties.setReturnUrl("https://khoithu.vn/return");
+        properties.setCancelUrl("https://khoithu.vn/cancel");
         signer = new VnpayRecurringSigner(properties);
         client = new VnpayRecurringClient(properties, signer, new ObjectMapper(), HttpClient.newHttpClient());
         command = new VnpayRecurringMandateCommand("17000000000000001", "NP123", 123L,
             100_000L, 1, LocalDate.of(2026, 9, 1), LocalDateTime.of(2026, 8, 1, 12, 0),
-            "127.0.0.1", "NovelPlusWeb");
+            "127.0.0.1", "KhoiThuWeb");
     }
 
     @Test
@@ -118,7 +118,7 @@ class VnpayRecurringClientTest {
     void buildsDocumentedCancelPayloadAndChecksum() {
         VnpayRecurringCancelCommand cancel = new VnpayRecurringCancelCommand(
             "17000000000000003", "666821925535879168", "tokenABC123",
-            "127.0.0.1", "NovelPlusServer");
+            "127.0.0.1", "KhoiThuServer");
 
         Map<String, Object> payload = client.buildCancelPayload(cancel);
 

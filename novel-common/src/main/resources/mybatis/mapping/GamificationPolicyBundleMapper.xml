@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.java2nb.novel.mapper.GamificationPolicyBundleMapper">
+    <sql id="bundleColumns">
+        id, policy_version AS policyVersion, status, content_hash AS contentHash,
+        created_by AS createdBy, submitted_by AS submittedBy, approved_by AS approvedBy,
+        published_by AS publishedBy, change_reason AS changeReason,
+        submitted_at AS submittedAt, approved_at AS approvedAt, published_at AS publishedAt,
+        archived_at AS archivedAt, version, create_time AS createTime, update_time AS updateTime
+    </sql>
+
+    <select id="selectBundles"
+            resultType="com.java2nb.novel.service.gamification.config.GamificationPolicyBundleRow">
+        SELECT <include refid="bundleColumns"/>
+        FROM gamification_policy_bundle
+        ORDER BY id DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectBundle"
+            resultType="com.java2nb.novel.service.gamification.config.GamificationPolicyBundleRow">
+        SELECT <include refid="bundleColumns"/>
+        FROM gamification_policy_bundle
+        WHERE policy_version = #{policyVersion}
+        LIMIT 1
+    </select>
+
+    <select id="lockBundle"
+            resultType="com.java2nb.novel.service.gamification.config.GamificationPolicyBundleRow">
+        SELECT <include refid="bundleColumns"/>
+        FROM gamification_policy_bundle
+        WHERE policy_version = #{policyVersion}
+        FOR UPDATE
+    </select>
+
+    <insert id="insertDraft" useGeneratedKeys="true" keyProperty="bundle.id">
+        INSERT INTO gamification_policy_bundle
+            (policy_version, status, content_hash, created_by, change_reason, version)
+        VALUES (#{bundle.policyVersion}, 'DRAFT', #{bundle.contentHash}, #{bundle.createdBy},
+                #{bundle.changeReason}, 0)
+    </insert>
+
+    <insert id="cloneLevelRules">
+        INSERT INTO level_rule (rule_version, level, min_exp, title_key, frame_code)
+        SELECT #{target}, level, min_exp, title_key, frame_code
+        FROM level_rule WHERE rule_version = #{source}
+    </insert>
+    <insert id="cloneLevelRewards">
+        INSERT INTO level_reward_policy
+            (policy_version, level, ticket_amount, ticket_validity_days)
+        SELECT #{target}, level, ticket_amount, ticket_validity_days
+        FROM level_reward_policy WHERE policy_version = #{source}
+    </insert>
+    <insert id="cloneQuests">
+        INSERT INTO quest_definition
+            (policy_version, quest_code, event_type, period_type, target_count, name_key, active, sort_no)
+        SELECT #{target}, quest_code, event_type, period_type, target_count, name_key, active, sort_no
+        FROM quest_definition WHERE policy_version = #{source}
+    </insert>
+    <insert id="cloneQuestRewards">
+        INSERT INTO quest_reward
+            (policy_version, quest_code, campaign_code, reward_type, amount)
+        SELECT #{target}, quest_code, campaign_code, reward_type, amount
+        FROM quest_reward WHERE policy_version = #{source} AND campaign_code = 'DEFAULT'
+    </insert>
+    <insert id="cloneRealms">
+        INSERT INTO realm_catalog
+            (policy_version, realm_code, name_key, min_level, sort_no, active)
+        SELECT #{target}, realm_code, name_key, min_level, sort_no, active
+        FROM realm_catalog WHERE policy_version = #{source}
+    </insert>
+    <insert id="cloneAbusePolicy">
+        INSERT INTO gamification_abuse_policy (policy_version, review_score_threshold)
+        SELECT #{target}, review_score_threshold
+        FROM gamification_abuse_policy WHERE policy_version = #{source}
+    </insert>
+    <insert id="cloneAbuseRules">
+        INSERT INTO gamification_abuse_rule
+            (policy_version, rule_code, metric_name, threshold_value, window_minutes, score, hard_block)
+        SELECT #{target}, rule_code, metric_name, threshold_value, window_minutes, score, hard_block
+        FROM gamification_abuse_rule WHERE policy_version = #{source}
+    </insert>
+    <insert id="clonePublicPolicy">
+        INSERT INTO gamification_public_policy (policy_version, title, content_text, status)
+        SELECT #{target}, title, content_text, 'DRAFT'
+        FROM gamification_public_policy WHERE policy_version = #{source}
+    </insert>
+
+    <select id="selectLevels" resultType="com.java2nb.novel.service.gamification.LevelRuleRow">
+        SELECT rule_version AS ruleVersion, level, min_exp AS minExp,
+               title_key AS titleKey, frame_code AS frameCode
+        FROM level_rule WHERE rule_version = #{policyVersion} ORDER BY level
+    </select>
+    <select id="selectLevelRewards"
+            resultType="com.java2nb.novel.service.gamification.LevelRewardPolicyRow">
+        SELECT policy_version AS policyVersion, level, ticket_amount AS ticketAmount,
+               ticket_validity_days AS ticketValidityDays
+        FROM level_reward_policy WHERE policy_version = #{policyVersion} ORDER BY level
+    </select>
+    <select id="selectQuests" resultType="com.java2nb.novel.service.gamification.QuestDefinitionRow">
+        SELECT policy_version AS policyVersion, quest_code AS questCode, event_type AS eventType,
+               period_type AS periodType, target_count AS targetCount, name_key AS nameKey,
+               sort_no AS sortNo, active
+        FROM quest_definition WHERE policy_version = #{policyVersion}
+        ORDER BY sort_no, quest_code
+    </select>
+    <select id="selectQuestRewards"
+            resultType="com.java2nb.novel.service.gamification.config.GamificationQuestRewardRow">
+        SELECT policy_version AS policyVersion, quest_code AS questCode,
+               campaign_code AS campaignCode, reward_type AS rewardType, amount
+        FROM quest_reward
+        WHERE policy_version = #{policyVersion} AND campaign_code = 'DEFAULT'
+        ORDER BY quest_code, reward_type
+    </select>
+    <select id="selectRealms" resultType="com.java2nb.novel.service.gamification.RealmCatalogRow">
+        SELECT policy_version AS policyVersion, realm_code AS realmCode, name_key AS nameKey,
+               min_level AS minLevel, sort_no AS sortNo, active
+        FROM realm_catalog WHERE policy_version = #{policyVersion}
+        ORDER BY sort_no, realm_code
+    </select>
+    <select id="selectAbusePolicy"
+            resultType="com.java2nb.novel.service.gamification.TicketRiskPolicyRow">
+        SELECT policy_version AS policyVersion, review_score_threshold AS reviewScoreThreshold
+        FROM gamification_abuse_policy WHERE policy_version = #{policyVersion}
+        LIMIT 1
+    </select>
+    <select id="selectAbuseRules"
+            resultType="com.java2nb.novel.service.gamification.TicketRiskRuleRow">
+        SELECT policy_version AS policyVersion, rule_code AS ruleCode, metric_name AS metricName,
+               threshold_value AS thresholdValue, window_minutes AS windowMinutes,
+               score, hard_block AS hardBlock
+        FROM gamification_abuse_rule WHERE policy_version = #{policyVersion}
+        ORDER BY rule_code
+    </select>
+    <select id="selectPublicPolicy"
+            resultType="com.java2nb.novel.service.gamification.GamificationPublicPolicyRow">
+        SELECT id, policy_version AS policyVersion, title, content_text AS contentText, status,
+               published_by AS publishedBy, published_at AS publishedAt, version
+        FROM gamification_public_policy WHERE policy_version = #{policyVersion}
+        LIMIT 1
+    </select>
+
+    <select id="selectCanonicalLines" resultType="string">
+        SELECT canonical.line
+        FROM (
+            SELECT CONCAT('10|', LPAD(level, 10, '0'), '|', min_exp, '|', title_key, '|',
+                          COALESCE(frame_code, '')) AS line,
+                   CONCAT('10|', LPAD(level, 10, '0')) AS sort_key
+            FROM level_rule WHERE rule_version = #{policyVersion}
+            UNION ALL
+            SELECT CONCAT('20|', LPAD(level, 10, '0'), '|', ticket_amount, '|', ticket_validity_days),
+                   CONCAT('20|', LPAD(level, 10, '0'))
+            FROM level_reward_policy WHERE policy_version = #{policyVersion}
+            UNION ALL
+            SELECT CONCAT('30|', quest_code, '|', event_type, '|', period_type, '|', target_count,
+                          '|', name_key, '|', active, '|', sort_no), CONCAT('30|', quest_code)
+            FROM quest_definition WHERE policy_version = #{policyVersion}
+            UNION ALL
+            SELECT CONCAT('40|', quest_code, '|', campaign_code, '|', reward_type, '|', amount),
+                   CONCAT('40|', quest_code, '|', campaign_code, '|', reward_type)
+            FROM quest_reward WHERE policy_version = #{policyVersion} AND campaign_code = 'DEFAULT'
+            UNION ALL
+            SELECT CONCAT('50|', realm_code, '|', name_key, '|', min_level, '|', sort_no, '|', active),
+                   CONCAT('50|', realm_code)
+            FROM realm_catalog WHERE policy_version = #{policyVersion}
+            UNION ALL
+            SELECT CONCAT('60|', review_score_threshold), '60|policy'
+            FROM gamification_abuse_policy WHERE policy_version = #{policyVersion}
+            UNION ALL
+            SELECT CONCAT('70|', rule_code, '|', metric_name, '|', threshold_value, '|',
+                          COALESCE(window_minutes, ''), '|', score, '|', hard_block),
+                   CONCAT('70|', rule_code)
+            FROM gamification_abuse_rule WHERE policy_version = #{policyVersion}
+            UNION ALL
+            SELECT CONCAT('80|', title, '|', content_text), '80|public'
+            FROM gamification_public_policy WHERE policy_version = #{policyVersion}
+        ) canonical
+        ORDER BY canonical.sort_key
+    </select>
+
+    <insert id="upsertLevel">
+        INSERT INTO level_rule (rule_version, level, min_exp, title_key, frame_code)
+        VALUES (#{policyVersion}, #{row.level}, #{row.minExp}, #{row.titleKey}, #{row.frameCode})
+        ON DUPLICATE KEY UPDATE min_exp = VALUES(min_exp), title_key = VALUES(title_key),
+                                frame_code = VALUES(frame_code)
+    </insert>
+    <insert id="upsertLevelReward">
+        INSERT INTO level_reward_policy
+            (policy_version, level, ticket_amount, ticket_validity_days)
+        VALUES (#{policyVersion}, #{row.level}, #{row.ticketAmount}, #{row.ticketValidityDays})
+        ON DUPLICATE KEY UPDATE ticket_amount = VALUES(ticket_amount),
+                                ticket_validity_days = VALUES(ticket_validity_days)
+    </insert>
+    <insert id="upsertQuest">
+        INSERT INTO quest_definition
+            (policy_version, quest_code, event_type, period_type, target_count, name_key, active, sort_no)
+        VALUES (#{policyVersion}, #{row.questCode}, #{row.eventType}, #{row.periodType},
+                #{row.targetCount}, #{row.nameKey}, #{row.active}, #{row.sortNo})
+        ON DUPLICATE KEY UPDATE event_type = VALUES(event_type), period_type = VALUES(period_type),
+                                target_count = VALUES(target_count), name_key = VALUES(name_key),
+                                active = VALUES(active), sort_no = VALUES(sort_no)
+    </insert>
+    <delete id="deleteDefaultQuestRewards">
+        DELETE FROM quest_reward
+        WHERE policy_version = #{policyVersion} AND quest_code = #{questCode}
+          AND campaign_code = 'DEFAULT'
+    </delete>
+    <insert id="insertQuestReward">
+        INSERT INTO quest_reward (policy_version, quest_code, campaign_code, reward_type, amount)
+        VALUES (#{policyVersion}, #{questCode}, 'DEFAULT', #{rewardType}, #{amount})
+    </insert>
+    <insert id="upsertRealm">
+        INSERT INTO realm_catalog (policy_version, realm_code, name_key, min_level, sort_no, active)
+        VALUES (#{policyVersion}, #{row.realmCode}, #{row.nameKey}, #{row.minLevel},
+                #{row.sortNo}, #{row.active})
+        ON DUPLICATE KEY UPDATE name_key = VALUES(name_key), min_level = VALUES(min_level),
+                                sort_no = VALUES(sort_no), active = VALUES(active)
+    </insert>
+    <insert id="upsertAbusePolicy">
+        INSERT INTO gamification_abuse_policy (policy_version, review_score_threshold)
+        VALUES (#{policyVersion}, #{reviewScoreThreshold})
+        ON DUPLICATE KEY UPDATE review_score_threshold = VALUES(review_score_threshold)
+    </insert>
+    <insert id="upsertAbuseRule">
+        INSERT INTO gamification_abuse_rule
+            (policy_version, rule_code, metric_name, threshold_value, window_minutes, score, hard_block)
+        VALUES (#{policyVersion}, #{row.ruleCode}, #{row.metricName}, #{row.thresholdValue},
+                #{row.windowMinutes}, #{row.score}, #{row.hardBlock})
+        ON DUPLICATE KEY UPDATE metric_name = VALUES(metric_name),
+                                threshold_value = VALUES(threshold_value),
+                                window_minutes = VALUES(window_minutes), score = VALUES(score),
+                                hard_block = VALUES(hard_block)
+    </insert>
+    <insert id="upsertPublicPolicy">
+        INSERT INTO gamification_public_policy (policy_version, title, content_text, status)
+        VALUES (#{policyVersion}, #{title}, #{contentText}, 'DRAFT')
+        ON DUPLICATE KEY UPDATE title = VALUES(title), content_text = VALUES(content_text)
+    </insert>
+
+    <update id="updateDraftHash">
+        UPDATE gamification_policy_bundle
+        SET content_hash = #{contentHash}, change_reason = #{reason}, version = version + 1
+        WHERE id = #{id} AND status = 'DRAFT' AND version = #{expectedVersion}
+    </update>
+    <update id="submit">
+        UPDATE gamification_policy_bundle
+        SET status = 'PENDING_APPROVAL', submitted_by = #{operatorId}, submitted_at = #{at},
+            change_reason = #{reason}, content_hash = #{contentHash}, version = version + 1
+        WHERE id = #{id} AND status = 'DRAFT' AND version = #{expectedVersion}
+    </update>
+    <update id="approve">
+        UPDATE gamification_policy_bundle
+        SET status = 'APPROVED', approved_by = #{operatorId}, approved_at = #{at},
+            change_reason = #{reason}, version = version + 1
+        WHERE id = #{id} AND status = 'PENDING_APPROVAL' AND version = #{expectedVersion}
+          AND created_by &lt;&gt; #{operatorId}
+    </update>
+    <update id="publish">
+        UPDATE gamification_policy_bundle
+        SET status = 'PUBLISHED', published_by = #{operatorId}, published_at = #{at},
+            change_reason = #{reason}, version = version + 1
+        WHERE id = #{id} AND status = 'APPROVED' AND version = #{expectedVersion}
+    </update>
+    <update id="publishPublicPolicy">
+        UPDATE gamification_public_policy
+        SET status = 'PUBLISHED', published_by = #{operatorId}, published_at = #{at},
+            version = version + 1
+        WHERE policy_version = #{policyVersion} AND status = 'DRAFT'
+    </update>
+    <insert id="insertPublicPolicyAudit">
+        INSERT INTO gamification_public_policy_audit
+            (policy_id, event_type, from_status, to_status, operator_id)
+        SELECT id, #{eventType}, #{fromStatus}, #{toStatus}, #{operatorId}
+        FROM gamification_public_policy WHERE policy_version = #{policyVersion}
+    </insert>
+    <insert id="insertAudit">
+        INSERT INTO gamification_policy_bundle_audit
+            (policy_id, event_type, from_status, to_status, operator_id, reason,
+             before_hash, after_hash)
+        VALUES (#{policyId}, #{eventType}, #{fromStatus}, #{toStatus}, #{operatorId}, #{reason},
+                #{beforeHash}, #{afterHash})
+    </insert>
+</mapper>

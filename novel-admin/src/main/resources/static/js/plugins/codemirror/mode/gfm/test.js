@@ -131,31 +131,31 @@
      "[em *foo ][em&link bar/hello#1][em *]");
 
   MT("vanillaLink",
-     "foo [link http://www.example.com/] bar");
+     "foo [link http://www.khoithu.vn/] bar");
 
   MT("vanillaLinkPunctuation",
-     "foo [link http://www.example.com/]. bar");
+     "foo [link http://www.khoithu.vn/]. bar");
 
   MT("vanillaLinkExtension",
-     "foo [link http://www.example.com/index.html] bar");
+     "foo [link http://www.khoithu.vn/index.html] bar");
 
   MT("vanillaLinkEmphasis",
-     "foo [em *][em&link http://www.example.com/index.html][em *] bar");
+     "foo [em *][em&link http://www.khoithu.vn/index.html][em *] bar");
 
   MT("notALink",
      "[comment ```css]",
      "[tag foo] {[property color]:[keyword black];}",
-     "[comment ```][link http://www.example.com/]");
+     "[comment ```][link http://www.khoithu.vn/]");
 
   MT("notALink",
-     "[comment ``foo `bar` http://www.example.com/``] hello");
+     "[comment ``foo `bar` http://www.khoithu.vn/``] hello");
 
   MT("notALink",
      "[comment `foo]",
-     "[link http://www.example.com/]",
+     "[link http://www.khoithu.vn/]",
      "[comment `foo]",
      "",
-     "[link http://www.example.com/]");
+     "[link http://www.khoithu.vn/]");
 
   MT("headerCodeBlockGithub",
      "[header&header-1 # heading]",
@@ -166,7 +166,7 @@
      "",
      "Commit: [link be6a8cc1c1ecfe9489fb51e4869af15a13fc2cd2]",
      "Issue: [link #1]",
-     "Link: [link http://www.example.com/]");
+     "Link: [link http://www.khoithu.vn/]");
 
   MT("strikethrough",
      "[strikethrough ~~foo~~]");

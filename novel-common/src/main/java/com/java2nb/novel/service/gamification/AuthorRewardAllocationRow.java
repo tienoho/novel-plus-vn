@@ -20,9 +20,11 @@ public class AuthorRewardAllocationRow {
     private Long roundingAdjustmentXu;
     private String status;
     private Date postedAt;
+    private Date releaseEligibleAt;
     private Date releasedAt;
     private Date clawedBackAt;
     private String reason;
     private String policyVersion;
+    private Long runtimeConfigRevision;
     private Long version;
 }

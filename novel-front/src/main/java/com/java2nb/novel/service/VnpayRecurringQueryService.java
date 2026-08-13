@@ -74,7 +74,7 @@ public class VnpayRecurringQueryService {
             String transactionDate = LocalDateTime.ofInstant(
                 providerQuery.merchantDate().toInstant(), zoneId).format(DATE_TIME);
             String createDate = LocalDateTime.now(zoneId).format(DATE_TIME);
-            String orderInfo = "Tra soat gia han Novel Plus " + providerQuery.providerRequestId();
+            String orderInfo = "Tra soat gia han Khởi Thư " + providerQuery.providerRequestId();
 
             Map<String, String> requestData = new LinkedHashMap<>();
             requestData.put("vnp_RequestId", requestId);

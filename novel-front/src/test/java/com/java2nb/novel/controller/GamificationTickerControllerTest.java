@@ -1,10 +1,11 @@
 package com.java2nb.novel.controller;
 
-import com.java2nb.novel.core.config.GamificationProperties;
 import com.java2nb.novel.core.exception.BusinessException;
 import com.java2nb.novel.dto.gamification.TickerEntryResponse;
 import com.java2nb.novel.service.gamification.MonthlyTicketService;
 import com.java2nb.novel.service.gamification.TickerEntryRow;
+import com.java2nb.novel.service.gamification.config.GamificationConfigProvider;
+import com.java2nb.novel.service.gamification.config.GamificationConfigSnapshot;
 import io.github.xxyopen.model.resp.RestResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,16 +21,16 @@ import static org.mockito.Mockito.when;
 class GamificationTickerControllerTest {
 
     private MonthlyTicketService monthlyTicketService;
-    private GamificationProperties properties;
+    private GamificationConfigProvider configProvider;
     private GamificationTickerController controller;
 
     @BeforeEach
     void setUp() {
         monthlyTicketService = mock(MonthlyTicketService.class);
-        properties = new GamificationProperties();
-        properties.getVote().setEnabled(true);
-        properties.getVote().setIpHashSalt("a".repeat(32));
-        controller = new GamificationTickerController(monthlyTicketService, properties);
+        configProvider = mock(GamificationConfigProvider.class);
+        when(configProvider.current()).thenReturn(
+            GamificationConfigSnapshot.bootstrapDisabled().toBuilder().voteEnabled(true).build());
+        controller = new GamificationTickerController(monthlyTicketService, configProvider);
     }
 
     @Test
@@ -52,7 +53,7 @@ class GamificationTickerControllerTest {
 
     @Test
     void refusesWhenVotingIsDisabled() {
-        properties.getVote().setEnabled(false);
+        when(configProvider.current()).thenReturn(GamificationConfigSnapshot.bootstrapDisabled());
 
         assertThatThrownBy(() -> controller.getTicker(20)).isInstanceOf(BusinessException.class);
     }

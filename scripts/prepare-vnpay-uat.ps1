@@ -9,7 +9,7 @@ param(
     [string]$SandboxCardHolder = $env:VNPAY_SANDBOX_CARD_HOLDER,
     [string]$SandboxCardDate = $env:VNPAY_SANDBOX_CARD_DATE,
     [string]$SandboxOtp = $env:VNPAY_SANDBOX_OTP,
-    [string]$AcmeEmail = 'ops@example.com',
+    [string]$AcmeEmail = 'admin@khoithu.vn',
     [string]$EnvFile = '.env.uat',
     [string]$SecretDirectory = 'secrets/uat',
     [string]$RegistrationFile = '.vnpay-uat-registration.txt'
@@ -19,7 +19,7 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
 
 if ($Domain -notmatch '^(?=.{4,253}$)(?!-)(?:[A-Za-z0-9-]+\.)+[A-Za-z]{2,63}$' -or `
-    $Domain -match '(^|\.)(localhost|example\.(com|net|org)|invalid)$') {
+        $Domain -match '(^|\.)(localhost|example\.(com|net|org)|invalid)$') {
     throw 'Domain UAT phải là hostname công khai hợp lệ và không được là localhost/example.'
 }
 if ($TmnCode -notmatch '^[A-Za-z0-9]{8}$') {
@@ -37,17 +37,20 @@ if ($SandboxCardNumber -notmatch '^\d{12,19}$' -or
 
 $resolvedEnvFile = if ([System.IO.Path]::IsPathRooted($EnvFile)) {
     [System.IO.Path]::GetFullPath($EnvFile)
-} else {
+}
+else {
     [System.IO.Path]::GetFullPath((Join-Path $repoRoot $EnvFile))
 }
 $resolvedSecretDirectory = if ([System.IO.Path]::IsPathRooted($SecretDirectory)) {
     [System.IO.Path]::GetFullPath($SecretDirectory)
-} else {
+}
+else {
     [System.IO.Path]::GetFullPath((Join-Path $repoRoot $SecretDirectory))
 }
 $resolvedRegistrationFile = if ([System.IO.Path]::IsPathRooted($RegistrationFile)) {
     [System.IO.Path]::GetFullPath($RegistrationFile)
-} else {
+}
+else {
     [System.IO.Path]::GetFullPath((Join-Path $repoRoot $RegistrationFile))
 }
 if (Test-Path -LiteralPath $resolvedEnvFile) {
@@ -82,7 +85,8 @@ function New-RandomSecret([int]$ByteCount = 48) {
 
 $secretNames = @(
     'mysql_root_password', 'mysql_app_password', 'redis_password', 'jwt_secret',
-    'cache_manager_password', 'pii_encryption_key', 'admin_bootstrap_password',
+    'cache_manager_password', 'pii_encryption_key', 'gamification_vote_ip_hash_salt',
+    'admin_bootstrap_password',
     'crawler_admin_password', 'backup_encryption_password', 'vnpay_hash_secret',
     'vnpay_recurring_password', 'vnpay_recurring_client_secret',
     'vnpay_recurring_hash_secret', 'vietqr_webhook_secret',
@@ -96,12 +100,13 @@ try {
     foreach ($name in $secretNames) {
         $value = switch ($name) {
             'pii_encryption_key' { New-RandomSecret 32 }
+            'gamification_vote_ip_hash_salt' { New-RandomSecret }
             'vnpay_hash_secret' { $hashSecret }
             'vnpay_recurring_password' { New-RandomSecret }
             'vnpay_recurring_client_secret' { New-RandomSecret }
             'vnpay_recurring_hash_secret' { New-RandomSecret }
             'vietqr_webhook_secret' { New-RandomSecret }
-            'alertmanager_webhook_url' { 'https://example.invalid/novel-plus-uat-alerts' }
+            'alertmanager_webhook_url' { 'https://example.invalid/khoi-thu-uat-alerts' }
             'vnpay_sandbox_card_number' { $SandboxCardNumber }
             'vnpay_sandbox_card_holder' { $SandboxCardHolder }
             'vnpay_sandbox_card_date' { $SandboxCardDate }
@@ -125,7 +130,7 @@ try {
         $envSecretDirectory = './' + $normalizedSecretDirectory
     }
     $envContent = @"
-COMPOSE_PROJECT_NAME=novel-plus-uat
+COMPOSE_PROJECT_NAME=khoi-thu-uat
 IMAGE_TAG=uat
 TZ=Asia/Ho_Chi_Minh
 MYSQL_DATABASE=novel_plus

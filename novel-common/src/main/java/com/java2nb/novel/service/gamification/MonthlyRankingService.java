@@ -8,7 +8,8 @@ import java.util.List;
 public interface MonthlyRankingService {
 
     /** Tạo lười kỳ thường chứa thời điểm {@code at}; mọi biên tháng được tính ở Java. */
-    MonthlySeasonRow ensureRegularSeason(Date at, ZoneId zoneId, String policyVersion);
+    MonthlySeasonRow ensureRegularSeason(Date at, ZoneId zoneId, String policyVersion,
+                                         long runtimeConfigRevision);
 
     /**
      * Tạo kỳ đặc biệt (lễ hội, kỷ niệm...) do admin định nghĩa thủ công. {@code seasonType}
@@ -17,7 +18,7 @@ public interface MonthlyRankingService {
      */
     MonthlySeasonRow createSpecialSeason(String periodCode, String seasonType, Date startAt,
                                          Date endAt, Date voteCutoffAt, ZoneId zoneId,
-                                         String policyVersion);
+                                         String policyVersion, long runtimeConfigRevision);
 
     List<MonthlySeasonRow> listSeasonsReadyToClose(Date at, int limit);
 

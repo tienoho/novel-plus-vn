@@ -46,14 +46,14 @@ class QuestCampaignConfigServiceImplTest {
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("DRAFT");
 
-        verify(mapper, never()).deleteRewardTypes("SUMMER_2027", "DAILY_READING");
+        verify(mapper, never()).deleteRewardTypes("SUMMER_2027", "DAILY_READING", "v1");
     }
 
     @Test
     void activatesDraftOnlyWhenRewardExistsAndWindowDoesNotOverlap() {
         QuestCampaignRow draft = campaign(71L, "SUMMER_2027", "DRAFT");
         when(mapper.lockById(71L)).thenReturn(draft);
-        when(mapper.countRewards("SUMMER_2027")).thenReturn(2);
+        when(mapper.countRewards("SUMMER_2027", "v1")).thenReturn(2);
         when(mapper.countOverlappingActive(71L, draft.getStartAt(), draft.getEndAt())).thenReturn(0);
         when(mapper.updateStatus(71L, "DRAFT", "ACTIVE")).thenReturn(1);
         QuestCampaignRow active = campaign(71L, "SUMMER_2027", "ACTIVE");
@@ -67,7 +67,7 @@ class QuestCampaignConfigServiceImplTest {
     void rejectsOverlappingCampaignBeforeActivation() {
         QuestCampaignRow draft = campaign(71L, "SUMMER_2027", "DRAFT");
         when(mapper.lockById(71L)).thenReturn(draft);
-        when(mapper.countRewards("SUMMER_2027")).thenReturn(1);
+        when(mapper.countRewards("SUMMER_2027", "v1")).thenReturn(1);
         when(mapper.countOverlappingActive(71L, draft.getStartAt(), draft.getEndAt())).thenReturn(1);
 
         assertThatThrownBy(() -> service.activate(

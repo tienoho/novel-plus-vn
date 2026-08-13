@@ -202,7 +202,7 @@ class ReadingHeartbeatWriterTest {
 
     private ReadingHeartbeatCommand command(int sequence, int activeSeconds, Date heartbeatAt) {
         return new ReadingHeartbeatCommand(USER_ID, SESSION_ID, BOOK_ID, CHAPTER_ID, sequence,
-            activeSeconds, heartbeatAt, LOCAL_DATE, ZONE_ID, 60, 180, "v1");
+            activeSeconds, heartbeatAt, LOCAL_DATE, ZONE_ID, 60, 180, "v1", 7L);
     }
 
     private ReadingSessionRow session(int sequence, Date heartbeatAt, int totalSeconds, long version) {
@@ -243,6 +243,8 @@ class ReadingHeartbeatWriterTest {
         row.setEventCount(eventCount);
         row.setLocalDate(LOCAL_DATE);
         row.setRequestHash(ReadingHeartbeatWriter.requestHash(command));
+        row.setPolicyVersion(command.policyVersion());
+        row.setRuntimeConfigRevision(command.runtimeConfigRevision());
         return row;
     }
 }

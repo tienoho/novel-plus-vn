@@ -148,6 +148,7 @@ $secretNames = @(
     'jwt_secret',
     'cache_manager_password',
     'pii_encryption_key',
+    'gamification_vote_ip_hash_salt',
     'admin_bootstrap_password',
     'crawler_admin_password',
     'backup_encryption_password',
@@ -163,7 +164,7 @@ $managedEnvironment = @(
     'SECRETS_DIR', 'MYSQL_HOST_PORT', 'CADDY_HTTP_PORT', 'CADDY_HTTPS_PORT',
     'NOVEL_DOMAIN', 'NOVEL_ADMIN_DOMAIN', 'NOVEL_CRAWL_DOMAIN', 'NOVEL_GRAFANA_DOMAIN',
     'ALERTMANAGER_ALLOW_HTTP', 'CADDY_RATE_LIMIT_REQUESTS', 'CADDY_WRITE_RATE_LIMIT_REQUESTS',
-    'NOVEL_THEME', 'CRAWLER_ADMIN_USERNAME', 'GAMIFICATION_VOTE_IP_HASH_SALT',
+    'NOVEL_THEME', 'CRAWLER_ADMIN_USERNAME', 'GAMIFICATION_CONFIG_SOURCE',
     'NODE_TLS_REJECT_UNAUTHORIZED', 'LOAD_BASE_URL', 'LOAD_VUS', 'LOAD_RAMP_SECONDS',
     'LOAD_DURATION_SECONDS', 'LOAD_THINK_TIME_MS', 'LOAD_REPORT_PATH', 'LOAD_RUN_ID'
 )
@@ -220,7 +221,7 @@ $env:CADDY_RATE_LIMIT_REQUESTS = '1000000'
 $env:CADDY_WRITE_RATE_LIMIT_REQUESTS = '1000000'
 $env:NOVEL_THEME = 'green'
 $env:CRAWLER_ADMIN_USERNAME = 'admin'
-$env:GAMIFICATION_VOTE_IP_HASH_SALT = 'load-test-vote-hash-salt-2026-at-least-32-characters'
+$env:GAMIFICATION_CONFIG_SOURCE = 'DB'
 $env:NODE_TLS_REJECT_UNAUTHORIZED = '0'
 $env:LOAD_BASE_URL = "https://localhost:$CaddyHttpsHostPort"
 $env:LOAD_VUS = [string]$VirtualUsers

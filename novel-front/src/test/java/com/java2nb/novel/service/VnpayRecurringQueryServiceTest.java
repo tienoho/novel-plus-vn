@@ -40,8 +40,8 @@ class VnpayRecurringQueryServiceTest {
         properties.setClientSecret("a-secure-client-secret");
         properties.setTmnCode("VNPAYREC");
         properties.setHashSecret("0123456789abcdef0123456789abcdef");
-        properties.setReturnUrl("https://example.com/return");
-        properties.setCancelUrl("https://example.com/cancel");
+        properties.setReturnUrl("https://khoithu.vn/return");
+        properties.setCancelUrl("https://khoithu.vn/cancel");
         properties.setQueryUrl("https://sandbox.vnpayment.vn/merchant_webapi/api/transaction");
         properties.setServerIp("127.0.0.1");
         signer = new VnpayRecurringSigner(properties);
@@ -120,7 +120,7 @@ class VnpayRecurringQueryServiceTest {
         response.put("vnp_TransactionNo", "666821925535879168");
         response.put("vnp_TransactionType", "01");
         response.put("vnp_TransactionStatus", transactionStatus);
-        response.put("vnp_OrderInfo", "Tra soat gia han Novel Plus NPR81A1");
+        response.put("vnp_OrderInfo", "Tra soat gia han Khởi Thư NPR81A1");
         response.put("vnp_PromotionCode", "");
         response.put("vnp_PromotionAmount", "");
         response.put("vnp_SecureHash", signer.signFields(List.copyOf(response.values())));

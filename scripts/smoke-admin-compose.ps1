@@ -1,5 +1,5 @@
 param(
-    [string]$ProjectName = "novel-plus-admin-smoke",
+    [string]$ProjectName = "khoi-thu-admin-smoke",
     [int]$TimeoutSeconds = 600,
     [int]$MySqlHostPort = 13317,
     [int]$CaddyHttpHostPort = 13480,
@@ -132,9 +132,9 @@ function Assert-CrawlerCsrf {
     }
     $cookieAttributes = $csrfCookie.Groups[2].Value
     if ($cookieAttributes -notmatch '(?i)(?:^|;)\s*Path=/' `
-        -or $cookieAttributes -notmatch '(?i)(?:^|;)\s*Secure(?:;|$)' `
-        -or $cookieAttributes -notmatch '(?i)(?:^|;)\s*SameSite=Lax(?:;|$)' `
-        -or $cookieAttributes -match '(?i)(?:^|;)\s*HttpOnly(?:;|$)') {
+            -or $cookieAttributes -notmatch '(?i)(?:^|;)\s*Secure(?:;|$)' `
+            -or $cookieAttributes -notmatch '(?i)(?:^|;)\s*SameSite=Lax(?:;|$)' `
+            -or $cookieAttributes -match '(?i)(?:^|;)\s*HttpOnly(?:;|$)') {
         throw "Crawler CSRF cookie attributes are not browser-compatible and production-safe."
     }
     $csrfField = [regex]::Match($loginResponse, '(?is)<input\b(?=[^>]*\bname=["'']_csrf["''])[^>]*\bvalue=["'']([^"'']+)["''][^>]*>')
@@ -156,10 +156,10 @@ function Assert-Observability {
     param([string]$ProbeContainer)
 
     foreach ($endpoint in @(
-        "http://front:8083/actuator/prometheus",
-        "http://admin:80/actuator/prometheus",
-        "http://crawl:8081/actuator/prometheus"
-    )) {
+            "http://front:8083/actuator/prometheus",
+            "http://admin:80/actuator/prometheus",
+            "http://crawl:8081/actuator/prometheus"
+        )) {
         & docker exec $ProbeContainer curl --fail --silent --show-error $endpoint | Out-Null
         if ($LASTEXITCODE -ne 0) {
             throw "Prometheus endpoint không truy cập được: $endpoint"
@@ -176,11 +176,11 @@ function Assert-Observability {
         }
         $targets = $targetsRaw | ConvertFrom-Json
         $notUp = @($expectedJobs | Where-Object {
-            $job = $_
-            @($targets.data.activeTargets | Where-Object {
-                $_.labels.job -eq $job -and $_.health -eq "up"
-            }).Count -ne 1
-        })
+                $job = $_
+                @($targets.data.activeTargets | Where-Object {
+                        $_.labels.job -eq $job -and $_.health -eq "up"
+                    }).Count -ne 1
+            })
         if ($notUp.Count -eq 0) { break }
         Start-Sleep -Seconds 5
     } while ((Get-Date) -lt $targetDeadline)
@@ -196,7 +196,7 @@ function Assert-Observability {
         "http://prometheus:9090/api/v1/query?query=novel_migration_success"
     $migration = $migrationRaw | ConvertFrom-Json
     if ($LASTEXITCODE -ne 0 -or $migration.data.result.Count -ne 1 `
-        -or $migration.data.result[0].value[1] -ne "1") {
+            -or $migration.data.result[0].value[1] -ne "1") {
         throw "Prometheus không nhận được novel_migration_success=1."
     }
 
@@ -205,8 +205,8 @@ function Assert-Observability {
     $dashboardRaw = & docker exec $ProbeContainer curl --fail --silent --show-error `
         --user "${grafanaUser}:$grafanaPassword" `
         "http://grafana:3000/api/search?query=Novel%20Plus"
-    if ($LASTEXITCODE -ne 0 -or $dashboardRaw -notmatch 'novel-plus-overview') {
-        throw "Grafana chưa provision dashboard Novel Plus."
+    if ($LASTEXITCODE -ne 0 -or $dashboardRaw -notmatch 'khoi-thu-overview') {
+        throw "Grafana chưa provision dashboard Khởi Thư."
     }
 
     Write-Output "Observability verified: 4 Prometheus targets up, Flyway metric=1 and Grafana dashboard provisioned."
@@ -252,6 +252,7 @@ $secretNames = @(
     "jwt_secret",
     "cache_manager_password",
     "pii_encryption_key",
+    "gamification_vote_ip_hash_salt",
     "admin_bootstrap_password",
     "crawler_admin_password",
     "backup_encryption_password",
@@ -320,7 +321,7 @@ try {
         $upArguments += "--build"
     }
     $upArguments += @("mysql", "pushgateway", "migrate", "redis", "front", "crawl", "admin", `
-        "alertmanager", "prometheus", "grafana", "caddy")
+            "alertmanager", "prometheus", "grafana", "caddy")
     Invoke-Compose $upArguments
 
     $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
@@ -331,13 +332,13 @@ try {
     $grafanaContainer = "$ProjectName-grafana-1"
     $caddyContainer = "$ProjectName-caddy-1"
     $appContainers = [ordered]@{
-        admin = $adminContainer
-        front = $frontContainer
-        crawl = $crawlContainer
-        grafana = $grafanaContainer
+        admin        = $adminContainer
+        front        = $frontContainer
+        crawl        = $crawlContainer
+        grafana      = $grafanaContainer
         alertmanager = "$ProjectName-alertmanager-1"
-        pushgateway = "$ProjectName-pushgateway-1"
-        caddy = $caddyContainer
+        pushgateway  = "$ProjectName-pushgateway-1"
+        caddy        = $caddyContainer
     }
 
     while ((Get-Date) -lt $deadline) {

@@ -9,6 +9,7 @@ import com.java2nb.novel.service.GamificationAdminService;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,6 +32,20 @@ public class GamificationAdminController extends BaseController {
     @RequiresPermissions("novel:gamification:view")
     public String index() {
         return "novel/gamification/gamification";
+    }
+
+    @GetMapping("/settings")
+    @RequiresPermissions("novel:gamification:settings:view")
+    public String settings(Model model) {
+        model.addAttribute("currentUserId", getUserId());
+        return "novel/gamification/settings";
+    }
+
+    @GetMapping("/policy-studio")
+    @RequiresPermissions("novel:gamification:policy:view")
+    public String policies(Model model) {
+        model.addAttribute("currentUserId", getUserId());
+        return "novel/gamification/policies";
     }
 
     @ResponseBody
@@ -244,26 +259,6 @@ public class GamificationAdminController extends BaseController {
         Query query = new Query(params);
         return R.ok().put("data", new PageBean(service.listPublicPolicies(query),
             service.countPublicPolicies(query)));
-    }
-
-    @ResponseBody
-    @PostMapping("/public-policies/create")
-    @RequiresPermissions("novel:gamification:config")
-    @Log("Tạo bản nháp luật chơi gamification")
-    public R createPublicPolicy(@RequestParam String policyVersion, @RequestParam String title,
-                                @RequestParam String contentText) {
-        return R.ok().put("data", service.createPublicPolicy(policyVersion, title,
-            contentText, getUserId()));
-    }
-
-    @ResponseBody
-    @PostMapping("/public-policies/publish")
-    @RequiresPermissions("novel:gamification:config")
-    @Log("Phát hành luật chơi gamification")
-    public R publishPublicPolicy(@RequestParam long policyId,
-                                 @RequestParam long expectedVersion) {
-        return R.ok().put("data", service.publishPublicPolicy(policyId,
-            expectedVersion, getUserId()));
     }
 
     @ResponseBody

@@ -1,12 +1,9 @@
 package com.java2nb.novel.service.gamification;
 
 /**
- * Ngưỡng chính sách được truyền vào service thay vì đọc từ cấu hình.
- *
- * <p>{@code novel-common} cố ý không có lớp {@code @ConfigurationProperties} nào cho gamification.
- * Module dùng chung được nạp bởi cả ba ứng dụng với profile khác nhau, nên gắn nó vào một cây cấu
- * hình cụ thể sẽ khiến hành vi nghiệp vụ phụ thuộc vào ứng dụng nào đang gọi. Bên gọi dựng bản ghi
- * này từ {@code GamificationProperties} rồi truyền xuống.
+ * Tập ngưỡng bất biến được chụp từ {@code GamificationConfigProvider} một lần cho mỗi thao tác.
+ * Service nhận bản ghi này thay vì đọc lại provider giữa transaction, nhờ đó toàn bộ lần bỏ phiếu
+ * dùng cùng runtime revision và policy version kể cả khi admin kích hoạt revision mới đồng thời.
  */
 public record TicketPolicy(
     String policyVersion,

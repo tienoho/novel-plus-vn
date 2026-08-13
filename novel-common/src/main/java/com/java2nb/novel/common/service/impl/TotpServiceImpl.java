@@ -26,7 +26,7 @@ import java.util.*;
 public class TotpServiceImpl implements TotpService {
 
     private final User2faDao user2faDao;
-    private static final String PRE_AUTH_SECRET = "NovelPlus_2FA_PreAuth_Key_2026";
+    private static final String PRE_AUTH_SECRET = "KhoiThu_2FA_PreAuth_Key_2026";
     private static final String BASE32_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -39,7 +39,7 @@ public class TotpServiceImpl implements TotpService {
 
     @Override
     public String getQrCodeUri(String username, String secretKey) {
-        String issuer = "NovelPlus";
+        String issuer = "KhoiThu";
         String account = StringUtils.defaultIfBlank(username, "User");
         return String.format("otpauth://totp/%s:%s?secret=%s&issuer=%s", issuer, account, secretKey, issuer);
     }
@@ -69,8 +69,10 @@ public class TotpServiceImpl implements TotpService {
             StringBuilder sb = new StringBuilder();
             for (int j = 0; j < 8; j++) {
                 int idx = random.nextInt(36);
-                if (idx < 10) sb.append(idx);
-                else sb.append((char) ('a' + idx - 10));
+                if (idx < 10)
+                    sb.append(idx);
+                else
+                    sb.append((char) ('a' + idx - 10));
             }
             codes.add(sb.toString());
         }
@@ -79,7 +81,8 @@ public class TotpServiceImpl implements TotpService {
 
     @Override
     public boolean is2faEnabled(Long userId) {
-        if (userId == null) return false;
+        if (userId == null)
+            return false;
         User2faDO user2fa = user2faDao.selectByUserId(userId);
         return user2fa != null && Boolean.TRUE.equals(user2fa.getIsEnabled());
     }
@@ -174,7 +177,9 @@ public class TotpServiceImpl implements TotpService {
         // Try Backup code match
         if (StringUtils.isNotBlank(user2fa.getBackupCodesJson())) {
             try {
-                List<String> hashedCodes = OBJECT_MAPPER.readValue(user2fa.getBackupCodesJson(), new TypeReference<List<String>>() {});
+                List<String> hashedCodes = OBJECT_MAPPER.readValue(user2fa.getBackupCodesJson(),
+                        new TypeReference<List<String>>() {
+                        });
                 String incomingHash = hashSha256(code.trim().toLowerCase());
 
                 if (hashedCodes != null && hashedCodes.contains(incomingHash)) {
@@ -205,14 +210,16 @@ public class TotpServiceImpl implements TotpService {
         try {
             String decoded = new String(Base64.getUrlDecoder().decode(preAuthToken), StandardCharsets.UTF_8);
             String[] parts = decoded.split(":");
-            if (parts.length != 4) return null;
+            if (parts.length != 4)
+                return null;
 
             Long userId = Long.parseLong(parts[0]);
             String username = parts[1];
             long exp = Long.parseLong(parts[2]);
             String expectedSig = parts[3];
 
-            if (System.currentTimeMillis() > exp) return null;
+            if (System.currentTimeMillis() > exp)
+                return null;
 
             String payload = userId + ":" + username + ":" + exp;
             String computedSig = hashSha256(payload + "|" + PRE_AUTH_SECRET);
@@ -237,9 +244,9 @@ public class TotpServiceImpl implements TotpService {
 
             int offset = hash[hash.length - 1] & 0xF;
             int binary = ((hash[offset] & 0x7F) << 24) |
-                         ((hash[offset + 1] & 0xFF) << 16) |
-                         ((hash[offset + 2] & 0xFF) << 8) |
-                         (hash[offset + 3] & 0xFF);
+                    ((hash[offset + 1] & 0xFF) << 16) |
+                    ((hash[offset + 2] & 0xFF) << 8) |
+                    (hash[offset + 3] & 0xFF);
 
             int otp = binary % 1_000_000;
             return String.format("%06d", otp);
@@ -295,7 +302,8 @@ public class TotpServiceImpl implements TotpService {
             StringBuilder hexString = new StringBuilder();
             for (byte b : hash) {
                 String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) hexString.append('0');
+                if (hex.length() == 1)
+                    hexString.append('0');
                 hexString.append(hex);
             }
             return hexString.toString();

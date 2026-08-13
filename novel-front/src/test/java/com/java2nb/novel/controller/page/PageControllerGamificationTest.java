@@ -1,7 +1,6 @@
 package com.java2nb.novel.controller.page;
 
 import com.java2nb.novel.core.bean.UserDetails;
-import com.java2nb.novel.core.config.GamificationProperties;
 import com.java2nb.novel.core.config.VnpayProperties;
 import com.java2nb.novel.service.AuthorService;
 import com.java2nb.novel.service.BookContentService;
@@ -10,6 +9,8 @@ import com.java2nb.novel.service.NewsService;
 import com.java2nb.novel.service.UserService;
 import com.java2nb.novel.service.chapter.ChapterCommercialPolicyService;
 import com.java2nb.novel.service.recommendation.RecommendationService;
+import com.java2nb.novel.service.gamification.config.GamificationConfigProvider;
+import com.java2nb.novel.service.gamification.config.GamificationConfigSnapshot;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
 
@@ -70,6 +71,8 @@ class PageControllerGamificationTest {
     }
 
     private PageController controller(AuthorService authorService, UserDetails user) {
+        GamificationConfigProvider provider = mock(GamificationConfigProvider.class);
+        when(provider.current()).thenReturn(GamificationConfigSnapshot.bootstrapDisabled());
         return new PageController(
             mock(BookService.class),
             mock(NewsService.class),
@@ -81,7 +84,7 @@ class PageControllerGamificationTest {
             mock(ThreadPoolExecutor.class),
             Map.<String, BookContentService>of(),
             new VnpayProperties(),
-            new GamificationProperties()) {
+            provider) {
             @Override
             protected UserDetails getUserDetails(HttpServletRequest request) {
                 return user;

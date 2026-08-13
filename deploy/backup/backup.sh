@@ -25,7 +25,7 @@ GNUPGHOME="$temporary/gnupg"
 mkdir -m 0700 "$GNUPGHOME"
 export GNUPGHOME
 timestamp=$(date -u +%Y%m%dT%H%M%SZ)
-archive="novel-plus-${timestamp}.tar.gz"
+archive="khoi-thu-${timestamp}.tar.gz"
 encrypted="/backups/${archive}.gpg"
 
 MYSQL_PWD=$(cat "$password_file") mysqldump \

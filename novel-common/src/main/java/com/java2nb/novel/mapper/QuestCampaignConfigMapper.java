@@ -17,17 +17,21 @@ public interface QuestCampaignConfigMapper {
 
     QuestCampaignRow lockById(@Param("campaignId") long campaignId);
 
-    int countQuest(@Param("questCode") String questCode);
+    int countQuest(@Param("questCode") String questCode,
+                   @Param("policyVersion") String policyVersion);
 
     int deleteRewardTypes(@Param("campaignCode") String campaignCode,
-                          @Param("questCode") String questCode);
+                          @Param("questCode") String questCode,
+                          @Param("policyVersion") String policyVersion);
 
     int insertReward(@Param("campaignCode") String campaignCode,
                      @Param("questCode") String questCode,
+                     @Param("policyVersion") String policyVersion,
                      @Param("rewardType") String rewardType,
                      @Param("amount") long amount);
 
-    int countRewards(@Param("campaignCode") String campaignCode);
+    int countRewards(@Param("campaignCode") String campaignCode,
+                     @Param("policyVersion") String policyVersion);
 
     int countOverlappingActive(@Param("campaignId") long campaignId,
                                @Param("startAt") Date startAt,

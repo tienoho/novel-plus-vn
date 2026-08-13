@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project 
+    xmlns="http://maven.apache.org/POM/4.0.0"
+         
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>novel</artifactId>
@@ -8,53 +10,41 @@
         <version>5.3.3</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-
     <artifactId>novel-crawl</artifactId>
-
     <name>novel-crawl</name>
-    <description>Trình quản lý thu thập dữ liệu Novel Plus</description>
-
+    <description>Trình quản lý thu thập dữ liệu Khởi Thư</description>
     <dependencies>
-
         <dependency>
             <groupId>com.java2nb</groupId>
             <artifactId>novel-common</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
             <version>2.2</version>
         </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
-
     </dependencies>
-
     <build>
         <plugins>
             <plugin>
@@ -80,7 +70,6 @@
                                 </copy>
                                 <copy file="${project.build.directory}/${project.artifactId}-${project.version}.jar"
                                       tofile="${project.build.directory}/build/${project.artifactId}.jar"/>
-
                                 <fixcrlf srcdir="${basedir}/src/main/build/scripts" eol="unix"/>
                                 <copy todir="${project.build.directory}/build/bin">
                                     <fileset dir="${basedir}/src/main/build/scripts">
@@ -94,7 +83,6 @@
                                     <zipfileset filemode="755" dir='${project.build.directory}/build/'
                                                 excludes="${project.artifactId}.zip"/>
                                 </zip>
-
                                 <copy file="${basedir}/src/main/build/docker/Dockerfile"
                                       tofile="${project.build.directory}/build/Dockerfile"/>
                             </tasks>
@@ -104,6 +92,4 @@
             </plugin>
         </plugins>
     </build>
-
-
 </project>

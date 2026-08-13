@@ -11,8 +11,9 @@ $tempRoot = Join-Path $repository 'tmp'
 $secretTemp = Join-Path $tempRoot 'compose-secrets-backup-verify'
 $backupTemp = Join-Path $tempRoot 'backup-restore-verify'
 $projectName = if ([string]::IsNullOrWhiteSpace($env:BACKUP_VERIFY_PROJECT_NAME)) {
-    'novel-plus-backup-verify'
-} else {
+    'khoi-thu-backup-verify'
+}
+else {
     $env:BACKUP_VERIFY_PROJECT_NAME
 }
 if ($projectName -notmatch '^[a-z0-9][a-z0-9_-]*$') {
@@ -46,7 +47,8 @@ function Get-SecretValue {
         $sourceDirectory = [Environment]::GetEnvironmentVariable('SECRETS_DIR')
         if ([string]::IsNullOrWhiteSpace($sourceDirectory)) {
             $sourceDirectory = Join-Path $repository 'secrets'
-        } elseif (-not [System.IO.Path]::IsPathRooted($sourceDirectory)) {
+        }
+        elseif (-not [System.IO.Path]::IsPathRooted($sourceDirectory)) {
             $sourceDirectory = Join-Path $repository $sourceDirectory
         }
         $sourceFile = Join-Path $sourceDirectory $FileName
@@ -90,21 +92,22 @@ try {
 
     $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
     $secretValues = [ordered]@{
-        mysql_root_password = Get-SecretValue -EnvironmentName 'MYSQL_ROOT_PASSWORD' -FileName 'mysql_root_password'
-        mysql_app_password = Get-SecretValue -EnvironmentName 'MYSQL_APP_PASSWORD' -FileName 'mysql_app_password'
-        redis_password = Get-SecretValue -EnvironmentName 'REDIS_PASSWORD' -FileName 'redis_password'
-        jwt_secret = Get-SecretValue -EnvironmentName 'JWT_SECRET' -FileName 'jwt_secret'
-        cache_manager_password = Get-SecretValue -EnvironmentName 'CACHE_MANAGER_PASSWORD' -FileName 'cache_manager_password'
-        pii_encryption_key = Get-SecretValue -EnvironmentName 'PII_ENCRYPTION_KEY' -FileName 'pii_encryption_key'
-        admin_bootstrap_password = Get-SecretValue -EnvironmentName 'ADMIN_BOOTSTRAP_PASSWORD' -FileName 'admin_bootstrap_password'
-        crawler_admin_password = Get-SecretValue -EnvironmentName 'CRAWLER_ADMIN_PASSWORD' -FileName 'crawler_admin_password'
-        backup_encryption_password = Get-SecretValue -EnvironmentName 'BACKUP_ENCRYPTION_PASSWORD' `
+        mysql_root_password            = Get-SecretValue -EnvironmentName 'MYSQL_ROOT_PASSWORD' -FileName 'mysql_root_password'
+        mysql_app_password             = Get-SecretValue -EnvironmentName 'MYSQL_APP_PASSWORD' -FileName 'mysql_app_password'
+        redis_password                 = Get-SecretValue -EnvironmentName 'REDIS_PASSWORD' -FileName 'redis_password'
+        jwt_secret                     = Get-SecretValue -EnvironmentName 'JWT_SECRET' -FileName 'jwt_secret'
+        cache_manager_password         = Get-SecretValue -EnvironmentName 'CACHE_MANAGER_PASSWORD' -FileName 'cache_manager_password'
+        pii_encryption_key             = Get-SecretValue -EnvironmentName 'PII_ENCRYPTION_KEY' -FileName 'pii_encryption_key'
+        gamification_vote_ip_hash_salt = 'integration-gamification-vote-ip-hash-salt-2026'
+        admin_bootstrap_password       = Get-SecretValue -EnvironmentName 'ADMIN_BOOTSTRAP_PASSWORD' -FileName 'admin_bootstrap_password'
+        crawler_admin_password         = Get-SecretValue -EnvironmentName 'CRAWLER_ADMIN_PASSWORD' -FileName 'crawler_admin_password'
+        backup_encryption_password     = Get-SecretValue -EnvironmentName 'BACKUP_ENCRYPTION_PASSWORD' `
             -FileName 'backup_encryption_password' -DefaultValue 'integration-backup-encryption-password'
-        vnpay_hash_secret = 'disabled'
-        vnpay_recurring_password = 'disabled'
-        vnpay_recurring_client_secret = 'disabled'
-        vnpay_recurring_hash_secret = 'disabled'
-        vietqr_webhook_secret = 'disabled'
+        vnpay_hash_secret              = 'disabled'
+        vnpay_recurring_password       = 'disabled'
+        vnpay_recurring_client_secret  = 'disabled'
+        vnpay_recurring_hash_secret    = 'disabled'
+        vietqr_webhook_secret          = 'disabled'
     }
     foreach ($entry in $secretValues.GetEnumerator()) {
         [System.IO.File]::WriteAllText((Join-Path $secretTemp $entry.Key), $entry.Value, $utf8NoBom)

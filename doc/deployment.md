@@ -1,4 +1,4 @@
-# Runbook triển khai Novel Plus
+# Runbook triển khai Khởi Thư
 
 Tài liệu này áp dụng cho bộ Docker Compose tại thư mục gốc. Stack gồm MySQL, Redis, service migration one-shot, `front`, `crawl`, `admin`, Prometheus, Alertmanager, Pushgateway, Grafana và Caddy làm cổng vào HTTPS duy nhất. Các công cụ backup/restore nằm trong profile `tools` và không tự khởi động cùng ứng dụng.
 
@@ -13,11 +13,11 @@ Tạo tệp môi trường, thư mục secret và backup bên ngoài repo:
 
 ```bash
 cp .env.example .env
-sudo install -d -m 0700 /etc/novel-plus/secrets
-sudo install -d -o 10002 -g 10002 -m 0700 /var/backups/novel-plus
+sudo install -d -m 0700 /etc/khoi-thu/secrets
+sudo install -d -o 10002 -g 10002 -m 0700 /var/backups/khoi-thu
 ```
 
-Đặt `SECRETS_DIR=/etc/novel-plus/secrets` và `BACKUP_DIR=/var/backups/novel-plus` trong `.env`. Tạo đủ các file được liệt kê tại [secrets/README.md](../secrets/README.md), đặt quyền `0600`, chủ sở hữu là tài khoản vận hành Docker. `pii_encryption_key` phải là Base64 của đúng 32 byte; các secret còn lại phải là chuỗi ngẫu nhiên dài. Không đặt secret trực tiếp trong `.env` và không commit `.env` hay thư mục secret thật.
+Đặt `SECRETS_DIR=/etc/khoi-thu/secrets` và `BACKUP_DIR=/var/backups/khoi-thu` trong `.env`. Tạo đủ các file được liệt kê tại [secrets/README.md](../secrets/README.md), đặt quyền `0600`, chủ sở hữu là tài khoản vận hành Docker. `pii_encryption_key` phải là Base64 của đúng 32 byte; các secret còn lại phải là chuỗi ngẫu nhiên dài. Không đặt secret trực tiếp trong `.env` và không commit `.env` hay thư mục secret thật.
 
 Kiểm tra Compose trước khi build:
 
@@ -126,7 +126,7 @@ Lệnh tạo một gói GPG AES-256 chứa dump nhất quán, trigger/routine/ev
 Diễn tập tự động trên database tạm, không ghi đè dữ liệu hiện tại:
 
 ```bash
-BACKUP_ARCHIVE=novel-plus-YYYYMMDDTHHMMSSZ.tar.gz.gpg \
+BACKUP_ARCHIVE=khoi-thu-YYYYMMDDTHHMMSSZ.tar.gz.gpg \
 docker compose --profile tools run --rm restore-drill
 ```
 
@@ -134,7 +134,7 @@ Phục hồi thật là thao tác phá hủy, phải dừng ba ứng dụng và 
 
 ```bash
 docker compose stop caddy front admin crawl
-BACKUP_ARCHIVE=novel-plus-YYYYMMDDTHHMMSSZ.tar.gz.gpg RESTORE_CONFIRM=RESTORE \
+BACKUP_ARCHIVE=khoi-thu-YYYYMMDDTHHMMSSZ.tar.gz.gpg RESTORE_CONFIRM=RESTORE \
 docker compose --profile tools run --rm restore
 docker compose up -d
 ```
@@ -161,9 +161,30 @@ Sau phục hồi phải chạy `migrate`, kiểm tra checksum Flyway, health và
    docker compose logs --since=10m migrate front crawl admin
    ```
 
-Image `novel-plus/migrations` dùng Flyway 13.1.0 và chỉ giữ các plugin/driver cần cho MySQL; không xóa driver riêng lẻ khi plugin `ServiceLoader` tương ứng vẫn còn. Compose chạy baseline cùng 39 migration tăng dần, từ `20260712_vi_localization.sql` đến `20260817_author_payout_four_eyes.sql`, sau đó validate checksum trước khi mở các ứng dụng. Không sửa migration đã phát hành, không chạy lại bằng shell loop và không dùng `novel_plus_data.sql.zip` trong image release.
+Image `khoi-thu/migrations` dùng Flyway 13.1.0 và chỉ giữ các plugin/driver cần cho MySQL; không xóa driver riêng lẻ khi plugin `ServiceLoader` tương ứng vẫn còn. Compose chạy baseline cùng 41 migration tăng dần, từ `20260712_vi_localization.sql` đến `20260819_gamification_dynamic_config_p1_hardening.sql`, sau đó validate checksum trước khi mở các ứng dụng. Không sửa migration đã phát hành, không chạy lại bằng shell loop và không dùng `novel_plus_data.sql.zip` trong image release.
 
 Migration VNPAY chủ động dừng nếu phát hiện `out_trade_no` trùng để tránh tự sửa lịch sử thanh toán. Migration sổ cái chỉ backfill số dư đầu kỳ một lần thông qua `platform_migration_history`; các migration KYC, refund, kiểm duyệt, báo cáo và editor tạo schema/audit cần thiết nhưng không tự sinh dữ liệu định danh. Các migration mới bổ sung BCrypt, thuê bao recurring, kỳ gamification đặc biệt, thưởng level, chống lạm dụng và chính sách công khai. Mọi lỗi checksum hoặc invariant phải chặn deploy để vận hành đối soát, không tự bỏ qua.
+
+### 4.1. Cutover cấu hình Gamification
+
+Production mặc định dùng `GAMIFICATION_CONFIG_SOURCE=DB`. Trước lần cutover đầu tiên, giữ một bản
+ENV đã phê duyệt để rollback và thực hiện tuần tự:
+
+1. import ENV thành draft trong `/novel/gamification/settings`;
+2. submit, phê duyệt bằng tài khoản khác và schedule revision;
+3. chuyển canary sang `DB_SHADOW`, chờ `gamification_config_shadow_diff_keys=0`;
+4. chuyển một front sang `DB`, smoke đường đọc/ghi, rồi chuyển admin/crawl và các front còn lại;
+5. xác minh revision config/scheduler đồng nhất trước khi xóa 38 biến runtime cũ khỏi deploy.
+
+Chỉ giữ `GAMIFICATION_CONFIG_SOURCE`, refresh/max-stale, `GAMIFICATION_FORCE_DISABLE`, key ID và
+salt file. File `secrets/gamification_vote_ip_hash_salt` phải có ít nhất 32 ký tự ngẫu nhiên, không
+trùng JWT/Redis/database secret. Khi incident, `FORCE_DISABLE=true` khóa đường ghi ngay; nếu provider
+DB không phục hồi, đổi source về `ENV` và restart. Không UPDATE revision cũ hoặc down-migration.
+
+Theo dõi các alert `NovelGamificationConfigRevisionDrift`, `NovelGamificationConfigStale`,
+`NovelGamificationConfigRefreshFailed`, `NovelGamificationConfigActivationFailed` và
+`NovelGamificationSchedulerRescheduleFailed`; dashboard hiển thị revision config/scheduler và tuổi
+snapshot theo từng ứng dụng.
 
 ## 5. Caddy, TLS và giới hạn truy cập
 
@@ -354,7 +375,7 @@ vẫn xanh. Với volume development cũ được tạo trước thay đổi nà
 Grafana được build thành image first-party từ đúng tag `v13.1.3`, commit
 `45a27d64b64a82d666b06aa5c5bb3521587edb0d` và Go 1.26.5. Patch chỉ bỏ backend Tempo không dùng;
 runtime bỏ Tempo, Elasticsearch và Zipkin, tắt plugin preinstall mặc định và xóa đúng ba thư mục này
-khỏi volume plugin cũ trước khi chạy. Novel Plus chỉ provision Prometheus. Image phải chạy UID 472,
+khỏi volume plugin cũ trước khi chạy. Khởi Thư chỉ provision Prometheus. Image phải chạy UID 472,
 không được tải plugin lúc khởi động và phải qua scan, SBOM, attestation cùng smoke dashboard trước RC.
 
 Job `runtime-dependencies` phải quét đúng hai reference có digest của Redis và

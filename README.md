@@ -1,20 +1,20 @@
-# Novel Plus
+# Khởi Thư
 
 <p align="center">
-  <a href="https://github.com/201206030/novel-plus"><img alt="GitHub stars" src="https://img.shields.io/github/stars/201206030/novel-plus?logo=github"></a>
-  <a href="https://github.com/201206030/novel-plus"><img alt="GitHub forks" src="https://img.shields.io/github/forks/201206030/novel-plus?logo=github"></a>
-  <a href="https://github.com/201206030/novel-plus/releases"><img alt="Lượt tải GitHub" src="https://img.shields.io/github/downloads/201206030/novel-plus/total.svg"></a>
+  <a href="https://github.com/201206030/khoi-thu"><img alt="GitHub stars" src="https://img.shields.io/github/stars/201206030/khoi-thu?logo=github"></a>
+  <a href="https://github.com/201206030/khoi-thu"><img alt="GitHub forks" src="https://img.shields.io/github/forks/201206030/khoi-thu?logo=github"></a>
+  <a href="https://github.com/201206030/khoi-thu/releases"><img alt="Lượt tải GitHub" src="https://img.shields.io/github/downloads/201206030/khoi-thu/total.svg"></a>
   <a href="https://hub.docker.com/u/201206030"><img alt="Lượt kéo Docker" src="https://img.shields.io/docker/pulls/201206030/novel-front"></a>
 </p>
 
-Novel Plus là hệ thống quản lý và đọc truyện đa nền tảng, hỗ trợ giao diện máy tính và thiết bị di động. Dự án gồm cổng đọc, khu vực tác giả, trang quản trị nền tảng và trình quản lý thu thập dữ liệu.
+Khởi Thư là hệ thống quản lý và đọc truyện đa nền tảng, hỗ trợ giao diện máy tính và thiết bị di động. Dự án gồm cổng đọc, khu vực tác giả, trang quản trị nền tảng và trình quản lý thu thập dữ liệu.
 
 Các chức năng chính gồm đề xuất và tìm kiếm tiếng Việt có dấu/không dấu, chịu lỗi chính tả nhẹ, bảng xếp hạng, đọc chương, bình luận, tủ sách, lịch sử đọc, theo dõi tác giả/truyện và thông báo chương mới, quản lý tác giả, nạp Xu, mua chương, tin tức, báo cáo thống kê, nhiều giao diện, nhiều nguồn thu thập và hỗ trợ sáng tác bằng AI.
 
 ## Liên kết
 
-- Mã nguồn: [GitHub](https://github.com/201206030/novel-plus)
-- Bản phát hành: [GitHub Releases](https://github.com/201206030/novel-plus/releases)
+- Mã nguồn: [GitHub](https://github.com/201206030/khoi-thu)
+- Bản phát hành: [GitHub Releases](https://github.com/201206030/khoi-thu/releases)
 - Runbook triển khai: [doc/deployment.md](doc/deployment.md)
 - Hướng dẫn tích hợp VNPAY: [doc/vnpay.md](doc/vnpay.md)
 - Kiến trúc ví và sổ cái: [doc/wallet-ledger.md](doc/wallet-ledger.md)
@@ -41,7 +41,7 @@ Các chức năng chính gồm đề xuất và tìm kiếm tiếng Việt có d
 ## Cấu trúc dự án
 
 ```text
-novel-plus
+khoi-thu
 ├── novel-common   # Mô hình dữ liệu, cấu hình và tiện ích dùng chung
 ├── novel-front    # Cổng đọc, giao diện di động và khu vực tác giả
 ├── novel-crawl    # Quản lý nguồn và tác vụ thu thập dữ liệu
@@ -81,7 +81,7 @@ Các dịch vụ OSS, VNPAY, AI và nguồn thu thập là tùy chọn; chỉ b�
 
 1. Tạo database MySQL 8.4 trống với bộ ký tự `utf8mb4`, hoặc để Compose tạo database từ cấu hình.
 2. Cấu hình secret rồi chạy `docker compose run --rm migrate`.
-3. Image `novel-plus/migrations` dùng Flyway để chạy baseline và toàn bộ migration đúng thứ tự, sau đó validate checksum trước khi các ứng dụng khởi động.
+3. Image `khoi-thu/migrations` dùng Flyway để chạy baseline và toàn bộ migration đúng thứ tự, sau đó validate checksum trước khi các ứng dụng khởi động.
 
 Không chạy thủ công từng tệp trong `doc/sql` trên môi trường do Compose quản lý và không sửa migration lịch sử đã phát hành. Migration Việt hóa chỉ cập nhật giá trị tiếng Trung mặc định khi khớp chính xác, giữ nguyên dữ liệu đã tùy chỉnh.
 
@@ -179,7 +179,7 @@ Username crawler lấy từ `CRAWLER_ADMIN_USERNAME`; password nằm trong file 
 
 MySQL, Redis, ảnh tải lên và nội dung truyện dùng named volume nên được giữ lại khi chạy `docker compose down`. Lệnh `docker compose down -v` xóa toàn bộ volume và dữ liệu, chỉ dùng khi chủ động khởi tạo lại môi trường.
 
-Flyway chạy baseline và 39 migration tăng dần, từ `20260712_vi_localization.sql` đến `20260817_author_payout_four_eyes.sql`, trong service one-shot trước các ứng dụng. Chuỗi migration bổ sung Việt hóa, bảo mật, thanh toán/sổ cái, thuê bao recurring, công cụ tác giả/độc giả và gamification. Không sửa checksum hoặc chạy lại SQL bằng shell loop. Nếu database cũ có dữ liệu không đáp ứng invariant, migration phải dừng để quản trị viên đối soát thay vì tự xóa hoặc gộp lịch sử. Xem thứ tự và quy tắc tại [hướng dẫn SQL](doc/sql/readme.md).
+Flyway chạy baseline và 40 migration tăng dần, từ `20260712_vi_localization.sql` đến `20260818_gamification_runtime_config.sql`, trong service one-shot trước các ứng dụng. Migration mới nhất đưa runtime settings/policy gamification vào database có revision, audit, maker-checker và kích hoạt theo lịch; salt hash IP vẫn nằm trong Docker secret. Không sửa checksum hoặc chạy lại SQL bằng shell loop. Nếu database cũ có dữ liệu không đáp ứng invariant, migration phải dừng để quản trị viên đối soát thay vì tự xóa hoặc gộp lịch sử. Xem thứ tự và quy tắc tại [hướng dẫn SQL](doc/sql/readme.md) và [runbook gamification](doc/gamification.md).
 
 Các identifier/URL AI, VNPAY, OSS và email là tùy chọn trong `.env`; credential lõi, webhook checksum, mật khẩu Grafana và URL webhook Alertmanager nằm trong file secret, không ghi khóa thật vào source, image hay environment của container. IPN VNPAY phải được cấu hình thành `https://<ten-mien>/pay/vnpay/ipn`. Caddy tự cấp TLS, áp security header, giới hạn upload/rate cơ bản và chặn `/actuator/**` từ Internet; Prometheus chỉ scrape endpoint này trong network Compose. Backup profile tạo gói GPG AES-256 cho database và file. Quy trình giám sát, backup, restore drill và rollback nằm trong [runbook triển khai](doc/deployment.md).
 
@@ -266,7 +266,7 @@ Tiếng Việt là ngôn ngữ hiển thị mặc định. Catalog tiếng Trung
 
 ## AI
 
-Novel Plus hỗ trợ mở rộng, rút gọn, viết tiếp, trau chuốt nội dung và sinh ảnh bìa. Prompt first-party yêu cầu đầu ra tiếng Việt tự nhiên.
+Khởi Thư hỗ trợ mở rộng, rút gọn, viết tiếp, trau chuốt nội dung và sinh ảnh bìa. Prompt first-party yêu cầu đầu ra tiếng Việt tự nhiên.
 
 Ví dụ cấu hình dùng endpoint tương thích OpenAI:
 

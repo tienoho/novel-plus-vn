@@ -26,7 +26,7 @@
 <div th:fragment="footer">
 	<script src="/js/jquery.min.js?v=2.1.4"></script>
 	<script src="/js/csrf.js"></script>
-	<script th:inline="javascript">
+	<script th:inline="javascript" th:attr="nonce=${cspNonce}">
 		window.AdminI18n = Object.assign(window.AdminI18n || {}, {
 			add: /*[[#{common.add}]]*/ 'Thêm',
 			edit: /*[[#{common.edit}]]*/ 'Sửa',
@@ -273,8 +273,8 @@
 			,logIp: /*[[#{admin.log.ip}]]*/ 'Địa chỉ IP'
 			,imageMax2M: /*[[#{validation.imageMax2M}]]*/ 'Kích thước ảnh không được vượt quá 2 MB.'
 			,uploadFailed: /*[[#{validation.uploadFailed}]]*/ 'Tải lên thất bại'
-			,welcomeTitle: /*[[#{admin.welcome.title}]]*/ 'Chào mừng đến với Novel Plus'
-			,welcomeMessage: /*[[#{admin.welcome.message}]]*/ 'Cảm ơn bạn đã sử dụng Novel Plus.'
+			,welcomeTitle: /*[[#{admin.welcome.title}]]*/ 'Chào mừng đến với Khởi Thư'
+			,welcomeMessage: /*[[#{admin.welcome.message}]]*/ 'Cảm ơn bạn đã sử dụng Khởi Thư.'
 			,test_order_id: /*[[#{test.order.id}]]*/ 'Khóa chính'
 			,test_order_merchantNo: /*[[#{test.order.merchantNo}]]*/ 'Mã thương nhân Fubei'
 			,test_order_externalOrderNo: /*[[#{test.order.externalOrderNo}]]*/ 'Mã đơn của thương nhân bên thứ ba'

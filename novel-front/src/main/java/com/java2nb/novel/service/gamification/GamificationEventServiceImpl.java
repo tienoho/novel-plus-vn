@@ -1,8 +1,9 @@
 package com.java2nb.novel.service.gamification;
 
-import com.java2nb.novel.core.config.GamificationProperties;
 import com.java2nb.novel.service.gamification.GamificationEventInputFactory;
 import com.java2nb.novel.service.gamification.GamificationEventRecorder;
+import com.java2nb.novel.service.gamification.config.GamificationConfigProvider;
+import com.java2nb.novel.service.gamification.config.GamificationConfigSnapshot;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -10,25 +11,24 @@ import java.util.Date;
 @Service
 public class GamificationEventServiceImpl implements GamificationEventService {
 
-    private final GamificationProperties properties;
+    private final GamificationConfigProvider configProvider;
     private final GamificationEventRecorder recorder;
 
-    public GamificationEventServiceImpl(GamificationProperties properties,
+    public GamificationEventServiceImpl(GamificationConfigProvider configProvider,
                                         GamificationEventRecorder recorder) {
-        this.properties = properties;
+        this.configProvider = configProvider;
         this.recorder = recorder;
     }
 
     @Override
     public void ingest(String eventType, String sourceKey, long userId, Long bookId,
                        Date occurredAt, String payloadJson) {
-        if (!properties.getEvent().isEnabled()) {
+        GamificationConfigSnapshot config = configProvider.currentForWrite();
+        if (!config.isEventEnabled()) {
             return;
         }
-        if (!properties.isConfigured()) {
-            throw new IllegalStateException("Cấu hình gamification không hợp lệ khi ghi sự kiện");
-        }
         recorder.ingest(GamificationEventInputFactory.create(eventType, sourceKey, userId, bookId,
-            occurredAt, payloadJson, properties.resolveZoneId(), properties.getPolicyVersion()));
+            occurredAt, payloadJson, java.time.ZoneId.of(config.getZoneId()),
+            config.getPolicyVersion(), config.getRuntimeRevision()));
     }
 }

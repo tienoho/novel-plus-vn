@@ -1,4 +1,4 @@
-# Biên bản sẵn sàng production Novel Plus
+# Biên bản sẵn sàng production Khởi Thư
 
 Ngày tái xác minh kỹ thuật: **10/08/2026**. Cập nhật audit secret lịch sử: **09/08/2026**.
 
@@ -203,7 +203,7 @@ bằng chứng phát hành lâu dài.
   thử, container và volume tạm đã được dọn riêng sau khi thu bằng chứng.
 - Grafana 13.1.3 hardened được build từ đúng commit `45a27d64…` bằng Go 1.26.5. Trivy 0.69.3 trả 0
   vulnerability/secret/misconfiguration. Smoke standalone xác nhận UID 472, health database `ok`,
-  datasource Prometheus và dashboard `novel-plus-overview`; volume đã seed Tempo/Elasticsearch/Zipkin
+  datasource Prometheus và dashboard `khoi-thu-overview`; volume đã seed Tempo/Elasticsearch/Zipkin
   được dọn đúng ba thư mục, không còn background preinstall hoặc process plugin. Smoke toàn stack local
   ngày 10/08/2026 tiếp tục xác nhận Grafana healthy và dashboard được provision. Chưa có SBOM/attestation
   RC và chưa có smoke toàn stack bằng tập image RC khóa theo digest.
@@ -224,7 +224,7 @@ bằng chứng phát hành lâu dài.
 
 ```powershell
 docker run --rm `
-  -v "D:\Project\novel-plus:/workspace" `
+  -v "D:\Project\khoi-thu:/workspace" `
   -v "$HOME/.m2:/root/.m2" `
   -w /workspace `
   maven:3.9.11-eclipse-temurin-21 `

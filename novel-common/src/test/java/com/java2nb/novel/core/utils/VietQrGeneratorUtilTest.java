@@ -45,7 +45,7 @@ class VietQrGeneratorUtilTest {
         String accountNo = "1234567890";
         long amountVnd = 100000;
         String paymentRef = "1002003004";
-        String accountName = "NOVEL PLUS";
+        String accountName = "KHOI THU";
 
         String url = VietQrGeneratorUtil.generateQuickLinkUrl(bankBin, accountNo, amountVnd, paymentRef, accountName);
 

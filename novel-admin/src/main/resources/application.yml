@@ -81,19 +81,47 @@ novel:
     zone-id: ${GAMIFICATION_ZONE_ID:Asia/Ho_Chi_Minh}
     event:
       enabled: ${GAMIFICATION_EVENT_ENABLED:false}
+      drain-batch-size: ${GAMIFICATION_EVENT_DRAIN_BATCH:200}
+      drain-delay-ms: ${GAMIFICATION_EVENT_DRAIN_DELAY_MS:15000}
+      max-attempt: ${GAMIFICATION_EVENT_MAX_ATTEMPT:10}
     ticket:
       enabled: ${GAMIFICATION_TICKET_ENABLED:false}
       lot-validity-days: ${GAMIFICATION_TICKET_LOT_DAYS:60}
+      grant-on-top-up-enabled: ${GAMIFICATION_TICKET_GRANT_ON_TOPUP:false}
+      expiry-cron: ${GAMIFICATION_TICKET_EXPIRY_CRON:0 20 3 * * ?}
+      expiry-batch-size: ${GAMIFICATION_TICKET_EXPIRY_BATCH:500}
       max-grant-per-batch: ${GAMIFICATION_TICKET_MAX_GRANT_BATCH:1000}
+    vote:
+      enabled: ${GAMIFICATION_VOTE_ENABLED:false}
+      allow-crawled-books: ${GAMIFICATION_VOTE_ALLOW_CRAWLED:false}
+      max-tickets-per-request: ${GAMIFICATION_VOTE_MAX_PER_REQUEST:10}
+      max-votes-per-day: ${GAMIFICATION_VOTE_MAX_VOTES_DAY:20}
+      max-tickets-per-day: ${GAMIFICATION_VOTE_MAX_TICKETS_DAY:50}
+      max-tickets-per-book-per-season: ${GAMIFICATION_VOTE_MAX_PER_BOOK:100}
+      max-lots-per-spend: ${GAMIFICATION_VOTE_MAX_LOTS:50}
+    quest:
+      enabled: ${GAMIFICATION_QUEST_ENABLED:false}
+      reply-quest-enabled: ${GAMIFICATION_QUEST_REPLY_ENABLED:false}
+      heartbeat-interval-seconds: ${GAMIFICATION_HEARTBEAT_INTERVAL:60}
+      heartbeat-max-minutes-per-day: ${GAMIFICATION_HEARTBEAT_MAX_MIN:180}
+    realm:
+      enabled: ${GAMIFICATION_REALM_ENABLED:false}
+      affects-benefits: ${GAMIFICATION_REALM_AFFECTS_BENEFITS:false}
+      change-cooldown-hours: ${GAMIFICATION_REALM_COOLDOWN_HOURS:24}
     season:
       enabled: ${GAMIFICATION_SEASON_ENABLED:false}
+      close-cron: ${GAMIFICATION_SEASON_CLOSE_CRON:0 5 0 1 * ?}
       close-drain-seconds: ${GAMIFICATION_SEASON_DRAIN_SECONDS:60}
+      resume-delay-ms: ${GAMIFICATION_SEASON_RESUME_DELAY_MS:30000}
+      auto-finalize: ${GAMIFICATION_SEASON_AUTO_FINALIZE:false}
+      review-window-hours: ${GAMIFICATION_SEASON_REVIEW_HOURS:72}
     job:
       lease-seconds: ${GAMIFICATION_JOB_LEASE_SECONDS:300}
       batch-size: ${GAMIFICATION_JOB_BATCH_SIZE:500}
     reward:
       enabled: ${GAMIFICATION_REWARD_ENABLED:false}
       claim-window-days: ${GAMIFICATION_REWARD_CLAIM_WINDOW_DAYS:7}
+      release-cron: ${GAMIFICATION_REWARD_RELEASE_CRON:0 40 3 * * ?}
   common:
     i18n:
       enabled: false

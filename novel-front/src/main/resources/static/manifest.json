@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "Novel Plus Việt Nam",
-  "short_name": "Novel Plus",
-  "description": "Nền tảng đọc và sáng tác truyện dành cho người Việt.",
+  "name": "Khởi Thư - Đọc & Sáng Tác Tiểu Thuyết",
+  "short_name": "Khởi Thư",
+  "description": "Nền tảng đọc và sáng tác truyện chữ Việt Nam.",
   "lang": "vi",
   "dir": "ltr",
   "start_url": "/?source=pwa",

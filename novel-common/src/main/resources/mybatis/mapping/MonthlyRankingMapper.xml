@@ -13,6 +13,7 @@
                vote_cutoff_at AS voteCutoffAt,
                status,
                policy_version AS policyVersion,
+               runtime_config_revision AS runtimeConfigRevision,
                snapshot_id    AS snapshotId,
                closing_at     AS closingAt,
                review_at      AS reviewAt,
@@ -26,17 +27,17 @@
     <insert id="insertRegularSeasonIgnore">
         INSERT IGNORE INTO monthly_ticket_season
             (period_code, season_type, zone_id, start_at, end_at, vote_cutoff_at,
-             status, policy_version)
+             status, policy_version, runtime_config_revision)
         VALUES (#{periodCode}, 'REGULAR', #{zoneId}, #{startAt}, #{endAt}, #{voteCutoffAt},
-                'OPEN', #{policyVersion})
+                'OPEN', #{policyVersion}, #{runtimeConfigRevision})
     </insert>
 
     <insert id="insertSpecialSeasonIgnore">
         INSERT IGNORE INTO monthly_ticket_season
             (period_code, season_type, zone_id, start_at, end_at, vote_cutoff_at,
-             status, policy_version)
+             status, policy_version, runtime_config_revision)
         VALUES (#{periodCode}, #{seasonType}, #{zoneId}, #{startAt}, #{endAt}, #{voteCutoffAt},
-                'OPEN', #{policyVersion})
+                'OPEN', #{policyVersion}, #{runtimeConfigRevision})
     </insert>
 
     <select id="selectSeasonByPeriod"
@@ -50,6 +51,7 @@
                vote_cutoff_at AS voteCutoffAt,
                status,
                policy_version AS policyVersion,
+               runtime_config_revision AS runtimeConfigRevision,
                snapshot_id    AS snapshotId,
                closing_at     AS closingAt,
                review_at      AS reviewAt,
@@ -72,6 +74,7 @@
                vote_cutoff_at AS voteCutoffAt,
                status,
                policy_version AS policyVersion,
+               runtime_config_revision AS runtimeConfigRevision,
                snapshot_id    AS snapshotId,
                closing_at     AS closingAt,
                review_at      AS reviewAt,
@@ -97,6 +100,7 @@
                vote_cutoff_at AS voteCutoffAt,
                status,
                policy_version AS policyVersion,
+               runtime_config_revision AS runtimeConfigRevision,
                snapshot_id    AS snapshotId,
                closing_at     AS closingAt,
                review_at      AS reviewAt,
@@ -120,6 +124,7 @@
                vote_cutoff_at AS voteCutoffAt,
                status,
                policy_version AS policyVersion,
+               runtime_config_revision AS runtimeConfigRevision,
                snapshot_id    AS snapshotId,
                closing_at     AS closingAt,
                review_at      AS reviewAt,
@@ -144,6 +149,7 @@
                vote_cutoff_at AS voteCutoffAt,
                status,
                policy_version AS policyVersion,
+               runtime_config_revision AS runtimeConfigRevision,
                snapshot_id    AS snapshotId,
                closing_at     AS closingAt,
                review_at      AS reviewAt,
@@ -168,6 +174,7 @@
                vote_cutoff_at AS voteCutoffAt,
                status,
                policy_version AS policyVersion,
+               runtime_config_revision AS runtimeConfigRevision,
                snapshot_id    AS snapshotId,
                closing_at     AS closingAt,
                review_at      AS reviewAt,

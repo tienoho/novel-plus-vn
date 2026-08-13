@@ -171,7 +171,7 @@
   LD("json_ld_keywords",
     '{',
     '  [meta "@context"]: {',
-    '    [meta "@base"]: [string "http://example.com"],',
+    '    [meta "@base"]: [string "http://khoithu.vn"],',
     '    [meta "@vocab"]: [string "http://xmlns.com/foaf/0.1/"],',
     '    [property "likesFlavor"]: {',
     '      [meta "@container"]: [meta "@list"]',

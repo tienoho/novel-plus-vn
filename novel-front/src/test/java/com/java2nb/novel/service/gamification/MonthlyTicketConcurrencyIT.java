@@ -52,7 +52,7 @@ class MonthlyTicketConcurrencyIT {
             "SELECT id FROM monthly_ticket_season WHERE period_code='2099-11'", Long.class);
         service.grant(new TicketGrantCommand(userId, 1, "ADMIN_GRANT", "concurrency-" + suffix,
             "ADMIN_GRANT:concurrency:" + userId, new Date(voteAt.getTime() - 60_000),
-            new Date(voteAt.getTime() + 86_400_000), "ADMIN", 1L, "concurrency IT", "v1"));
+            new Date(voteAt.getTime() + 86_400_000), "ADMIN", 1L, "concurrency IT", "v1", 1L));
 
         TicketPolicy policy = new TicketPolicy("v1", 60, 10, 20, 50, 100, 50, false);
         CountDownLatch startGate = new CountDownLatch(1);
@@ -65,8 +65,8 @@ class MonthlyTicketConcurrencyIT {
                     startGate.await();
                     try {
                         return service.castVote(new TicketVoteCommand(userId, bookId, seasonId, 1,
-                            clientRequestId, "c".repeat(64), "d".repeat(64), voteAt,
-                            LocalDate.of(2099, 11, 15)), policy).status().name();
+                            clientRequestId, "c".repeat(64), "d".repeat(64), "v1", voteAt,
+                            LocalDate.of(2099, 11, 15), 1L), policy).status().name();
                     } catch (RuntimeException exception) {
                         return exception.getClass().getSimpleName();
                     }

@@ -1,9 +1,10 @@
 package com.java2nb.novel.core.schedule;
 
-import com.java2nb.novel.core.config.GamificationProperties;
 import com.java2nb.novel.mapper.MonthlyTicketMapper;
 import com.java2nb.novel.service.gamification.MonthlyTicketService;
 import com.java2nb.novel.service.gamification.TicketExpiryResult;
+import com.java2nb.novel.service.gamification.config.GamificationConfigProvider;
+import com.java2nb.novel.service.gamification.config.GamificationConfigSnapshot;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -26,18 +27,19 @@ class MonthlyTicketExpiryScheduleTest {
     private static final Instant NOW = Instant.parse("2026-08-15T03:00:00Z");
     private static final Date CUTOFF = Date.from(NOW);
 
-    private GamificationProperties properties;
+    private GamificationConfigProvider configProvider;
     private MonthlyTicketMapper mapper;
     private MonthlyTicketService service;
     private MonthlyTicketExpirySchedule schedule;
 
     @BeforeEach
     void setUp() {
-        properties = new GamificationProperties();
-        properties.getTicket().setEnabled(true);
+        configProvider = mock(GamificationConfigProvider.class);
+        when(configProvider.currentForWrite()).thenReturn(
+            GamificationConfigSnapshot.bootstrapDisabled().toBuilder().ticketEnabled(true).build());
         mapper = mock(MonthlyTicketMapper.class);
         service = mock(MonthlyTicketService.class);
-        schedule = new MonthlyTicketExpirySchedule(properties, mapper, service,
+        schedule = new MonthlyTicketExpirySchedule(configProvider, mapper, service,
             Clock.fixed(NOW, ZoneOffset.UTC), "expiry-test-instance");
     }
 

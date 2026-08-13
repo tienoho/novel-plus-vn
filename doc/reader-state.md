@@ -1,6 +1,6 @@
 # Đồng bộ vị trí đọc, dấu trang và ghi chú
 
-Novel Plus lưu trạng thái đọc riêng tư theo tài khoản để độc giả có thể tiếp tục trên thiết bị khác, đánh dấu một vị trí trong chương và ghi chú trên đoạn văn đã chọn.
+Khởi Thư lưu trạng thái đọc riêng tư theo tài khoản để độc giả có thể tiếp tục trên thiết bị khác, đánh dấu một vị trí trong chương và ghi chú trên đoạn văn đã chọn.
 
 ## Mô hình dữ liệu
 

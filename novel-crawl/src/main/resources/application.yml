@@ -40,9 +40,9 @@ crawl:
 # Máy chủ email.
 spring:
   mail:
-    host: ${MAIL_HOST:smtp.example.com}
+    host: ${MAIL_HOST:smtp.khoithu.vn}
     # Tên hiển thị của người gửi.
-    nickname: ${MAIL_NICKNAME:novel-plus}
+    nickname: ${MAIL_NICKNAME:khoi-thu}
     # Tài khoản email.
     username: ${MAIL_USERNAME:disabled}
     # Mã ủy quyền ứng dụng của email.

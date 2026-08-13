@@ -10,49 +10,7 @@
     <select id="selectPublished"
             resultType="com.java2nb.novel.service.gamification.GamificationPublicPolicyRow">
         SELECT <include refid="columns"/> FROM gamification_public_policy
-        WHERE status = 'PUBLISHED' LIMIT 1
+        WHERE policy_version = #{policyVersion} AND status = 'PUBLISHED' LIMIT 1
     </select>
 
-    <select id="selectByVersion"
-            resultType="com.java2nb.novel.service.gamification.GamificationPublicPolicyRow">
-        SELECT <include refid="columns"/> FROM gamification_public_policy
-        WHERE policy_version = #{policyVersion} LIMIT 1
-    </select>
-
-    <select id="lockById"
-            resultType="com.java2nb.novel.service.gamification.GamificationPublicPolicyRow">
-        SELECT <include refid="columns"/> FROM gamification_public_policy
-        WHERE id = #{policyId} FOR UPDATE
-    </select>
-
-    <select id="selectById"
-            resultType="com.java2nb.novel.service.gamification.GamificationPublicPolicyRow">
-        SELECT <include refid="columns"/> FROM gamification_public_policy
-        WHERE id = #{policyId} LIMIT 1
-    </select>
-
-    <insert id="insertDraft">
-        INSERT INTO gamification_public_policy
-            (policy_version, title, content_text, status)
-        VALUES (#{policyVersion}, #{title}, #{contentText}, 'DRAFT')
-    </insert>
-
-    <update id="archivePublished">
-        UPDATE gamification_public_policy
-        SET status = 'ARCHIVED', archived_at = #{archivedAt}, version = version + 1
-        WHERE status = 'PUBLISHED'
-    </update>
-
-    <update id="publish">
-        UPDATE gamification_public_policy
-        SET status = 'PUBLISHED', published_by = #{operatorId}, published_at = #{publishedAt},
-            version = version + 1
-        WHERE id = #{policyId} AND status = 'DRAFT' AND version = #{expectedVersion}
-    </update>
-
-    <insert id="insertAudit">
-        INSERT INTO gamification_public_policy_audit
-            (policy_id, event_type, from_status, to_status, operator_id)
-        VALUES (#{policyId}, #{eventType}, #{fromStatus}, #{toStatus}, #{operatorId})
-    </insert>
 </mapper>

@@ -9,8 +9,12 @@ FROM docker.io/library/golang:1.26.5-bookworm@sha256:6c5605ab3a9a9fb3c4eafe5b3d6
 ARG GRAFANA_VERSION
 ARG GRAFANA_COMMIT
 ARG GRAFANA_SOURCE_DATE_EPOCH
+ARG GRAFANA_GO_BUILD_PARALLELISM=2
 ARG TARGETOS=linux
 ARG TARGETARCH=amd64
+
+ENV GOMAXPROCS=${GRAFANA_GO_BUILD_PARALLELISM} \
+    GOFLAGS=-p=${GRAFANA_GO_BUILD_PARALLELISM}
 
 RUN git clone --depth 1 --branch "v${GRAFANA_VERSION}" \
       https://github.com/grafana/grafana.git /src \

@@ -222,7 +222,7 @@ jobs:
           target: ${{ matrix.target }}
           load: true
           push: false
-          tags: novel-plus/${{ matrix.image }}:ci
+          tags: khoi-thu/${{ matrix.image }}:ci
           cache-from: type=gha,scope=ci-${{ matrix.image }}
           cache-to: type=gha,mode=max,scope=ci-${{ matrix.image }}
 
@@ -230,7 +230,7 @@ jobs:
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
         with:
           version: v0.69.3
-          image-ref: novel-plus/${{ matrix.image }}:ci
+          image-ref: khoi-thu/${{ matrix.image }}:ci
           format: table
           exit-code: '1'
           ignore-unfixed: true
@@ -240,7 +240,7 @@ jobs:
       - name: Tạo SBOM SPDX
         uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
         with:
-          image: novel-plus/${{ matrix.image }}:ci
+          image: khoi-thu/${{ matrix.image }}:ci
           format: spdx-json
           syft-version: '1.50.0'
           artifact-name: sbom-${{ matrix.image }}.spdx.json

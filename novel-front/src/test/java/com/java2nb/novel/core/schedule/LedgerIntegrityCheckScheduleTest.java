@@ -1,11 +1,12 @@
 package com.java2nb.novel.core.schedule;
 
-import com.java2nb.novel.core.config.GamificationProperties;
 import com.java2nb.novel.core.observability.NovelBusinessMetrics;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import com.java2nb.novel.mapper.MonthlyTicketMapper;
 import com.java2nb.novel.mapper.MonthlyRankingMapper;
 import com.java2nb.novel.mapper.WalletLedgerMapper;
+import com.java2nb.novel.service.gamification.config.GamificationConfigProvider;
+import com.java2nb.novel.service.gamification.config.GamificationConfigSnapshot;
 import org.junit.jupiter.api.Test;
 
 import java.time.Clock;
@@ -33,10 +34,10 @@ class LedgerIntegrityCheckScheduleTest {
         MonthlyRankingMapper rankingMapper = emptyRankingAuditMapper();
         when(mapper.checkZeroSumLedger()).thenReturn(List.of());
         when(mapper.checkProjectionMismatch()).thenReturn(List.of());
-        GamificationProperties properties = new GamificationProperties();
+        GamificationConfigSnapshot config = GamificationConfigSnapshot.bootstrapDisabled();
 
         LedgerIntegrityCheckSchedule schedule = new LedgerIntegrityCheckSchedule(
-            mapper, ticketMapper, rankingMapper, properties, metrics(), CLOCK);
+            mapper, ticketMapper, rankingMapper, provider(config), metrics(), CLOCK);
 
         schedule.runLedgerIntegrityAudit();
 
@@ -46,14 +47,13 @@ class LedgerIntegrityCheckScheduleTest {
         // thẳng xuống làm tham số, không để SQL tự cộng trừ bằng TIMESTAMPADD với tham số động —
         // ShardingSphere hiểu nhầm tên đơn vị thời gian thành tên cột trong trường hợp đó.
         Date expectedJobCutoff = Date.from(Instant.parse("2027-01-01T00:00:00Z")
-            .minusSeconds(properties.getJob().getLeaseSeconds()));
+            .minusSeconds(config.getJobLeaseSeconds()));
         Date expectedReviewCutoff = Date.from(Instant.parse("2027-01-01T00:00:00Z")
-            .minusSeconds(properties.getSeason().getReviewWindowHours() * 3600L));
-        Date expectedClaimCutoff = Date.from(Instant.parse("2027-01-01T00:00:00Z")
-            .minusSeconds(properties.getReward().getClaimWindowDays() * 86400L));
+            .minusSeconds(config.getSeasonReviewWindowHours() * 3600L));
+        Date expectedReleaseAt = Date.from(CLOCK.instant());
 
         verify(ticketMapper, times(2)).checkStuckJobs(expectedJobCutoff, expectedReviewCutoff);
-        verify(ticketMapper, times(2)).checkPendingRewards(expectedClaimCutoff);
+        verify(ticketMapper, times(2)).checkPendingRewards(expectedReleaseAt);
     }
 
     @Test
@@ -65,7 +65,8 @@ class LedgerIntegrityCheckScheduleTest {
         when(mapper.checkProjectionMismatch()).thenReturn(List.of());
 
         LedgerIntegrityCheckSchedule schedule = new LedgerIntegrityCheckSchedule(
-            mapper, ticketMapper, rankingMapper, new GamificationProperties(), metrics(), CLOCK);
+            mapper, ticketMapper, rankingMapper,
+            provider(GamificationConfigSnapshot.bootstrapDisabled()), metrics(), CLOCK);
 
         assertThat(schedule.performAuditCheck()).isFalse();
     }
@@ -81,7 +82,8 @@ class LedgerIntegrityCheckScheduleTest {
             .thenReturn(List.of(Map.of("user_id", 99L, "available_balance", 2L, "lot_remaining", 1L)));
 
         LedgerIntegrityCheckSchedule schedule = new LedgerIntegrityCheckSchedule(
-            mapper, ticketMapper, rankingMapper, new GamificationProperties(), metrics(), CLOCK);
+            mapper, ticketMapper, rankingMapper,
+            provider(GamificationConfigSnapshot.bootstrapDisabled()), metrics(), CLOCK);
 
         assertThat(schedule.performAuditCheck()).isFalse();
     }
@@ -98,6 +100,12 @@ class LedgerIntegrityCheckScheduleTest {
 
     private NovelBusinessMetrics metrics() {
         return new NovelBusinessMetrics(new SimpleMeterRegistry());
+    }
+
+    private GamificationConfigProvider provider(GamificationConfigSnapshot snapshot) {
+        GamificationConfigProvider provider = mock(GamificationConfigProvider.class);
+        when(provider.current()).thenReturn(snapshot);
+        return provider;
     }
 
     private MonthlyRankingMapper emptyRankingAuditMapper() {

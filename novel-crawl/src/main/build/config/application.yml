@@ -53,7 +53,7 @@ spring:
   mail:
     host: smtp.163.com
     #Tên hiển thị người gửi
-    nickname: novel-plus
+    nickname: khoi-thu
     #Tài khoản email
     username: ${MAIL_USERNAME:disabled}
     #Mã ủy quyền email bên thứ ba

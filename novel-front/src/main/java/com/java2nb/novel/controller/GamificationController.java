@@ -3,7 +3,6 @@ package com.java2nb.novel.controller;
 import com.java2nb.novel.common.annotation.LimitType;
 import com.java2nb.novel.common.annotation.RateLimit;
 import com.java2nb.novel.core.bean.UserDetails;
-import com.java2nb.novel.core.config.GamificationProperties;
 import com.java2nb.novel.core.enums.ResponseStatus;
 import com.java2nb.novel.core.exception.BusinessException;
 import com.java2nb.novel.core.i18n.Messages;
@@ -17,6 +16,8 @@ import com.java2nb.novel.dto.gamification.CheckInResponse;
 import com.java2nb.novel.service.gamification.QuestClaimCommand;
 import com.java2nb.novel.service.gamification.GamificationCheckInService;
 import com.java2nb.novel.service.gamification.GamificationProgressService;
+import com.java2nb.novel.service.gamification.config.GamificationConfigProvider;
+import com.java2nb.novel.service.gamification.config.GamificationConfigSnapshot;
 import io.github.xxyopen.model.resp.RestResult;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -44,23 +45,23 @@ import org.springframework.format.annotation.DateTimeFormat;
 public class GamificationController extends BaseController {
 
     private final GamificationProgressService progressService;
-    private final GamificationProperties properties;
+    private final GamificationConfigProvider configProvider;
     private final Messages messages;
     private final GamificationCheckInService checkInService;
     private final Clock clock;
 
     @Autowired
     public GamificationController(GamificationProgressService progressService,
-                                  GamificationProperties properties, Messages messages,
+                                  GamificationConfigProvider configProvider, Messages messages,
                                   GamificationCheckInService checkInService) {
-        this(progressService, properties, messages, checkInService, Clock.systemUTC());
+        this(progressService, configProvider, messages, checkInService, Clock.systemUTC());
     }
 
     GamificationController(GamificationProgressService progressService,
-                           GamificationProperties properties, Messages messages,
+                           GamificationConfigProvider configProvider, Messages messages,
                            GamificationCheckInService checkInService, Clock clock) {
         this.progressService = progressService;
-        this.properties = properties;
+        this.configProvider = configProvider;
         this.messages = messages;
         this.checkInService = checkInService;
         this.clock = clock;
@@ -68,10 +69,11 @@ public class GamificationController extends BaseController {
 
     @GetMapping("profile")
     public RestResult<GamificationProfileResponse> getProfile(HttpServletRequest request) {
-        requireProgressEnabled();
+        GamificationConfigSnapshot config = configProvider.current();
+        requireProgressEnabled(config);
         long userId = requireUser(request).getId();
         return RestResult.ok(GamificationProfileResponse.from(
-            progressService.getProfileSnapshot(userId, properties.getPolicyVersion())));
+            progressService.getProfileSnapshot(userId, config.getPolicyVersion())));
     }
 
     @PatchMapping("realm")
@@ -79,14 +81,15 @@ public class GamificationController extends BaseController {
         limitType = LimitType.USER)
     public RestResult<RealmUpdateResponse> updateRealm(@Valid @RequestBody RealmUpdateRequest input,
                                                        HttpServletRequest request) {
-        requireRealmEnabled();
+        GamificationConfigSnapshot config = configProvider.currentForWrite();
+        requireRealmEnabled(config);
         long userId = requireUser(request).getId();
         var result = progressService.updateRealm(userId,
             input.realmType(), input.expectedVersion(), Date.from(clock.instant()),
-            properties.resolveZoneId(), properties.getRealm().getChangeCooldownHours(),
-            properties.getPolicyVersion());
+            java.time.ZoneId.of(config.getZoneId()), config.getRealmChangeCooldownHours(),
+            config.getPolicyVersion());
         return RestResult.ok(RealmUpdateResponse.from(result,
-            progressService.getProfileSnapshot(userId, properties.getPolicyVersion())));
+            progressService.getProfileSnapshot(userId, config.getPolicyVersion())));
     }
 
     @GetMapping("quests")
@@ -94,13 +97,14 @@ public class GamificationController extends BaseController {
         @RequestParam(required = false)
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
         HttpServletRequest request) {
-        requireQuestEnabled();
+        GamificationConfigSnapshot config = configProvider.current();
+        requireQuestEnabled(config);
         long userId = requireUser(request).getId();
         Instant now = clock.instant();
         LocalDate effectiveDate = date == null
-            ? LocalDate.ofInstant(now, properties.resolveZoneId()) : date;
+            ? LocalDate.ofInstant(now, java.time.ZoneId.of(config.getZoneId())) : date;
         List<QuestProgressResponse> response = progressService.listQuests(
-                userId, effectiveDate, Date.from(now))
+                userId, effectiveDate, Date.from(now), config.getPolicyVersion())
             .stream()
             .map(row -> QuestProgressResponse.from(row, messages.get(row.getNameKey())))
             .toList();
@@ -112,14 +116,16 @@ public class GamificationController extends BaseController {
         limitType = LimitType.USER)
     public RestResult<QuestClaimResponse> claimQuest(@PathVariable String questCode,
                                                      HttpServletRequest request) {
-        requireQuestEnabled();
+        GamificationConfigSnapshot config = configProvider.currentForWrite();
+        requireQuestEnabled(config);
         long userId = requireUser(request).getId();
         Instant now = clock.instant();
         Date claimedAt = Date.from(now);
-        LocalDate localDate = LocalDate.ofInstant(now, properties.resolveZoneId());
+        java.time.ZoneId zoneId = java.time.ZoneId.of(config.getZoneId());
+        LocalDate localDate = LocalDate.ofInstant(now, zoneId);
         var result = progressService.claimQuest(new QuestClaimCommand(userId, questCode, localDate,
-            claimedAt, properties.resolveZoneId(), properties.getTicket().getLotValidityDays(),
-            properties.getPolicyVersion(), properties.getPolicyVersion()));
+            claimedAt, zoneId, config.getTicketLotValidityDays(),
+            config.getPolicyVersion(), config.getPolicyVersion(), config.getRuntimeRevision()));
         return RestResult.ok(QuestClaimResponse.from(result));
     }
 
@@ -128,21 +134,23 @@ public class GamificationController extends BaseController {
         limitType = LimitType.USER)
     public RestResult<GamificationProfileResponse> updateTickerPreference(
         @Valid @RequestBody TickerPreferenceRequest input, HttpServletRequest request) {
-        requireProgressEnabled();
+        GamificationConfigSnapshot config = configProvider.currentForWrite();
+        requireProgressEnabled(config);
         long userId = requireUser(request).getId();
         var profile = progressService.updateTickerOptOut(userId, input.optOut(),
-            input.expectedVersion(), properties.getPolicyVersion());
+            input.expectedVersion(), config.getPolicyVersion());
         return RestResult.ok(GamificationProfileResponse.from(profile,
-            progressService.getProfileSnapshot(userId, properties.getPolicyVersion()).nextLevelExp()));
+            progressService.getProfileSnapshot(userId, config.getPolicyVersion()).nextLevelExp()));
     }
 
     @PostMapping("check-in")
     @RateLimit(key = "gamification-check-in", count = 10, timeWindowSeconds = 60,
         limitType = LimitType.USER)
     public RestResult<CheckInResponse> checkIn(HttpServletRequest request) {
-        requireQuestEnabled();
+        GamificationConfigSnapshot config = configProvider.currentForWrite();
+        requireQuestEnabled(config);
         long userId = requireUser(request).getId();
-        return RestResult.ok(CheckInResponse.from(checkInService.checkIn(userId)));
+        return RestResult.ok(CheckInResponse.from(checkInService.checkIn(userId, config)));
     }
 
     private UserDetails requireUser(HttpServletRequest request) {
@@ -153,22 +161,20 @@ public class GamificationController extends BaseController {
         return user;
     }
 
-    private void requireProgressEnabled() {
-        if ((!properties.getQuest().isEnabled() && !properties.getRealm().isEnabled())
-            || !properties.isConfigured()) {
+    private void requireProgressEnabled(GamificationConfigSnapshot config) {
+        if (!config.isQuestEnabled() && !config.isRealmEnabled()) {
             throw new BusinessException(ResponseStatus.GAMIFICATION_DISABLED);
         }
     }
 
-    private void requireRealmEnabled() {
-        if (!properties.getRealm().isEnabled() || !properties.isConfigured()) {
+    private void requireRealmEnabled(GamificationConfigSnapshot config) {
+        if (!config.isRealmEnabled()) {
             throw new BusinessException(ResponseStatus.GAMIFICATION_DISABLED);
         }
     }
 
-    private void requireQuestEnabled() {
-        if (!properties.getEvent().isEnabled() || !properties.getQuest().isEnabled()
-            || !properties.isConfigured()) {
+    private void requireQuestEnabled(GamificationConfigSnapshot config) {
+        if (!config.isEventEnabled() || !config.isQuestEnabled()) {
             throw new BusinessException(ResponseStatus.GAMIFICATION_DISABLED);
         }
     }

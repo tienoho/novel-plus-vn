@@ -1,4 +1,4 @@
-# PowerShell Database Backup Script for Novel-Plus MySQL Database
+# PowerShell Database Backup Script for Khoi-Thu MySQL Database
 param (
     [string]$BackupDir = ".\backups",
     [string]$DbHost = "127.0.0.1",
@@ -21,16 +21,18 @@ Write-Host "[INFO] Starting database backup for '$DbName' at $Timestamp..." -For
 
 $DockerRunning = $false
 try {
-    $dockerContainer = docker ps --format '{{.Names}}' | Select-String "novel-plus-mysql"
+    $dockerContainer = docker ps --format '{{.Names}}' | Select-String "khoi-thu-mysql"
     if ($dockerContainer) {
         $DockerRunning = $true
     }
-} catch {}
+}
+catch {}
 
 if ($DockerRunning) {
-    Write-Host "[INFO] Dumping database via Docker container 'novel-plus-mysql'..." -ForegroundColor Cyan
-    docker exec novel-plus-mysql mysqldump --default-character-set=utf8mb4 --routines --triggers --single-transaction -u"$DbUser" -p"$DbPass" "$DbName" | Set-Content -Path $BackupFile -Encoding UTF8
-} else {
+    Write-Host "[INFO] Dumping database via Docker container 'khoi-thu-mysql'..." -ForegroundColor Cyan
+    docker exec khoi-thu-mysql mysqldump --default-character-set=utf8mb4 --routines --triggers --single-transaction -u"$DbUser" -p"$DbPass" "$DbName" | Set-Content -Path $BackupFile -Encoding UTF8
+}
+else {
     Write-Host "[INFO] Dumping database via mysqldump command..." -ForegroundColor Cyan
     & mysqldump --host="$DbHost" --port=$DbPort --default-character-set=utf8mb4 --routines --triggers --single-transaction -u"$DbUser" -p"$DbPass" "$DbName" | Set-Content -Path $BackupFile -Encoding UTF8
 }

@@ -2,7 +2,7 @@
 
 ## Mục tiêu
 
-Xây dựng hệ sinh thái gamification an toàn cho Novel Plus, kết nối hoạt động đọc truyện, nhiệm vụ, EXP, cảnh giới, Ngọn Đuốc, bảng xếp hạng tháng và quỹ thưởng tác giả mà không làm sai lệch sổ cái Xu, không trả thưởng trùng và có thể vận hành, kiểm toán, rollback trên production.
+Xây dựng hệ sinh thái gamification an toàn cho Khởi Thư, kết nối hoạt động đọc truyện, nhiệm vụ, EXP, cảnh giới, Ngọn Đuốc, bảng xếp hạng tháng và quỹ thưởng tác giả mà không làm sai lệch sổ cái Xu, không trả thưởng trùng và có thể vận hành, kiểm toán, rollback trên production.
 
 ## Phạm vi
 

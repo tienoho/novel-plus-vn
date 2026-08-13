@@ -23,7 +23,6 @@
         $('#questCampaignCreateForm').on('submit', submitQuestCampaignCreate);
         $('#questRewardForm').on('submit', submitQuestReward);
         $('#specialSeasonForm').on('submit', submitCreateSpecialSeason);
-        $('#publicPolicyCreateForm').on('submit', submitPublicPolicyCreate);
         $('#publicPolicySearchForm').on('submit', function (event) {
             event.preventDefault();
             window.reloadGamificationPublicPolicies();
@@ -38,7 +37,6 @@
         bindReloadForm('#riskReviewSearchForm', window.reloadGamificationRiskReviews);
         bindReloadForm('#questCampaignSearchForm', window.reloadQuestCampaigns);
         bindReloadForm('#questRewardSearchForm', window.reloadQuestRewards);
-        $(document).on('click', '.js-publish-policy', publishPublicPolicy);
         $(document).on('click', '.js-risk-review', riskReviewFromButton);
         $(document).on('click', '.js-ticker-moderate', tickerModerationFromButton);
         $(document).on('click', '.js-quest-campaign-action', questCampaignActionFromButton);
@@ -213,60 +211,8 @@
                 {field: 'title', title: text.publicPolicyTitle, formatter: escapeHtml},
                 {field: 'status', title: text.policyStatus, formatter: escapeHtml},
                 {field: 'publishedBy', title: text.publishedBy, formatter: formatOptionalNumber},
-                {field: 'publishedAt', title: text.publishedAt, formatter: formatDateTime},
-                {field: 'id', title: text.actions, formatter: publicPolicyActionFormatter}
+                {field: 'publishedAt', title: text.publishedAt, formatter: formatDateTime}
             ]));
-    }
-
-    function publicPolicyActionFormatter(value, row) {
-        if (!permissions.config || row.status !== 'DRAFT') { return '-'; }
-        var policyId = Number(value);
-        var version = Number(row.version);
-        if (!Number.isSafeInteger(policyId) || policyId <= 0
-            || !Number.isSafeInteger(version) || version < 0) {
-            return '-';
-        }
-        return '<button type="button" class="btn btn-xs btn-primary js-publish-policy"' +
-            ' data-policy-id="' + policyId + '" data-policy-version="' + version + '">' +
-            escapeHtml(text.publishPolicy) + '</button>';
-    }
-
-    function submitPublicPolicyCreate(event) {
-        event.preventDefault();
-        $.post(prefix + '/public-policies/create', getFormJson('publicPolicyCreateForm'))
-            .done(function (response) {
-                if (response && response.code === 0) {
-                    layer.msg(text.operationSuccess);
-                    document.getElementById('publicPolicyCreateForm').reset();
-                    window.reloadGamificationPublicPolicies();
-                } else {
-                    layer.alert(response && response.msg ? response.msg : text.connectionError);
-                }
-            }).fail(function () { layer.alert(text.connectionError); });
-    }
-
-    function publishPublicPolicy(event) {
-        var button = event.currentTarget;
-        var policyId = Number(button.getAttribute('data-policy-id'));
-        var expectedVersion = Number(button.getAttribute('data-policy-version'));
-        if (!Number.isSafeInteger(policyId) || policyId <= 0
-            || !Number.isSafeInteger(expectedVersion) || expectedVersion < 0) {
-            return;
-        }
-        layer.confirm(text.publishPolicyConfirm, function (index) {
-            layer.close(index);
-            $.post(prefix + '/public-policies/publish', {
-                policyId: policyId,
-                expectedVersion: expectedVersion
-            }).done(function (response) {
-                if (response && response.code === 0) {
-                    layer.msg(text.operationSuccess);
-                    window.reloadGamificationPublicPolicies();
-                } else {
-                    layer.alert(response && response.msg ? response.msg : text.connectionError);
-                }
-            }).fail(function () { layer.alert(text.connectionError); });
-        });
     }
 
     function riskReviewActionFormatter(value, row) {

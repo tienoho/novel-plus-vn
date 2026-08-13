@@ -2,3 +2,11 @@ services:
   mysql:
     volumes:
       - ./e2e/fixtures:/e2e/fixtures:ro
+  caddy:
+    depends_on: !override
+      front:
+        condition: service_healthy
+      admin:
+        condition: service_healthy
+      crawl:
+        condition: service_healthy

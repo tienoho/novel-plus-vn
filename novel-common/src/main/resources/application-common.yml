@@ -35,7 +35,7 @@ management:
       show-details: never
   metrics:
     tags:
-      application: ${spring.application.name:novel-plus}
+      application: ${spring.application.name:khoi-thu}
     distribution:
       percentiles-histogram:
         http.server.requests: true

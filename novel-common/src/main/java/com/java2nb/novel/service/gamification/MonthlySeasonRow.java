@@ -16,6 +16,7 @@ public class MonthlySeasonRow {
     private Date voteCutoffAt;
     private String status;
     private String policyVersion;
+    private Long runtimeConfigRevision;
     private Long snapshotId;
     private Date closingAt;
     private Date reviewAt;

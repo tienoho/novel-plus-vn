@@ -22,6 +22,7 @@ public class GamificationEventRow {
     private Date processedAt;
     private String errorMessage;
     private String policyVersion;
+    private Long runtimeConfigRevision;
     private Long version;
     private Date createTime;
 }

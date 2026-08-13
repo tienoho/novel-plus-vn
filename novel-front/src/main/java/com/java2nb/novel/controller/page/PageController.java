@@ -2,7 +2,6 @@ package com.java2nb.novel.controller.page;
 
 import com.java2nb.novel.controller.BaseController;
 import com.java2nb.novel.core.bean.UserDetails;
-import com.java2nb.novel.core.config.GamificationProperties;
 import com.java2nb.novel.core.config.VnpayProperties;
 import com.java2nb.novel.core.enums.ResponseStatus;
 import com.java2nb.novel.core.exception.BusinessException;
@@ -14,6 +13,7 @@ import com.java2nb.novel.service.recommendation.RecommendationService;
 import com.java2nb.novel.service.chapter.ChapterAccessDecision;
 import com.java2nb.novel.service.chapter.ChapterCommercialPolicyService;
 import com.java2nb.novel.service.entitlement.ReadingTicketService;
+import com.java2nb.novel.service.gamification.config.GamificationConfigProvider;
 import com.java2nb.novel.vo.BookCommentVO;
 import com.java2nb.novel.vo.BookSettingVO;
 import io.github.xxyopen.model.page.PageBean;
@@ -63,7 +63,7 @@ public class PageController extends BaseController {
 
     private final VnpayProperties vnpayProperties;
 
-    private final GamificationProperties gamificationProperties;
+    private final GamificationConfigProvider gamificationConfigProvider;
 
     @RequestMapping("{url}.html")
     public String module(@PathVariable("url") String url) {
@@ -374,7 +374,9 @@ public class PageController extends BaseController {
         model.addAttribute("needBuy", access.purchaseRequired());
         model.addAttribute("offlineEligible", access.offlineEligible());
         model.addAttribute("temporaryFree", access.temporaryFree());
-        model.addAttribute("readingHeartbeatEnabled", gamificationProperties.isReadingHeartbeatEnabled());
+        var gamification = gamificationConfigProvider.current();
+        model.addAttribute("readingHeartbeatEnabled",
+            gamification.isEventEnabled() && gamification.isQuestEnabled());
 
         return ThreadLocalUtil.getTemplateDir() + "book/book_content";
     }

@@ -1,7 +1,7 @@
 # Cấu hình website
 website:
   # Tên website
-  name: Novel Plus
+  name: Khởi Thư
   # Tên miền
   domain: www.xxyopen.com
   # Từ khóa SEO

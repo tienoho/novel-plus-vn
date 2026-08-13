@@ -55,7 +55,8 @@ public interface MonthlyTicketMapper {
                   @Param("grantLedgerId") long grantLedgerId,
                   @Param("effectiveAt") Date effectiveAt,
                   @Param("expireAt") Date expireAt,
-                  @Param("policyVersion") String policyVersion);
+                  @Param("policyVersion") String policyVersion,
+                  @Param("runtimeConfigRevision") long runtimeConfigRevision);
 
     /**
      * Cộng số dư khi cấp. Điều kiện {@code version} là khoá lạc quan; trả về 0 nghĩa là một giao
@@ -151,7 +152,9 @@ public interface MonthlyTicketMapper {
                    @Param("clientRequestId") String clientRequestId,
                    @Param("sourceIpHash") String sourceIpHash,
                    @Param("sourceDeviceHash") String sourceDeviceHash,
-                   @Param("policyVersion") String policyVersion);
+                   @Param("sourceHashKeyId") String sourceHashKeyId,
+                   @Param("policyVersion") String policyVersion,
+                   @Param("runtimeConfigRevision") long runtimeConfigRevision);
 
     int insertRankVoterIgnore(@Param("seasonId") long seasonId,
                               @Param("bookId") long bookId,
@@ -226,7 +229,7 @@ public interface MonthlyTicketMapper {
                                              @Param("reviewCutoff") java.util.Date reviewCutoff);
 
     /** Đối soát: thưởng vẫn chờ release sau khi cửa sổ khiếu nại đã hết. */
-    List<Map<String, Object>> checkPendingRewards(@Param("claimCutoff") java.util.Date claimCutoff);
+    List<Map<String, Object>> checkPendingRewards(@Param("releaseAt") java.util.Date releaseAt);
 
     /**
      * Vote gần nhất của người dùng đã chọn tham gia ticker công khai

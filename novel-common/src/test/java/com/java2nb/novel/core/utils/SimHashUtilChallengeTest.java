@@ -40,13 +40,14 @@ class SimHashUtilChallengeTest {
     @Test
     @DisplayName("64-bit fingerprint string vs Long bit alignment consistency")
     void testSimHashStringAndLongConsistency() {
-        String text = "Đây là một đoạn văn bản thử nghiệm tính năng phát hiện đạo văn trong Novel Plus.";
+        String text = "Đây là một đoạn văn bản thử nghiệm tính năng phát hiện đạo văn trong Khởi Thư.";
 
         long hashLong = SimHashUtil.getSimHashLong(text);
         String hashStr = SimHashUtil.getSimHash(text);
 
         assertThat(hashStr).hasSize(64);
-        // Ensure getSimHash(text) converts back to hashLong accurately via getHammingDistance
+        // Ensure getSimHash(text) converts back to hashLong accurately via
+        // getHammingDistance
         assertThat(SimHashUtil.getHammingDistance(hashLong, SimHashUtil.getSimHashLong(text))).isEqualTo(0);
     }
 

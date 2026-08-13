@@ -142,12 +142,12 @@ class MonthlyRankingServiceImplTest {
         december.setPeriodCode("2026-12");
         when(mapper.selectSeasonByPeriod("2026-12")).thenReturn(december);
 
-        service.ensureRegularSeason(lastMillisecond, ZoneId.of("Asia/Ho_Chi_Minh"), "v1");
+        service.ensureRegularSeason(lastMillisecond, ZoneId.of("Asia/Ho_Chi_Minh"), "v1", 7L);
 
         verify(mapper).insertRegularSeasonIgnore("2026-12", "Asia/Ho_Chi_Minh",
             Date.from(Instant.parse("2026-11-30T17:00:00Z")),
             Date.from(Instant.parse("2026-12-31T17:00:00Z")),
-            Date.from(Instant.parse("2026-12-31T17:00:00Z")), "v1");
+            Date.from(Instant.parse("2026-12-31T17:00:00Z")), "v1", 7L);
 
         reset(mapper);
         Date firstMillisecond = Date.from(Instant.parse("2026-12-31T17:00:00Z"));
@@ -155,12 +155,12 @@ class MonthlyRankingServiceImplTest {
         january.setPeriodCode("2027-01");
         when(mapper.selectSeasonByPeriod("2027-01")).thenReturn(january);
 
-        service.ensureRegularSeason(firstMillisecond, ZoneId.of("Asia/Ho_Chi_Minh"), "v1");
+        service.ensureRegularSeason(firstMillisecond, ZoneId.of("Asia/Ho_Chi_Minh"), "v1", 7L);
 
         verify(mapper).insertRegularSeasonIgnore("2027-01", "Asia/Ho_Chi_Minh",
             Date.from(Instant.parse("2026-12-31T17:00:00Z")),
             Date.from(Instant.parse("2027-01-31T17:00:00Z")),
-            Date.from(Instant.parse("2027-01-31T17:00:00Z")), "v1");
+            Date.from(Instant.parse("2027-01-31T17:00:00Z")), "v1", 7L);
     }
 
     @Test
@@ -170,12 +170,12 @@ class MonthlyRankingServiceImplTest {
         february.setPeriodCode("2028-02");
         when(mapper.selectSeasonByPeriod("2028-02")).thenReturn(february);
 
-        service.ensureRegularSeason(leapDay, ZoneId.of("Asia/Ho_Chi_Minh"), "v1");
+        service.ensureRegularSeason(leapDay, ZoneId.of("Asia/Ho_Chi_Minh"), "v1", 7L);
 
         verify(mapper).insertRegularSeasonIgnore("2028-02", "Asia/Ho_Chi_Minh",
             Date.from(Instant.parse("2028-01-31T17:00:00Z")),
             Date.from(Instant.parse("2028-02-29T17:00:00Z")),
-            Date.from(Instant.parse("2028-02-29T17:00:00Z")), "v1");
+            Date.from(Instant.parse("2028-02-29T17:00:00Z")), "v1", 7L);
     }
 
     @Test
@@ -274,11 +274,11 @@ class MonthlyRankingServiceImplTest {
         when(mapper.selectSeasonByPeriod("ky-ky-niem-2026")).thenReturn(inserted);
 
         MonthlySeasonRow result = service.createSpecialSeason("ky-ky-niem-2026", "ANNIVERSARY",
-            start, end, cutoff, ZoneId.of("Asia/Ho_Chi_Minh"), "v1");
+            start, end, cutoff, ZoneId.of("Asia/Ho_Chi_Minh"), "v1", 7L);
 
         assertThat(result.getSeasonType()).isEqualTo("ANNIVERSARY");
         verify(mapper).insertSpecialSeasonIgnore("ky-ky-niem-2026", "ANNIVERSARY", "Asia/Ho_Chi_Minh",
-            start, end, cutoff, "v1");
+            start, end, cutoff, "v1", 7L);
     }
 
     @Test
@@ -287,7 +287,7 @@ class MonthlyRankingServiceImplTest {
         Date end = Date.from(Instant.parse("2026-09-08T00:00:00Z"));
 
         assertThatThrownBy(() -> service.createSpecialSeason("ky-ky-niem-2026", "REGULAR",
-            start, end, end, ZoneId.of("UTC"), "v1"))
+            start, end, end, ZoneId.of("UTC"), "v1", 7L))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -297,7 +297,7 @@ class MonthlyRankingServiceImplTest {
         Date end = Date.from(Instant.parse("2026-09-01T00:00:00Z"));
 
         assertThatThrownBy(() -> service.createSpecialSeason("ky-ky-niem-2026", "FESTIVAL",
-            start, end, start, ZoneId.of("UTC"), "v1"))
+            start, end, start, ZoneId.of("UTC"), "v1", 7L))
             .isInstanceOf(IllegalArgumentException.class);
     }
 

@@ -1,6 +1,6 @@
 # Ví và sổ cái giao dịch
 
-Novel Plus dùng sổ cái kép cho mọi biến động Xu. `wallet_account` là nguồn số dư có kiểm toán; `user.account_balance` chỉ là projection tương thích với API/UI cũ và được cập nhật trong cùng transaction database.
+Khởi Thư dùng sổ cái kép cho mọi biến động Xu. `wallet_account` là nguồn số dư có kiểm toán; `user.account_balance` chỉ là projection tương thích với API/UI cũ và được cập nhật trong cùng transaction database.
 
 ## Tài khoản ví
 

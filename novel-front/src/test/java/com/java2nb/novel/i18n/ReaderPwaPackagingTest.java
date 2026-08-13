@@ -20,7 +20,7 @@ class ReaderPwaPackagingTest {
         String worker = read(staticRoot.resolve("service-worker.js"));
 
         assertThat(manifest).contains(
-            "\"name\": \"Novel Plus Việt Nam\"",
+            "\"name\": \"Khởi Thư Việt Nam\"",
             "\"lang\": \"vi\"",
             "\"display\": \"standalone\"",
             "\"start_url\": \"/?source=pwa\""

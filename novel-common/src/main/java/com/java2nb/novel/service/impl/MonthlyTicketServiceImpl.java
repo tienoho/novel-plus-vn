@@ -100,7 +100,7 @@ public class MonthlyTicketServiceImpl implements MonthlyTicketService {
 
         if (monthlyTicketMapper.insertLot(command.userId(), command.sourceType(), command.sourceRef(),
             command.amount(), posted.getId(), command.effectiveAt(), command.expireAt(),
-            command.policyVersion()) != 1) {
+            command.policyVersion(), command.runtimeConfigRevision()) != 1) {
             throw new IllegalStateException("Không thể tạo lô Ngọn Đuốc");
         }
 
@@ -267,7 +267,7 @@ public class MonthlyTicketServiceImpl implements MonthlyTicketService {
         }
 
         String idempotencyKey = voteIdempotencyKey(command, season.getId());
-        String requestHash = voteRequestHash(command, season.getId(), policy.policyVersion());
+        String requestHash = voteRequestHash(command, season.getId());
         long balanceAfter = Math.subtractExact(account.getAvailableBalance(), command.amount());
         String businessId = season.getId() + ":" + command.bookId() + ":" + command.clientRequestId();
         try {
@@ -318,7 +318,7 @@ public class MonthlyTicketServiceImpl implements MonthlyTicketService {
         if (monthlyTicketMapper.insertVote(season.getId(), command.bookId(), book.getAuthorId(),
             command.userId(), command.amount(), ledger.getId(), idempotencyKey, requestHash,
             command.clientRequestId(), command.sourceIpHash(), command.sourceDeviceHash(),
-            policy.policyVersion()) != 1) {
+            command.sourceHashKeyId(), policy.policyVersion(), command.runtimeConfigRevision()) != 1) {
             throw new IllegalStateException("Không thể ghi lượt thắp đuốc");
         }
 
@@ -462,9 +462,9 @@ public class MonthlyTicketServiceImpl implements MonthlyTicketService {
             + command.clientRequestId();
     }
 
-    private String voteRequestHash(TicketVoteCommand command, long seasonId, String policyVersion) {
+    private String voteRequestHash(TicketVoteCommand command, long seasonId) {
         String canonical = "SPEND|" + command.userId() + '|' + seasonId + '|' + command.bookId()
-            + '|' + command.amount() + '|' + command.clientRequestId() + '|' + policyVersion;
+            + '|' + command.amount() + '|' + command.clientRequestId();
         return sha256(canonical);
     }
 
@@ -478,7 +478,8 @@ public class MonthlyTicketServiceImpl implements MonthlyTicketService {
             + '|' + command.sourceType() + '|' + command.sourceRef()
             + '|' + command.effectiveAt().getTime() + '|' + command.expireAt().getTime()
             + '|' + command.operatorType() + '|' + Objects.toString(command.operatorId(), "")
-            + '|' + Objects.toString(command.reason(), "") + '|' + command.policyVersion();
+            + '|' + Objects.toString(command.reason(), "") + '|' + command.policyVersion() + '|'
+            + command.runtimeConfigRevision();
         return sha256(canonical);
     }
 

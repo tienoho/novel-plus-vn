@@ -17,12 +17,13 @@ public interface GamificationProgressService {
 
     int applyEvent(GamificationEventRow event);
 
-    List<QuestProgressRow> listQuests(long userId, LocalDate localDate, Date observedAt);
+    List<QuestProgressRow> listQuests(long userId, LocalDate localDate, Date observedAt,
+                                      String policyVersion);
 
     QuestClaimResult claimQuest(QuestClaimCommand command);
 
     CheckInResult checkIn(long userId, LocalDate localDate, Date checkedAt, ZoneId zoneId,
-                          String ruleVersion, String policyVersion);
+                          String ruleVersion, String policyVersion, long runtimeConfigRevision);
 
     /**
      * Bật/tắt hiển thị trên bảng chạy công khai. Mặc định cột là ẩn (opt-out); người dùng phải

@@ -1,7 +1,8 @@
 package com.java2nb.novel.core.schedule;
 
-import com.java2nb.novel.core.config.GamificationProperties;
 import com.java2nb.novel.service.gamification.AuthorRewardService;
+import com.java2nb.novel.service.gamification.config.GamificationConfigProvider;
+import com.java2nb.novel.service.gamification.config.GamificationConfigSnapshot;
 import org.junit.jupiter.api.Test;
 
 import java.time.Clock;
@@ -19,13 +20,12 @@ class AuthorRewardReleaseScheduleTest {
     @Test
     void releasesOnlyAllocationsOlderThanTheConfiguredClaimWindow() {
         Instant now = Instant.parse("2026-09-08T00:00:00Z");
-        GamificationProperties properties = new GamificationProperties();
-        properties.getReward().setEnabled(true);
-        properties.getReward().setClaimWindowDays(7);
+        GamificationConfigProvider provider = mock(GamificationConfigProvider.class);
+        when(provider.currentForWrite()).thenReturn(
+            GamificationConfigSnapshot.bootstrapDisabled().toBuilder().rewardEnabled(true).build());
         AuthorRewardService service = mock(AuthorRewardService.class);
-        Date cutoff = Date.from(Instant.parse("2026-09-01T00:00:00Z"));
-        when(service.listMaturedAllocationIds(cutoff, 500)).thenReturn(List.of(81L, 82L));
-        AuthorRewardReleaseSchedule schedule = new AuthorRewardReleaseSchedule(properties, service,
+        when(service.listMaturedAllocationIds(Date.from(now), 500)).thenReturn(List.of(81L, 82L));
+        AuthorRewardReleaseSchedule schedule = new AuthorRewardReleaseSchedule(provider, service,
             Clock.fixed(now, ZoneOffset.UTC));
 
         schedule.releaseMaturedRewards();

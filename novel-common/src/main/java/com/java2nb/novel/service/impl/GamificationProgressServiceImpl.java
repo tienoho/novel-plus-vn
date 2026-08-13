@@ -91,7 +91,7 @@ public class GamificationProgressServiceImpl implements GamificationProgressServ
         if (!Objects.equals(profile.getVersion(), expectedVersion)) {
             throw new BusinessException(ResponseStatus.GAMIFICATION_PROFILE_VERSION_CONFLICT);
         }
-        RealmCatalogRow realm = mapper.selectRealm(realmCode);
+        RealmCatalogRow realm = mapper.selectRealm(realmCode, ruleVersion);
         if (realm == null || !Boolean.TRUE.equals(realm.getActive())) {
             throw new BusinessException(ResponseStatus.GAMIFICATION_REALM_INVALID);
         }
@@ -117,7 +117,8 @@ public class GamificationProgressServiceImpl implements GamificationProgressServ
     @Transactional(rollbackFor = Exception.class)
     public int applyEvent(GamificationEventRow event) {
         Objects.requireNonNull(event, "Thiếu sự kiện cần áp dụng");
-        List<QuestDefinitionRow> quests = mapper.selectActiveQuestsByEventType(event.getEventType());
+        List<QuestDefinitionRow> quests = mapper.selectActiveQuestsByEventType(event.getEventType(),
+            event.getPolicyVersion());
         for (QuestDefinitionRow quest : quests) {
             String periodKey = periodKey(quest.getPeriodType(), event.getLocalDate());
             mapper.insertQuestProgressIgnore(event.getUserId(), quest.getQuestCode(), periodKey,
@@ -131,7 +132,8 @@ public class GamificationProgressServiceImpl implements GamificationProgressServ
     @Override
     @Transactional(rollbackFor = Exception.class)
     public CheckInResult checkIn(long userId, LocalDate localDate, Date checkedAt, ZoneId zoneId,
-                                 String ruleVersion, String policyVersion) {
+                                 String ruleVersion, String policyVersion,
+                                 long runtimeConfigRevision) {
         validateIdentity(userId, ruleVersion);
         if (localDate == null || checkedAt == null || zoneId == null
             || policyVersion == null || policyVersion.isBlank() || policyVersion.length() > 32
@@ -164,26 +166,30 @@ public class GamificationProgressServiceImpl implements GamificationProgressServ
         profile.setLongestStreak(longest);
         profile.setVersion(profile.getVersion() + 1);
         eventRecorder.ingest(GamificationEventInputFactory.create("CHECK_IN_COMPLETED", sourceKey,
-            userId, null, checkedAt, "{\"streak\":" + streak + '}', zoneId, policyVersion));
+            userId, null, checkedAt, "{\"streak\":" + streak + '}', zoneId, policyVersion,
+            runtimeConfigRevision));
         return new CheckInResult(profile, sourceKey, false);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<QuestProgressRow> listQuests(long userId, LocalDate localDate, Date observedAt) {
-        if (userId <= 0 || localDate == null || observedAt == null) {
+    public List<QuestProgressRow> listQuests(long userId, LocalDate localDate, Date observedAt,
+                                             String policyVersion) {
+        if (userId <= 0 || localDate == null || observedAt == null
+            || policyVersion == null || policyVersion.isBlank()) {
             throw new IllegalArgumentException("Chủ thể hoặc ngày xem nhiệm vụ không hợp lệ");
         }
-        QuestCampaignRow campaign = resolveActiveCampaign(observedAt);
+        QuestCampaignRow campaign = resolveActiveCampaign(observedAt, policyVersion);
         String campaignCode = campaign == null ? DEFAULT_CAMPAIGN : campaign.getCampaignCode();
         return mapper.selectQuestProgress(userId, localDate.toString(), periodKey("WEEKLY", localDate),
-            campaignCode);
+            campaignCode, policyVersion);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public QuestClaimResult claimQuest(QuestClaimCommand command) {
-        QuestDefinitionRow quest = mapper.selectQuestByCode(command.questCode());
+        QuestDefinitionRow quest = mapper.selectQuestByCode(command.questCode(),
+            command.policyVersion());
         if (quest == null) {
             throw new BusinessException(ResponseStatus.GAMIFICATION_QUEST_NOT_FOUND);
         }
@@ -281,7 +287,7 @@ public class GamificationProgressServiceImpl implements GamificationProgressServ
                         + ':' + profile.getRuleVersion(),
                     command.userId(), null, command.claimedAt(),
                     "{\"level\":" + reachedLevel.getLevel() + '}', command.zoneId(),
-                    rewardPolicyVersion));
+                    rewardPolicyVersion, command.runtimeConfigRevision()));
             }
         }
         return ledger.getId();
@@ -299,7 +305,7 @@ public class GamificationProgressServiceImpl implements GamificationProgressServ
             command.ticketValidityDays(), ChronoUnit.DAYS));
         monthlyTicketService.grant(new TicketGrantCommand(command.userId(), amount, "QUEST",
             sourceRef, idempotencyKey, effectiveAt, expireAt, "SYSTEM", null, null,
-            rewardPolicyVersion));
+            rewardPolicyVersion, command.runtimeConfigRevision()));
         TicketLedgerRow ledger = monthlyTicketMapper.selectLedgerByIdempotencyKey(idempotencyKey);
         if (ledger == null) {
             throw new IllegalStateException("Không đọc được bút toán Đuốc thưởng nhiệm vụ");
@@ -326,8 +332,9 @@ public class GamificationProgressServiceImpl implements GamificationProgressServ
         };
     }
 
-    private QuestCampaignRow resolveActiveCampaign(Date observedAt) {
-        List<QuestCampaignRow> campaigns = mapper.selectActiveQuestCampaigns(observedAt);
+    private QuestCampaignRow resolveActiveCampaign(Date observedAt, String policyVersion) {
+        List<QuestCampaignRow> campaigns = mapper.selectActiveQuestCampaigns(observedAt,
+            policyVersion);
         if (campaigns == null || campaigns.isEmpty()) {
             return null;
         }
@@ -344,12 +351,12 @@ public class GamificationProgressServiceImpl implements GamificationProgressServ
     }
 
     private QuestRewardSelection resolveQuestReward(QuestClaimCommand command) {
-        QuestCampaignRow campaign = resolveActiveCampaign(command.claimedAt());
+        QuestCampaignRow campaign = resolveActiveCampaign(command.claimedAt(), command.policyVersion());
         QuestRewardSummary defaultReward = mapper.selectQuestRewardSummary(
-            command.questCode(), DEFAULT_CAMPAIGN);
+            command.questCode(), DEFAULT_CAMPAIGN, command.policyVersion());
         if (campaign != null) {
             QuestRewardSummary campaignReward = mapper.selectQuestRewardSummary(
-                command.questCode(), campaign.getCampaignCode());
+                command.questCode(), campaign.getCampaignCode(), campaign.getPolicyVersion());
             if (hasReward(campaignReward)) {
                 return new QuestRewardSelection(campaign.getCampaignCode(),
                     campaign.getPolicyVersion(), mergeReward(campaignReward, defaultReward));

@@ -1,23 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project 
+    xmlns="http://maven.apache.org/POM/4.0.0" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.5.16</version>
         <relativePath/>
     </parent>
-
     <groupId>com.java2nb</groupId>
     <artifactId>novel-admin</artifactId>
     <version>5.3.3</version>
     <packaging>jar</packaging>
-
     <name>novel-admin</name>
-    <description>Trang quản trị Novel Plus</description>
-
+    <description>Trang quản trị Khởi Thư</description>
     <properties>
         <java.version>17</java.version>
         <lombok.version>1.18.46</lombok.version>
@@ -29,7 +27,6 @@
         <netty.version>4.1.136.Final</netty.version>
         <commons-io.version>2.19.0</commons-io.version>
     </properties>
-
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -54,24 +51,20 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
     <dependencies>
         <dependency>
             <groupId>com.java2nb</groupId>
             <artifactId>novel-common</artifactId>
             <version>${project.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -107,7 +100,6 @@
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.mybatis.spring.boot</groupId>
             <artifactId>mybatis-spring-boot-starter</artifactId>
@@ -179,19 +171,15 @@
         <!--<groupId>org.springframework.boot</groupId>-->
         <!--<artifactId>spring-boot-starter-cache</artifactId>-->
         <!--</dependency>-->
-
         <!--<dependency>-->
         <!--<groupId>net.sf.ehcache</groupId>-->
         <!--<artifactId>ehcache</artifactId>-->
         <!--</dependency>-->
-
-
         <!--<dependency>-->
         <!--<groupId>org.springframework.boot</groupId>-->
         <!--<artifactId>spring-boot-devtools</artifactId>-->
         <!--<optional>true</optional>-->
         <!--</dependency>-->
-
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
@@ -202,26 +190,21 @@
             <artifactId>swagger-annotations</artifactId>
             <version>1.6.16</version>
         </dependency>
-
         <!-- Hỗ trợ Redis. -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
-
         <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
             <version>2.9.0</version>
         </dependency>
-
-
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-text</artifactId>
@@ -233,7 +216,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
         <!-- ShardingSphere-JDBC -->
         <dependency>
             <groupId>org.apache.shardingsphere</groupId>
@@ -250,7 +232,6 @@
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
         </dependency>
-
         <!-- Cần khi triển khai gói WAR. -->
         <!--<dependency>-->
         <!--<groupId>org.springframework.boot</groupId>-->
@@ -270,31 +251,11 @@
         <!--<scope>provided</scope>-->
         <!--</dependency>-->
     </dependencies>
-    <!--  <build>
-          <plugins>
-              &lt;!&ndash;<plugin>
-                  <groupId>org.springframework.boot</groupId>
-                  <artifactId>spring-boot-maven-plugin</artifactId>
-                  <configuration>
-                      <executable>true</executable>
-                  </configuration>
-              </plugin>&ndash;&gt;
+    <!--  <build><plugins>
+              &lt;!&ndash;<plugin><groupId>org.springframework.boot</groupId><artifactId>spring-boot-maven-plugin</artifactId><configuration><executable>true</executable></configuration></plugin>&ndash;&gt;
               &lt;!&ndash; Spring Boot mặc định dùng spring-boot-maven-plugin; cần đổi plugin nếu JAR được mô-đun khác tham chiếu. &ndash;&gt;
-              &lt;!&ndash; <plugin>
-                   <groupId>org.apache.maven.plugins</groupId>
-                   <artifactId>maven-compiler-plugin</artifactId>
-                   <configuration>
-                       <source>1.8</source>
-                       <target>1.8</target>
-                       <encoding>UTF-8</encoding>
-                   </configuration>
-               </plugin>&ndash;&gt;
-              <plugin>
-                  <groupId>org.springframework.boot</groupId>
-                  <artifactId>spring-boot-maven-plugin</artifactId>
-              </plugin>
-          </plugins>
-      </build>-->
+              &lt;!&ndash; <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><configuration><source>1.8</source><target>1.8</target><encoding>UTF-8</encoding></configuration></plugin>&ndash;&gt;
+              <plugin><groupId>org.springframework.boot</groupId><artifactId>spring-boot-maven-plugin</artifactId></plugin></plugins></build>-->
     <build>
         <plugins>
             <plugin>
@@ -338,7 +299,6 @@
                                 </copy>
                                 <copy file="${project.build.directory}/${project.artifactId}-${project.version}.jar"
                                       tofile="${project.build.directory}/build/${project.artifactId}.jar"/>
-
                                 <fixcrlf srcdir="${basedir}/src/main/build/scripts" eol="unix"/>
                                 <copy todir="${project.build.directory}/build/bin">
                                     <fileset dir="${basedir}/src/main/build/scripts">
@@ -352,7 +312,6 @@
                                     <zipfileset filemode="755" dir='${project.build.directory}/build/'
                                                 excludes="${project.artifactId}.zip"/>
                                 </zip>
-
                                 <copy file="${basedir}/src/main/build/docker/Dockerfile"
                                       tofile="${project.build.directory}/build/Dockerfile"/>
                             </tasks>
@@ -386,7 +345,6 @@
             </snapshots>
         </pluginRepository>
     </pluginRepositories>
-
     <profiles>
         <profile>
             <!-- Profile chuyển sang Maven Central. -->

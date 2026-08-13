@@ -1,4 +1,4 @@
-title = "Novel Plus Gitleaks configuration"
+title = "Khởi Thư Gitleaks configuration"
 
 [extend]
 useDefault = true

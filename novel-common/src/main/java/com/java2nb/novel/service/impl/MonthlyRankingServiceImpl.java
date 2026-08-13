@@ -53,10 +53,11 @@ public class MonthlyRankingServiceImpl implements MonthlyRankingService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public MonthlySeasonRow ensureRegularSeason(Date at, ZoneId zoneId, String policyVersion) {
+    public MonthlySeasonRow ensureRegularSeason(Date at, ZoneId zoneId, String policyVersion,
+                                                long runtimeConfigRevision) {
         Objects.requireNonNull(at, "Thiếu thời điểm tạo kỳ xếp hạng");
         Objects.requireNonNull(zoneId, "Thiếu múi giờ tạo kỳ xếp hạng");
-        if (policyVersion == null || policyVersion.isBlank()) {
+        if (policyVersion == null || policyVersion.isBlank() || runtimeConfigRevision <= 0) {
             throw new IllegalArgumentException("Thiếu phiên bản chính sách của kỳ xếp hạng");
         }
         ZonedDateTime local = at.toInstant().atZone(zoneId);
@@ -66,7 +67,7 @@ public class MonthlyRankingServiceImpl implements MonthlyRankingService {
         String periodCode = month.toString();
         monthlyRankingMapper.insertRegularSeasonIgnore(periodCode, zoneId.getId(),
             Date.from(start.toInstant()), Date.from(end.toInstant()), Date.from(end.toInstant()),
-            policyVersion);
+            policyVersion, runtimeConfigRevision);
         MonthlySeasonRow season = monthlyRankingMapper.selectSeasonByPeriod(periodCode);
         if (season == null) {
             throw new IllegalStateException("Không thể tạo hoặc đọc kỳ xếp hạng tháng hiện tại");
@@ -78,7 +79,7 @@ public class MonthlyRankingServiceImpl implements MonthlyRankingService {
     @Override
     public MonthlySeasonRow createSpecialSeason(String periodCode, String seasonType, Date startAt,
                                                 Date endAt, Date voteCutoffAt, ZoneId zoneId,
-                                                String policyVersion) {
+                                                String policyVersion, long runtimeConfigRevision) {
         Objects.requireNonNull(zoneId, "Thiếu múi giờ kỳ đặc biệt");
         if (periodCode == null || !periodCode.matches("[a-z0-9][a-z0-9-]{0,31}")) {
             throw new IllegalArgumentException(
@@ -89,7 +90,7 @@ public class MonthlyRankingServiceImpl implements MonthlyRankingService {
             throw new IllegalArgumentException(
                 "Loại kỳ đặc biệt phải viết hoa, tối đa 24 ký tự và khác 'REGULAR'");
         }
-        if (policyVersion == null || policyVersion.isBlank()) {
+        if (policyVersion == null || policyVersion.isBlank() || runtimeConfigRevision <= 0) {
             throw new IllegalArgumentException("Thiếu phiên bản chính sách của kỳ đặc biệt");
         }
         if (startAt == null || endAt == null || voteCutoffAt == null || !endAt.after(startAt)
@@ -97,7 +98,7 @@ public class MonthlyRankingServiceImpl implements MonthlyRankingService {
             throw new IllegalArgumentException("Khung thời gian kỳ đặc biệt không hợp lệ");
         }
         monthlyRankingMapper.insertSpecialSeasonIgnore(periodCode, seasonType, zoneId.getId(),
-            startAt, endAt, voteCutoffAt, policyVersion);
+            startAt, endAt, voteCutoffAt, policyVersion, runtimeConfigRevision);
         MonthlySeasonRow season = monthlyRankingMapper.selectSeasonByPeriod(periodCode);
         if (season == null) {
             throw new IllegalStateException("Không thể tạo hoặc đọc kỳ đặc biệt vừa tạo");

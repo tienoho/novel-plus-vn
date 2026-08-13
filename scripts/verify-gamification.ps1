@@ -13,8 +13,9 @@ $tempRoot = Join-Path $repository 'tmp'
 $mavenTemp = Join-Path $tempRoot 'maven-gamification'
 $composeSecretTemp = Join-Path $tempRoot 'compose-secrets-gamification'
 $verifyProjectName = if ([string]::IsNullOrWhiteSpace($env:VERIFY_COMPOSE_PROJECT_NAME)) {
-    'novel-plus-verify'
-} else {
+    'khoi-thu-verify'
+}
+else {
     $env:VERIFY_COMPOSE_PROJECT_NAME
 }
 if ($verifyProjectName -notmatch '^[a-z0-9][a-z0-9_-]*$') {
@@ -47,8 +48,8 @@ function Get-Setting {
     if ([string]::IsNullOrWhiteSpace($value) -and (Test-Path -LiteralPath $dotEnvPath)) {
         $pattern = '^\s*' + [regex]::Escape($Name) + '\s*=\s*(.*)\s*$'
         $match = Get-Content -LiteralPath $dotEnvPath |
-            Select-String -Pattern $pattern |
-            Select-Object -Last 1
+        Select-String -Pattern $pattern |
+        Select-Object -Last 1
         if ($null -ne $match) {
             $value = $match.Matches[0].Groups[1].Value.Trim()
             if ($value.Length -ge 2) {
@@ -107,25 +108,28 @@ function Initialize-ComposeSecrets {
     New-Item -ItemType Directory -Force -Path $composeSecretTemp | Out-Null
     $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
     $secretValues = [ordered]@{
-        mysql_root_password = Get-SecretSetting -Name 'MYSQL_ROOT_PASSWORD' -FileName 'mysql_root_password'
-        mysql_app_password = Get-SecretSetting -Name 'MYSQL_APP_PASSWORD' -FileName 'mysql_app_password'
-        redis_password = Get-SecretSetting -Name 'REDIS_PASSWORD' -FileName 'redis_password'
-        jwt_secret = Get-SecretSetting -Name 'JWT_SECRET' -FileName 'jwt_secret'
-        cache_manager_password = Get-SecretSetting -Name 'CACHE_MANAGER_PASSWORD' -FileName 'cache_manager_password'
-        pii_encryption_key = Get-SecretSetting -Name 'PII_ENCRYPTION_KEY' -FileName 'pii_encryption_key'
-        admin_bootstrap_password = Get-SecretSetting -Name 'ADMIN_BOOTSTRAP_PASSWORD' -FileName 'admin_bootstrap_password'
-        crawler_admin_password = Get-SecretSetting -Name 'CRAWLER_ADMIN_PASSWORD' -FileName 'crawler_admin_password'
-        backup_encryption_password = Get-SecretSetting -Name 'BACKUP_ENCRYPTION_PASSWORD' `
+        mysql_root_password            = Get-SecretSetting -Name 'MYSQL_ROOT_PASSWORD' -FileName 'mysql_root_password'
+        mysql_app_password             = Get-SecretSetting -Name 'MYSQL_APP_PASSWORD' -FileName 'mysql_app_password'
+        redis_password                 = Get-SecretSetting -Name 'REDIS_PASSWORD' -FileName 'redis_password'
+        jwt_secret                     = Get-SecretSetting -Name 'JWT_SECRET' -FileName 'jwt_secret'
+        cache_manager_password         = Get-SecretSetting -Name 'CACHE_MANAGER_PASSWORD' -FileName 'cache_manager_password'
+        pii_encryption_key             = Get-SecretSetting -Name 'PII_ENCRYPTION_KEY' -FileName 'pii_encryption_key'
+        gamification_vote_ip_hash_salt = Get-SecretSetting -Name 'GAMIFICATION_VOTE_IP_HASH_SALT' `
+            -FileName 'gamification_vote_ip_hash_salt' `
+            -DefaultValue 'integration-gamification-vote-ip-hash-salt-2026'
+        admin_bootstrap_password       = Get-SecretSetting -Name 'ADMIN_BOOTSTRAP_PASSWORD' -FileName 'admin_bootstrap_password'
+        crawler_admin_password         = Get-SecretSetting -Name 'CRAWLER_ADMIN_PASSWORD' -FileName 'crawler_admin_password'
+        backup_encryption_password     = Get-SecretSetting -Name 'BACKUP_ENCRYPTION_PASSWORD' `
             -FileName 'backup_encryption_password' -DefaultValue 'integration-backup-encryption-password'
-        vnpay_hash_secret = Get-SecretSetting -Name 'VNPAY_HASH_SECRET' `
+        vnpay_hash_secret              = Get-SecretSetting -Name 'VNPAY_HASH_SECRET' `
             -FileName 'vnpay_hash_secret' -DefaultValue 'disabled'
-        vnpay_recurring_password = Get-SecretSetting -Name 'VNPAY_RECURRING_PASSWORD' `
+        vnpay_recurring_password       = Get-SecretSetting -Name 'VNPAY_RECURRING_PASSWORD' `
             -FileName 'vnpay_recurring_password' -DefaultValue 'disabled'
-        vnpay_recurring_client_secret = Get-SecretSetting -Name 'VNPAY_RECURRING_CLIENT_SECRET' `
+        vnpay_recurring_client_secret  = Get-SecretSetting -Name 'VNPAY_RECURRING_CLIENT_SECRET' `
             -FileName 'vnpay_recurring_client_secret' -DefaultValue 'disabled'
-        vnpay_recurring_hash_secret = Get-SecretSetting -Name 'VNPAY_RECURRING_HASH_SECRET' `
+        vnpay_recurring_hash_secret    = Get-SecretSetting -Name 'VNPAY_RECURRING_HASH_SECRET' `
             -FileName 'vnpay_recurring_hash_secret' -DefaultValue 'disabled'
-        vietqr_webhook_secret = Get-SecretSetting -Name 'VIETQR_WEBHOOK_SECRET' `
+        vietqr_webhook_secret          = Get-SecretSetting -Name 'VIETQR_WEBHOOK_SECRET' `
             -FileName 'vietqr_webhook_secret' -DefaultValue 'disabled'
     }
     foreach ($entry in $secretValues.GetEnumerator()) {
@@ -162,8 +166,8 @@ function Assert-MavenJava21 {
         throw "Unable to inspect the Maven Java runtime (exit code $versionExitCode)."
     }
     $javaVersionLine = $versionOutput |
-        Where-Object { $_.ToString() -match 'Java version:\s*\d+' } |
-        Select-Object -First 1
+    Where-Object { $_.ToString() -match 'Java version:\s*\d+' } |
+    Select-Object -First 1
     if ($null -eq $javaVersionLine) {
         throw 'Unable to determine the Java version used by Maven.'
     }
@@ -210,8 +214,8 @@ try {
     $env:TEMP = $mavenTemp
     $env:TMP = $mavenTemp
     $jdbcUrl = "jdbc:mysql://127.0.0.1:$hostPort/$database" +
-        '?allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf-8&useSSL=false' +
-        '&serverTimezone=Asia/Ho_Chi_Minh'
+    '?allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf-8&useSSL=false' +
+    '&serverTimezone=Asia/Ho_Chi_Minh'
     $env:SPRING_DATASOURCE_DRIVER_CLASS_NAME = 'com.mysql.cj.jdbc.Driver'
     $env:SPRING_DATASOURCE_URL = $jdbcUrl
     $env:SPRING_DATASOURCE_USERNAME = $username
@@ -222,8 +226,8 @@ try {
     $env:GIFT_CODE_HMAC_VERIFICATION_KEYS = ''
     $integrationTestFiles = Get-ChildItem -LiteralPath (Join-Path $repository 'novel-front/src/test/java') `
         -Recurse -File | Where-Object {
-            $_.Name -like '*MySqlIntegrationTest.java' -or $_.Name -like '*ConcurrencyIT.java'
-        }
+        $_.Name -like '*MySqlIntegrationTest.java' -or $_.Name -like '*ConcurrencyIT.java'
+    }
     if ($integrationTestFiles.Count -eq 0) {
         throw 'No MySQL integration or concurrency tests were found.'
     }

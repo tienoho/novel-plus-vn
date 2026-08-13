@@ -37,7 +37,7 @@ Kiểm thử tối thiểu phải chứng minh:
 
 Ngày nghiệm thu kỹ thuật: **27/07/2026**.
 
-- Image `novel-plus/front:local` được build lại bằng target `front`; container front chạy healthy với template runtime được phủ vào cả bốn theme.
+- Image `khoi-thu/front:local` được build lại bằng target `front`; container front chạy healthy với template runtime được phủ vào cả bốn theme.
 - Smoke API trên MySQL thật tạo đủ bốn loại, liệt kê đúng bốn item, update tăng version từ `0` lên `1`, request dùng version cũ trả `4007`, loại ngoài allowlist trả `4008` và truyện không thuộc tác giả trả `5004` cho cả đọc lẫn tạo.
 - UI thực hiện thành công tạo, sửa và xóa một item. Nội dung chứa thẻ `script`/`img` được hiển thị như văn bản, không tạo node thực thi và không đặt biến XSS thử nghiệm.
 - Hộp xác nhận dùng tiêu đề `Thông báo`, nút `Đồng ý`/`Hủy`; `header.js` được nạp trước `common.js` nên không còn lỗi `$.cookie is not a function`.

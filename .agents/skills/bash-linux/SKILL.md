@@ -90,8 +90,8 @@ version: 1.0.0
 
 | Task | Command |
 |------|---------|
-| Download | `curl -O https://example.com/file` |
-| API request | `curl -X GET https://api.example.com` |
+| Download | `curl -O https://khoithu.vn/file` |
+| API request | `curl -X GET https://api.khoithu.vn` |
 | POST JSON | `curl -X POST -H "Content-Type: application/json" -d '{"key":"value"}' URL` |
 | Check port | `nc -zv localhost 3000` |
 | Network info | `ifconfig` or `ip addr` |

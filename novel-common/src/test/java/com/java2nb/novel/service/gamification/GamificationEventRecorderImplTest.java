@@ -66,7 +66,7 @@ class GamificationEventRecorderImplTest {
 
     private GamificationEventInput event(String hash) {
         return new GamificationEventInput("CHAPTER_PURCHASED", "GAMIFY:CHAPTER_PURCHASE:11:22",
-            11L, 33L, new Date(1_000), LocalDate.of(2026, 7, 30), hash, null, "v1");
+            11L, 33L, new Date(1_000), LocalDate.of(2026, 7, 30), hash, null, "v1", 7L);
     }
 
     private GamificationEventRow row(GamificationEventInput event) {
@@ -78,6 +78,7 @@ class GamificationEventRecorderImplTest {
         row.setLocalDate(event.localDate());
         row.setPayloadHash(event.payloadHash());
         row.setPolicyVersion(event.policyVersion());
+        row.setRuntimeConfigRevision(event.runtimeConfigRevision());
         return row;
     }
 }
