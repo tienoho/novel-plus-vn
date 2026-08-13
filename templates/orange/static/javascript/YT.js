@@ -270,7 +270,7 @@ var YT = {
             var obj = $C(listId);
             if (obj != undefined) {
                 obj.length = 0;
-                var objV = eval("DirtInfo." + dirtName);
+                var objV = DirtInfo[dirtName];
                 if (objV != undefined && objV != null) {
                     for (var i = 0; i < objV.length; i++) {
                         obj.options.add(new Option(objV[i][1], objV[i][0]));
@@ -284,7 +284,7 @@ var YT = {
         },
         /* Lấy nhãn tương ứng với giá trị. */
         GetName: function (dirtName, dValue) {
-            var obj = eval("DirtInfo." + dirtName);
+            var obj = DirtInfo[dirtName];
             if (obj != undefined && obj != null) {
                 for (var i = 0; i < obj.length; i++) {
                     if (obj[i][0] == dValue) {

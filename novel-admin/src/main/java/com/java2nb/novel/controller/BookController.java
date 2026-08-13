@@ -37,8 +37,8 @@ import com.java2nb.common.utils.Query;
 import com.java2nb.common.utils.R;
 import com.java2nb.common.utils.Messages;
 
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 /**
  * Bảng tác phẩm

@@ -4,6 +4,7 @@ import com.github.pagehelper.PageHelper;
 import com.java2nb.novel.core.bean.UserDetails;
 import com.java2nb.novel.core.config.AuthorIncomeProperties;
 import com.java2nb.novel.core.enums.ResponseStatus;
+import com.java2nb.novel.core.security.RichTextSanitizer;
 import com.java2nb.novel.entity.User;
 import com.java2nb.novel.entity.*;
 import com.java2nb.novel.mapper.*;
@@ -11,18 +12,19 @@ import com.java2nb.novel.service.UserService;
 import com.java2nb.novel.service.wallet.InsufficientWalletBalanceException;
 import com.java2nb.novel.service.wallet.WalletLedgerService;
 import com.java2nb.novel.service.wallet.WalletPostResult;
+import com.java2nb.novel.service.chapter.ChapterCommercialPolicyService;
+import com.java2nb.novel.service.entitlement.ReadingTicketService;
+import com.java2nb.novel.service.gamification.GamificationEventService;
 import com.java2nb.novel.vo.BookReadHistoryVO;
 import com.java2nb.novel.vo.BookShelfVO;
 import com.java2nb.novel.vo.UserFeedbackVO;
 import io.github.xxyopen.model.page.PageBean;
 import io.github.xxyopen.model.page.builder.pagehelper.PageBuilder;
 import io.github.xxyopen.util.IdWorker;
-import io.github.xxyopen.util.MD5Util;
 import io.github.xxyopen.web.exception.BusinessException;
 import io.github.xxyopen.web.util.BeanUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.Charsets;
 import org.mybatis.dynamic.sql.delete.render.DeleteStatementProvider;
 import org.mybatis.dynamic.sql.render.RenderingStrategies;
 import org.mybatis.dynamic.sql.select.render.SelectStatementProvider;
@@ -31,6 +33,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -67,6 +70,18 @@ public class UserServiceImpl implements UserService {
 
     private final AuthorIncomeProperties authorIncomeProperties;
 
+    private final BookIndexMapper bookIndexMapper;
+
+    private final ChapterCommercialPolicyService chapterCommercialPolicyService;
+
+    private final ReadingTicketService readingTicketService;
+
+    private final GamificationEventService gamificationEventService;
+
+    private final PasswordEncoder passwordEncoder;
+
+    private final RichTextSanitizer richTextSanitizer;
+
     private final IdWorker idWorker = IdWorker.INSTANCE;
 
 
@@ -85,6 +100,7 @@ public class UserServiceImpl implements UserService {
         }
         User entity = new User();
         BeanUtils.copyProperties(user, entity);
+        entity.setUsername(richTextSanitizer.sanitizeText(entity.getUsername()));
         //Tạo bản ghi đăng ký trong cơ sở dữ liệu
         Long id = idWorker.nextId();
         entity.setId(id);
@@ -92,7 +108,7 @@ public class UserServiceImpl implements UserService {
         Date currentDate = new Date();
         entity.setCreateTime(currentDate);
         entity.setUpdateTime(currentDate);
-        entity.setPassword(MD5Util.MD5Encode(entity.getPassword(), Charsets.UTF_8.name()));
+        entity.setPassword(passwordEncoder.encode(entity.getPassword()));
         userMapper.insertSelective(entity);
         //Tạo và trả về đối tượng UserDetail
         UserDetails userDetails = new UserDetails();
@@ -105,14 +121,13 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDetails login(User user) {
         //Truy vấn bản ghi theo tên đăng nhập và mật khẩu
-        SelectStatementProvider selectStatement = select(id, username, nickName)
+        SelectStatementProvider selectStatement = select(id, username, nickName, password)
             .from(UserDynamicSqlSupport.user)
             .where(username, isEqualTo(user.getUsername()))
-            .and(password, isEqualTo(MD5Util.MD5Encode(user.getPassword(), Charsets.UTF_8.name())))
             .build()
             .render(RenderingStrategies.MYBATIS3);
         List<User> users = userMapper.selectMany(selectStatement);
-        if (users.size() == 0) {
+        if (users.size() == 0 || !passwordEncoder.matches(user.getPassword(), users.get(0).getPassword())) {
             throw new BusinessException(ResponseStatus.USERNAME_PASS_ERROR);
         }
         //Tạo và trả về đối tượng UserDetail
@@ -208,7 +223,7 @@ public class UserServiceImpl implements UserService {
     public void addFeedBack(Long userId, String content) {
         UserFeedback feedback = new UserFeedback();
         feedback.setUserId(userId);
-        feedback.setContent(content);
+        feedback.setContent(richTextSanitizer.sanitizeText(content));
         feedback.setCreateTime(new Date());
         userFeedbackMapper.insertSelective(feedback);
     }
@@ -248,6 +263,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void updateUserInfo(Long userId, User user) {
+        if (user.getNickName() != null) {
+            user.setNickName(richTextSanitizer.sanitizeText(user.getNickName()));
+        }
         boolean changesDateOfBirth = user.getDateOfBirth() != null;
         user.setIsAgeVerified(changesDateOfBirth ? (byte) 0 : null);
         user.setId(userId);
@@ -263,13 +281,13 @@ public class UserServiceImpl implements UserService {
             .where(id, isEqualTo(userId))
             .build()
             .render(RenderingStrategies.MYBATIS3);
-        if (!userMapper.selectMany(selectStatement).get(0).getPassword()
-            .equals(MD5Util.MD5Encode(oldPassword, Charsets.UTF_8.name()))) {
+        List<User> users = userMapper.selectMany(selectStatement);
+        if (users.isEmpty() || !passwordEncoder.matches(oldPassword, users.get(0).getPassword())) {
             throw new BusinessException(ResponseStatus.OLD_PASSWORD_ERROR);
         }
         UpdateStatementProvider updateStatement = update(user)
             .set(password)
-            .equalTo(MD5Util.MD5Encode(newPassword, Charsets.UTF_8.name()))
+            .equalTo(passwordEncoder.encode(newPassword))
             .where(id, isEqualTo(userId))
             .build()
             .render(RenderingStrategies.MYBATIS3);
@@ -288,9 +306,28 @@ public class UserServiceImpl implements UserService {
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void buyBookIndex(Long userId, Long authorId, UserBuyRecord buyRecord) {
+        if (buyRecord == null || buyRecord.getBookIndexId() == null) {
+            throw new IllegalArgumentException("Thiếu chương cần mua");
+        }
+        BookIndex lockedChapter = bookIndexMapper.lockById(buyRecord.getBookIndexId());
+        if (lockedChapter == null) {
+            throw new IllegalArgumentException("Không tìm thấy chương cần mua");
+        }
+        if (buyRecord.getBookId() == null || !buyRecord.getBookId().equals(lockedChapter.getBookId())) {
+            throw new IllegalArgumentException("Chương không thuộc tác phẩm cần mua");
+        }
         if (queryIsBuyBookIndex(userId, buyRecord.getBookIndexId())) {
             return;
         }
+        Date now = new Date();
+        if (readingTicketService.hasActiveChapterEntitlement(userId, buyRecord.getBookIndexId(), now)) {
+            return;
+        }
+        if (!chapterCommercialPolicyService.evaluate(lockedChapter, false, now).purchaseRequired()) {
+            return;
+        }
+        buyRecord.setBookIndexName(lockedChapter.getIndexName());
+        buyRecord.setBuyAmount(lockedChapter.getBookPrice());
         if (buyRecord.getBuyAmount() == null || buyRecord.getBuyAmount() <= 0) {
             throw new IllegalArgumentException("Giá chương phải lớn hơn 0");
         }
@@ -318,6 +355,11 @@ public class UserServiceImpl implements UserService {
             if (postResult != WalletPostResult.ALREADY_POSTED) {
                 throw exception;
             }
+        }
+        if (postResult == WalletPostResult.POSTED) {
+            gamificationEventService.ingest("CHAPTER_PURCHASED",
+                "GAMIFY:CHAPTER_PURCHASE:" + userId + ":" + buyRecord.getBookIndexId(),
+                userId, buyRecord.getBookId(), buyRecord.getCreateTime(), null);
         }
     }
 

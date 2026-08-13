@@ -38,6 +38,12 @@
         </dependency>
 
         <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
@@ -83,7 +89,8 @@
                                         <include name="*.bat"/>
                                     </fileset>
                                 </copy>
-                                <zip destfile='${project.build.directory}/build/${project.artifactId}.zip'>
+                                <zip destfile='${project.build.directory}/build/${project.artifactId}.zip'
+                                     compress="false">
                                     <zipfileset filemode="755" dir='${project.build.directory}/build/'
                                                 excludes="${project.artifactId}.zip"/>
                                 </zip>

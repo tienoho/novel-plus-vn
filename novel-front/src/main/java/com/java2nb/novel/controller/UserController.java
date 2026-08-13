@@ -6,6 +6,9 @@ import com.java2nb.novel.core.cache.CacheService;
 import com.java2nb.novel.core.enums.ResponseStatus;
 import com.java2nb.novel.core.utils.IpUtil;
 import com.java2nb.novel.core.utils.RandomValidateCodeUtil;
+import com.java2nb.novel.core.utils.AuthCookieService;
+import com.java2nb.novel.core.utils.CookieUtil;
+import com.java2nb.novel.core.utils.RefreshTokenSessionService;
 import com.java2nb.novel.entity.Book;
 import com.java2nb.novel.entity.BookIndex;
 import com.java2nb.novel.entity.User;
@@ -18,6 +21,7 @@ import io.github.xxyopen.model.resp.RestResult;
 import io.github.xxyopen.web.valid.AddGroup;
 import io.github.xxyopen.web.valid.UpdateGroup;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -47,13 +51,17 @@ public class UserController extends BaseController {
 
     private final com.java2nb.novel.common.service.TotpService totpService;
 
+    private final AuthCookieService authCookieService;
+
+    private final RefreshTokenSessionService refreshTokenSessionService;
+
     /**
      * Đăng nhập
      */
     @PostMapping("login")
     @com.java2nb.novel.common.annotation.RateLimit(count = 5, timeWindowSeconds = 60, limitType = com.java2nb.novel.common.annotation.LimitType.IP)
     @com.java2nb.novel.common.annotation.AuditLog(module = "AUTH", eventType = "AUTH_LOGIN", detail = "Nguoi dung dang nhap")
-    public RestResult<Map<String, Object>> login(User user) {
+    public RestResult<Map<String, Object>> login(User user, HttpServletResponse response) {
 
         //Đăng nhập
         UserDetails userDetails = userService.login(user);
@@ -66,8 +74,8 @@ public class UserController extends BaseController {
             return RestResult.ok(data);
         }
 
-        Map<String, Object> data = new HashMap<>(1);
-        data.put("token", jwtTokenUtil.generateToken(userDetails));
+        authCookieService.write(response, refreshTokenSessionService.issue(userDetails));
+        Map<String, Object> data = sessionData(userDetails);
 
         return RestResult.ok(data);
 
@@ -76,20 +84,25 @@ public class UserController extends BaseController {
 
     /**
      * Đăng ký
+     */
     @PostMapping("register")
+    @com.java2nb.novel.common.annotation.RateLimit(key = "register", count = 5, timeWindowSeconds = 60,
+        limitType = com.java2nb.novel.common.annotation.LimitType.IP)
+    @com.java2nb.novel.common.annotation.AuditLog(module = "AUTH", eventType = "AUTH_REGISTER",
+        detail = "Nguoi dung dang ky")
     public RestResult<?> register(@Validated({AddGroup.class}) User user,
-        @RequestParam(value = "velCode", defaultValue = "") String velCode, HttpServletRequest request) {
+        @RequestParam(value = "velCode", defaultValue = "") String velCode, HttpServletRequest request,
+        HttpServletResponse response) {
 
-        //Kiểm tra mã xác minh có đúng hay không
-        if (!velCode.equals(
-            cacheService.get(RandomValidateCodeUtil.RANDOM_CODE_KEY + ":" + IpUtil.getRealIp(request)))) {
+        String captchaKey = RandomValidateCodeUtil.RANDOM_CODE_KEY + ":" + IpUtil.getRealIp(request);
+        if (!cacheService.compareAndDelete(captchaKey, velCode)) {
             return RestResult.fail(ResponseStatus.VEL_CODE_ERROR);
         }
 
         //Đăng ký
         UserDetails userDetails = userService.register(user);
-        Map<String, Object> data = new HashMap<>(1);
-        data.put("token", jwtTokenUtil.generateToken(userDetails));
+        authCookieService.write(response, refreshTokenSessionService.issue(userDetails));
+        Map<String, Object> data = sessionData(userDetails);
 
         return RestResult.ok(data);
 
@@ -101,21 +114,25 @@ public class UserController extends BaseController {
      *Làm mới tokenn
      */
     @PostMapping("refreshToken")
-    public RestResult<?> refreshToken(HttpServletRequest request) {
-        String token = getToken(request);
-        if (jwtTokenUtil.canRefresh(token)) {
-            token = jwtTokenUtil.refreshToken(token);
-            Map<String, Object> data = new HashMap<>(2);
-            data.put("token", token);
-            UserDetails userDetail = jwtTokenUtil.getUserDetailsFromToken(token);
-            data.put("username", userDetail.getUsername());
-            data.put("nickName", userDetail.getNickName());
-            return RestResult.ok(data);
-
-        } else {
+    public RestResult<?> refreshToken(HttpServletRequest request, HttpServletResponse response) {
+        String refreshToken = CookieUtil.getCookie(request, AuthCookieService.REFRESH_COOKIE);
+        var tokens = refreshTokenSessionService.rotate(refreshToken);
+        if (tokens == null) {
+            authCookieService.clear(response);
             return RestResult.fail(ResponseStatus.NO_LOGIN);
         }
+        authCookieService.write(response, tokens);
+        UserDetails userDetail = jwtTokenUtil.getUserDetailsFromToken(tokens.accessToken());
+        return RestResult.ok(sessionData(userDetail));
 
+    }
+
+    @PostMapping("logout")
+    public RestResult<?> logout(HttpServletRequest request, HttpServletResponse response) {
+        refreshTokenSessionService.revoke(
+            CookieUtil.getCookie(request, AuthCookieService.REFRESH_COOKIE));
+        authCookieService.clear(response);
+        return RestResult.ok();
     }
 
     /**
@@ -237,7 +254,8 @@ public class UserController extends BaseController {
      * Cập nhật thông tin cá nhân
      */
     @PostMapping("updateUserInfo")
-    public RestResult<?> updateUserInfo(@Validated({UpdateGroup.class}) User user, HttpServletRequest request) {
+    public RestResult<?> updateUserInfo(@Validated({UpdateGroup.class}) User user, HttpServletRequest request,
+                                        HttpServletResponse response) {
         UserDetails userDetails = getUserDetails(request);
         if (userDetails == null) {
             return RestResult.fail(ResponseStatus.NO_LOGIN);
@@ -245,9 +263,14 @@ public class UserController extends BaseController {
         userService.updateUserInfo(userDetails.getId(), user);
         if (user.getNickName() != null) {
             userDetails.setNickName(user.getNickName());
-            Map<String, Object> data = new HashMap<>(1);
-            data.put("token", jwtTokenUtil.generateToken(userDetails));
-            return RestResult.ok(data);
+            String refreshToken = CookieUtil.getCookie(request, AuthCookieService.REFRESH_COOKIE);
+            var tokens = refreshTokenSessionService.replace(refreshToken, userDetails);
+            if (tokens == null) {
+                authCookieService.clear(response);
+                return RestResult.fail(ResponseStatus.NO_LOGIN);
+            }
+            authCookieService.write(response, tokens);
+            return RestResult.ok(sessionData(userDetails));
         }
         return RestResult.ok();
     }
@@ -293,6 +316,9 @@ public class UserController extends BaseController {
         if (userDetails == null) {
             return RestResult.fail(ResponseStatus.NO_LOGIN);
         }
+        if (buyRecord == null || buyRecord.getBookIndexId() == null) {
+            throw new IllegalArgumentException("Thiếu chương cần mua");
+        }
         BookIndex bookIndex = bookService.queryBookIndex(buyRecord.getBookIndexId());
         Book book = bookService.queryBookDetail(bookIndex.getBookId());
         UserBuyRecord authoritativeRecord = new UserBuyRecord();
@@ -303,6 +329,13 @@ public class UserController extends BaseController {
         authoritativeRecord.setBuyAmount(bookIndex.getBookPrice());
         userService.buyBookIndex(userDetails.getId(), book.getAuthorId(), authoritativeRecord);
         return RestResult.ok();
+    }
+
+    private Map<String, Object> sessionData(UserDetails userDetails) {
+        Map<String, Object> data = new HashMap<>(2);
+        data.put("username", userDetails.getUsername());
+        data.put("nickName", userDetails.getNickName());
+        return data;
     }
 
     /**

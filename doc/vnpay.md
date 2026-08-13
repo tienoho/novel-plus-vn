@@ -22,7 +22,7 @@ Sao chép `.env.example` thành `.env`, sau đó cấu hình:
 |---|---:|---|
 | `VNPAY_ENABLED` | Có | Đặt `true` để mở VNPAY; mặc định `false` |
 | `VNPAY_TMN_CODE` | Có | Mã website 8 ký tự chữ/số do VNPAY cấp |
-| `VNPAY_HASH_SECRET` | Có | Khóa HMAC do VNPAY cấp |
+| `secrets/vnpay_hash_secret` | Có | File secret HMAC do VNPAY cấp; Compose nạp qua `VNPAY_HASH_SECRET_FILE` |
 | `VNPAY_PAY_URL` | Có | Endpoint tạo thanh toán sandbox/production |
 | `VNPAY_RETURN_URL` | Có | URL HTTPS công khai trả trình duyệt về website |
 | `VNPAY_QUERY_URL` | Khi bật QueryDr | API truy vấn giao dịch sandbox/production |
@@ -35,7 +35,7 @@ Ví dụ sandbox:
 ```dotenv
 VNPAY_ENABLED=true
 VNPAY_TMN_CODE=DEMOV210
-VNPAY_HASH_SECRET=thay-bang-khoa-sandbox-do-vnpay-cap
+# Ghi khóa Sandbox vào file secrets/vnpay_hash_secret, không đặt trong .env.
 VNPAY_PAY_URL=https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
 VNPAY_RETURN_URL=https://sandbox.example.vn/pay/vnpay/return
 VNPAY_QUERY_URL=https://sandbox.vnpayment.vn/merchant_webapi/api/transaction
@@ -74,6 +74,52 @@ Kết quả QueryDr:
 - thất bại: đơn chuyển sang thất bại, không cộng Xu;
 - đang xử lý/không xác định/API lỗi: giữ đơn ở trạng thái chờ để lần sau đối soát lại.
 
+### QueryDr cho VNPAY Recurring
+
+VNPAY Recurring dùng TmnCode và HashSecret riêng do VNPAY cấp, nhưng truy vấn trạng thái qua cùng API
+QueryDr. Khi request `recurring_pay` trả kết quả không xác định, hệ thống chuyển attempt sang `UNKNOWN`
+và cycle sang `PROVIDER_PENDING`; tuyệt đối chưa chạy nguồn fallback ở thời điểm này.
+
+| Biến | Mặc định | Ràng buộc |
+|---|---|---|
+| `VNPAY_RECURRING_QUERY_URL` | Sandbox QueryDr | URL HTTP(S) do VNPAY cấp |
+| `VNPAY_RECURRING_SERVER_IP` | `127.0.0.1` | IPv4/IPv6 của máy gọi QueryDr; production phải dùng IP công khai đã đăng ký |
+| `VNPAY_RECURRING_QUERY_DELAY_MS` | `300000` | Từ 60.000 đến 3.600.000 ms; đồng thời là lease chống hai replica query cùng cycle |
+| `VNPAY_RECURRING_REVOCATION_DELAY_MS` | `60000` | Chu kỳ quét mandate cần thu hồi, từ 10.000 đến 3.600.000 ms |
+| `VNPAY_RECURRING_REVOCATION_RETRY_DELAY_MS` | `300000` | Thời gian chờ thử lại khi provider chưa xác nhận, từ 60.000 đến 86.400.000 ms |
+| `VNPAY_RECURRING_REVOCATION_LEASE_MS` | `60000` | Lease chống hai replica cùng gửi lệnh hủy; phải bao phủ cả request xác thực và request hủy |
+| `VNPAY_RECURRING_REVOCATION_BATCH_SIZE` | `50` | Số mandate tối đa mỗi lượt, từ 1 đến 500 |
+
+Worker QueryDr ký bằng bộ secret Recurring và kiểm tra checksum, command, TmnCode, order reference,
+số tiền snapshot, loại giao dịch và trạng thái phản hồi. Hai replica có thể cùng nhìn thấy một cycle,
+nhưng optimistic lease chỉ cho một replica gửi QueryDr. Kết quả được xử lý như sau:
+
+- `00`: settlement cycle và cấp kỳ thuê bao đúng một lần;
+- `01`, `04`, `05`, `06`, `07`, `09` hoặc lỗi kết nối/chữ ký: tiếp tục `PROVIDER_PENDING`, không
+  thử fallback; các trạng thái đảo tiền, nghi ngờ gian lận và hoàn trả phải được đối soát an toàn;
+- chỉ `02` là thất bại cuối tự động; chuyển sang lịch retry 24/72 giờ, sau đó mới xét nguồn fallback.
+
+Khi người dùng hủy thuê bao cuối kỳ, transaction nội bộ dừng auto-renew ngay và chuyển mandate sang
+`REVOKE_PENDING`. Worker gửi `cancel_recurring` ngoài transaction, dùng lease để chỉ một replica gọi
+provider. Mã `00`, `04` (mandate không còn) và `12` (token không còn) đều đạt trạng thái mong muốn;
+các mã/lỗi mạng khác giữ hàng đợi và thử lại. Chỉ sau khi provider xác nhận, hệ thống chuyển
+`REVOKED`, xóa ciphertext token và ngày hết hạn. Việc hủy trong giao diện vì vậy không phụ thuộc độ
+sẵn sàng tức thời của VNPAY nhưng vẫn fail-closed, audit được và không làm mất quyền đọc kỳ hiện tại.
+
+Admin có hàng đợi riêng trên trang quản trị thuê bao để xem `PENDING`, `FAILED`, `REVOKE_PENDING` và
+`REVOKED` mà không trả ciphertext token ra trình duyệt. Thao tác “thử thu hồi lại” chỉ áp dụng cho
+`REVOKE_PENDING`, bắt buộc lý do 8–500 ký tự, optimistic version và chỉ được chạy khi lease worker đã
+hết. Thao tác chỉ đặt lại lịch retry; không sửa token, không giả lập phản hồi provider và được ghi vào
+`reading_subscription_mandate_admin_audit` bất biến.
+
+Gauge `novel_subscription_renewal_queue{state="mandate_revoke_pending"}` phản ánh tổng mandate đang
+chờ thu hồi kể cả khi Recurring tạm tắt. Prometheus cảnh báo mức warning khi queue khác 0 liên tục
+15 phút; vận hành phải kiểm tra mã lỗi gần nhất và chỉ dùng retry có audit, không sửa DB trực tiếp.
+
+`transaction.mcDate` và `order.orderReference` dùng cho QueryDr được lấy từ attempt đã lưu, không tạo
+lại theo thời điểm truy vấn. Đặc tả QueryDr chính thức có bảng ánh xạ riêng cho “Thanh toán định kỳ”:
+<https://sandbox.vnpayment.vn/apis/docs/truy-van-hoan-tien/querydr%26refund.html>.
+
 ## 5. Trạng thái và dữ liệu đơn
 
 | Trường | Giá trị |
@@ -88,6 +134,93 @@ Kết quả QueryDr:
 Migration [sql/20260716_vnpay_hardening.sql](sql/20260716_vnpay_hardening.sql) thêm `account_amount`, unique index `uk_order_pay_out_trade_no` và index `idx_order_pay_vnpay_reconcile`. Migration có thể chạy lại và sẽ dừng nếu dữ liệu cũ có mã đơn trùng.
 
 ## 6. Kiểm tra sandbox
+
+### Chuẩn bị môi trường UAT để đăng ký IPN
+
+Trước tiên trỏ DNS của bốn hostname UAT về máy chạy Compose và mở TCP 80/443. Chuẩn bị cấu hình,
+secret cùng nội dung email đăng ký mà không ghi credential vào Git:
+
+```powershell
+$env:VNPAY_SANDBOX_HASH_SECRET_FILE = 'C:\secure\vnpay-sandbox-hash-secret'
+$env:VNPAY_SANDBOX_CARD_NUMBER = '<so-the-test-do-vnpay-cap>'
+$env:VNPAY_SANDBOX_CARD_HOLDER = '<chu-the-test>'
+$env:VNPAY_SANDBOX_CARD_DATE = '<MM/YY>'
+$env:VNPAY_SANDBOX_OTP = '<otp-test>'
+./scripts/prepare-vnpay-uat.ps1 `
+  -Domain 'uat.example.vn' `
+  -TmnCode '<ma-sandbox-8-ky-tu>' `
+  -AcmeEmail 'ops@example.vn'
+```
+
+Lệnh sinh ba artifact ignored: `.env.uat`, `secrets/uat/` và `.vnpay-uat-registration.txt`. Merchant
+secret và dữ liệu thẻ test chỉ nằm trong `secrets/uat/`, không xuất hiện trong `.env.uat` hoặc nội dung
+đăng ký gửi VNPAY. Sau đó dựng
+stack, migrate, nạp test data UAT, kiểm tra TLS/channel/IPN fail-closed và tạo thử một URL checkout đúng
+merchant, mệnh giá cùng Return URL mà chưa thực hiện giao dịch:
+
+```powershell
+./scripts/start-vnpay-uat.ps1
+```
+
+`start-vnpay-uat.ps1` tự chạy cả preflight callback và preflight checkout. Chỉ gửi nội dung
+`.vnpay-uat-registration.txt` sau khi cả hai đạt. Không gửi file secret. Sau khi
+VNPAY xác nhận đã cấu hình IPN, chạy giao dịch kiểm chứng server-to-server:
+
+```powershell
+./scripts/test-vnpay-uat.ps1
+```
+
+Tại thời điểm này, không cần sửa thêm code hoặc image. Các phần migrate database, test account, dữ
+liệu nạp Xu, trình duyệt Playwright và đối soát ledger đã nằm trong harness. Hai việc ngoại vi còn lại
+là: DNS/TLS của domain UAT hoạt động và VNPAY xác nhận đúng IPN/Return URL. Script test tự đọc dữ liệu
+thẻ Sandbox từ file secret đã tạo; biến môi trường cùng tên chỉ dùng khi cần ghi đè tạm thời.
+Credential one-off không phải credential Recurring; giữ
+`VNPAY_RECURRING_ENABLED=false` cho tới khi VNPAY cấp riêng dịch vụ Recurring.
+
+Script test tự chạy `npm ci` trong image `node:22-alpine` và chạy Chromium trong image Playwright
+được pin cùng phiên bản package. Máy UAT chỉ cần PowerShell và Docker; không phải cài Node hoặc
+Chromium trên host. Từ lần chạy sau có thể thêm `-SkipNpmInstall` để dùng lại volume dependency.
+
+`test-vnpay-uat.ps1` không chuyển tiếp IPN đầu tiên. Nó chỉ đạt khi VNPAY tự gọi URL đã đăng ký, đơn
+chuyển `SUCCESS`, lần replay của harness trả `02`, số Xu tăng đúng, projection ví khớp và giao dịch
+sổ cái kép cân bằng. Dừng UAT nhưng giữ dữ liệu bằng:
+
+```powershell
+docker compose --env-file .env.uat -p novel-plus-uat `
+  -f compose.yaml -f compose.e2e.yaml down
+```
+
+Smoke tự động trên database cô lập đọc checksum từ file ngoài Git và thông tin thẻ/OTP test từ biến
+môi trường tiến trình:
+
+```powershell
+$env:VNPAY_SANDBOX_HASH_SECRET_FILE = 'C:\secure\vnpay-sandbox-hash-secret'
+$env:VNPAY_SANDBOX_TMN_CODE = '<ma-website-sandbox-8-ky-tu>'
+$env:VNPAY_SANDBOX_CARD_NUMBER = '<so-the-test-do-vnpay-cap>'
+$env:VNPAY_SANDBOX_CARD_HOLDER = '<chu-the-test>'
+$env:VNPAY_SANDBOX_CARD_DATE = '<MM/YY>'
+$env:VNPAY_SANDBOX_OTP = '<otp-test>'
+./scripts/run-vnpay-sandbox-smoke.ps1
+```
+
+Runner migrate/seed MySQL mới, chỉ publish `front` trên loopback, thực hiện thanh toán NCB Sandbox,
+kiểm tra Return, IPN, replay, số Xu và ledger zero-sum rồi tự xóa container, volume và secret tạm.
+Report generated nằm tại `e2e/test-results/vnpay-sandbox-smoke.json` và không chứa checksum, thẻ, OTP
+hoặc URL có chữ ký.
+
+Có thể kiểm tra riêng việc đăng nhập, tạo đơn và cấu trúc URL checkout trước khi dùng credential/thẻ test thật:
+
+```powershell
+$env:VNPAY_SANDBOX_HASH_SECRET = '<chuoi-ngau-nhien-toi-thieu-32-ky-tu>'
+./scripts/run-vnpay-sandbox-smoke.ps1 -TmnCode 'DEMOV210' -CheckoutPreflightOnly
+```
+
+Chế độ này chỉ chứng minh luồng cấu hình nội bộ: đơn phải còn `pending`, số dư không đổi và chưa có ledger.
+Nó không thay thế checkout bằng credential Sandbox thật hoặc provider-delivered IPN qua URL đã đăng ký.
+
+Harness chủ động chuyển tiếp payload Return do VNPAY ký sang IPN local để kiểm tra settlement. Kết quả
+này **không** chứng minh VNPAY server gọi được callback. Gate server-to-server chỉ đạt khi VNPAY gọi
+trực tiếp `https://<ten-mien>/pay/vnpay/ipn` đã đăng ký và log/audit ghi nhận request đó.
 
 1. Chạy migration và khởi động stack với credential sandbox.
 2. Xác nhận `/pay/index.html` hiển thị VNPAY và đúng mệnh giá VND/Xu.

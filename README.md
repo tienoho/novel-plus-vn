@@ -19,13 +19,21 @@ Các chức năng chính gồm đề xuất và tìm kiếm tiếng Việt có d
 - Hướng dẫn tích hợp VNPAY: [doc/vnpay.md](doc/vnpay.md)
 - Kiến trúc ví và sổ cái: [doc/wallet-ledger.md](doc/wallet-ledger.md)
 - KYC và tài chính tác giả: [doc/author-finance.md](doc/author-finance.md)
+- Biên bản phê duyệt pháp lý/vận hành: [doc/legal-operational-approval-record.md](doc/legal-operational-approval-record.md)
 - Biên bản nghiệm thu P0: [doc/p0-acceptance.md](doc/p0-acceptance.md)
+- Biên bản sẵn sàng production: [doc/production-readiness-acceptance.md](doc/production-readiness-acceptance.md)
 - Trình soạn thảo, bản nháp và lịch xuất bản: [doc/author-editor.md](doc/author-editor.md)
+- Giá chương, tự mở khóa và sự kiện miễn phí: [doc/chapter-commercial-policy.md](doc/chapter-commercial-policy.md)
+- Nhập và xuất TXT, DOCX, EPUB: [doc/book-import-export.md](doc/book-import-export.md)
 - Analytics lượt đọc, giữ chân và doanh thu: [doc/author-analytics.md](doc/author-analytics.md)
 - Tìm kiếm tiếng Việt và sửa lỗi chính tả: [doc/vietnamese-search.md](doc/vietnamese-search.md)
 - Theo dõi tác giả và thông báo chương mới: [doc/chapter-notifications.md](doc/chapter-notifications.md)
 - PWA, đọc offline, tiết kiệm dữ liệu và TTS tiếng Việt: [doc/reader-pwa.md](doc/reader-pwa.md)
 - Đề xuất theo hành vi, thể loại và lịch sử đọc: [doc/recommendation.md](doc/recommendation.md)
+- Vận hành gamification, Ngọn Đuốc và xếp hạng tháng: [doc/gamification.md](doc/gamification.md)
+- Chính sách gamification phiên bản v1: [doc/gamification-policy-v1.md](doc/gamification-policy-v1.md)
+- Vé đọc, thuê bao và quyền đọc chương: [doc/reader-entitlements.md](doc/reader-entitlements.md)
+- Mã quà cấp Xu/Vé đọc: [doc/gift-codes.md](doc/gift-codes.md)
 - Hướng dẫn migration SQL: [doc/sql/readme.md](doc/sql/readme.md)
 - Tài liệu gốc: [docs.xxyopen.com](https://docs.xxyopen.com/course/novelplus/1.html)
 - Trang giới thiệu: [novel.xxyopen.com](https://novel.xxyopen.com)
@@ -48,8 +56,8 @@ novel-plus
 | Công nghệ | Mục đích |
 |---|---|
 | Java 21 | Nền tảng chạy |
-| Spring Boot 3 | `novel-front`, `novel-crawl` và các mô-đun dùng chung |
-| Spring Boot 2.7 | `novel-admin` |
+| Spring Boot 3.5 | `novel-front`, `novel-crawl`, `novel-admin` và các mô-đun dùng chung |
+| Springdoc OpenAPI | Tài liệu API trang quản trị |
 | Thymeleaf | Kết xuất giao diện máy chủ |
 | MyBatis / MyBatis Dynamic SQL | Truy cập dữ liệu |
 | ShardingSphere-JDBC | Phân mảnh cơ sở dữ liệu |
@@ -71,12 +79,11 @@ Các dịch vụ OSS, VNPAY, AI và nguồn thu thập là tùy chọn; chỉ b�
 
 ## Khởi tạo cơ sở dữ liệu
 
-1. Tạo một cơ sở dữ liệu MySQL mới với bộ ký tự `utf8mb4`.
-2. Chạy [doc/sql/novel_plus.sql](doc/sql/novel_plus.sql) để tạo cấu trúc và dữ liệu mặc định.
-3. Chạy lần lượt các migration có ngày mới hơn phiên bản SQL khởi tạo.
-4. Với bản Việt hóa, chạy [doc/sql/20260712_vi_localization.sql](doc/sql/20260712_vi_localization.sql).
+1. Tạo database MySQL 8.4 trống với bộ ký tự `utf8mb4`, hoặc để Compose tạo database từ cấu hình.
+2. Cấu hình secret rồi chạy `docker compose run --rm migrate`.
+3. Image `novel-plus/migrations` dùng Flyway để chạy baseline và toàn bộ migration đúng thứ tự, sau đó validate checksum trước khi các ứng dụng khởi động.
 
-Migration Việt hóa chỉ cập nhật giá trị tiếng Trung mặc định khi khớp chính xác. Các giá trị đã được quản trị viên tùy chỉnh được giữ nguyên và migration có thể chạy lại an toàn.
+Không chạy thủ công từng tệp trong `doc/sql` trên môi trường do Compose quản lý và không sửa migration lịch sử đã phát hành. Migration Việt hóa chỉ cập nhật giá trị tiếng Trung mặc định khi khớp chính xác, giữ nguyên dữ liệu đã tùy chỉnh.
 
 ## Cấu hình
 
@@ -91,16 +98,24 @@ Không ghi khóa API, mật khẩu hoặc khóa bí mật thật vào Git. Dùng
 
 ## Biên dịch và kiểm thử
 
-Biên dịch reactor chính bằng JDK 21:
+Biên dịch và kiểm thử toàn bộ reactor bằng JDK 21:
 
 ```bash
-mvn clean test
+mvn clean verify
 ```
 
-`novel-admin` dùng Spring Boot 2.7 và có thể kiểm tra riêng:
+`novel-admin` đã dùng Spring Boot 3.5 và nằm trong reactor trên. Khi cần kiểm tra riêng:
 
 ```bash
 mvn -f novel-admin/pom.xml clean test
+```
+
+Sau khi đăng nhập admin, đặc tả Springdoc ở `/v3/api-docs` và giao diện ở `/swagger-ui/index.html`; không mở hai đường dẫn này ngoài lớp kiểm soát truy cập của tên miền quản trị.
+
+Smoke Flyway, Redis, admin health và `/login` bằng Compose với secret tạm tự hủy:
+
+```powershell
+./scripts/smoke-admin-compose.ps1 -TimeoutSeconds 240
 ```
 
 Các kiểm tra i18n xác minh:
@@ -110,11 +125,25 @@ Các kiểm tra i18n xác minh:
 - Java, template và JavaScript first-party không chứa chuỗi Trung ngoài allowlist có giải thích;
 - locale mặc định cố định là `vi-VN`.
 
+Chạy bài tải Compose 500 người dùng đồng thời, gồm kiểm tra SLO và đối chiếu ledger/projection sau tải:
+
+```powershell
+./scripts/run-load-test.ps1 -VirtualUsers 500 -RampSeconds 30 `
+  -DurationSeconds 120 -ThinkTimeMs 1000 -TimeoutSeconds 600
+```
+
+Trạng thái nghiệm thu hiện tại là **kỹ thuật local/Compose đạt, chưa production-approved**. Phải hoàn
+tất smoke VNPAY/VietQR bằng credential thật và checklist pháp lý/vận hành trong
+[biên bản sẵn sàng production](doc/production-readiness-acceptance.md) trước khi nhận dữ liệu hoặc
+thanh toán production.
+
 ## Deploy bằng Docker Compose
 
-Bộ Compose khởi động MySQL 8.4, Redis 7, migration Việt hóa, cổng đọc, crawler và trang quản trị. Docker image ứng dụng được build trực tiếp từ source bằng JDK 21; không cần build JAR trước trên máy host.
+Bộ Compose khởi động MySQL 8.4, Redis 7, Flyway one-shot, front, crawler, trang quản trị, Prometheus, Alertmanager, Pushgateway, Grafana và Caddy. Docker image ứng dụng được build trực tiếp từ source bằng JDK 21; không cần build JAR trước trên máy host. Production chỉ publish Caddy ở cổng 80/443; MySQL loopback chỉ được bật rõ ràng bằng `compose.test.yaml` khi chạy integration test.
 
-1. Tạo tệp cấu hình riêng và thay toàn bộ giá trị `change-me`:
+CSP được enforce mặc định bằng nonce sinh riêng cho từng response; không bật `unsafe-inline` hoặc `unsafe-eval` cho script. Front, admin và crawler đều bảo vệ request ghi bằng CSRF token. Crawler phát cookie `XSRF-TOKEN` đọc được bởi JavaScript, có `Secure; SameSite=Lax` trong Compose production, và gửi token qua `X-XSRF-TOKEN`; không tắt CSRF để xử lý lỗi tích hợp.
+
+1. Tạo tệp cấu hình riêng, thư mục secret và các file được liệt kê tại [secrets/README.md](secrets/README.md):
 
    ```bash
    cp .env.example .env
@@ -136,22 +165,23 @@ Bộ Compose khởi động MySQL 8.4, Redis 7, migration Việt hóa, cổng đ
 
    ```bash
    docker compose ps --all
-   docker compose logs -f front crawl admin
+   docker compose logs -f migrate front crawl admin prometheus alertmanager grafana caddy
    ```
 
-Các địa chỉ mặc định:
+Các địa chỉ production lấy từ `.env`:
 
-- front: `http://localhost:8083`
-- crawler: `http://localhost:8081`
-- admin: `http://localhost:8080`
+- website: `https://${NOVEL_DOMAIN}`
+- crawler: `https://${NOVEL_CRAWL_DOMAIN}`
+- admin: `https://${NOVEL_ADMIN_DOMAIN}`
+- dashboard vận hành: `https://${NOVEL_GRAFANA_DOMAIN}`
 
-Tài khoản crawler lấy từ `CRAWLER_ADMIN_USERNAME` và `CRAWLER_ADMIN_PASSWORD` trong `.env`. Database mới có tài khoản quản trị seed `admin/admin`; phải đổi mật khẩu ngay sau lần đăng nhập đầu tiên.
+Username crawler lấy từ `CRAWLER_ADMIN_USERNAME`; password nằm trong file `crawler_admin_password`. Admin đầu tiên được bootstrap bằng `ADMIN_BOOTSTRAP_USERNAME` và file `admin_bootstrap_password`, dùng BCrypt và buộc đổi mật khẩu; không còn tài khoản production `admin/admin` hợp lệ.
 
 MySQL, Redis, ảnh tải lên và nội dung truyện dùng named volume nên được giữ lại khi chạy `docker compose down`. Lệnh `docker compose down -v` xóa toàn bộ volume và dữ liệu, chỉ dùng khi chủ động khởi tạo lại môi trường.
 
-Các migration từ `20260712_vi_localization.sql` đến `20260727_recommendation.sql` chạy như một service one-shot ở mỗi lần khởi động và có thể chạy lặp lại. Chúng bổ sung dữ liệu Việt hóa, hardening VNPAY, sổ cái kép, KYC/rút thu nhập, refund/chargeback/VietQR, kiểm duyệt-bản quyền, báo cáo-bảo mật, editor bản nháp, kiểu lưu SimHash nhất quán, queue kiểm duyệt bìa, analytics tác giả, tìm kiếm tiếng Việt, thông báo chương và index recommendation. Nếu database cũ đã có `out_trade_no` trùng, migration chủ động dừng để quản trị viên đối soát thay vì tự xóa hoặc gộp lịch sử. Khi nâng cấp từ phiên bản cũ hơn, vẫn phải chạy các migration trung gian theo [hướng dẫn SQL](doc/sql/readme.md).
+Flyway chạy baseline và 39 migration tăng dần, từ `20260712_vi_localization.sql` đến `20260817_author_payout_four_eyes.sql`, trong service one-shot trước các ứng dụng. Chuỗi migration bổ sung Việt hóa, bảo mật, thanh toán/sổ cái, thuê bao recurring, công cụ tác giả/độc giả và gamification. Không sửa checksum hoặc chạy lại SQL bằng shell loop. Nếu database cũ có dữ liệu không đáp ứng invariant, migration phải dừng để quản trị viên đối soát thay vì tự xóa hoặc gộp lịch sử. Xem thứ tự và quy tắc tại [hướng dẫn SQL](doc/sql/readme.md).
 
-Các khóa AI, VNPAY, OSS và email là tùy chọn, được đọc từ `.env`; không ghi khóa thật vào source hoặc image. IPN VNPAY phải được cấu hình tại cổng merchant thành `https://<ten-mien>/pay/vnpay/ipn`; URL này cần HTTPS công khai. Trong production nên đặt reverse proxy TLS phía trước ba cổng HTTP, dùng Docker secrets hoặc secret manager và sao lưu volume MySQL định kỳ.
+Các identifier/URL AI, VNPAY, OSS và email là tùy chọn trong `.env`; credential lõi, webhook checksum, mật khẩu Grafana và URL webhook Alertmanager nằm trong file secret, không ghi khóa thật vào source, image hay environment của container. IPN VNPAY phải được cấu hình thành `https://<ten-mien>/pay/vnpay/ipn`. Caddy tự cấp TLS, áp security header, giới hạn upload/rate cơ bản và chặn `/actuator/**` từ Internet; Prometheus chỉ scrape endpoint này trong network Compose. Backup profile tạo gói GPG AES-256 cho database và file. Quy trình giám sát, backup, restore drill và rollback nằm trong [runbook triển khai](doc/deployment.md).
 
 VietQR mặc định tắt và yêu cầu tài khoản nhận tiền thật cùng webhook secret tối thiểu 32 ký tự. NAPAS/payout ngân hàng không giả lập thành công khi chưa có hợp đồng adapter thật. Phát hành chứng từ cũng mặc định tắt cho tới khi cấu hình pháp nhân/MST và hoàn tất phê duyệt thuế; các báo cáo kỹ thuật không thay thế hóa đơn điện tử hợp pháp.
 
@@ -160,7 +190,7 @@ VietQR mặc định tắt và yêu cầu tài khoản nhận tiền thật cùn
 ```dotenv
 VNPAY_ENABLED=true
 VNPAY_TMN_CODE=ma_website_do_vnpay_cap
-VNPAY_HASH_SECRET=khoa_bi_mat_do_vnpay_cap
+# Ghi khóa bí mật do VNPAY cấp vào file secrets/vnpay_hash_secret.
 VNPAY_PAY_URL=https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
 VNPAY_RETURN_URL=https://ten-mien-cua-ban/pay/vnpay/return
 VNPAY_QUERY_URL=https://sandbox.vnpayment.vn/merchant_webapi/api/transaction
@@ -173,6 +203,24 @@ VNPAY_RECONCILIATION_INITIAL_DELAY_MS=60000
 VNPAY_RECONCILIATION_MIN_AGE_MINUTES=20
 VNPAY_RECONCILIATION_MAX_AGE_DAYS=30
 VNPAY_RECONCILIATION_BATCH_SIZE=50
+```
+
+VNPAY Recurring dùng bộ credential riêng và chỉ được bật khi VNPAY đã cấp dịch vụ. Ngoài endpoint
+đăng ký/thanh toán định kỳ, phải cấu hình QueryDr để cycle không xác định được đối soát trước khi thử
+nguồn fallback:
+
+```dotenv
+VNPAY_RECURRING_ENABLED=false
+VNPAY_RECURRING_BASE_URL=https://sandbox.vnpayment.vn
+VNPAY_RECURRING_PAY_URL=https://sandbox.vnpayment.vn/recurring-payment/pay
+VNPAY_RECURRING_QUERY_URL=https://sandbox.vnpayment.vn/merchant_webapi/api/transaction
+VNPAY_RECURRING_SERVER_IP=127.0.0.1
+VNPAY_RECURRING_QUERY_DELAY_MS=300000
+VNPAY_RECURRING_REVOCATION_DELAY_MS=60000
+VNPAY_RECURRING_REVOCATION_RETRY_DELAY_MS=300000
+VNPAY_RECURRING_REVOCATION_LEASE_MS=60000
+VNPAY_RECURRING_REVOCATION_BATCH_SIZE=50
+# Client/password/client secret/TmnCode/HashSecret Recurring do VNPAY cấp riêng.
 ```
 
 Khi chuyển sang production, thay cả `VNPAY_PAY_URL`, `VNPAY_QUERY_URL`, mã website, khóa bí mật và IP máy chủ bằng thông tin VNPAY production. Không dùng Return URL để cộng Xu; hệ thống chỉ ghi nhận tiền từ IPN hoặc QueryDr có chữ ký hợp lệ, đúng merchant, đúng mã đơn, đúng kênh và đúng số tiền. Số Xu được chốt ngay lúc tạo đơn nên thay đổi tỷ lệ sau đó không làm sai đơn đang chờ. QueryDr tự đối soát các đơn quá 20 phút khi IPN bị gián đoạn; nhiều replica giành quyền xử lý bằng optimistic update và cập nhật số dư vẫn có tính idempotent. Mã kênh VNPAY trong `order_pay.pay_channel` là `4`; các đơn từ cổng thanh toán cũ vẫn được giữ để đối soát lịch sử nhưng không còn endpoint hoặc giao diện tạo giao dịch mới qua cổng đó.
@@ -205,6 +253,14 @@ Thư mục `templates/<theme>` là nguồn theme. `novel-front` cung cấp lớp
 - `orange`
 - `dark`
 - `blue`
+
+Đóng gói một theme bằng lifecycle Maven đầy đủ:
+
+```powershell
+mvn -pl novel-front -am -Dtheme.name=green package
+```
+
+Có thể thay `green` bằng `orange`, `dark` hoặc `blue`. Pha `generate-resources` chủ động xóa riêng `target/classes/templates` và `target/classes/static` trước khi chép runtime base rồi ghi đè theme, vì vậy đổi theme liên tiếp không để lại file từ lần đóng gói trước. Không gọi trực tiếp `resources:resources` để đổi theme vì goal rời này bỏ qua pha chuẩn bị nói trên. Script phân phối được sao chép vào `target/build/bin` rồi mới chuẩn hóa line ending Unix; build không được phép sửa file trong `src/main/build/scripts`. Artifact `novel-front/target/build/novel-front.zip` chứa cả `Dockerfile`, JAR, cấu hình, script và bộ theme để có thể triển khai độc lập.
 
 Tiếng Việt là ngôn ngữ hiển thị mặc định. Catalog tiếng Trung chỉ được giữ làm fallback nội bộ; giao diện chưa cung cấp bộ chọn ngôn ngữ.
 

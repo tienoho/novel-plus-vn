@@ -43,10 +43,10 @@
 <div style="height: 50px;line-height: 50px;text-align: center" class="layui-header header header-doc  layui-bg-cyan">
 
     <div style="float: left;margin-left: 10px">
-        <a href="javascript:history.go(-1)">
+        <a href="#" data-csp-action="history-back">
             <i style="font-size: 20px;color: #92B8B1;" class="layui-icon">&#xe65c;</i></a>
     </div>
-    <a style="color: #ffffff;" th:href="'/book/'+ ${book.id} + '.html'"><b class="layui-icon" th:utext="${book.bookName}"></b></a>
+    <a style="color: #ffffff;" th:href="'/book/'+ ${book.id} + '.html'"><b class="layui-icon" th:text="${book.bookName}"></b></a>
     <div style="float: right;margin-right: 10px">
         <a href="/"><i style="font-size: 20px;color: #92B8B1;" class="layui-icon">&#xe68e;</i></a>
     </div>
@@ -61,7 +61,7 @@
 
 <div class="layui-colla-content layui-show indexP layui-row">
     <p class="line-limit-length layui-col-xs12 layui-col-sm4 layui-col-md3 layui-col-lg2" style="padding-left:10px;height: 50px;line-height: 50px;" th:each="index : ${bookIndexList}">
-        <a th:href="'/book/'+${index.bookId}+'/'+${index.id}+'.html'" th:utext="${index.indexName}">
+        <a th:href="'/book/'+${index.bookId}+'/'+${index.id}+'.html'" th:text="${index.indexName}">
 
         </a>
     </p>
@@ -81,12 +81,7 @@
     $("#content").css("min-height",($(window).height()-60)+"px");
     $.get("/book/addVisit",{"bookId":$("#bookIdHidden").val()},function(){});
     function toMyCollect(){
-        var token = localStorage.getItem("token");
-        if(token) {
-            window.location.href = "/book/search?token=" + token;
-        }else{
-            window.location.href = "/user/login.html";
-        }
+        window.location.href = "/user/favorites.html";
     }
 </script>
 

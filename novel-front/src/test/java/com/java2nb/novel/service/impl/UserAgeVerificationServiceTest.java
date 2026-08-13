@@ -7,6 +7,8 @@ import com.java2nb.novel.mapper.FrontUserMapper;
 import com.java2nb.novel.mapper.FrontUserReadHistoryMapper;
 import com.java2nb.novel.mapper.UserBuyRecordMapper;
 import com.java2nb.novel.mapper.UserFeedbackMapper;
+import com.java2nb.novel.mapper.BookIndexMapper;
+import com.java2nb.novel.service.chapter.ChapterCommercialPolicyService;
 import com.java2nb.novel.service.wallet.WalletLedgerService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -79,7 +81,13 @@ class UserAgeVerificationServiceTest {
             mock(UserFeedbackMapper.class),
             mock(UserBuyRecordMapper.class),
             mock(WalletLedgerService.class),
-            mock(AuthorIncomeProperties.class)
+            mock(AuthorIncomeProperties.class),
+            mock(BookIndexMapper.class),
+            mock(ChapterCommercialPolicyService.class),
+            mock(com.java2nb.novel.service.entitlement.ReadingTicketService.class),
+            mock(com.java2nb.novel.service.gamification.GamificationEventService.class),
+            mock(org.springframework.security.crypto.password.PasswordEncoder.class),
+            new com.java2nb.novel.core.security.RichTextSanitizer()
         );
     }
 }

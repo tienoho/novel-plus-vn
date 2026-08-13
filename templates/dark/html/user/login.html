@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title th:text="#{auth.loginOrRegister}">Đăng nhập hoặc đăng ký</title>
+    <title th:text="#{site.login}">Đăng nhập</title>
 
     <div th:include="common/css :: css"></div>
 
@@ -17,10 +17,10 @@
 <div style="height: 50px;line-height: 50px;text-align: center" class="layui-header header header-doc  layui-bg-cyan">
 
     <div style="float: left;margin-left: 10px">
-        <a href="javascript:history.go(-1)">
+        <a href="#" data-csp-action="history-back">
             <i style="font-size: 20px;color: #92B8B1;" class="layui-icon">&#xe65c;</i></a>
     </div>
-    <b class="layui-icon" th:text="#{auth.loginOrRegister}">Đăng nhập hoặc đăng ký</b>
+    <b class="layui-icon" th:text="#{site.login}">Đăng nhập</b>
     <div style="float: right;margin-right: 10px"><a href="/">
         <i style="font-size: 20px;color: #92B8B1;" class="layui-icon">&#xe68e;</i>
     </a>
@@ -40,11 +40,11 @@
         <div class="layui-input-inline">
             <input id="password" type="password" name="password" required lay-verify="required" th:placeholder="#{auth.password.required}" autocomplete="off" class="layui-input">
         </div>
-        <div class="layui-form-mid layui-word-aux" th:text="#{auth.autoRegisterNote}">Nếu tên đăng nhập chưa tồn tại, hệ thống sẽ tự động tạo tài khoản.</div>
+        <div class="layui-form-mid layui-word-aux"><a href="/user/register.html" th:text="#{auth.registerNow}">Đăng ký ngay</a></div>
     </div>
     <div class="layui-form-item">
         <div class="layui-input-block">
-            <button class="layui-btn" lay-submit lay-filter="formDemo" th:text="#{auth.loginOrRegister}">Đăng nhập hoặc đăng ký</button>
+            <button class="layui-btn" lay-submit lay-filter="formDemo" th:text="#{site.login}">Đăng nhập</button>
             <button type="reset" class="layui-btn layui-btn-primary" th:text="#{common.reset}">Đặt lại</button>
         </div>
     </div>
@@ -64,46 +64,53 @@
 </script>
 
 <script>
-    // Xử lý form đăng nhập hoặc đăng ký.
+    // Xử lý form đăng nhập bằng cookie HttpOnly do máy chủ thiết lập.
     layui.use('form', function(){
         var form = layui.form;
 
-        // Gửi form mà không thay đổi field API.
         form.on('submit(formDemo)', function(){
-            $.post("/user/loginOrRegist",{"bookId":$("#bookIdHidden").val(),"loginName":$("#loginName").val(),"password":$("#password").val()},function (data) {
-                if(data.code == 1 || data.code == 2){
-                    localStorage.setItem("token",data.token);
-                    layer.alert(data.desc);
-                    setTimeout(function () {
-                        var bookId = $("#bookIdHidden").val();
-                        if(bookId){
-                            // Quay lại trang truyện để tiếp tục thêm vào tủ sách.
-                            window.location.href="/book/"+bookId+".html";
-                        }else{
-                            // Mở tủ sách của người dùng.
-                            window.location.href="/book/search?token="+data.token;
-                        }
-                    },3000)
-
-                }else{
-                    layer.alert(data.desc);
+            $.ajax({
+                type: "POST",
+                url: "/user/login",
+                data: {"username": $("#loginName").val(), "password": $("#password").val()},
+                dataType: "json",
+                success: function (data) {
+                    if (data.code === 200) {
+                        window.location.href = loginRedirectPath();
+                    } else {
+                        layer.alert(data.msg || "");
+                    }
+                },
+                error: function () {
+                    layer.alert(/*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng');
                 }
             });
             return false;
         });
     });
+
+    function loginRedirectPath() {
+        var originUrl = getQueryVariable("originUrl");
+        if (originUrl) {
+            try {
+                var target = new URL(decodeURIComponent(originUrl), window.location.origin);
+                if (target.origin === window.location.origin) {
+                    return target.pathname + target.search + target.hash;
+                }
+            } catch (ignored) {
+                // Dùng đường dẫn an toàn bên dưới khi originUrl không hợp lệ.
+            }
+        }
+        var bookId = $("#bookIdHidden").val() || getQueryVariable("bookId");
+        return /^\d+$/.test(bookId || "") ? "/book/" + bookId + ".html" : "/user/favorites.html";
+    }
 </script>
 <script>
 
 
 
     function toMyCollect(){
-        var token = localStorage.getItem("token");
-        if(token) {
-            window.location.href = "/book/search?token=" + token;
-        }else{
-            window.location.href = "/user/login.html";
-        }
+        window.location.href = "/user/favorites.html";
     }
 </script>
 

@@ -14,7 +14,7 @@
         <div class="viewhistoryBox">
             <div class="my_bookshelf">
                 <div class="title cf">
-                    <h2 class="fl ml10"><a href="javascript:void(0);" class="red" th:text="#{user.recentReading}">Đọc gần đây</a></h2><i
+                    <h2 class="fl ml10"><span class="red" th:text="#{user.recentReading}">Đọc gần đây</span></h2><i
                         class="fl ml20 mr20 font16">|</i>
                     <h2 class="fl"><a href="/user/favorites.html" th:text="#{user.bookshelf}">Tủ sách</a></h2>
                 </div>
@@ -80,29 +80,9 @@
                 if (data.code == 200) {
                     var bookHistoryList = data.data.list;
                     if (bookHistoryList.length > 0) {
-                        var bookHistoryListHtml = "";
-                        for (var i = 0; i < bookHistoryList.length; i++) {
-                            var book = bookHistoryList[i];
-                            bookHistoryListHtml += (" <tr class=\"book_list\" vals=\"291\">\n" +
-                                "                            <td class=\"style bookclass\">\n" +
-                                "                                <a href=\"/book/bookclass.html?c=" + book.catId + "\" >[" + book.catName + "]</a>\n" +
-                                "                            </td>\n" +
-                                "                            <td class=\"name\">\n" +
-                                "                                <a href=\"/book/" + book.bookId + ".html\">\n" +
-                                "                                    " + book.bookName + "</a>\n" +
-                                "                            </td>\n" +
-                                "                            <td class=\"chapter\" valsc=\"291|2037554|1\">\n" +
-                                "<a href='/book/" + book.bookId + "/" + book.lastIndexId + ".html'>" + book.lastIndexName + "</a>" +
-                                "                            </td>\n" +
-                                "                            <td class=\"time\">\n" +
-                                "                                " + book.lastIndexUpdateTime + "\n" +
-                                "                            </td>\n" +
-                                "                            <td class=\"goread\">\n" +
-                                "<a href='/book/" + book.bookId + "/" + book.preContentId + ".html'>" + continueReadingText + "</a>" +
-                                "                            </td>\n" +
-                                "                        </tr>");
-                        }
-                        $("#bookHistoryList").html(bookHistoryListHtml);
+                        novelRenderBookTable("bookHistoryList", bookHistoryList, {
+                            continueText: continueReadingText
+                        });
 
                         layui.use('laypage', function () {
                             var laypage = layui.laypage;
@@ -139,7 +119,7 @@
                     location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
 
                 } else {
-                    layer.alert(data.msg);
+                    novelAlertText(data.msg);
                 }
 
             },

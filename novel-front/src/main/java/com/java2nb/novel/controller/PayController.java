@@ -1,8 +1,13 @@
 package com.java2nb.novel.controller;
 
 import com.java2nb.novel.core.bean.UserDetails;
+import com.java2nb.novel.core.config.VietQrProperties;
 import com.java2nb.novel.core.config.VnpayProperties;
 import com.java2nb.novel.core.i18n.Messages;
+import com.java2nb.novel.core.observability.NovelBusinessMetrics;
+import com.java2nb.novel.core.observability.NovelBusinessMetrics.Outcome;
+import com.java2nb.novel.core.observability.NovelBusinessMetrics.PaymentOperation;
+import com.java2nb.novel.core.observability.NovelBusinessMetrics.PaymentProvider;
 import com.java2nb.novel.core.utils.IpUtil;
 import com.java2nb.novel.service.OrderService;
 import com.java2nb.novel.service.PayOrderCreation;
@@ -14,7 +19,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,9 +33,9 @@ import com.java2nb.novel.common.annotation.AuditLog;
 import com.java2nb.novel.common.annotation.LimitType;
 import com.java2nb.novel.common.annotation.RateLimit;
 import com.java2nb.novel.core.payment.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.*;
 
 @Controller
@@ -43,43 +51,51 @@ public class PayController extends BaseController {
     private final VnpayService vnpayService;
     private final OrderService orderService;
     private final Messages messages;
-
-    @Autowired(required = false)
-    private PaymentAdapterFactory paymentAdapterFactory;
+    private final VietQrProperties vietQrProperties;
+    private final PaymentAdapterFactory paymentAdapterFactory;
+    private final NovelBusinessMetrics metrics;
 
     @ResponseBody
     @GetMapping("channels")
     public List<Map<String, Object>> listChannels() {
         List<Map<String, Object>> channels = new ArrayList<>();
         channels.add(Map.of("code", 4, "name", "VNPAY", "enabled", vnpayProperties.isConfigured()));
-        channels.add(Map.of("code", 5, "name", "VIETQR", "enabled", true));
+        channels.add(Map.of("code", 5, "name", "VIETQR", "enabled",
+            vietQrProperties.isConfigured() && paymentAdapterFactory.findAdapter(VIETQR_CHANNEL).isPresent()));
         return channels;
     }
 
-    @SneakyThrows
     @PostMapping("vnpay")
     @RateLimit(key = "vnpay", count = 10, timeWindowSeconds = 60, limitType = LimitType.USER)
     @AuditLog(module = "PAYMENT", eventType = "CREATE_VNPAY_ORDER", detail = "Tao don nap tien VNPAY")
-    public void vnpay(Integer payAmount, HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<?> vnpay(Integer payAmount, HttpServletRequest request) {
+        boolean jsonResponse = acceptsJson(request);
         UserDetails userDetails = getUserDetails(request);
         if (userDetails == null) {
-            response.sendRedirect("/user/login.html?originUrl=/pay/index.html");
-            return;
+            if (jsonResponse) {
+                return paymentError(HttpStatus.UNAUTHORIZED, messages.get("auth.login.required"), true);
+            }
+            return ResponseEntity.status(HttpStatus.FOUND)
+                .location(URI.create("/user/login.html?originUrl=/pay/index.html"))
+                .build();
         }
         if (!vnpayProperties.isConfigured()) {
-            response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, messages.get("payment.vnpay.unavailable"));
-            return;
+            return paymentError(HttpStatus.SERVICE_UNAVAILABLE, messages.get("payment.vnpay.unavailable"),
+                jsonResponse);
         }
         if (payAmount == null || !vnpayProperties.isAllowedAmount(payAmount)) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, messages.get("payment.amount.invalid"));
-            return;
+            return paymentError(HttpStatus.BAD_REQUEST, messages.get("payment.amount.invalid"), jsonResponse);
         }
 
         int accountAmount = vnpayProperties.calculateXu(payAmount);
         PayOrderCreation order = orderService.createPayOrder(VNPAY_CHANNEL, payAmount, accountAmount,
             userDetails.getId());
-        response.sendRedirect(vnpayService.createPaymentUrl(order.outTradeNo(), payAmount,
-            IpUtil.getRealIp(request), order.createTime()));
+        String paymentUrl = vnpayService.createPaymentUrl(order.outTradeNo(), payAmount,
+            IpUtil.getRealIp(request), order.createTime());
+        if (jsonResponse) {
+            return ResponseEntity.ok(Map.of("code", 200, "paymentUrl", paymentUrl));
+        }
+        return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(paymentUrl)).build();
     }
 
     @ResponseBody
@@ -89,22 +105,21 @@ public class PayController extends BaseController {
     public Map<String, Object> vietqr(@RequestParam("payAmount") Integer payAmount, HttpServletRequest request) {
         UserDetails userDetails = getUserDetails(request);
         if (userDetails == null) {
-            return Map.of("code", 401, "msg", "Chưa đăng nhập");
+            return Map.of("code", 401, "msg", message("auth.login.required", "Vui lòng đăng nhập trước"));
         }
-        if (payAmount == null || payAmount <= 0) {
-            return Map.of("code", 400, "msg", "Số tiền nạp không hợp lệ");
+        PaymentAdapter vietQrAdapter = paymentAdapterFactory.findAdapter(VIETQR_CHANNEL).orElse(null);
+        if (!vietQrProperties.isConfigured() || vietQrAdapter == null) {
+            metrics.recordPayment(PaymentProvider.VIETQR, PaymentOperation.WEBHOOK, Outcome.UNAVAILABLE);
+            return Map.of("code", 503, "msg", message("payment.vietqr.unavailable",
+                "VietQR chưa được cấu hình an toàn"));
+        }
+        if (payAmount == null || !vnpayProperties.isAllowedAmount(payAmount)) {
+            return Map.of("code", 400, "msg", message("payment.amount.invalid",
+                "Mệnh giá nạp không hợp lệ"));
         }
 
         int accountAmount = vnpayProperties.calculateXu(payAmount);
         PayOrderCreation order = orderService.createPayOrder(VIETQR_CHANNEL, payAmount, accountAmount, userDetails.getId());
-
-        PaymentAdapter vietQrAdapter = paymentAdapterFactory != null
-            ? paymentAdapterFactory.findAdapter(VIETQR_CHANNEL).orElse(null)
-            : null;
-
-        if (vietQrAdapter == null) {
-            return Map.of("code", 500, "msg", "PaymentAdapter VietQR chưa sẵn sàng");
-        }
 
         PaymentCreationRequest creationRequest = PaymentCreationRequest.builder()
             .outTradeNo(order.outTradeNo())
@@ -133,35 +148,33 @@ public class PayController extends BaseController {
         Map<String, String> headers = extractHeaders(request);
         Map<String, String> params = singleValueParams(request);
 
-        PaymentAdapter vietQrAdapter = paymentAdapterFactory != null
-            ? paymentAdapterFactory.findAdapter(VIETQR_CHANNEL).orElse(null)
-            : null;
-
-        WebhookVerifyResult verifyResult;
-        if (vietQrAdapter != null) {
-            verifyResult = vietQrAdapter.verifyAndParseWebhook(headers, params, body);
-        } else {
-            verifyResult = WebhookVerifyResult.builder().valid(true).outTradeNo(params.get("outTradeNo")).amountVnd(parseAmountVnd(params.get("amount"))).build();
+        PaymentAdapter vietQrAdapter = paymentAdapterFactory.findAdapter(VIETQR_CHANNEL).orElse(null);
+        if (!vietQrProperties.isConfigured() || vietQrAdapter == null) {
+            return Map.of("code", 503, "msg", message("payment.vietqr.unavailable",
+                "VietQR chưa được cấu hình an toàn"));
         }
+        WebhookVerifyResult verifyResult = vietQrAdapter.verifyAndParseWebhook(headers, params, body);
 
         if (!verifyResult.isValid()) {
+            metrics.recordPayment(PaymentProvider.VIETQR, PaymentOperation.WEBHOOK, Outcome.REJECTED);
             return Map.of("code", 401, "msg", verifyResult.getResponseMessage());
         }
 
         String outTradeNoStr = verifyResult.getOutTradeNo();
-        if (outTradeNoStr == null) {
+        if (outTradeNoStr == null || verifyResult.getBankTradeNo() == null
+            || verifyResult.getAmountVnd() == null || !verifyResult.isSuccessful()) {
+            metrics.recordPayment(PaymentProvider.VIETQR, PaymentOperation.WEBHOOK, Outcome.REJECTED);
             return Map.of("code", 400, "msg", "Missing outTradeNo");
         }
 
         try {
             long outTradeNo = Long.parseLong(outTradeNoStr);
-            String bankTradeNo = verifyResult.getBankTradeNo() != null ? verifyResult.getBankTradeNo() : "VQ" + System.currentTimeMillis();
+            String bankTradeNo = verifyResult.getBankTradeNo();
             Integer amountVnd = verifyResult.getAmountVnd();
-            if (amountVnd == null) {
-                amountVnd = 0;
-            }
 
             PayOrderUpdateResult result = orderService.processPayOrder(outTradeNo, bankTradeNo, VIETQR_CHANNEL, amountVnd, true);
+            metrics.recordPayment(PaymentProvider.VIETQR, PaymentOperation.WEBHOOK,
+                paymentOutcome(result));
             return switch (result) {
                 case SUCCESS -> Map.of("code", 200, "msg", "Confirm success");
                 case ALREADY_PROCESSED -> Map.of("code", 200, "msg", "Order already processed");
@@ -170,6 +183,7 @@ public class PayController extends BaseController {
                 case INVALID_ACCOUNT_AMOUNT -> Map.of("code", 500, "msg", "Invalid account amount");
             };
         } catch (Exception e) {
+            metrics.recordPayment(PaymentProvider.VIETQR, PaymentOperation.WEBHOOK, Outcome.FAILED);
             log.error("Không thể xử lý VietQR Webhook", e);
             return Map.of("code", 500, "msg", "Error processing webhook");
         }
@@ -218,12 +232,14 @@ public class PayController extends BaseController {
     public Map<String, String> vnpayIpn(HttpServletRequest request) {
         Map<String, String> params = singleValueParams(request);
         if (!vnpayService.verifySignature(params)) {
+            metrics.recordPayment(PaymentProvider.VNPAY, PaymentOperation.WEBHOOK, Outcome.REJECTED);
             return ipnResponse("97", "Invalid checksum");
         }
 
         try {
             Integer amountVnd = parseAmountVnd(params.get("vnp_Amount"));
             if (amountVnd == null) {
+                metrics.recordPayment(PaymentProvider.VNPAY, PaymentOperation.WEBHOOK, Outcome.REJECTED);
                 return ipnResponse("04", "Invalid amount");
             }
             long outTradeNo = Long.parseLong(params.get("vnp_TxnRef"));
@@ -233,6 +249,8 @@ public class PayController extends BaseController {
 
             PayOrderUpdateResult result = orderService.processPayOrder(outTradeNo, tradeNo, VNPAY_CHANNEL,
                 amountVnd, successful);
+            metrics.recordPayment(PaymentProvider.VNPAY, PaymentOperation.WEBHOOK,
+                paymentOutcome(result));
             return switch (result) {
                 case SUCCESS -> ipnResponse("00", "Confirm success");
                 case ALREADY_PROCESSED -> ipnResponse("02", "Order already confirmed");
@@ -241,6 +259,7 @@ public class PayController extends BaseController {
                 case INVALID_ACCOUNT_AMOUNT -> ipnResponse("99", "Invalid account amount");
             };
         } catch (RuntimeException exception) {
+            metrics.recordPayment(PaymentProvider.VNPAY, PaymentOperation.WEBHOOK, Outcome.FAILED);
             log.warn("Không thể xử lý IPN VNPAY", exception);
             return ipnResponse("99", "Unknown error");
         }
@@ -272,6 +291,28 @@ public class PayController extends BaseController {
         return Map.of("RspCode", code, "Message", message);
     }
 
+    private Outcome paymentOutcome(PayOrderUpdateResult result) {
+        return switch (result) {
+            case SUCCESS -> Outcome.SUCCESS;
+            case ALREADY_PROCESSED -> Outcome.ALREADY_PROCESSED;
+            case NOT_FOUND, INVALID_CHANNEL, INVALID_AMOUNT -> Outcome.REJECTED;
+            case INVALID_ACCOUNT_AMOUNT -> Outcome.FAILED;
+        };
+    }
+
+    private boolean acceptsJson(HttpServletRequest request) {
+        String accept = request.getHeader(HttpHeaders.ACCEPT);
+        return (accept != null && accept.contains(MediaType.APPLICATION_JSON_VALUE))
+            || "XMLHttpRequest".equals(request.getHeader("X-Requested-With"));
+    }
+
+    private ResponseEntity<?> paymentError(HttpStatus status, String message, boolean jsonResponse) {
+        if (jsonResponse) {
+            return ResponseEntity.status(status).body(Map.of("code", status.value(), "msg", message));
+        }
+        return ResponseEntity.status(status).body(message);
+    }
+
     private Integer parseAmountVnd(String rawAmountValue) {
         if (rawAmountValue == null) return null;
         try {
@@ -284,5 +325,10 @@ public class PayController extends BaseController {
         } catch (RuntimeException exception) {
             return null;
         }
+    }
+
+    private String message(String key, String fallback) {
+        String value = messages.get(key);
+        return value == null || value.isBlank() ? fallback : value;
     }
 }

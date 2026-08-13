@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head th:replace="common/header :: common_head(~{::title},~{},~{::link},~{})">
+    <title th:text="#{gift.page.title}+'_'+${application.website.name}">Đổi mã quà</title>
+    <link rel="stylesheet" href="/css/user.css"/>
+    <link rel="stylesheet" href="/css/gift-code.css"/>
+</head>
+<body>
+<div th:replace="common/top :: top('')"></div>
+<div class="main box_center cf">
+    <div class="userBox cf">
+        <nav class="my_l" th:aria-label="#{user.center}">
+            <ul class="log_list">
+                <li><a class="link_1" href="/user/userinfo.html" th:text="#{user.center}">Tài khoản của tôi</a></li>
+                <li><a class="link_4" href="/user/quests.html" th:text="#{gamification.page.nav}">Hành trình đọc</a></li>
+                <li><a class="link_4 on" href="/user/gift_codes.html" th:text="#{gift.page.nav}">Mã quà</a></li>
+                <li><a class="link_4" href="/user/favorites.html" th:text="#{user.bookshelf}">Tủ sách</a></li>
+                <li><a class="link_6" href="/user/comment.html" th:text="#{user.comments}">Bình luận của tôi</a></li>
+                <li><a class="link_7" href="/user/feedback_list.html" th:text="#{user.feedback}">Phản hồi của tôi</a></li>
+                <li><a class="link_8" href="/user/setup.html" th:text="#{user.settings}">Cài đặt tài khoản</a></li>
+            </ul>
+        </nav>
+        <main class="my_r gift-code-shell">
+            <section class="gift-code-heading">
+                <p class="gift-code-kicker" th:text="#{gift.page.kicker}">Quyền lợi độc giả</p>
+                <h1 th:text="#{gift.page.title}">Đổi mã quà</h1>
+                <p th:text="#{gift.page.description}">Nhập mã được tặng để nhận Xu hoặc Vé đọc.</p>
+            </section>
+            <section id="giftCodeApp" class="gift-code-card"
+                     data-endpoint="/user/gift-codes/redeem"
+                     data-history-endpoint="/user/gift-codes/redemptions"
+                     data-login-url="/user/login.html"
+                     th:data-action="#{gift.redeem.action}"
+                     th:data-redeeming="#{gift.redeem.redeeming}"
+                     th:data-success="#{gift.redeem.success}"
+                     th:data-already="#{gift.redeem.already}"
+                     th:data-invalid="#{gift.redeem.invalid}"
+                     th:data-failed="#{gift.redeem.failed}"
+                     th:data-network-error="#{gift.redeem.networkError}"
+                     th:data-history-loading="#{gift.history.loading}"
+                     th:data-history-empty="#{gift.history.empty}"
+                     th:data-history-failed="#{gift.history.failed}"
+                     th:data-history-campaign="#{gift.history.campaign}"
+                     th:data-history-code="#{gift.history.code}"
+                     th:data-history-receipt="#{gift.history.receipt}"
+                     th:data-history-previous="#{gift.history.previous}"
+                     th:data-history-next="#{gift.history.next}"
+                     th:data-xu-unit="#{gift.reward.xu}"
+                     th:data-ticket-unit="#{gift.reward.ticket}">
+                <form id="giftCodeForm" novalidate>
+                    <label class="gift-code-label" for="giftCodeInput" th:text="#{gift.code.label}">Mã quà</label>
+                    <input id="giftCodeInput" class="gift-code-input" name="code" type="text"
+                           autocomplete="off" autocapitalize="characters" spellcheck="false"
+                           minlength="16" maxlength="80" required
+                           th:placeholder="#{gift.code.placeholder}"/>
+                    <p class="gift-code-hint" th:text="#{gift.code.hint}">Có thể nhập mã có hoặc không có dấu gạch nối.</p>
+                    <button id="giftCodeSubmit" class="gift-code-submit" type="submit"
+                            th:text="#{gift.redeem.action}">Đổi mã</button>
+                </form>
+                <p id="giftCodeStatus" class="gift-code-status" role="status" aria-live="polite" hidden></p>
+            </section>
+            <section class="gift-code-history" aria-labelledby="giftCodeHistoryHeading">
+                <h2 id="giftCodeHistoryHeading" th:text="#{gift.history.title}">Lịch sử đổi mã</h2>
+                <p id="giftCodeHistoryStatus" class="gift-code-history-status" role="status" aria-live="polite"></p>
+                <div id="giftCodeHistoryList" class="gift-code-history-list"></div>
+                <nav class="gift-code-pagination" th:aria-label="#{gift.history.pagination}">
+                    <button id="giftCodeHistoryPrevious" type="button" th:text="#{gift.history.previous}">Trang trước</button>
+                    <button id="giftCodeHistoryNext" type="button" th:text="#{gift.history.next}">Trang sau</button>
+                </nav>
+            </section>
+        </main>
+    </div>
+</div>
+<div th:replace="common/footer :: footer"></div>
+<div th:replace="common/js :: js"></div>
+<script src="/javascript/gift-code.js" type="text/javascript"></script>
+</body>
+</html>

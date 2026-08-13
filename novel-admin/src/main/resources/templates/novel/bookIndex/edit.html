@@ -81,7 +81,7 @@
                                                    id="createTime"
                                                    name="createTime"
                                                    th:value="${bookIndex.createTime}==null?null:${#dates.format(bookIndex.createTime,'yyyy-MM-dd HH:mm:ss')}"
-                                                   onclick="laydate({istime: true, format: 'YYYY-MM-DD hh:mm:ss'})"
+                                                   data-admin-laydate="datetime"
                                                    style="background-color: #fff;" readonly="readonly"/>
                                                                             </div>
                                 </div>
@@ -92,7 +92,7 @@
                                                    id="updateTime"
                                                    name="updateTime"
                                                    th:value="${bookIndex.updateTime}==null?null:${#dates.format(bookIndex.updateTime,'yyyy-MM-dd HH:mm:ss')}"
-                                                   onclick="laydate({istime: true, format: 'YYYY-MM-DD hh:mm:ss'})"
+                                                   data-admin-laydate="datetime"
                                                    style="background-color: #fff;" readonly="readonly"/>
                                                                             </div>
                                 </div>

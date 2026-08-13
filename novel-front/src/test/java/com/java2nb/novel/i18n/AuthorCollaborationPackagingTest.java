@@ -14,7 +14,7 @@ class AuthorCollaborationPackagingTest {
     void runtimePageIsResponsiveUsesNaturalMessagesAndTextNodes() throws Exception {
         String page = read(Path.of("src/main/resources/templates/author/collaborators.html"));
         int headerScript = page.indexOf("<script src=\"/javascript/header.js\"></script>");
-        int commonScript = page.indexOf("<script src=\"/javascript/common.js\"></script>");
+        int commonScript = page.indexOf("<script src=\"/javascript/common.js?v=5\"></script>");
 
         assertThat(page)
             .contains("/author/books/", "/collaborators", "/access")
@@ -32,18 +32,28 @@ class AuthorCollaborationPackagingTest {
     void allExistingAuthorIndexOverlaysUseAccessFlagsAndOwnerOnlyLinks() throws Exception {
         Path module = Path.of("").toAbsolutePath().normalize();
         Path repository = module.getParent();
+        String script = read(module.resolve("src/main/resources/static/javascript/author-index-page.js"));
+        assertThat(script)
+            .contains("book.canEditBook === true")
+            .contains("book.canManageChapters === true || book.canPublishChapters === true")
+            .contains("book.canManageStory === true")
+            .contains("book.canViewAnalytics === true")
+            .contains("book.ownerAccess === true")
+            .contains("/author/collaborators.html?bookId=")
+            .contains("prev: messages.previous", "next: messages.next")
+            .contains("bookList.replaceChildren(fragment)", "processData: false", "contentType: false")
+            .doesNotContain(".html(", "onchange=", "ajaxFileUpload");
         for (Path path : new Path[] {
             module.resolve("src/main/resources/templates/author/index.html"),
             repository.resolve("templates/green/html/author/index.html"),
             repository.resolve("templates/orange/html/author/index.html")
         }) {
             assertThat(read(path))
-                .contains("book.canEditBook === true")
-                .contains("book.canManageChapters === true || book.canPublishChapters === true")
-                .contains("book.canManageStory === true")
-                .contains("book.canViewAnalytics === true")
-                .contains("book.ownerAccess === true")
-                .contains("/author/collaborators.html?bookId=");
+                .contains("/javascript/author-index-page.js")
+                .contains("data-collaborators=#{author.collaboration.open}")
+                .contains("data-previous-page=#{notification.previousPage}")
+                .contains("data-next-page=#{notification.nextPage}")
+                .doesNotContain("<script language=", "onchange=", ".html(");
         }
         assertThat(repository.resolve("templates/dark/html/author/index.html")).doesNotExist();
         assertThat(repository.resolve("templates/blue/html/author/index.html")).doesNotExist();
@@ -55,7 +65,7 @@ class AuthorCollaborationPackagingTest {
         String migration = read(repository.resolve("doc/sql/20260727_author_collaboration.sql"));
         String mapper = read(repository.resolve(
             "novel-front/src/main/resources/mybatis/mapping/AuthorBookCollaborationMapper.xml"));
-        String compose = read(repository.resolve("compose.yaml"));
+        String flywayImage = read(repository.resolve("deploy/flyway/Dockerfile"));
 
         assertThat(migration)
             .contains("CREATE TABLE IF NOT EXISTS `author_book_collaborator`")
@@ -66,7 +76,9 @@ class AuthorCollaborationPackagingTest {
             .contains("version = version + 1")
             .contains("version = #{expectedVersion}")
             .contains("b.author_id = #{actorAuthorId} OR c.id IS NOT NULL");
-        assertThat(compose).contains("/migrations/20260727_author_collaboration.sql");
+        assertThat(flywayImage).contains(
+            "COPY --chmod=0444 doc/sql/20260727_author_collaboration.sql "
+                + "/flyway/sql/V2026072703__author_collaboration.sql");
     }
 
     private String read(Path path) throws Exception {

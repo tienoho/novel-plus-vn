@@ -21,6 +21,32 @@
 19. `20260727_recommendation.sql` thêm index pool tác phẩm đã duyệt và index lịch sử mua theo tài khoản/tác phẩm. Migration chỉ tạo index còn thiếu, không sửa dữ liệu hành vi hoặc nội dung.
 20. `20260727_author_story_bible.sql` tạo kho tư liệu riêng tư theo tác phẩm cho dàn ý, nhân vật, địa điểm và dòng thời gian. Mọi thao tác runtime phải lọc đồng thời `author_id` và `book_id`; cột `version` chống ghi đè giữa nhiều tab.
 21. `20260727_author_collaboration.sql` tạo vai trò đồng tác giả/biên tập viên, sáu quyền theo tác phẩm, optimistic version và audit thay đổi quyền bất biến. Chủ sở hữu tác phẩm có toàn quyền ngầm định; migration không cấp quyền tài chính, KYC, bản quyền hoặc quản trị cộng tác viên.
+22. `20260727_reader_annotations.sql` tạo vị trí đọc đồng bộ theo tác phẩm và dấu trang/ghi chú riêng tư theo chương. Mọi thao tác annotation phải lọc `user_id`; optimistic version ngăn thiết bị cũ ghi đè ghi chú mới.
+23. `20260728_author_ai.sql` tạo provenance bất biến cho thao tác AI của tác giả. Bảng chỉ lưu hash SHA-256, độ dài, model và metadata quyền; không lưu bản thảo, story bible hoặc đầu ra AI dạng rõ.
+24. `20260728_chapter_commercial_policy.sql` tạo chính sách giá/mở khóa 1-1 theo chương và mở rộng bản nháp bằng các trường nullable. `book_index.book_price` vẫn là giá authoritative; migration chỉ backfill giá preview của bản nháp cũ và không tự thay đổi quyền đọc của chương đã xuất bản.
+25. `20260729_gamification_monthly_ticket.sql` tạo toàn bộ nền dữ liệu gamification: sổ cái Ngọn Đuốc với lô tiêu theo FIFO, giới hạn chống lạm dụng ở tầng database, kỳ xếp hạng cùng snapshot bất biến, quỹ thưởng tác giả, sổ sự kiện, nhiệm vụ, EXP và cảnh giới. Migration không backfill hồ sơ người dùng: hồ sơ được tạo lười khi dùng lần đầu, nên nâng cấp không đụng tới bảng `user`.
+
+    Ba điểm cần biết khi vận hành migration này:
+
+    - Sổ cái Ngọn Đuốc, phân bổ lô, sổ EXP, lần nhận thưởng nhiệm vụ và dòng xếp hạng đều bất biến, chặn bằng trigger `SIGNAL SQLSTATE '45000'`. Kỳ xếp hạng đã chốt không quay ngược được, và snapshot đã niêm phong không ghi đè được. Sửa sai chỉ có một đường là bút toán đảo.
+    - Ràng buộc `chk_mt_account_balance` cấm số dư Ngọn Đuốc âm. Đây là khác biệt cố ý so với ví Xu độc giả, nơi chargeback được phép tạo trạng thái nợ. Ngọn Đuốc không phải tài sản tài chính nên không có trạng thái nợ.
+    - Thưởng xếp hạng đi qua ví hệ thống `REWARD_CLEARING` trước khi vào `AUTHOR_REVENUE_XU`. Nhờ vậy bút toán thu hồi trong cửa sổ khiếu nại chỉ chạm hai ví hệ thống và không bao giờ đẩy ví tác giả xuống âm.
+
+    Toàn bộ tính năng mặc định tắt bằng cờ trong `novel.gamification`. Rollback đi bằng cờ tính năng, **không** bằng SQL đảo: bảng và dữ liệu được giữ nguyên để không mất khả năng kiểm toán. Chính sách và lý do chọn từng giá trị mặc định nằm ở `doc/gamification-policy-v1.md`; quy trình vận hành nằm ở `doc/gamification.md`.
+26. `20260730_reader_entitlements.sql` tạo tài khoản Vé đọc, lot có hạn tiêu theo FIFO, sổ cái/phân bổ bất biến và quyền đọc chương idempotent. Một người dùng chỉ có tối đa một entitlement `ACTIVE` cho mỗi chương; lịch sử mua chương bằng Xu và hợp đồng API hiện hữu không bị thay đổi bởi migration.
+27. `20260731_reader_subscriptions.sql` tạo catalog gói, trạng thái thuê bao có snapshot quyền lợi và biên nhận cấp Vé đọc theo kỳ bất biến. Migration không seed giá, không thu tiền và không tự kích hoạt thuê bao; mỗi người dùng chỉ có tối đa một thuê bao đang mở (`ACTIVE` hoặc `PAUSED`).
+28. `20260801_reader_subscription_admin.sql` thêm menu cùng quyền xem/cấu hình/kích hoạt thủ công; không seed plan thương mại.
+29. `20260802_gift_codes.sql` tạo campaign, code HMAC và redemption bất biến cho reward Xu/Vé đọc; không lưu plaintext code.
+30. `20260803_gift_code_revoke.sql` thêm quyền thu hồi code chưa sử dụng; không thay đổi hoặc xóa redemption/sổ cái.
+31. `20260804_reader_subscription_checkout.sql` thêm giá VND nullable cho catalog thuê bao. Migration không seed giá; plan cũ được giữ nguyên và chỉ plan có giá hợp lệ mới được mở bán.
+32. `20260805_reader_subscription_paid_review.sql` thêm trạng thái chuyển tiếp `REFUND_PENDING`, quyền xử lý riêng và audit bất biến cho đơn thuê bao đã thu tiền nhưng chưa thể kích hoạt. Migration không tự hoàn tiền và không sửa sổ cái.
+33. `20260806_gift_code_hmac_rotation.sql` gắn `hmac_key_id` cho mã quà cũ bằng giá trị `legacy-v1`, thêm index lookup theo khóa và trigger chặn sửa danh tính HMAC. Migration không re-hash và không cần plaintext.
+34. `20260807_vi_friend_link.sql` Việt hóa liên kết bạn bè seed còn sót bằng điều kiện khớp chính xác ID, URL và tên Trung mặc định; dữ liệu đã tùy chỉnh được giữ nguyên.
+35. `20260808_security_passwords.sql` vô hiệu hóa hash mật khẩu legacy và chuẩn bị bootstrap quản trị viên bằng BCrypt.
+36. `20260809_reading_subscription_recurring.sql` tạo mandate, cycle và attempt cho thuê bao tự gia hạn.
+37. Các migration `20260810`–`20260813` hoàn thiện kỳ đặc biệt, level reward, chống lạm dụng và chính sách gamification công khai.
+38. Các migration `20260814`–`20260816` bổ sung thu hồi, quản trị và idempotency mandate VNPAY Recurring.
+39. `20260817_author_payout_four_eyes.sql` lưu riêng người duyệt/người thực hiện, thêm check constraint maker-checker và tách quyền approve/execute. Yêu cầu legacy thiếu actor phase bị fail-closed để đối soát thủ công.
 
 ## Nâng cấp database đang hoạt động
 

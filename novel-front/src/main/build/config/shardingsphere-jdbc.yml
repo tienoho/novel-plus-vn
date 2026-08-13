@@ -12,8 +12,8 @@ dataSources:
     dataSourceClassName: com.zaxxer.hikari.HikariDataSource
     driverClassName: com.mysql.cj.jdbc.Driver
     jdbcUrl: jdbc:mysql://localhost:3306/novel_plus?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
-    username: root
-    password: test123456
+    username: '__DB_USERNAME__'
+    password: '__DB_PASSWORD__'
 # Cấu hình quy tắc
 rules:
   - !SINGLE

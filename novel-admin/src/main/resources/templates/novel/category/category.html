@@ -10,12 +10,12 @@
                 <div class="fixed-table-toolbar">
                     <div class="columns pull-left">
                         <button shiro:hasPermission="novel:category:add" type="button"
-                                class="btn  btn-primary" onclick="add()">
+                                class="btn  btn-primary" data-admin-action="add">
                             <i class="fa fa-plus" aria-hidden="true"></i><span th:text="#{common.add}">Thêm</span>
                         </button>
                         <button shiro:hasPermission="novel:category:batchRemove" type="button"
                                 class="btn  btn-danger"
-                                onclick="batchRemove()">
+                                data-admin-action="batch-remove">
                             <i class="fa fa-trash" aria-hidden="true"></i><span th:text="#{common.deleteAction}">Xóa</span>
                         </button>
                     </div>

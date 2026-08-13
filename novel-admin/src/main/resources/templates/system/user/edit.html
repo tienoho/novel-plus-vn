@@ -30,7 +30,7 @@
 									<input id="deptId" name="deptId" class="hidden" th:value="${user.deptId}">
 									 <input id="deptName" name="deptName"
 										class="form-control" type="text" style="cursor: pointer;"
-										onclick="openDept()" readonly="readonly" th:placeholder="#{admin.user.department}" placeholder="Phòng ban" th:value="${user.deptName}">
+										data-admin-action="open-department" readonly="readonly" th:placeholder="#{admin.user.department}" placeholder="Phòng ban" th:value="${user.deptName}">
 								</div>
 							</div>
 						<div class="form-group">

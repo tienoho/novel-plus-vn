@@ -1,6 +1,6 @@
 package com.java2nb.common.utils;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 public class HttpServletUtils {
     public static boolean jsAjax(HttpServletRequest req){

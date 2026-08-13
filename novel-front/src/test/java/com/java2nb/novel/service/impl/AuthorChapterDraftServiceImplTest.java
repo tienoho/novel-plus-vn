@@ -9,6 +9,7 @@ import com.java2nb.novel.service.BookService;
 import com.java2nb.novel.service.collaboration.AuthorBookAccess;
 import com.java2nb.novel.service.collaboration.AuthorBookCollaborationService;
 import com.java2nb.novel.service.collaboration.BookPermission;
+import com.java2nb.novel.service.chapter.ChapterCommercialPolicyService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -24,6 +25,7 @@ class AuthorChapterDraftServiceImplTest {
     private BookIndexMapper bookIndexMapper;
     private BookService bookService;
     private AuthorBookCollaborationService collaborationService;
+    private ChapterCommercialPolicyService commercialPolicyService;
     private AuthorChapterDraftServiceImpl service;
 
     @BeforeEach
@@ -32,8 +34,12 @@ class AuthorChapterDraftServiceImplTest {
         bookIndexMapper = mock(BookIndexMapper.class);
         bookService = mock(BookService.class);
         collaborationService = mock(AuthorBookCollaborationService.class);
+        commercialPolicyService = mock(ChapterCommercialPolicyService.class);
+        when(commercialPolicyService.calculateAutomaticPrice(anyInt())).thenReturn(5);
+        when(commercialPolicyService.resolveEffectivePrice(anyByte(), nullable(Integer.class), anyInt()))
+            .thenReturn(0);
         service = new AuthorChapterDraftServiceImpl(
-            draftMapper, bookIndexMapper, bookService, collaborationService);
+            draftMapper, bookIndexMapper, bookService, collaborationService, commercialPolicyService);
         AuthorBookAccess access = new AuthorBookAccess();
         access.setBookId(10L);
         access.setOwnerAuthorId(7L);
@@ -97,7 +103,9 @@ class AuthorChapterDraftServiceImplTest {
     void staleAutosaveVersionIsRejected() {
         AuthorChapterDraft current = draft(100L, "DRAFT", 2L);
         when(draftMapper.selectById(100L)).thenReturn(current);
-        when(draftMapper.updateAutosave(eq(100L), eq(7L), eq(1L), anyString(), anyString(), anyByte(), any()))
+        when(draftMapper.updateAutosave(eq(100L), eq(7L), eq(1L), anyString(), anyString(), anyByte(),
+            anyInt(), nullable(Integer.class), nullable(Date.class), nullable(Date.class), nullable(Date.class),
+            any()))
             .thenReturn(0);
 
         DraftAutosaveRequest input = input(100L, 1L);
@@ -173,6 +181,7 @@ class AuthorChapterDraftServiceImplTest {
         draft.setIndexName("Chương 1");
         draft.setContent("Nội dung");
         draft.setIsVip((byte) 0);
+        draft.setBookPrice(0);
         draft.setStatus(status);
         draft.setVersion(version);
         return draft;

@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -46,6 +47,8 @@ public class SysUserServiceImpl implements SysUserService {
     DeptService deptService;
     @Autowired
     Messages messages;
+    @Autowired
+    PasswordEncoder passwordEncoder;
     private static final Logger logger = LoggerFactory.getLogger(SysUserService.class);
 
     @Override
@@ -136,9 +139,11 @@ public class SysUserServiceImpl implements SysUserService {
 
     @Override
     public int resetPwd(UserVO userVO, UserDO userDO) throws Exception {
+        validateNewPassword(userVO.getPwdNew());
         if (Objects.equals(userVO.getUserDO().getUserId(), userDO.getUserId())) {
-            if (Objects.equals(MD5Utils.encrypt(userDO.getUsername(), userVO.getPwdOld()), userDO.getPassword())) {
-                userDO.setPassword(MD5Utils.encrypt(userDO.getUsername(), userVO.getPwdNew()));
+            if (passwordEncoder.matches(userVO.getPwdOld(), userDO.getPassword())) {
+                userDO.setPassword(passwordEncoder.encode(userVO.getPwdNew()));
+                userDO.setMustChangePassword(false);
                 return userMapper.update(userDO);
             } else {
                 throw new Exception(messages.get("error.oldPasswordInvalid"));
@@ -150,14 +155,24 @@ public class SysUserServiceImpl implements SysUserService {
 
     @Override
     public int adminResetPwd(UserVO userVO) throws Exception {
+        validateNewPassword(userVO.getPwdNew());
         UserDO userDO = get(userVO.getUserDO().getUserId());
         if ("admin".equals(userDO.getUsername())) {
             throw new Exception(messages.get("error.superAdminReset"));
         }
-        userDO.setPassword(MD5Utils.encrypt(userDO.getUsername(), userVO.getPwdNew()));
+        userDO.setPassword(passwordEncoder.encode(userVO.getPwdNew()));
+        userDO.setMustChangePassword(true);
         return userMapper.update(userDO);
 
 
+    }
+
+    private void validateNewPassword(String value) throws Exception {
+        if (value == null || value.length() < 12 || value.length() > 72
+            || value.toLowerCase(Locale.ROOT).contains("change-me")
+            || "admin".equalsIgnoreCase(value)) {
+            throw new Exception(messages.get("validation.password.strong"));
+        }
     }
 
     @Transactional

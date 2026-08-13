@@ -1,0 +1,34 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    stack: novel-plus-compose
+
+rule_files:
+  - /etc/prometheus/rules/*.yml
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: [alertmanager:9093]
+
+scrape_configs:
+  - job_name: novel-front
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: [front:8083]
+
+  - job_name: novel-admin
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: [admin:80]
+
+  - job_name: novel-crawl
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: [crawl:8081]
+
+  - job_name: pushgateway
+    honor_labels: true
+    static_configs:
+      - targets: [pushgateway:9091]

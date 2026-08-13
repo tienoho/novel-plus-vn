@@ -27,12 +27,14 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --gid 10001 novel \
     && useradd --uid 10001 --gid novel --home-dir /app --shell /usr/sbin/nologin novel \
-    && mkdir -p /app/config /data/pic /data/books \
+    && mkdir -p /app/config /data/pic /data/books /usr/local/lib/novel \
+    && chmod 0755 /usr/local/lib/novel \
     && chown -R novel:novel /app /data
 
 WORKDIR /app
 
 COPY --chmod=0755 deploy/docker/entrypoint.sh /usr/local/bin/novel-entrypoint
+COPY --chmod=0444 deploy/docker/validate-secrets.sh /usr/local/lib/novel/validate-secrets.sh
 COPY --chown=novel:novel deploy/docker/shardingsphere-jdbc.yml.template /opt/novel/shardingsphere-jdbc.yml.template
 
 ENV TZ=Asia/Ho_Chi_Minh \
@@ -41,6 +43,7 @@ ENV TZ=Asia/Ho_Chi_Minh \
 ENTRYPOINT ["/usr/local/bin/novel-entrypoint"]
 
 FROM runtime AS front
+ENV NOVEL_SERVICE_ROLE=front
 COPY --from=builder --chown=novel:novel /workspace/novel-front/target/novel-front-*.jar /app/app.jar
 COPY --from=builder --chown=novel:novel /workspace/packaged-themes /app/templates
 USER novel
@@ -49,6 +52,7 @@ HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=10 \
     CMD curl --fail --silent --show-error http://127.0.0.1:8083/ > /dev/null || exit 1
 
 FROM runtime AS crawl
+ENV NOVEL_SERVICE_ROLE=crawl
 COPY --from=builder --chown=novel:novel /workspace/novel-crawl/target/novel-crawl-*.jar /app/app.jar
 USER novel
 EXPOSE 8081
@@ -56,6 +60,7 @@ HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=10 \
     CMD curl --fail --silent --show-error http://127.0.0.1:8081/login.html > /dev/null || exit 1
 
 FROM runtime AS admin
+ENV NOVEL_SERVICE_ROLE=admin
 COPY --from=builder --chown=novel:novel /workspace/novel-admin/target/novel-admin-*.jar /app/app.jar
 USER novel
 EXPOSE 80

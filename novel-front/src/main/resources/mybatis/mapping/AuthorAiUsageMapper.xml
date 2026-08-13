@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.java2nb.novel.mapper.AuthorAiUsageMapper">
+    <insert id="insert" parameterType="com.java2nb.novel.service.ai.AuthorAiUsageRow"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO author_ai_usage
+            (book_id, owner_author_id, actor_author_id, draft_id, operation, model_name,
+             input_sha256, output_sha256, input_chars, output_chars, context_items)
+        VALUES
+            (#{bookId}, #{ownerAuthorId}, #{actorAuthorId}, #{draftId}, #{operation}, #{modelName},
+             #{inputSha256}, #{outputSha256}, #{inputChars}, #{outputChars}, #{contextItems})
+    </insert>
+</mapper>

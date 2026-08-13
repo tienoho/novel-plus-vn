@@ -1,9 +1,25 @@
 #Cổng
 server:
   port: 8088
+novel:
+  gift-code:
+    enabled: ${GIFT_CODE_ENABLED:false}
+    hmac-key-id: ${GIFT_CODE_HMAC_KEY_ID:legacy-v1}
+    hmac-secret: ${GIFT_CODE_HMAC_SECRET:disabled}
+    hmac-verification-keys: ${GIFT_CODE_HMAC_VERIFICATION_KEYS:}
+    policy-version: ${GIFT_CODE_POLICY_VERSION:v1}
+  reader-subscription:
+    activation-enabled: ${READING_SUBSCRIPTION_ADMIN_ACTIVATION_ENABLED:false}
+    policy-version: ${READING_TICKET_POLICY_VERSION:v1}
 spring:
   redis:
-    host: 127.0.0.1
-    port: 6379
-    password: test123456
+    host: ${SPRING_REDIS_HOST:127.0.0.1}
+    port: ${SPRING_REDIS_PORT:6379}
+    password: ${SPRING_REDIS_PASSWORD:}
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:127.0.0.1}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      password: ${SPRING_DATA_REDIS_PASSWORD:}
+      timeout: 10s
 

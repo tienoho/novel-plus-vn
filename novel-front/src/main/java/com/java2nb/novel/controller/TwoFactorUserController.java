@@ -4,11 +4,17 @@ import com.java2nb.novel.common.annotation.AuditLog;
 import com.java2nb.novel.common.entity.User2faDO;
 import com.java2nb.novel.common.service.TotpService;
 import com.java2nb.novel.core.enums.ResponseStatus;
+import com.java2nb.novel.core.bean.UserDetails;
+import com.java2nb.novel.core.utils.AuthCookieService;
+import com.java2nb.novel.core.utils.RefreshTokenSessionService;
+import com.java2nb.novel.entity.User;
+import com.java2nb.novel.service.UserService;
 import io.github.xxyopen.model.resp.RestResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +25,9 @@ import java.util.Map;
 public class TwoFactorUserController {
 
     private final TotpService totpService;
+    private final UserService userService;
+    private final RefreshTokenSessionService refreshTokenSessionService;
+    private final AuthCookieService authCookieService;
 
     @PostMapping("/api/2fa/setup")
     @AuditLog(module = "AUTH", eventType = "AUTH_2FA_SETUP", detail = "Khoi tao bi mat 2FA TOTP")
@@ -71,7 +80,8 @@ public class TwoFactorUserController {
 
     @PostMapping("/login/2fa")
     @AuditLog(module = "AUTH", eventType = "AUTH_2FA_CHALLENGE", detail = "Xac thuc buoc 2 2FA TOTP")
-    public RestResult login2fa(@RequestParam String preAuthToken, @RequestParam String code) {
+    public RestResult login2fa(@RequestParam String preAuthToken, @RequestParam String code,
+                               HttpServletResponse response) {
         Long userId = totpService.verifyPreAuthToken(preAuthToken);
         if (userId == null) {
             return RestResult.fail(ResponseStatus.VEL_CODE_ERROR);
@@ -81,6 +91,15 @@ public class TwoFactorUserController {
             return RestResult.fail(ResponseStatus.VEL_CODE_ERROR);
         }
 
+        User user = userService.userInfo(userId);
+        if (user == null) {
+            return RestResult.fail(ResponseStatus.NO_LOGIN);
+        }
+        UserDetails details = new UserDetails();
+        details.setId(userId);
+        details.setUsername(user.getUsername());
+        details.setNickName(user.getNickName());
+        authCookieService.write(response, refreshTokenSessionService.issue(details));
         Map<String, Object> data = new HashMap<>();
         data.put("userId", userId);
         data.put("authVerified", true);

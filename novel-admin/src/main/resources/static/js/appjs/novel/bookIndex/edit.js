@@ -84,7 +84,7 @@ function update() {
                 parent.layer.close(index);
 
             } else {
-                parent.layer.alert(data.msg)
+                parent.layer.alert(HtmlUtil.htmlEncode(data.msg || ""))
             }
 
         }

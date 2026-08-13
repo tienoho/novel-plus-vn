@@ -10,7 +10,15 @@ const TEXT_EXTENSIONS = new Set([
     ".css", ".gitignore", ".html", ".java", ".js", ".json", ".less", ".md",
     ".properties", ".sh", ".sql", ".txt", ".vm", ".vue", ".xml", ".yaml", ".yml"
 ]);
-const IGNORED_DIRECTORIES = new Set([".git", ".idea", "node_modules", "target"]);
+const IGNORED_DIRECTORIES = new Set([
+    ".auth",
+    ".git",
+    ".idea",
+    "node_modules",
+    "playwright-report",
+    "target",
+    "test-results"
+]);
 
 const wholeFileAllowRules = [
     {
@@ -56,10 +64,6 @@ function allowTokens(files, tokens) {
     for (const file of files) exactTokenAllowlist.set(file, tokens);
 }
 
-allowTokens([
-    "novel-crawl/src/main/java/com/java2nb/novel/controller/CrawlController.java",
-    "novel-crawl/src/main/resources/templates/crawl/crawlSource_test.html"
-], ["是否匹配", "匹配结果"]);
 allowTokens([
     "novel-crawl/src/main/java/com/java2nb/novel/core/crawl/CrawlParser.java"
 ], ["正在手打中"]);

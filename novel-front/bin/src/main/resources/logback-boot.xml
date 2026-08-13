@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- Lớp kết xuất dùng cho log màu -->
+    <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter" />
+    <conversionRule conversionWord="wex" converterClass="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter" />
+    <conversionRule conversionWord="wEx" converterClass="org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter" />
+    <!-- Định dạng log màu -->
+    <property name="CONSOLE_LOG_PATTERN" value="${CONSOLE_LOG_PATTERN:-%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}}" />
+
+    <!-- %m nội dung, %p cấp log, %t tên luồng, %d ngày, %c tên đầy đủ lớp, %i chỉ mục từ 0 -->
+    <!-- Appender là nút con của configuration và chịu trách nhiệm ghi log. -->
+    <!-- ConsoleAppender xuất log ra bảng điều khiển -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <!-- Bảng điều khiển phải dùng UTF-8, không dùng GBK để tránh lỗi mã hóa -->
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- RollingFileAppender ghi log cuộn; ghi vào tệp chỉ định rồi chuyển sang tệp khác khi thỏa điều kiện -->
+    <!-- 1. Lưu log theo ngày; khi đổi ngày, đổi tên tệp hôm trước theo mẫu XXX%ngày%chỉ_mục và tiếp tục ghi vào novel-front.log -->
+    <!-- 2. Nếu chưa đổi ngày nhưng tệp log vượt 10 MB, chia và đổi tên tệp hiện tại -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- Đặt đường dẫn tệp log -->
+        <file>logs/novel-front.log</file>
+        <!-- rollingPolicy quyết định hành vi RollingFileAppender khi cuộn, gồm di chuyển và đổi tên tệp. -->
+        <!-- SizeAndTimeBasedRollingPolicy là chính sách cuộn theo thời gian và kích thước tệp -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- Tên tệp đang hoạt động thay đổi định kỳ theo fileNamePattern -->
+            <!-- Tên tệp: logs/debug.2023-10-01.0.log -->
+            <fileNamePattern>logs/debug.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <!-- Mỗi tệp log được giữ trong 30 ngày -->
+            <maxHistory>30</maxHistory>
+            <!-- Kích thước tối đa của một tệp log -->
+            <maxFileSize>10MB</maxFileSize>
+            <!-- Giới hạn tổng kích thước mọi tệp log -->
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <!-- Nút pattern đặt định dạng log -->
+            <pattern>%d %p (%file:%line\)- %m%n</pattern>
+            <!-- Mã hóa log: đặt bộ ký tự tại đây - -->
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- Cấp log xuất ra bảng điều khiển -->
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE" />
+    </root>
+
+    <!-- Đặt cấp ghi log cho một package trong dự án -->
+    <!-- com.java2nb là package gốc; mọi thao tác log bên dưới dùng cấp DEBUG -->
+    <!-- Thứ tự cấp từ cao xuống thấp: FATAL > ERROR > WARN > INFO > DEBUG > TRACE -->
+    <logger name="com.java2nb" level="DEBUG" additivity="false">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE" />
+    </logger>
+</configuration>

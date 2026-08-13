@@ -22,13 +22,13 @@ function update() {
 		},
 		success : function(data) {
 			if (data.code == 0) {
-				parent.layer.msg(data.msg);
+				parent.layer.msg(HtmlUtil.htmlEncode(data.msg || ""));
 				parent.reLoad();
 				var index = parent.layer.getFrameIndex(window.name); // Lấy chỉ mục cửa sổ
 				parent.layer.close(index);
 
 			} else {
-				parent.layer.msg(data.msg);
+				parent.layer.msg(HtmlUtil.htmlEncode(data.msg || ""));
 			}
 
 		}

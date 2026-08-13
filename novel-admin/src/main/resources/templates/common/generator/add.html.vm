@@ -20,7 +20,7 @@
                                             <input type="text" class="laydate-icon layer-date form-control"
                                                    id="${column.attrname}"
                                                    name="${column.attrname}"
-                                                   onclick="laydate({istime: true, format: 'YYYY-MM-DD hh:mm:ss'})"
+                                                   data-admin-laydate="datetime"
                                                    style="background-color: #fff;" readonly="readonly"/>
                                         #elseif($column.pageType == 1)
                                             <input id="${column.attrname}" name="${column.attrname}"

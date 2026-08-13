@@ -33,6 +33,7 @@ public class WalletLedgerServiceImpl implements WalletLedgerService {
     private static final WalletRef PLATFORM_REVENUE = new WalletRef("SYSTEM", 0L, "PLATFORM_REVENUE");
     private static final WalletRef PAYOUT_CLEARING = new WalletRef("SYSTEM", 0L, "PAYOUT_CLEARING");
     private static final WalletRef REFUND_CLEARING = new WalletRef("SYSTEM", 0L, "REFUND_CLEARING");
+    private static final WalletRef REWARD_CLEARING = new WalletRef("SYSTEM", 0L, "REWARD_CLEARING");
 
     private final WalletLedgerMapper walletLedgerMapper;
 
@@ -63,6 +64,19 @@ public class WalletLedgerServiceImpl implements WalletLedgerService {
         entries.put(PLATFORM_REVENUE, platformAmount);
         return post("CHAPTER_PURCHASE", businessId, amount, idempotencyKey, "Mua chương truyện", entries, userId,
             null);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public WalletPostResult chargeReaderSubscription(long userId, long amount,
+                                                     String businessId,
+                                                     String idempotencyKey) {
+        requirePositive(amount, "Giá gia hạn thuê bao bằng Xu phải lớn hơn 0");
+        Map<WalletRef, Long> entries = new LinkedHashMap<>();
+        entries.put(readerWallet(userId), -amount);
+        entries.put(PLATFORM_REVENUE, amount);
+        return post("SUBSCRIPTION_RENEWAL", businessId, amount, idempotencyKey,
+            "Tự gia hạn thuê bao bằng Xu", entries, userId, null);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -196,6 +210,32 @@ public class WalletLedgerServiceImpl implements WalletLedgerService {
         entries.put(SYSTEM_ISSUANCE, amount);
         return post("AUTHOR_WITHDRAWAL_SETTLED", withdrawalNo, amount, idempotencyKey,
             "Tất toán Xu sau khi đã chuyển khoản tác giả", entries, null, null);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public WalletPostResult creditAuthorRewardPending(long authorId, long amount, String allocationNo,
+                                                      String idempotencyKey, String description) {
+        requirePositive(amount, "Số Xu thưởng tác giả phải lớn hơn 0");
+        requireAllocationMatchesAuthor(allocationNo, authorId);
+        Map<WalletRef, Long> entries = new LinkedHashMap<>();
+        entries.put(SYSTEM_ISSUANCE, -amount);
+        entries.put(REWARD_CLEARING, amount);
+        return post("MONTHLY_AUTHOR_REWARD", allocationNo, amount, idempotencyKey, description,
+            entries, null, null);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public WalletPostResult releaseAuthorReward(long authorId, long amount, String allocationNo,
+                                                String idempotencyKey, String description) {
+        requirePositive(amount, "Số Xu thưởng tác giả phải lớn hơn 0");
+        requireAllocationMatchesAuthor(allocationNo, authorId);
+        Map<WalletRef, Long> entries = new LinkedHashMap<>();
+        entries.put(REWARD_CLEARING, -amount);
+        entries.put(authorWallet(authorId), amount);
+        return post("MONTHLY_AUTHOR_REWARD_RELEASE", allocationNo, amount, idempotencyKey,
+            description, entries, null, null);
     }
 
     @Override
@@ -376,6 +416,27 @@ public class WalletLedgerServiceImpl implements WalletLedgerService {
     private void requireText(String value, String message) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException(message);
+        }
+    }
+
+    private void requireAllocationMatchesAuthor(String allocationNo, long authorId) {
+        requireText(allocationNo, "Thiếu mã phân bổ thưởng tác giả");
+        if (authorId <= 0) {
+            throw new IllegalArgumentException("Mã tác giả nhận thưởng không hợp lệ");
+        }
+        String[] parts = allocationNo.split(":", -1);
+        if (parts.length != 4 || !parts[0].matches("\\d{4}-(0[1-9]|1[0-2])")) {
+            throw new IllegalArgumentException("Mã phân bổ thưởng tác giả không hợp lệ");
+        }
+        try {
+            long bookId = Long.parseLong(parts[1]);
+            int rank = Integer.parseInt(parts[2]);
+            long allocationAuthorId = Long.parseLong(parts[3]);
+            if (bookId <= 0 || rank <= 0 || allocationAuthorId != authorId) {
+                throw new IllegalArgumentException("Mã phân bổ không khớp tác giả nhận thưởng");
+            }
+        } catch (NumberFormatException exception) {
+            throw new IllegalArgumentException("Mã phân bổ thưởng tác giả không hợp lệ", exception);
         }
     }
 

@@ -49,7 +49,7 @@
                                 <li><textarea rows="20" cols="100" id="resultMap"></textarea></li>
 
 
-                                <li><input type="button" onclick="testCrawlSource()" name="btnRegister" th:value="#{crawl.test.action}" value="Kiểm thử"
+                                <li><input type="button" name="btnRegister" th:value="#{crawl.test.action}" value="Kiểm thử"
                                            id="btnRegister" class="btn_red"></li>
                             </ul>
                         </div>
@@ -81,6 +81,8 @@
         $("#rule").val(testParseRule);
     }
 
+    $("#btnRegister").on("click", testCrawlSource);
+
     function testCrawlSource() {
 
         var data = {};
@@ -111,13 +113,13 @@
             success: function (data) {
                 if (data.code == 200) {
                     var displayResult = {};
-                    displayResult[crawlMessages.matchStatus] = data.data['是否匹配'];
-                    if (Object.prototype.hasOwnProperty.call(data.data, '匹配结果')) {
-                        displayResult[crawlMessages.matchResult] = data.data['匹配结果'];
+                    displayResult[crawlMessages.matchStatus] = data.data.matched;
+                    if (Object.prototype.hasOwnProperty.call(data.data, 'matchResult')) {
+                        displayResult[crawlMessages.matchResult] = data.data.matchResult;
                     }
                     $("#resultMap").val(JSON.stringify(displayResult));
                 } else {
-                    layer.alert(data.msg);
+                    layer.alert(crawlEscapeHtml(data.msg || ""));
                 }
 
             },

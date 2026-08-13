@@ -22,6 +22,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class MessageCatalogTest {
 
@@ -32,13 +33,9 @@ class MessageCatalogTest {
         "crawl/crawlSource_add.html", new AllowedHan(RULE_TOKENS,
             "Token trong regex và giá trị trạng thái mẫu của website nguồn Trung Quốc."),
         "crawl/crawlSource_update.html", new AllowedHan(RULE_TOKENS,
-            "Token trong regex và giá trị trạng thái mẫu của website nguồn Trung Quốc."),
-        "crawl/crawlSource_test.html", new AllowedHan(Set.of("是否匹配", "匹配结果"),
-            "Tên field phản hồi API cũ được giữ để bảo toàn hợp đồng; UI ánh xạ sang nhãn Việt.")
+            "Token trong regex và giá trị trạng thái mẫu của website nguồn Trung Quốc.")
     );
     private static final Map<String, AllowedHan> JAVA_ALLOWLIST = Map.of(
-        "com/java2nb/novel/controller/CrawlController.java",
-        new AllowedHan(Set.of("是否匹配", "匹配结果"), "Tên field phản hồi API cũ."),
         "com/java2nb/novel/core/crawl/CrawlParser.java",
         new AllowedHan(Set.of("正在手打中"), "Dấu hiệu nội dung chưa hoàn tất trên website nguồn.")
     );
@@ -69,6 +66,21 @@ class MessageCatalogTest {
     @Test
     void javaContainsOnlyDocumentedContractOrSourceTokens() throws Exception {
         scan(Path.of("src/main/java"), JAVA_ALLOWLIST, ".java");
+    }
+
+    @Test
+    void crawlRuleTestUsesNeutralResponseKeysEndToEnd() throws Exception {
+        String controller = Files.readString(
+            Path.of("src/main/java/com/java2nb/novel/controller/CrawlController.java"),
+            StandardCharsets.UTF_8);
+        String template = Files.readString(
+            Path.of("src/main/resources/templates/crawl/crawlSource_test.html"),
+            StandardCharsets.UTF_8);
+
+        assertTrue(controller.contains("resultMap.put(\"matched\", isFind)"));
+        assertTrue(controller.contains("resultMap.put(\"matchResult\", matcher.group(1))"));
+        assertTrue(template.contains("data.data.matched"));
+        assertTrue(template.contains("data.data.matchResult"));
     }
 
     private void scan(Path root, Map<String, AllowedHan> allowlist, String extension) throws IOException {

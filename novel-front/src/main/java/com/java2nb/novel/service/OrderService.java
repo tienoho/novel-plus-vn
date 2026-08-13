@@ -1,5 +1,6 @@
 package com.java2nb.novel.service;
 
+import com.java2nb.novel.service.subscription.ReadingSubscriptionCheckoutOptions;
 import java.util.Date;
 import java.util.List;
 
@@ -19,6 +20,17 @@ public interface OrderService {
      * @return mã đơn thương nhân
      */
     PayOrderCreation createPayOrder(Byte payChannel, Integer payAmount, Integer accountAmount, Long userId);
+
+    /** Tạo đơn mua một kỳ thuê bao từ snapshot plan phía server. */
+    default ReadingSubscriptionCheckoutCreation createSubscriptionCheckout(
+        byte payChannel, long userId, String planCode, String clientRequestId) {
+        return createSubscriptionCheckout(payChannel, userId, planCode, clientRequestId,
+            ReadingSubscriptionCheckoutOptions.oneOff(1));
+    }
+
+    ReadingSubscriptionCheckoutCreation createSubscriptionCheckout(
+        byte payChannel, long userId, String planCode, String clientRequestId,
+        ReadingSubscriptionCheckoutOptions options);
 
     /**
      * Đối chiếu dữ liệu VNPAY trả về với đơn đã lưu mà không thay đổi trạng thái đơn.

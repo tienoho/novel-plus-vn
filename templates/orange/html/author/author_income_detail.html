@@ -110,7 +110,7 @@
 <script src="/layui/layui.all.js" type="text/javascript"></script>
 <script src="/javascript/header.js" type="text/javascript"></script>
 <script src="/javascript/user.js" type="text/javascript"></script>
-<script src="/javascript/common.js" type="text/javascript"></script>
+<script src="/javascript/common.js?v=5" type="text/javascript"></script>
 
 <script language="javascript" type="text/javascript" th:inline="javascript">
     const currencyText = /*[[#{payment.currency}]]*/ 'Xu';
@@ -135,23 +135,18 @@
                 if (data.code == 200) {
                     var bookList = data.data.list;
                     if (bookList.length > 0) {
-                        var bookListHtml = "";
+                        var incomeRows = document.createDocumentFragment();
                         for (var i = 0; i < bookList.length; i++) {
                             var book = bookList[i];
-                            bookListHtml += (" <tr class=\"book_list\" >\n" +
-                                "                            <td class=\"goread\">\n" +
-                                "                                " + book.incomeDate + "</td>\n" +
-                                "                            <td class=\"goread\" >"
-                                + book.incomeAccount + " " + currencyText + "</td>\n" +
-                                "                            <td class=\"goread\">\n" +
-                                "                                " + book.incomeCount + "\n" +
-                                "                            </td>\n" +
-                                "                            <td class=\"goread\">" + book.incomeNumber +
-                                "                            </td>\n" +
-
-                                " </tr>");
+                            var row = NovelSafeDom.element("tr", "book_list");
+                            row.appendChild(NovelSafeDom.element("td", "goread", book.incomeDate));
+                            row.appendChild(NovelSafeDom.element("td", "goread",
+                                NovelSafeDom.text(book.incomeAccount) + " " + currencyText));
+                            row.appendChild(NovelSafeDom.element("td", "goread", book.incomeCount));
+                            row.appendChild(NovelSafeDom.element("td", "goread", book.incomeNumber));
+                            incomeRows.appendChild(row);
                         }
-                        $("#bookList").html(bookListHtml);
+                        document.getElementById("bookList").replaceChildren(incomeRows);
 
                         layui.use('laypage', function () {
                             var laypage = layui.laypage;
@@ -188,7 +183,7 @@
                     location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
 
                 } else {
-                    layer.alert(data.msg);
+                    novelAlertText(data.msg);
                 }
 
             },
@@ -218,7 +213,7 @@
                     location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
 
                 } else {
-                    layer.alert(data.msg);
+                    novelAlertText(data.msg);
                 }
 
             },

@@ -18,7 +18,7 @@
 							<label class="col-sm-3 control-label" th:text="#{admin.user.password}+'：'">Mật khẩu:</label>
 							<div class="col-sm-8">
 								<input id="password" name="pwdNew" class="form-control"
-									type="password" value="111111">
+									type="password">
 							</div>
 						</div>
 						<div class="form-group">
@@ -36,6 +36,7 @@
 
 	<!-- JavaScript dùng chung. -->
 	<script src="/js/jquery.min.js?v=2.1.4"></script>
+	<script src="/js/csrf.js"></script>
 	<script src="/js/bootstrap.min.js?v=3.3.6"></script>
 
 	<!-- JavaScript của ứng dụng. -->
@@ -52,7 +53,7 @@
 		const resetPasswordMessages = {
 			systemContact: /*[[#{admin.system.contact}]]*/ 'Đã xảy ra lỗi hệ thống, vui lòng liên hệ quản trị viên',
 			passwordRequired: /*[[#{admin.user.password.required}]]*/ 'Vui lòng nhập mật khẩu',
-			passwordMinlength: /*[[#{admin.user.password.minlength5}]]*/ 'Mật khẩu phải có ít nhất 5 ký tự'
+			passwordMinlength: /*[[#{admin.user.password.minlength12}]]*/ 'Mật khẩu phải có ít nhất 12 ký tự'
 		};
 		$(document).ready(function() {
 			validateRule();
@@ -75,13 +76,13 @@
 				},
 				success : function(data) {
 					if (data.code == 0) {
-						parent.layer.msg(data.msg);
+						parent.layer.msg(HtmlUtil.htmlEncode(data.msg || ""));
 						parent.reLoad();
 						var index = parent.layer.getFrameIndex(window.name); // Lấy chỉ mục cửa sổ.
 						parent.layer.close(index);
 
 					} else {
-						parent.layer.msg(data.msg);
+						parent.layer.msg(HtmlUtil.htmlEncode(data.msg || ""));
 					}
 
 				}
@@ -96,7 +97,7 @@
 
 					password : {
 						required : true,
-						minlength : 5
+						minlength : 12
 					}
 				},
 				messages : {

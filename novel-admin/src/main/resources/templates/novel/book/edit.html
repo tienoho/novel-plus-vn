@@ -216,7 +216,7 @@
                                                    id="lastIndexUpdateTime"
                                                    name="lastIndexUpdateTime"
                                                    th:value="${book.lastIndexUpdateTime}==null?null:${#dates.format(book.lastIndexUpdateTime,'yyyy-MM-dd HH:mm:ss')}"
-                                                   onclick="laydate({istime: true, format: 'YYYY-MM-DD hh:mm:ss'})"
+                                                   data-admin-laydate="datetime"
                                                    style="background-color: #fff;" readonly="readonly"/>
                                                                             </div>
                                 </div>
@@ -245,7 +245,7 @@
                                                    id="updateTime"
                                                    name="updateTime"
                                                    th:value="${book.updateTime}==null?null:${#dates.format(book.updateTime,'yyyy-MM-dd HH:mm:ss')}"
-                                                   onclick="laydate({istime: true, format: 'YYYY-MM-DD hh:mm:ss'})"
+                                                   data-admin-laydate="datetime"
                                                    style="background-color: #fff;" readonly="readonly"/>
                                                                             </div>
                                 </div>
@@ -256,7 +256,7 @@
                                                    id="createTime"
                                                    name="createTime"
                                                    th:value="${book.createTime}==null?null:${#dates.format(book.createTime,'yyyy-MM-dd HH:mm:ss')}"
-                                                   onclick="laydate({istime: true, format: 'YYYY-MM-DD hh:mm:ss'})"
+                                                   data-admin-laydate="datetime"
                                                    style="background-color: #fff;" readonly="readonly"/>
                                                                             </div>
                                 </div>
@@ -285,7 +285,7 @@
                                                    id="crawlLastTime"
                                                    name="crawlLastTime"
                                                    th:value="${book.crawlLastTime}==null?null:${#dates.format(book.crawlLastTime,'yyyy-MM-dd HH:mm:ss')}"
-                                                   onclick="laydate({istime: true, format: 'YYYY-MM-DD hh:mm:ss'})"
+                                                   data-admin-laydate="datetime"
                                                    style="background-color: #fff;" readonly="readonly"/>
                                                                             </div>
                                 </div>

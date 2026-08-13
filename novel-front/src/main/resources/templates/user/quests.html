@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head th:replace="common/header :: common_head(~{::title},~{},~{::link},~{})">
+    <title th:text="#{gamification.page.title}+'_'+${application.website.name}">Hành trình đọc</title>
+    <link rel="stylesheet" href="/css/user.css"/>
+    <link rel="stylesheet" href="/css/gamification.css?v=4"/>
+</head>
+<body>
+<div th:replace="common/top :: top('')"></div>
+<div class="main box_center cf">
+    <div class="userBox cf">
+        <nav class="my_l" th:aria-label="#{user.center}">
+            <ul class="log_list">
+                <li><a class="link_1" href="/user/userinfo.html" th:text="#{user.center}">Tài khoản của tôi</a></li>
+                <li><a class="link_4 on" href="/user/quests.html" th:text="#{gamification.page.nav}">Hành trình đọc</a></li>
+                <li><a class="link_4" href="/user/favorites.html" th:text="#{user.bookshelf}">Tủ sách</a></li>
+                <li><a class="link_6" href="/user/comment.html" th:text="#{user.comments}">Bình luận của tôi</a></li>
+                <li><a class="link_7" href="/user/feedback_list.html" th:text="#{user.feedback}">Phản hồi của tôi</a></li>
+                <li><a class="link_8" href="/user/setup.html" th:text="#{user.settings}">Cài đặt tài khoản</a></li>
+            </ul>
+        </nav>
+        <main class="my_r gamification-shell">
+            <section class="gamification-heading">
+                <p class="gamification-kicker" th:text="#{gamification.page.kicker}">Tiến độ cá nhân</p>
+                <h1 th:text="#{gamification.page.title}">Hành trình đọc</h1>
+                <p th:text="#{gamification.page.subtitle}">Hoàn thành nhiệm vụ để tích lũy EXP và Ngọn Đuốc.</p>
+            </section>
+            <div id="gamificationApp" class="gamification-app"
+                 data-login-url="/user/login.html"
+                 th:data-loading="#{gamification.loading}"
+                 th:data-load-error="#{gamification.loadError}"
+                 th:data-empty="#{gamification.quest.empty}"
+                 th:data-claim="#{gamification.quest.claim}"
+                 th:data-claiming="#{gamification.quest.claiming}"
+                 th:data-claimed="#{gamification.quest.claimed}"
+                 th:data-incomplete="#{gamification.quest.incomplete}"
+                 th:data-claim-success="#{gamification.quest.claimSuccess}"
+                 th:data-level="#{gamification.profile.level}"
+                 th:data-exp="#{gamification.profile.exp}"
+                 th:data-next-level="#{gamification.profile.nextLevel}"
+                 th:data-realm="#{gamification.profile.realm}"
+                 th:data-streak="#{gamification.profile.streak}"
+                 th:data-exp-unit="#{gamification.reward.exp}"
+                 th:data-ticket-unit="#{gamification.reward.ticket}"
+                 th:data-check-in="#{gamification.checkIn.action}"
+                 th:data-checking-in="#{gamification.checkIn.checking}"
+                 th:data-checked-in="#{gamification.checkIn.checked}"
+                 th:data-check-in-success="#{gamification.checkIn.success}"
+                 th:data-check-in-already="#{gamification.checkIn.already}"
+                 th:data-check-in-next="#{gamification.checkIn.next}"
+                 th:data-realm-empty="#{gamification.realm.empty}"
+                 th:data-realm-nhap-mon="#{gamification.realm.nhapMon}"
+                 th:data-realm-tien-phong="#{gamification.realm.tienPhong}"
+                 th:data-realm-dai-su="#{gamification.realm.daiSu}"
+                 th:data-realm-ton-gia="#{gamification.realm.tonGia}"
+                 th:data-realm-chi-ton="#{gamification.realm.chiTon}"
+                 th:data-ticker-opt-out-saving="#{gamification.ticker.optOut.saving}"
+                 th:data-ticker-opt-out-save-failed="#{gamification.ticker.optOut.saveFailed}">
+                <div id="gamificationStatus" class="gamification-status" role="status" aria-live="polite"
+                     th:text="#{gamification.loading}">Đang tải hành trình...</div>
+                <section id="gamificationCheckIn" class="gamification-check-in"
+                         th:aria-labelledby="checkInHeading">
+                    <div>
+                        <h2 id="checkInHeading" th:text="#{gamification.checkIn.title}">Điểm danh hằng ngày</h2>
+                        <p th:text="#{gamification.checkIn.subtitle}">Duy trì chuỗi điểm danh để nhận EXP.</p>
+                        <p id="checkInMessage" class="gamification-check-in-message" aria-live="polite"></p>
+                    </div>
+                    <button id="checkInButton" class="gamification-check-in-button" type="button"
+                            th:text="#{gamification.checkIn.action}">Điểm danh ngay</button>
+                </section>
+                <section id="gamificationProfile" class="gamification-profile" hidden
+                         th:aria-label="#{gamification.profile.title}">
+                    <div class="gamification-stat"><span th:text="#{gamification.profile.level}">Cấp độ</span><strong id="profileLevel">0</strong></div>
+                    <div class="gamification-stat"><span th:text="#{gamification.profile.exp}">EXP</span><strong id="profileExp">0</strong></div>
+                    <div class="gamification-stat"><span th:text="#{gamification.profile.realm}">Cảnh giới</span><strong id="profileRealm">-</strong></div>
+                    <div class="gamification-stat"><span th:text="#{gamification.profile.streak}">Chuỗi điểm danh</span><strong id="profileStreak">0</strong></div>
+                </section>
+                <section class="gamification-ticker-preference" aria-labelledby="gamificationTickerOptOutHeading">
+                    <div>
+                        <h2 id="gamificationTickerOptOutHeading" th:text="#{gamification.ticker.optOut.title}">Hiển thị trên bảng chạy</h2>
+                        <p th:text="#{gamification.ticker.optOut.help}">Khi bật, tên hiển thị của bạn có thể xuất hiện công khai trên bảng chạy mỗi khi bạn thắp đuốc. Mặc định tắt.</p>
+                    </div>
+                    <label class="gamification-toggle">
+                        <input id="gamificationTickerOptOut" type="checkbox" disabled/>
+                        <span th:text="#{gamification.ticker.optOut.title}">Hiển thị trên bảng chạy</span>
+                    </label>
+                    <p id="gamificationTickerOptOutStatus" class="gamification-status" role="status" aria-live="polite" hidden></p>
+                </section>
+                <section class="gamification-quests" th:aria-labelledby="questHeading">
+                    <div class="gamification-section-title">
+                        <h2 id="questHeading" th:text="#{gamification.quest.title}">Nhiệm vụ</h2>
+                        <span id="profileNextLevel"></span>
+                    </div>
+                    <div id="questList" class="gamification-quest-list"></div>
+                </section>
+            </div>
+        </main>
+    </div>
+</div>
+<div th:replace="common/footer :: footer"></div>
+<div th:replace="common/js :: js"></div>
+<script src="/javascript/gamification-api.js?v=3" type="text/javascript"></script>
+<script src="/javascript/gamification.js?v=2" type="text/javascript"></script>
+</body>
+</html>

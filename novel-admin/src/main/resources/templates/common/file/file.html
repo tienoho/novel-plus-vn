@@ -12,17 +12,20 @@
     <link href="/css/animate.css" rel="stylesheet">
     <link href="/css/layui.css" rel="stylesheet">
     <link href="/css/style.css?v=4.1.0" rel="stylesheet">
-    <style>
-        .aactive {
-            color: #13b5b7 !important;
-        }
-        .hactive:hover{
-            color: #13b5b7 !important;
-        }
-    </style>
+    <link href="/css/common/file-manager.css" rel="stylesheet">
 </head>
 <body class="gray-bg">
-<div class="wrapper wrapper-content" id="app">
+<div class="wrapper wrapper-content" id="file-manager-app"
+     th:data-message-first="#{common.pagination.first}"
+     th:data-message-previous="#{common.pagination.previous}"
+     th:data-message-next="#{common.pagination.next}"
+     th:data-message-last="#{common.pagination.last}"
+     th:data-message-delete-confirm="#{common.deleteConfirm}"
+     th:data-message-confirm="#{common.confirm}"
+     th:data-message-cancel="#{common.cancel}"
+     th:data-message-copied="#{admin.file.copied}"
+     th:data-label-copy="#{admin.file.copy}"
+     th:data-label-delete="#{common.deleteAction}">
     <div class="row">
         <div class="col-sm-3">
             <div class="ibox float-e-margins">
@@ -33,24 +36,18 @@
                         </button>
                         <div class="hr-line-dashed"></div>
                         <ul class="folder-list" style="padding: 0">
-                            <li><a href="javascript:void(0)" class="file-control hactive" :class="{'aactive':type === ''}"
-                                   v-on:click="changeType('')"><i class="fa fa-folder"></i><span th:text="#{admin.file.all}">Tất cả tệp</span></a></li>
+                            <li><a href="#files-all" class="file-control hactive aactive" data-file-type=""><i class="fa fa-folder"></i><span th:text="#{admin.file.all}">Tất cả tệp</span></a></li>
 
-                            <li><a href="javascript:void(0)" class="file-control hactive" :class="{'aactive':type === 0}"
-                                   v-on:click="changeType(0)"><i class="fa fa-folder"></i><span th:text="#{admin.file.images}">Hình ảnh</span></a></li>
+                            <li><a href="#files-images" class="file-control hactive" data-file-type="0"><i class="fa fa-folder"></i><span th:text="#{admin.file.images}">Hình ảnh</span></a></li>
 
-                            <li><a href="javascript:void(0)" :class="{'aactive':type === 1}"
-                                   v-on:click="changeType(1)" class="file-control hactive"><i class="fa fa-folder"></i><span th:text="#{admin.file.documents}">Tài liệu</span></a>
+                            <li><a href="#files-documents" data-file-type="1" class="file-control hactive"><i class="fa fa-folder"></i><span th:text="#{admin.file.documents}">Tài liệu</span></a>
                             </li>
 
-                            <li><a href="javascript:void(0)" v-on:click="changeType(2)" :class="{'aactive':type === 2}"
-                                   class="file-control hactive"><i class="fa fa-folder"></i><span th:text="#{admin.file.videos}">Video</span></a></li>
+                            <li><a href="#files-videos" data-file-type="2" class="file-control hactive"><i class="fa fa-folder"></i><span th:text="#{admin.file.videos}">Video</span></a></li>
 
-                            <li><a href="javascript:void(0)" v-on:click="changeType(3)" :class="{'aactive':type === 3}"
-                                   class="file-control hactive"><i class="fa fa-folder"></i><span th:text="#{admin.file.music}">Âm thanh</span></a></li>
+                            <li><a href="#files-audio" data-file-type="3" class="file-control hactive"><i class="fa fa-folder"></i><span th:text="#{admin.file.music}">Âm thanh</span></a></li>
 
-                            <li><a href="javascript:void(0)" v-on:click="changeType(99)" :class="{'aactive':type === 99}"
-                                   class="file-control hactive"><i class="fa fa-folder"></i><span th:text="#{admin.file.other}">Khác</span></a></li>
+                            <li><a href="#files-other" data-file-type="99" class="file-control hactive"><i class="fa fa-folder"></i><span th:text="#{admin.file.other}">Khác</span></a></li>
                         </ul>
                     </div>
                 </div>
@@ -59,25 +56,7 @@
         <div class="col-sm-9 animated fadeInRight">
             <div class="row">
                 <div class="col-sm-12">
-                    <div class="file-box" v-for="row in rows">
-                        <div class="file">
-                            <a href="#">
-                                <span class="corner"></span>
-                                <div class="image">
-                                    <img alt="image" class="img-responsive" :src="row.url">
-                                </div>
-                                <div class="file-name">
-                                    <br/>
-                                    <small>{{row.createDate}}</small>
-                                </div>
-                                &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;<button
-                                    class="btn btn-warning btn-xs copy" :url="row.url" th:text="#{admin.file.copy}">Sao chép
-                            </button>&nbsp; &nbsp; &nbsp; &nbsp;<button class="btn btn-danger btn-xs"
-                                                                        @click="remove(row.id)" th:text="#{common.deleteAction}">Xóa
-                            </button>
-                            </a>
-                        </div>
-                    </div>
+                    <div id="file-list"></div>
                     <div id="incomeNum"></div>
                 </div>
             </div>
@@ -90,6 +69,7 @@
 
 <!-- JavaScript dùng chung. -->
 <script src="/js/jquery.min.js?v=2.1.4"></script>
+<script src="/js/csrf.js"></script>
 <script src="/js/bootstrap.min.js?v=3.3.6"></script>
 <script src="/js/bootstrap-paginator.min.js"></script>
 
@@ -97,134 +77,6 @@
 <script src="/js/layui.js"></script>
 <script src="/js/plugins/clipboard/clipboard.min.js"></script>
 <script src="/js/plugins/layer/layer.min.js"></script>
-<script src="/js/vue.min.js"></script>
-
-<script th:inline="javascript">
-    const fileMessages = {
-        first: /*[[#{common.pagination.first}]]*/ 'Trang đầu',
-        previous: /*[[#{common.pagination.previous}]]*/ 'Trang trước',
-        next: /*[[#{common.pagination.next}]]*/ 'Trang sau',
-        last: /*[[#{common.pagination.last}]]*/ 'Trang cuối',
-        deleteConfirm: /*[[#{common.deleteConfirm}]]*/ 'Bạn có chắc muốn xóa bản ghi đã chọn?',
-        confirm: /*[[#{common.confirm}]]*/ 'Đồng ý',
-        cancel: /*[[#{common.cancel}]]*/ 'Hủy',
-        copied: /*[[#{admin.file.copied}]]*/ 'Đã sao chép đường dẫn tệp vào bộ nhớ tạm'
-    };
-    var app = new Vue({
-        el: '#app',
-        data: {
-            limit: 12,
-            offset: 0,
-            total: 0,
-            file: '',
-            type: '',
-            rows: '',
-        },
-        methods: {
-            getData: function () {
-                $.getJSON("/common/sysFile/list", {
-                    limit: this.limit,
-                    offset: this.offset,
-                    type: this.type
-                }, function (r) {
-                    app.total = r.total;
-                    app.rows = r.rows;
-                    app.page();
-                });
-            },
-            page: function () {
-                var options = {
-                    currentPage: app.offset / 12 + 1, // Trang hiện tại.
-                    totalPages: Math.ceil(app.total / 12), // Tổng số trang.
-                    numberofPages: 4, // Số trang hiển thị.
-                    bootstrapMajorVersion: 3,
-                    alignment: 'center',
-                    size: 'large',
-                    shouldShowPage: true,
-                    itemTexts: function (type, page, current) { // Tùy chỉnh nhãn phân trang.
-                        switch (type) {
-                            case "first":
-                                return fileMessages.first;
-                            case "prev":
-                                return fileMessages.previous;
-                            case "next":
-                                return fileMessages.next;
-                            case "last":
-                                return fileMessages.last;
-                            case "page":
-                                return page;
-                        }
-                    },
-                    onPageClicked: function (event, originalEvent, type, page) {
-                        app.offset = (page - 1) * 12;
-                        app.getData();
-                    }
-                };
-                $('#page').bootstrapPaginator(options);
-            },
-            remove: function (id) {
-                layer.confirm(fileMessages.deleteConfirm, {
-                    btn: [fileMessages.confirm, fileMessages.cancel]
-                }, function () {
-                    $.ajax({
-                        url: "/common/sysFile/remove",
-                        type: "post",
-                        data: {
-                            'id': id
-                        },
-                        success: function (r) {
-                            if (r.code == 0) {
-                                layer.msg(r.msg);
-                                app.getData();
-                            } else {
-                                layer.msg(r.msg);
-                                app.getData();
-                            }
-                        }
-                    });
-                })
-            },
-            changeType: function (i) {
-                this.type = i;
-                this.offset = 0;
-                this.getData();
-            }
-        },
-        created: function () {
-            this.changeType('')
-        }
-    });
-</script>
-<script type="text/javascript">
-    var clipboard = new Clipboard('button.copy', {
-        text: function (trigger) {
-            layer.msg(fileMessages.copied);
-            return $(trigger).attr('url');
-        }
-    });
-    layui.use('upload', function () {
-        var upload = layui.upload;
-        // Khởi tạo upload.
-        var uploadInst = upload.render({
-            elem: '#test1', // Phần tử liên kết.
-            url: '/common/sysFile/upload', // API tải lên.
-            size: 1000,
-            accept: 'file',
-            done: function (r) {
-                layer.msg(r.msg);
-                app.getData();
-            },
-            error: function (r) {
-                layer.msg(r.msg);
-            }
-        });
-    });
-
-    // function changeType(i) {
-    //     app.type = i;
-    //     app.offset = 0;
-    //     app.getData();
-    // }
-</script>
+<script src="/js/common/file-manager.js"></script>
 </body>
 </html>

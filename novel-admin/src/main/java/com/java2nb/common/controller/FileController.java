@@ -12,12 +12,14 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.FileInputStream;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -60,13 +62,13 @@ public class FileController extends BaseController {
     }
 
     @GetMapping("/add")
-        // @RequiresPermissions("common:bComments")
+    @RequiresPermissions("common:sysFile:sysFile")
     String add() {
         return "common/sysFile/add";
     }
 
     @GetMapping("/edit")
-        // @RequiresPermissions("common:bComments")
+    @RequiresPermissions("common:sysFile:sysFile")
     String edit(Long id, Model model) {
         FileDO sysFile = sysFileService.get(id);
         model.addAttribute("sysFile", sysFile);
@@ -77,7 +79,7 @@ public class FileController extends BaseController {
      * Thông tin
      */
     @RequestMapping("/info/{id}")
-    @RequiresPermissions("common:info")
+    @RequiresPermissions("common:sysFile:sysFile")
     public R info(@PathVariable("id") Long id) {
         FileDO sysFile = sysFileService.get(id);
         return R.ok().put("sysFile", sysFile);
@@ -88,7 +90,7 @@ public class FileController extends BaseController {
      */
     @ResponseBody
     @PostMapping("/save")
-    @RequiresPermissions("common:save")
+    @RequiresPermissions("common:sysFile:sysFile")
     public R save(FileDO sysFile) {
         if (sysFileService.save(sysFile) > 0) {
             return R.ok();
@@ -100,7 +102,7 @@ public class FileController extends BaseController {
      * Sửa
      */
     @RequestMapping("/update")
-    @RequiresPermissions("common:update")
+    @RequiresPermissions("common:sysFile:sysFile")
     public R update(@RequestBody FileDO sysFile) {
         sysFileService.update(sysFile);
 
@@ -112,15 +114,25 @@ public class FileController extends BaseController {
      */
     @PostMapping("/remove")
     @ResponseBody
-    // @RequiresPermissions("common:remove")
+    @RequiresPermissions("common:sysFile:sysFile")
     public R remove(Long id, HttpServletRequest request) {
         if ("test".equals(getUsername())) {
             return R.error(1, messages.get("error.demoReadOnly"));
         }
-        String fileName =
-            jnConfig.getUploadPath() + sysFileService.get(id).getUrl().replace(Constant.UPLOAD_FILES_PREFIX, "");
+        FileDO storedFile = sysFileService.get(id);
+        if (storedFile == null || storedFile.getUrl() == null
+            || !storedFile.getUrl().startsWith(Constant.UPLOAD_FILES_PREFIX)) {
+            return R.error();
+        }
+        Path filePath;
+        try {
+            filePath = FileUtil.resolveUnderRoot(jnConfig.getUploadPath(),
+                storedFile.getUrl().substring(Constant.UPLOAD_FILES_PREFIX.length()));
+        } catch (IllegalArgumentException exception) {
+            return R.error();
+        }
         if (sysFileService.remove(id) > 0) {
-            boolean b = FileUtil.deleteFile(fileName);
+            boolean b = FileUtil.deleteFile(filePath);
             if (!b) {
                 return R.error(messages.get("error.fileDeletePartial"));
             }
@@ -135,7 +147,7 @@ public class FileController extends BaseController {
      */
     @PostMapping("/batchRemove")
     @ResponseBody
-    @RequiresPermissions("common:remove")
+    @RequiresPermissions("common:sysFile:sysFile")
     public R remove(@RequestParam("ids[]") Long[] ids) {
         if ("test".equals(getUsername())) {
             return R.error(1, messages.get("error.demoReadOnly"));
@@ -146,6 +158,7 @@ public class FileController extends BaseController {
 
     @ResponseBody
     @PostMapping("/upload")
+    @RequiresPermissions("common:sysFile:sysFile")
     R upload(@RequestParam("file") MultipartFile file, HttpServletRequest request) {
         if ("test".equals(getUsername())) {
             return R.error(1, messages.get("error.demoReadOnly"));
@@ -176,24 +189,33 @@ public class FileController extends BaseController {
      * Tải tệp
      */
     @RequestMapping(value = "/download")
+    @RequiresPermissions("common:sysFile:sysFile")
     public void fileDownload(String filePath, String fileName, HttpServletResponse resp) throws Exception {
-        String realFilePath = jnConfig.getUploadPath() + filePath;
-        InputStream in = new FileInputStream(realFilePath);
-        // Đặt header phản hồi và mã hóa URL cho tệp
-        fileName = URLEncoder.encode(fileName, "UTF-8");
-        resp.setHeader("Content-Disposition", "attachment;filename=" + fileName);
-
-        resp.setContentLength(in.available());
-
-        OutputStream out = resp.getOutputStream();
-        byte[] b = new byte[1024];
-        int len = 0;
-        while ((len = in.read(b)) != -1) {
-            out.write(b, 0, len);
+        String relativePath = filePath;
+        if (relativePath != null && relativePath.startsWith(Constant.UPLOAD_FILES_PREFIX)) {
+            relativePath = relativePath.substring(Constant.UPLOAD_FILES_PREFIX.length());
         }
-        out.flush();
-        out.close();
-        in.close();
+        final Path realFilePath;
+        try {
+            realFilePath = FileUtil.resolveUnderRoot(jnConfig.getUploadPath(), relativePath);
+        } catch (IllegalArgumentException exception) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+        if (!Files.isRegularFile(realFilePath)) {
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        String downloadName = fileName == null || fileName.isBlank()
+            ? realFilePath.getFileName().toString() : Path.of(fileName).getFileName().toString();
+        String encodedName = URLEncoder.encode(downloadName, StandardCharsets.UTF_8).replace("+", "%20");
+        resp.setHeader("Content-Disposition", "attachment; filename*=UTF-8''" + encodedName);
+        resp.setContentLengthLong(Files.size(realFilePath));
+
+        try (InputStream in = Files.newInputStream(realFilePath); OutputStream out = resp.getOutputStream()) {
+            in.transferTo(out);
+            out.flush();
+        }
     }
 
 

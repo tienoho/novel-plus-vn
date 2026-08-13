@@ -21,7 +21,7 @@
 
     <p><strong th:text="#{crawl.disk.time}+'：'">Thời gian:</strong><span th:text="${#dates.format(#dates.createNow(), 'dd-MM-yyyy HH:mm:ss')}"></span></p>
 
-    <div class="action" th:utext="${actionText}"></div>
+    <div class="action" th:text="${actionText}"></div>
 
     <h3>📊 <span th:text="#{crawl.disk.details}">Chi tiết sử dụng ổ đĩa</span></h3>
     <table>

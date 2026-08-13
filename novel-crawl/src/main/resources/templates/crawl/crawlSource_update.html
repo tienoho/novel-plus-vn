@@ -153,7 +153,7 @@
                                               th:placeholder="#{crawl.source.contentFilter}" placeholder="Nội dung cần lọc khỏi chương, mỗi dòng một giá trị" rows="5" cols="52"></textarea></li>
 
 
-                                <li><input type="button" onclick="updateCrawlSource()" name="btnRegister" th:value="#{crawl.submit}" value="Gửi"
+                                <li><input type="button" name="btnRegister" th:value="#{crawl.submit}" value="Gửi"
                                            id="btnRegister" class="btn_red"></li>
                             </ul>
                         </div>
@@ -205,7 +205,7 @@
                         location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
 
                     } else {
-                        layer.alert(data.msg);
+                        layer.alert(crawlEscapeHtml(data.msg || ""));
                     }
 
                 },
@@ -271,6 +271,8 @@
     }
 
     load();
+
+    $("#btnRegister").on("click", updateCrawlSource);
 
     function updateCrawlSource() {
 
@@ -509,7 +511,7 @@
 
 
                 } else {
-                    layer.alert(data.msg);
+                    layer.alert(crawlEscapeHtml(data.msg || ""));
                 }
 
             },

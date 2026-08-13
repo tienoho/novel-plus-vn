@@ -1,6 +1,8 @@
 package com.java2nb.novel.core.schedule;
 
 import com.java2nb.novel.core.config.VnpayProperties;
+import com.java2nb.novel.core.observability.NovelBusinessMetrics;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import com.java2nb.novel.service.OrderService;
 import com.java2nb.novel.service.PayOrderSnapshot;
 import com.java2nb.novel.service.PayOrderUpdateResult;
@@ -39,7 +41,8 @@ class VnpayReconciliationScheduleTest {
         properties.setReturnUrl("https://merchant.example/pay/vnpay/return");
         orderService = mock(OrderService.class);
         queryService = mock(VnpayQueryService.class);
-        schedule = new VnpayReconciliationSchedule(properties, orderService, queryService);
+        schedule = new VnpayReconciliationSchedule(properties, orderService, queryService,
+            new NovelBusinessMetrics(new SimpleMeterRegistry()));
         order = new PayOrderSnapshot(1L, 123L, 10_000, 1_000,
             Date.from(Instant.now().minusSeconds(1_800)), Date.from(Instant.now().minusSeconds(600)));
     }

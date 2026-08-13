@@ -1,0 +1,283 @@
+name: Kiểm tra production-ready
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+      - 'codex/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-ready-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  MYSQL_DATABASE: novel_plus
+  MYSQL_USER: novel
+  MAVEN_CMD: mvn
+
+jobs:
+  verify:
+    name: Maven, i18n, CSP và Compose
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Lấy mã nguồn
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Cài JDK 21
+        uses: actions/setup-java@d7793b545071e98d581d3bf084a51c3213318a07 # v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Cài Node.js 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+
+      - name: Sinh secret integration dùng một lần
+        shell: bash
+        run: |
+          {
+            echo "MYSQL_ROOT_PASSWORD=$(openssl rand -hex 48)"
+            echo "MYSQL_APP_PASSWORD=$(openssl rand -hex 48)"
+            echo "REDIS_PASSWORD=$(openssl rand -hex 48)"
+            echo "JWT_SECRET=$(openssl rand -hex 64)"
+            echo "CACHE_MANAGER_PASSWORD=$(openssl rand -hex 48)"
+            echo "CRAWLER_ADMIN_PASSWORD=CiCrawler!$(openssl rand -hex 24)"
+            echo "ADMIN_BOOTSTRAP_PASSWORD=CiAdmin!$(openssl rand -hex 24)"
+            echo "PII_ENCRYPTION_KEY=$(openssl rand -base64 32)"
+          } >> "$GITHUB_ENV"
+
+      - name: Build và kiểm thử toàn Maven reactor
+        run: mvn -B -ntp clean verify -Pcentral-repo
+
+      - name: Kiểm tra i18n, JavaScript và HTML
+        run: node scripts/verify-i18n.mjs
+
+      - name: Kiểm tra manifest release và nhánh fail-closed
+        run: node --test scripts/generate-release-manifest.test.mjs
+
+      - name: Kiểm tra auth sink và CSP
+        shell: pwsh
+        run: ./scripts/verify-csp.ps1 -FailOnBlocker
+
+      - name: Kiểm tra Compose production và test override
+        shell: pwsh
+        run: ./scripts/verify-gamification.ps1 -ConfigOnly
+
+      - name: Chạy Flyway, MySQL integration và concurrency
+        shell: pwsh
+        run: ./scripts/verify-gamification.ps1 -StopAfter
+
+      - name: Kiểm tra cấu hình Prometheus và rule cảnh báo
+        run: >-
+          docker run --rm
+          -v "${{ github.workspace }}/deploy/observability:/etc/prometheus:ro"
+          --entrypoint /bin/promtool
+          quay.io/prometheus/prometheus:v3.13.2@sha256:508729e0e2d18e11fd742a5a5ca70e557b940a93948c3c95fd0123a6fd538b69
+          check config /etc/prometheus/prometheus.yml
+
+      - name: Smoke Flyway, CSP, CSRF và observability trên Compose
+        shell: pwsh
+        run: ./scripts/smoke-admin-compose.ps1 -TimeoutSeconds 600
+
+      - name: Kiểm tra diff
+        run: git diff --check
+
+  dependency-review:
+    name: Dependency review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Lấy mã nguồn
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Chặn dependency dễ tổn thương
+        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
+        with:
+          fail-on-severity: high
+
+  secret-scan:
+    name: Gitleaks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Lấy toàn bộ lịch sử
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - name: Tự kiểm tra Gitleaks không silent-pass
+        shell: bash
+        run: |
+          set +e
+          control="$(openssl rand -base64 48)"
+          printf '%s = "%s"\n' 'api_key' "$control" | \
+            docker run --rm -i \
+              zricethezav/gitleaks:v8.30.0@sha256:691af3c7c5a48b16f187ce3446d5f194838f91238f27270ed36eef6359a574d9 \
+              stdin --no-banner --redact --exit-code 17
+          status=$?
+          set -e
+          if [ "$status" -ne 17 ]; then
+            echo "Gitleaks positive control không phát hiện fixture tổng hợp (exit=$status)." >&2
+            exit 1
+          fi
+      - name: Quét secret
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
+        env:
+          GITLEAKS_VERSION: '8.30.0'
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  codeql:
+    name: CodeQL Java
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - name: Lấy mã nguồn
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Cài JDK 21
+        uses: actions/setup-java@d7793b545071e98d581d3bf084a51c3213318a07 # v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Khởi tạo CodeQL
+        uses: github/codeql-action/init@bce182f857edf1feab116e9795a3393d21977282 # v4
+        with:
+          languages: java-kotlin
+          build-mode: manual
+
+      - name: Build cho CodeQL
+        run: mvn -B -ntp -DskipTests -Pcentral-repo package
+
+      - name: Phân tích CodeQL
+        uses: github/codeql-action/analyze@bce182f857edf1feab116e9795a3393d21977282 # v4
+
+  image-security:
+    name: Image ${{ matrix.image }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: front
+            dockerfile: deploy/docker/Dockerfile
+            target: front
+          - image: admin
+            dockerfile: deploy/docker/Dockerfile
+            target: admin
+          - image: crawl
+            dockerfile: deploy/docker/Dockerfile
+            target: crawl
+          - image: migrations
+            dockerfile: deploy/flyway/Dockerfile
+            target: ''
+          - image: caddy
+            dockerfile: deploy/caddy/Dockerfile
+            target: ''
+          - image: backup
+            dockerfile: deploy/backup/Dockerfile
+            target: ''
+          - image: alertmanager
+            dockerfile: deploy/observability/alertmanager/Dockerfile
+            target: ''
+          - image: pushgateway
+            dockerfile: deploy/observability/pushgateway/Dockerfile
+            target: ''
+          - image: mysql
+            dockerfile: deploy/mysql/Dockerfile
+            target: ''
+          - image: grafana
+            dockerfile: deploy/observability/grafana/Dockerfile
+            target: ''
+    steps:
+      - name: Lấy mã nguồn
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Cài Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Build image cục bộ
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          target: ${{ matrix.target }}
+          load: true
+          push: false
+          tags: novel-plus/${{ matrix.image }}:ci
+          cache-from: type=gha,scope=ci-${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=ci-${{ matrix.image }}
+
+      - name: Quét CVE và cấu hình image
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+        with:
+          version: v0.69.3
+          image-ref: novel-plus/${{ matrix.image }}:ci
+          format: table
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+          scanners: vuln,secret,misconfig
+
+      - name: Tạo SBOM SPDX
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
+        with:
+          image: novel-plus/${{ matrix.image }}:ci
+          format: spdx-json
+          syft-version: '1.50.0'
+          artifact-name: sbom-${{ matrix.image }}.spdx.json
+
+  playwright-e2e:
+    name: Playwright desktop, mobile và bốn theme
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Lấy mã nguồn
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Cài Node.js 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: e2e/package-lock.json
+
+      - name: Cài Playwright
+        working-directory: e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Chạy E2E production-like
+        shell: pwsh
+        run: ./scripts/run-e2e.ps1 -SkipNpmInstall -SkipBrowserInstall -TimeoutSeconds 900
+
+      - name: Lưu trace, ảnh lỗi và báo cáo
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: playwright-e2e
+          path: |
+            e2e/playwright-report
+            e2e/test-results
+          if-no-files-found: ignore
+          retention-days: 14

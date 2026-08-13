@@ -3,6 +3,7 @@ package com.java2nb.novel.core.crawl;
 import com.java2nb.novel.core.utils.RandomBookInfoUtil;
 import com.java2nb.novel.core.utils.StringUtil;
 import com.java2nb.novel.core.i18n.Messages;
+import com.java2nb.novel.core.security.RichTextSanitizer;
 import com.java2nb.novel.entity.Book;
 import com.java2nb.novel.entity.BookContent;
 import com.java2nb.novel.entity.BookIndex;
@@ -39,6 +40,8 @@ public class CrawlParser {
     private final StringRedisTemplate stringRedisTemplate;
 
     private final Messages messages;
+
+    private final RichTextSanitizer richTextSanitizer;
 
     /**
      * Khóa bộ nhớ đệm số chương đã thu thập theo nguồn
@@ -90,6 +93,7 @@ public class CrawlParser {
             if (isFindBookName) {
                 String bookName = bookNameMatch.group(1);
                 //Gán tên truyện
+                bookName = richTextSanitizer.sanitizeText(bookName);
                 book.setBookName(bookName);
                 Pattern authorNamePatten = PatternFactory.getPattern(ruleBean.getAuthorNamePatten());
                 Matcher authorNameMatch = authorNamePatten.matcher(bookDetailHtml);
@@ -97,7 +101,7 @@ public class CrawlParser {
                 if (isFindAuthorName) {
                     String authorName = authorNameMatch.group(1);
                     //Gán tên tác giả
-                    book.setAuthorName(authorName);
+                    book.setAuthorName(richTextSanitizer.sanitizeText(authorName));
                     if (StringUtils.isNotBlank(ruleBean.getPicUrlPatten())) {
                         Pattern picUrlPatten = PatternFactory.getPattern(ruleBean.getPicUrlPatten());
                         Matcher picUrlMatch = picUrlPatten.matcher(bookDetailHtml);
@@ -158,7 +162,7 @@ public class CrawlParser {
                         desc = desc.substring(0, desc.length() - bookName.length());
                     }
                     //Gán phần giới thiệu truyện
-                    book.setBookDesc(desc);
+                    book.setBookDesc(richTextSanitizer.sanitize(desc));
                     if (StringUtils.isNotBlank(ruleBean.getStatusPatten())) {
                         Pattern bookStatusPatten = PatternFactory.getPattern(ruleBean.getStatusPatten());
                         Matcher bookStatusMatch = bookStatusPatten.matcher(bookDetailHtml);
@@ -303,9 +307,10 @@ public class CrawlParser {
                         }
                         // Xóa mọi ký tự xuống dòng ở cuối nội dung
                         content = removeTrailingBrTags(content);
+                        content = richTextSanitizer.sanitize(content);
                         //Thêm mục lục và nội dung chương
                         BookIndex bookIndex = new BookIndex();
-                        bookIndex.setIndexName(indexName);
+                        bookIndex.setIndexName(richTextSanitizer.sanitizeText(indexName));
                         bookIndex.setIndexNum(indexNum);
                         int wordCount = StringUtil.getStrValidWordCount(content);
                         bookIndex.setWordCount(wordCount);

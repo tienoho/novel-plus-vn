@@ -26,6 +26,8 @@ public class AuthorWithdrawalReviewDO {
     private String providerReference;
     private Date requestedAt;
     private Date reviewedAt;
+    private Long approvedBy;
+    private Long executedBy;
     private Date paidAt;
     private String rejectionReason;
     private Long version;
@@ -70,6 +72,10 @@ public class AuthorWithdrawalReviewDO {
     public void setRequestedAt(Date value) { this.requestedAt = value; }
     public Date getReviewedAt() { return reviewedAt; }
     public void setReviewedAt(Date value) { this.reviewedAt = value; }
+    public Long getApprovedBy() { return approvedBy; }
+    public void setApprovedBy(Long value) { this.approvedBy = value; }
+    public Long getExecutedBy() { return executedBy; }
+    public void setExecutedBy(Long value) { this.executedBy = value; }
     public Date getPaidAt() { return paidAt; }
     public void setPaidAt(Date value) { this.paidAt = value; }
     public String getRejectionReason() { return rejectionReason; }

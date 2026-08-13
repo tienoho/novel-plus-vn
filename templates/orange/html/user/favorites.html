@@ -31,7 +31,7 @@
         <div class="my_r">
             <div class="my_bookshelf">
                 <div class="title cf">
-                    <h2 class="fl"><a href="javascript:void(0);" class="red" th:text="#{user.bookshelf}">Tủ sách</a></h2><i
+                    <h2 class="fl"><span class="red" th:text="#{user.bookshelf}">Tủ sách</span></h2><i
                         class="fl ml20 mr20 font16">|</i>
                     <h2 class="fl"><a href="/user/read_history.html" th:text="#{user.recentReading}">Đọc gần đây</a></h2>
                 </div>
@@ -94,30 +94,11 @@
                 if (data.code == 200) {
                     var bookShelfList = data.data.list;
                     if (bookShelfList.length > 0) {
-                        var bookShelfListHtml = "";
-                        for (var i = 0; i < bookShelfList.length; i++) {
-                            var book = bookShelfList[i];
-                            bookShelfListHtml += (" <tr id='shelf" + book.bookId + "' class=\"book_list\" vals=\"291\">\n" +
-                                "                            <td class=\"style bookclass\">\n" +
-                                "                                <a href=\"/book/bookclass.html?c=" + book.catId + "\" >[" + book.catName + "]</a>\n" +
-                                "                            </td>\n" +
-                                "                            <td class=\"name\">\n" +
-                                "                                <a href=\"/book/" + book.bookId + ".html\">\n" +
-                                "                                    " + book.bookName + "</a>\n" +
-                                "                            </td>\n" +
-                                "                            <td class=\"chapter\" valsc=\"291|2037554|1\">\n" +
-                                "<a href='/book/" + book.bookId + "/" + book.lastIndexId + ".html'>" + book.lastIndexName + "</a>" +
-                                "                            </td>\n" +
-                                "                            <td class=\"time\">\n" +
-                                "                                " + book.lastIndexUpdateTime + "\n" +
-                                "                            </td>\n" +
-                                "                            <td class=\"goread\">\n" +
-                                "<div style=''><a href='/book/" + book.bookId + "/" + book.preContentId + ".html'>" + continueReadingText + "</a></div>" +
-                                "<div style='line-height:8px;padding-bottom:13px'><a href='javascript:removeFromBookShelf(\"" + book.bookId + "\")'>" + removeShelfText + "</a></div>" +
-                                "                            </td>\n" +
-                                "                        </tr>");
-                        }
-                        $("#bookShelfList").html(bookShelfListHtml);
+                        novelRenderBookTable("bookShelfList", bookShelfList, {
+                            continueText: continueReadingText,
+                            removeText: removeShelfText,
+                            removable: true
+                        });
 
                         layui.use('laypage', function () {
                             var laypage = layui.laypage;
@@ -154,7 +135,7 @@
                     location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
 
                 } else {
-                    layer.alert(data.msg);
+                    novelAlertText(data.msg);
                 }
 
             },

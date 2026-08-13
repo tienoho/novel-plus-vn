@@ -6,6 +6,7 @@ import com.java2nb.common.utils.R;
 import com.java2nb.novel.entity.BookComment;
 import com.java2nb.novel.mapper.BookCommentDynamicSqlSupport;
 import com.java2nb.novel.mapper.BookCommentMapper;
+import com.java2nb.novel.service.CommentModerationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
@@ -18,8 +19,6 @@ import java.util.List;
 import java.util.Map;
 
 import static org.mybatis.dynamic.sql.SqlBuilder.isEqualTo;
-import static org.mybatis.dynamic.sql.SqlBuilder.isIn;
-import static org.mybatis.dynamic.sql.SqlBuilder.update;
 import static org.mybatis.dynamic.sql.select.SelectDSL.select;
 
 /**
@@ -32,6 +31,7 @@ import static org.mybatis.dynamic.sql.select.SelectDSL.select;
 public class CommentModerationController {
 
     private final BookCommentMapper bookCommentMapper;
+    private final CommentModerationService commentModerationService;
 
     /**
      * Danh sách bình luận theo trạng thái kiểm duyệt
@@ -69,12 +69,7 @@ public class CommentModerationController {
     @PostMapping("/batchAudit")
     @RequiresPermissions("novel:bookComment:edit")
     public R batchAudit(@RequestParam("ids[]") Long[] ids, @RequestParam("auditStatus") Byte auditStatus) {
-        if (ids != null && ids.length > 0) {
-            bookCommentMapper.update(update(BookCommentDynamicSqlSupport.bookComment)
-                .set(BookCommentDynamicSqlSupport.auditStatus).equalTo(auditStatus)
-                .where(BookCommentDynamicSqlSupport.id, isIn(ids))
-                .build().render(RenderingStrategies.MYBATIS3));
-        }
+        commentModerationService.batchAudit(ids, auditStatus);
         return R.ok();
     }
 }

@@ -1,4 +1,4 @@
-var dictList = parent.dictList;
+var dictList = Array.isArray(parent.dictList) ? parent.dictList : [];
 $(function () {
 
     loadDict();
@@ -15,15 +15,15 @@ function loadDict(){
         var dictValue = $(domEle).attr("dict-value");
         var changeFunc = $(domEle).attr("dict-change-func");
         if (dictType) {
-            var html = "";
             // Tải dữ liệu
             for (var i = 0; i < dictList.length; i++) {
-                if (dictList[i].type == dictType) {
-                    html += '<option value="' + dictList[i].value + '">' + dictList[i].name + '</option>'
-
+                if (dictList[i].type === dictType) {
+                    var option = document.createElement("option");
+                    option.value = dictList[i].value == null ? "" : String(dictList[i].value);
+                    option.textContent = dictList[i].name == null ? "" : String(dictList[i].name);
+                    domEle.appendChild(option);
                 }
             }
-            $(domEle).append(html);
             $(domEle).chosen({
                 maxHeight: 200
             });
@@ -31,8 +31,11 @@ function loadDict(){
             $(domEle).trigger("chosen:updated");
             // Sự kiện nhấp
             $(domEle).on('change', function (e, params) {
-                if(changeFunc) {
-                    eval(changeFunc + '()');
+                if (changeFunc && /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(changeFunc)) {
+                    var handler = window[changeFunc];
+                    if (typeof handler === "function") {
+                        handler.call(domEle, e, params);
+                    }
                 }
             });
         }
@@ -56,7 +59,7 @@ function formatDict(dictType, value) {
     // Tải dữ liệu
     for (var i = 0; i < dictList.length; i++) {
 
-        if (dictList[i].type == dictType && dictList[i].value == value) {
+        if (dictList[i].type === dictType && String(dictList[i].value) === String(value)) {
             name = dictList[i].name;
         }
     }

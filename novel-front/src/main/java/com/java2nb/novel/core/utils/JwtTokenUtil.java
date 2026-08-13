@@ -5,128 +5,100 @@ import com.java2nb.novel.core.bean.UserDetails;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import java.time.Instant;
+import java.util.Date;
+import java.util.Map;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
-/**
- * @author 11797
- */
 @Component
+@RequiredArgsConstructor
 @Slf4j
 public class JwtTokenUtil {
 
-    private static final String CLAIM_KEY_USERNAME = "sub";
-    private static final String CLAIM_KEY_CREATED = "created";
+    private static final String CLAIM_TOKEN_TYPE = "token_type";
+    private static final String ACCESS = "access";
+    private static final String REFRESH = "refresh";
+
+    private final ObjectMapper objectMapper;
+
     @Value("${jwt.secret}")
     private String secret;
-    @Value("${jwt.expiration}")
-    private Long expiration;
 
-    /**
-     * Tạo token JWT bằng khóa chịu trách nhiệm ký
-     */
-    private String generateToken(Map<String, Object> claims) {
-        return Jwts.builder()
-                .setClaims(claims)
-                .setExpiration(generateExpirationDate())
-                .signWith(SignatureAlgorithm.HS512, secret)
-                .compact();
+    @Value("${jwt.access-expiration:900}")
+    private long accessExpiration;
+
+    @Value("${jwt.refresh-expiration:604800}")
+    private long refreshExpiration;
+
+    @SneakyThrows
+    TokenPair generateTokens(UserDetails userDetails) {
+        String subject = objectMapper.writeValueAsString(userDetails);
+        return new TokenPair(
+            generateToken(subject, ACCESS, accessExpiration),
+            generateToken(subject, REFRESH, refreshExpiration));
     }
 
-    /**
-     * Lấy payload JWT từ token
-     */
-    private Claims getClaimsFromToken(String token) {
-        Claims claims = null;
-        try {
-            claims = Jwts.parser()
-                    .setSigningKey(secret)
-                    .parseClaimsJws(token)
-                    .getBody();
-        } catch (Exception e) {
-            log.info("Xác thực định dạng JWT thất bại: {}", token);
-        }
-        return claims;
+    public UserDetails getUserDetailsFromToken(String accessToken) {
+        return readUser(accessToken, ACCESS);
     }
 
-    /**
-     * Thời hạn token
-     */
-    private Date generateExpirationDate() {
-        return new Date(System.currentTimeMillis() + expiration * 1000);
-    }
-
-    /**
-     * Lấy thông tin người dùng từ token
-     */
-    public UserDetails getUserDetailsFromToken(String token) {
-        if(isTokenExpired(token)){
+    RefreshTokenDetails getRefreshTokenDetails(String refreshToken) {
+        if (refreshToken == null || refreshToken.isBlank()) {
             return null;
         }
-        UserDetails userDetail;
         try {
-            Claims claims = getClaimsFromToken(token);
-             userDetail = new ObjectMapper().readValue(claims.getSubject(),UserDetails.class);
-        } catch (Exception e) {
-            log.error(e.getMessage(),e);
-            userDetail = null;
-        }
-        return userDetail;
-    }
-
-
-    /**
-     * Kiểm tra token đã hết hiệu lực hay chưa
-     */
-    private boolean isTokenExpired(String token) {
-        Date expiredDate = getExpiredDateFromToken(token);
-        if(expiredDate == null){
-            return true;
-        }else {
-            return expiredDate.before(new Date());
+            Claims claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(refreshToken).getBody();
+            if (!REFRESH.equals(claims.get(CLAIM_TOKEN_TYPE, String.class))
+                || claims.getId() == null || claims.getExpiration() == null) {
+                return null;
+            }
+            UserDetails user = objectMapper.readValue(claims.getSubject(), UserDetails.class);
+            if (user.getId() == null) {
+                return null;
+            }
+            return new RefreshTokenDetails(user, claims.getId(), claims.getExpiration().toInstant());
+        } catch (Exception exception) {
+            log.debug("Refresh JWT không hợp lệ: {}", exception.getClass().getSimpleName());
+            return null;
         }
     }
 
-    /**
-     * Lấy thời gian hết hạn từ token
-     */
-    private Date getExpiredDateFromToken(String token) {
-        Claims claims = getClaimsFromToken(token);
-        return claims != null ? claims.getExpiration() : null;
+    private String generateToken(String subject, String type, long lifetimeSeconds) {
+        Date now = new Date();
+        return Jwts.builder()
+            .setId(UUID.randomUUID().toString())
+            .setSubject(subject)
+            .setIssuedAt(now)
+            .setExpiration(new Date(now.getTime() + lifetimeSeconds * 1000))
+            .addClaims(Map.of(CLAIM_TOKEN_TYPE, type))
+            .signWith(SignatureAlgorithm.HS512, secret)
+            .compact();
     }
 
-    /**
-     * Tạo token theo thông tin người dùng
-     */
-    @SneakyThrows
-    public String generateToken(UserDetails userDetails) {
-        Map<String, Object> claims = new HashMap<>(2);
-        claims.put(CLAIM_KEY_USERNAME, new ObjectMapper().writeValueAsString(userDetails));
-        claims.put(CLAIM_KEY_CREATED, new Date());
-        return generateToken(claims);
+    private UserDetails readUser(String token, String expectedType) {
+        if (token == null || token.isBlank()) {
+            return null;
+        }
+        try {
+            Claims claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
+            if (!expectedType.equals(claims.get(CLAIM_TOKEN_TYPE, String.class))) {
+                return null;
+            }
+            return objectMapper.readValue(claims.getSubject(), UserDetails.class);
+        } catch (Exception exception) {
+            log.debug("JWT không hợp lệ: {}", exception.getClass().getSimpleName());
+            return null;
+        }
     }
 
-    /**
-     * Kiểm tra token có thể làm mới hay không
-     */
-    public boolean canRefresh(String token) {
-        return !isTokenExpired(token);
+    public record TokenPair(String accessToken, String refreshToken) {
     }
 
-    /**
-     *Làm mới tokenn
-     */
-    public String refreshToken(String token) {
-        Claims claims = getClaimsFromToken(token);
-        claims.put(CLAIM_KEY_CREATED, new Date());
-        return generateToken(claims);
+    record RefreshTokenDetails(UserDetails userDetails, String jti, Instant expiresAt) {
     }
-
-
 }

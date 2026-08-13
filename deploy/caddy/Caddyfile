@@ -1,0 +1,69 @@
+{
+	email {$CADDY_ACME_EMAIL:ops@example.com}
+	admin off
+	log {
+		output stdout
+		format json
+	}
+}
+
+(novel_security) {
+	encode zstd gzip
+
+	request_body {
+		max_size {$CADDY_MAX_UPLOAD_SIZE:25MB}
+	}
+
+	rate_limit {
+		zone general {
+			key {remote_host}
+			events {$CADDY_RATE_LIMIT_REQUESTS:600}
+			window 1m
+			ipv6_prefix 64
+		}
+		zone writes {
+			match {
+				method POST PUT PATCH DELETE
+			}
+			key {remote_host}
+			events {$CADDY_WRITE_RATE_LIMIT_REQUESTS:120}
+			window 1m
+			ipv6_prefix 64
+		}
+	}
+
+	header {
+		-Server
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(self)"
+	}
+}
+
+{$NOVEL_DOMAIN:localhost} {
+	import novel_security
+	@actuator path /actuator /actuator/*
+	respond @actuator 404
+	reverse_proxy front:8083
+}
+
+{$NOVEL_ADMIN_DOMAIN:admin.localhost} {
+	import novel_security
+	@actuator path /actuator /actuator/*
+	respond @actuator 404
+	reverse_proxy admin:80
+}
+
+{$NOVEL_CRAWL_DOMAIN:crawl.localhost} {
+	import novel_security
+	@actuator path /actuator /actuator/*
+	respond @actuator 404
+	reverse_proxy crawl:8081
+}
+
+{$NOVEL_GRAFANA_DOMAIN:grafana.localhost} {
+	import novel_security
+	reverse_proxy grafana:3000
+}

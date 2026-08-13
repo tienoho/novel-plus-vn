@@ -17,6 +17,8 @@ public class UserDO implements Serializable {
     private String name;
     // Mật khẩu
     private String password;
+    // Bắt buộc đổi mật khẩu trước khi sử dụng các chức năng quản trị
+    private Boolean mustChangePassword;
     // Phòng ban
     private Long deptId;
     //Phòng ban cấp dưới
@@ -102,6 +104,14 @@ public class UserDO implements Serializable {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public Boolean getMustChangePassword() {
+        return mustChangePassword;
+    }
+
+    public void setMustChangePassword(Boolean mustChangePassword) {
+        this.mustChangePassword = mustChangePassword;
     }
 
     public Long getDeptId() {
@@ -246,7 +256,7 @@ public class UserDO implements Serializable {
                 "userId=" + userId +
                 ", username='" + username + '\'' +
                 ", name='" + name + '\'' +
-                ", password='" + password + '\'' +
+                ", mustChangePassword=" + mustChangePassword +
                 ", deptId=" + deptId +
                 ", deptName='" + deptName + '\'' +
                 ", email='" + email + '\'' +

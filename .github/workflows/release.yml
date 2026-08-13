@@ -1,136 +1,569 @@
-name: Create novel-plus Maven Release with ZIPs
+name: Phát hành Novel Plus
 
 on:
   push:
-    # Khớp mọi tag bắt đầu bằng 'v'.
     tags:
       - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  build-and-release:
+  verify:
+    name: Kiểm tra trước khi phát hành
     runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      MYSQL_DATABASE: novel_plus
+      MYSQL_USER: novel
+      MYSQL_HOST_PORT: '3307'
+      MAVEN_CMD: mvn
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Lấy mã nguồn
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@v3
+      - name: Cài đặt JDK 21
+        uses: actions/setup-java@d7793b545071e98d581d3bf084a51c3213318a07 # v4
         with:
+          distribution: temurin
           java-version: '21'
-          # Có thể chọn bản phân phối khác; mặc định dùng Temurin.
-          distribution: 'temurin'
+          cache: maven
 
-      - name: Build project with Maven
-        run: mvn clean install -DskipTests=true -Pcentral-repo
+      - name: Sinh secret integration dùng một lần
+        shell: bash
+        run: |
+          {
+            echo "MYSQL_ROOT_PASSWORD=$(openssl rand -hex 48)"
+            echo "MYSQL_APP_PASSWORD=$(openssl rand -hex 48)"
+            echo "REDIS_PASSWORD=$(openssl rand -hex 48)"
+            echo "JWT_SECRET=$(openssl rand -hex 64)"
+            echo "CACHE_MANAGER_PASSWORD=$(openssl rand -hex 48)"
+            echo "CRAWLER_ADMIN_PASSWORD=CiCrawler!$(openssl rand -hex 24)"
+            echo "ADMIN_BOOTSTRAP_PASSWORD=CiAdmin!$(openssl rand -hex 24)"
+            echo "PII_ENCRYPTION_KEY=$(openssl rand -base64 32)"
+          } >> "$GITHUB_ENV"
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+      - name: Kiểm tra Flyway và bất biến MySQL
+        shell: pwsh
+        run: ./scripts/verify-gamification.ps1 -StopAfter
+
+      - name: Build và kiểm thử Maven reactor
+        run: mvn -B -ntp clean verify -Pcentral-repo
+
+      - name: Kiểm tra i18n, JavaScript và HTML
+        run: node scripts/verify-i18n.mjs
+
+      - name: Kiểm tra manifest release và nhánh fail-closed
+        run: node --test scripts/generate-release-manifest.test.mjs
+
+      - name: Chặn token auth phía client và kiểm tra CSP
+        shell: pwsh
+        run: ./scripts/verify-csp.ps1
+
+  secret-scan:
+    name: Gitleaks toàn bộ lịch sử
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Lấy toàn bộ lịch sử
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          # Dùng tag_name thay cho github.ref.
-          tag_name: ${{ github.ref_name }}
-          release_name: novel-plus ${{ github.ref_name }}
-          draft: false
-          prerelease: false
-
-
-      # Dùng action để tải lên thay vì gọi curl trực tiếp.
-      - name: Upload sql.zip
-        uses: actions/upload-release-asset@v1
+          fetch-depth: 0
+      - name: Tự kiểm tra Gitleaks không silent-pass
+        shell: bash
+        run: |
+          set +e
+          control="$(openssl rand -base64 48)"
+          printf '%s = "%s"\n' 'api_key' "$control" | \
+            docker run --rm -i \
+              zricethezav/gitleaks:v8.30.0@sha256:691af3c7c5a48b16f187ce3446d5f194838f91238f27270ed36eef6359a574d9 \
+              stdin --no-banner --redact --exit-code 17
+          status=$?
+          set -e
+          if [ "$status" -ne 17 ]; then
+            echo "Gitleaks positive control không phát hiện fixture tổng hợp (exit=$status)." >&2
+            exit 1
+          fi
+      - name: Chặn secret trước khi phát hành
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          GITLEAKS_VERSION: '8.30.0'
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  runtime-dependencies:
+    name: Quét dependency runtime ${{ matrix.name }}
+    needs: [verify, secret-scan]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      artifact-metadata: write
+      attestations: write
+      contents: read
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: redis
+            image: 'docker.io/library/redis:7-alpine@sha256:e7723ff73d963f5cc6d9c4643ea3d989527a402a319239054e9472a7fb9219a2'
+          - name: prometheus
+            image: 'quay.io/prometheus/prometheus:v3.13.2@sha256:508729e0e2d18e11fd742a5a5ca70e557b940a93948c3c95fd0123a6fd538b69'
+
+    steps:
+      - name: Lấy mã nguồn
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Quét CVE, secret và cấu hình dependency runtime
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/novel-common/target/build/sql.zip
-          asset_name: sql.zip
-          asset_content_type: application/zip
+          version: v0.69.3
+          image-ref: ${{ matrix.image }}
+          format: json
+          output: trivy-runtime-${{ matrix.name }}.json
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+          scanners: vuln,secret,misconfig
+          timeout: 10m
 
-      - name: Upload novel-crawl.zip
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+      - name: Ký provenance cho report dependency runtime
+        uses: actions/attest@a1948c3f048ba23858d222213b7c278aabede763 # v4.1.1
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/novel-crawl/target/build/novel-crawl.zip
-          asset_name: novel-crawl.zip
-          asset_content_type: application/zip
+          subject-path: trivy-runtime-${{ matrix.name }}.json
 
-      - name: Upload novel-front.zip
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+      - name: Lưu report dependency runtime
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/novel-front/target/build/novel-front.zip
-          asset_name: novel-front.zip
-          asset_content_type: application/zip
+          name: release-runtime-${{ matrix.name }}
+          path: trivy-runtime-${{ matrix.name }}.json
+          if-no-files-found: warn
+          retention-days: 90
 
-      - name: Upload novel-admin.zip
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+  images:
+    name: Build và đẩy image ${{ matrix.image }}
+    needs: [verify, secret-scan, runtime-dependencies]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: novel-front
+            dockerfile: deploy/docker/Dockerfile
+            target: front
+          - image: novel-admin
+            dockerfile: deploy/docker/Dockerfile
+            target: admin
+          - image: novel-crawl
+            dockerfile: deploy/docker/Dockerfile
+            target: crawl
+          - image: novel-migrations
+            dockerfile: deploy/flyway/Dockerfile
+            target: ''
+          - image: novel-caddy
+            dockerfile: deploy/caddy/Dockerfile
+            target: ''
+          - image: novel-backup
+            dockerfile: deploy/backup/Dockerfile
+            target: ''
+          - image: novel-alertmanager
+            dockerfile: deploy/observability/alertmanager/Dockerfile
+            target: ''
+          - image: novel-pushgateway
+            dockerfile: deploy/observability/pushgateway/Dockerfile
+            target: ''
+          - image: novel-mysql
+            dockerfile: deploy/mysql/Dockerfile
+            target: ''
+          - image: novel-grafana
+            dockerfile: deploy/observability/grafana/Dockerfile
+            target: ''
+
+    steps:
+      - name: Lấy mã nguồn
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Cài đặt Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Tạo nhãn image
+        id: meta
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/novel-admin/target/build/novel-admin.zip
-          asset_name: novel-admin.zip
-          asset_content_type: application/zip
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}
+          tags: |
+            type=ref,event=tag
 
+      - name: Build một lần image phát hành
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          target: ${{ matrix.target }}
+          load: true
+          push: false
+          tags: |
+            ${{ steps.meta.outputs.tags }}
+            novel-plus/release-${{ matrix.image }}:scan
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=release-${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=release-${{ matrix.image }}
+          provenance: false
+          sbom: false
 
-      # Đăng nhập Docker Hub.
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
+      - name: Quét CVE, secret và cấu hình image
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+        with:
+          version: v0.69.3
+          image-ref: novel-plus/release-${{ matrix.image }}:scan
+          format: table
+          output: trivy-${{ matrix.image }}.txt
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+          scanners: vuln,secret,misconfig
+
+      - name: Tạo SBOM SPDX
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
+        with:
+          image: novel-plus/release-${{ matrix.image }}:scan
+          format: spdx-json
+          syft-version: '1.50.0'
+          output-file: sbom-release-${{ matrix.image }}.spdx.json
+          upload-artifact: false
+          upload-release-assets: false
+
+      - name: Đăng nhập Docker Hub
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Build và đẩy image novel-front.
-      - name: Build and Push novel-front Docker Image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./novel-front/target/build
-          file: ./novel-front/target/build/Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/novel-front:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/novel-front:${{ github.ref_name }}
-
-      # Build và đẩy image novel-admin.
-      - name: Build and Push novel-admin Docker Image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./novel-admin/target/build
-          file: ./novel-admin/target/build/Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/novel-admin:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/novel-admin:${{ github.ref_name }}
-
-      # Build và đẩy image novel-crawl.
-      - name: Build and Push novel-crawl Docker Image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./novel-crawl/target/build
-          file: ./novel-crawl/target/build/Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/novel-crawl:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/novel-crawl:${{ github.ref_name }}
-
-      # Giải nén tệp SQL.
-      - name: Unzip MySQL SQL File
+      - name: Đẩy đúng image đã kiểm tra
+        id: push
+        shell: bash
+        env:
+          IMAGE_TAGS: ${{ steps.meta.outputs.tags }}
+          SCANNED_IMAGE: novel-plus/release-${{ matrix.image }}:scan
         run: |
-          unzip -o ./doc/sql/novel_plus_data.sql.zip -d ./doc/sql/
+          set -euo pipefail
 
-      # Build và đẩy image mysql-novel-plus.
-      - name: Build and Push mysql-novel-plus Docker Image
-        uses: docker/build-push-action@v5
+          scanned_id="$(docker image inspect --format '{{.Id}}' "$SCANNED_IMAGE")"
+          pushed_digest=''
+          pushed_count=0
+
+          while IFS= read -r tag; do
+            [[ -n "$tag" ]] || continue
+            tag_id="$(docker image inspect --format '{{.Id}}' "$tag")"
+            if [[ "$tag_id" != "$scanned_id" ]]; then
+              echo "Tag $tag không trỏ tới image đã quét." >&2
+              exit 1
+            fi
+
+            push_output="$(docker push "$tag" 2>&1 | tee /dev/stderr)"
+            tag_digest="$(sed -nE 's/.*digest: (sha256:[0-9a-f]{64}).*/\1/p' <<< "$push_output" | tail -n 1)"
+            if [[ ! "$tag_digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+              echo "Không đọc được digest sau khi đẩy tag $tag." >&2
+              exit 1
+            fi
+            if [[ -n "$pushed_digest" && "$tag_digest" != "$pushed_digest" ]]; then
+              echo "Các tag phát hành không cùng digest: $pushed_digest != $tag_digest." >&2
+              exit 1
+            fi
+
+            pushed_digest="$tag_digest"
+            pushed_count=$((pushed_count + 1))
+          done <<< "$IMAGE_TAGS"
+
+          if [[ "$pushed_count" -eq 0 ]]; then
+            echo 'Metadata không tạo tag phát hành.' >&2
+            exit 1
+          fi
+
+          {
+            printf 'image_id=%s\n' "$scanned_id"
+            printf 'digest=%s\n' "$pushed_digest"
+          } > digest-${{ matrix.image }}.txt
+          printf 'digest=%s\n' "$pushed_digest" >> "$GITHUB_OUTPUT"
+
+      - name: Ký provenance cho digest đã đẩy
+        id: provenance_attestation
+        uses: actions/attest@a1948c3f048ba23858d222213b7c278aabede763 # v4.1.1
         with:
-          context: ./doc/sql
-          file: ./doc/sql/Dockerfile
-          push: true
-          tags: |
-            201206030/mysql-novel-plus:latest
-            201206030/mysql-novel-plus:${{ github.ref_name }}
+          subject-name: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+      - name: Gắn SBOM vào digest đã đẩy
+        id: sbom_attestation
+        uses: actions/attest@a1948c3f048ba23858d222213b7c278aabede763 # v4.1.1
+        with:
+          subject-name: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          sbom-path: sbom-release-${{ matrix.image }}.spdx.json
+          push-to-registry: true
+
+      - name: Ghi bằng chứng attestation theo image
+        shell: bash
+        env:
+          RELEASE_IMAGE: ${{ matrix.image }}
+          RELEASE_SUBJECT: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image }}
+          RELEASE_DIGEST: ${{ steps.push.outputs.digest }}
+          PROVENANCE_ID: ${{ steps.provenance_attestation.outputs['attestation-id'] }}
+          PROVENANCE_URL: ${{ steps.provenance_attestation.outputs['attestation-url'] }}
+          SBOM_ATTESTATION_ID: ${{ steps.sbom_attestation.outputs['attestation-id'] }}
+          SBOM_ATTESTATION_URL: ${{ steps.sbom_attestation.outputs['attestation-url'] }}
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+
+          const required = [
+            'RELEASE_IMAGE',
+            'RELEASE_SUBJECT',
+            'RELEASE_DIGEST',
+            'PROVENANCE_ID',
+            'PROVENANCE_URL',
+            'SBOM_ATTESTATION_ID',
+            'SBOM_ATTESTATION_URL',
+          ];
+          for (const name of required) {
+            if (!process.env[name]) throw new Error(`Thiếu output attestation: ${name}`);
+          }
+          if (!/^sha256:[0-9a-f]{64}$/.test(process.env.RELEASE_DIGEST)) {
+            throw new Error('Digest attestation không hợp lệ.');
+          }
+          const evidence = {
+            image: process.env.RELEASE_IMAGE,
+            subject: process.env.RELEASE_SUBJECT,
+            digest: process.env.RELEASE_DIGEST,
+            provenance: { id: process.env.PROVENANCE_ID, url: process.env.PROVENANCE_URL },
+            sbom: { id: process.env.SBOM_ATTESTATION_ID, url: process.env.SBOM_ATTESTATION_URL },
+          };
+          fs.writeFileSync(
+            `attestation-${process.env.RELEASE_IMAGE}.json`,
+            `${JSON.stringify(evidence, null, 2)}\n`,
+            'utf8',
+          );
+          NODE
+
+      - name: Lưu report quét và digest
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-security-${{ matrix.image }}
+          path: |
+            trivy-${{ matrix.image }}.txt
+            sbom-release-${{ matrix.image }}.spdx.json
+            digest-${{ matrix.image }}.txt
+            attestation-${{ matrix.image }}.json
+          if-no-files-found: error
+          retention-days: 90
+
+  release-manifest:
+    name: Khóa manifest release candidate
+    needs: images
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+
+    steps:
+      - name: Lấy mã nguồn đúng tag
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Cài Node.js 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+
+      - name: Tải bằng chứng của cả mười image
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: release-security-*
+          path: release-artifacts
+          merge-multiple: true
+
+      - name: Tải report dependency runtime đã quét
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: release-runtime-*
+          path: runtime-dependency-evidence
+          merge-multiple: true
+
+      - name: Xác minh đủ report dependency runtime sạch theo digest
+        run: >-
+          node scripts/generate-release-manifest.mjs verify-runtime-reports
+          --reports runtime-dependency-evidence
+
+      - name: Tạo manifest gắn tag, commit, digest, SBOM và attestation
+        env:
+          IMAGE_PREFIX: docker.io/${{ secrets.DOCKERHUB_USERNAME }}
+          RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: >-
+          node scripts/generate-release-manifest.mjs create
+          --artifacts release-artifacts
+          --output release-manifest.json
+          --checksum release-manifest.sha256
+          --tag "${GITHUB_REF_NAME}"
+          --commit "${GITHUB_SHA}"
+          --repository "${GITHUB_REPOSITORY}"
+          --image-prefix "${IMAGE_PREFIX}"
+          --run-id "${GITHUB_RUN_ID}"
+          --run-url "${RUN_URL}"
+
+      - name: Xác minh lại manifest theo đúng RC hiện tại
+        run: >-
+          node scripts/generate-release-manifest.mjs verify
+          --artifacts release-artifacts
+          --manifest release-manifest.json
+          --checksum release-manifest.sha256
+          --tag "${GITHUB_REF_NAME}"
+          --commit "${GITHUB_SHA}"
+
+      - name: Lưu trọn bộ bằng chứng release candidate
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-evidence
+          path: |
+            release-manifest.json
+            release-manifest.sha256
+            release-artifacts/*
+            runtime-dependency-evidence/*
+          if-no-files-found: error
+          retention-days: 90
+
+  release-smoke:
+    name: Smoke stack RC theo digest
+    needs: release-manifest
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      actions: read
+      artifact-metadata: write
+      attestations: write
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Lấy mã nguồn đúng tag RC
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Cài Node.js 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+
+      - name: Tải manifest và bằng chứng đã khóa
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: release-evidence
+          path: release-evidence
+
+      - name: Đăng nhập registry để kéo đúng image RC
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Sinh Compose env từ manifest RC đã xác minh
+        run: >-
+          node scripts/generate-release-manifest.mjs candidate-env
+          --artifacts release-evidence/release-artifacts
+          --manifest release-evidence/release-manifest.json
+          --checksum release-evidence/release-manifest.sha256
+          --output release-evidence/.env.rc-smoke
+          --tag "${GITHUB_REF_NAME}"
+          --commit "${GITHUB_SHA}"
+
+      - name: Khởi động và smoke đúng tập image theo digest
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/smoke-admin-compose.ps1 `
+            -TimeoutSeconds 600 `
+            -SkipImageBuild `
+            -VerifyBackupRestore `
+            -ReleaseEnvFile release-evidence/.env.rc-smoke `
+            *>&1 | Tee-Object -FilePath rc-compose-smoke.log
+
+          $manifestPath = 'release-evidence/release-manifest.json'
+          $manifest = Get-Content -Raw -LiteralPath $manifestPath | ConvertFrom-Json
+          if ($manifest.images.Count -ne 10) {
+            throw 'Release manifest must contain exactly ten images.'
+          }
+          $record = [ordered]@{
+            schemaVersion = 1
+            status = 'PASSED'
+            tag = $env:GITHUB_REF_NAME
+            commit = $env:GITHUB_SHA
+            imageCount = $manifest.images.Count
+            backupRestoreVerified = $true
+            releaseManifestSha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $manifestPath).Hash.ToLowerInvariant()
+            workflowRun = "https://github.com/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
+            verifiedAt = (Get-Date).ToUniversalTime().ToString('o')
+          }
+          $record | ConvertTo-Json -Depth 4 | Set-Content -Encoding utf8NoBOM rc-compose-smoke.json
+
+      - name: Lưu bằng chứng runtime của release candidate
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-runtime-smoke
+          path: |
+            rc-compose-smoke.log
+            rc-compose-smoke.json
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Ký provenance cho biên bản smoke RC
+        uses: actions/attest@a1948c3f048ba23858d222213b7c278aabede763 # v4.1.1
+        with:
+          subject-path: rc-compose-smoke.json
+
+  release:
+    name: Tạo GitHub Release nháp
+    needs: [release-manifest, release-smoke]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      actions: read
+      contents: write
+
+    steps:
+      - name: Tải manifest và bằng chứng đã khóa
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: release-evidence
+          path: release-evidence
+
+      - name: Tải bằng chứng runtime của đúng image RC
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: release-runtime-smoke
+          path: release-runtime-smoke
+
+      - name: Tạo release notes
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
+        with:
+          generate_release_notes: true
+          files: |
+            release-evidence/**
+            release-runtime-smoke/**
+          fail_on_unmatched_files: true
+          draft: true
+          make_latest: false

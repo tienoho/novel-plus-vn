@@ -111,11 +111,23 @@
 
 
 </head>
-<body>
+<body data-mobile-home-page
+      th:attr="data-description-label=#{book.description},data-network-error-text=#{auth.networkError}">
 
 
 <!-- Nội dung trang chủ mobile. -->
 <a name="top"></a>
+<div id="continueReadingWidget" style="display:none;padding:10px 10px 0 10px;"></div>
+<nav class="quick-genre-chips" aria-label="Lọc nhanh thể loại" style="padding:10px;">
+    <a href="/book/bookclass.html" class="chip-item active">🔥 Tất cả</a>
+    <a href="/book/bookclass.html?c=1" class="chip-item">⚔️ Tiên Hiệp</a>
+    <a href="/book/bookclass.html?c=2" class="chip-item">🏰 Huyền Huyễn</a>
+    <a href="/book/bookclass.html?c=3" class="chip-item">🏙️ Đô Thị</a>
+    <a href="/book/bookclass.html?c=4" class="chip-item">🌸 Ngôn Tình</a>
+    <a href="/book/bookclass.html?c=5" class="chip-item">🌌 Xuyên Không</a>
+    <a href="/book/bookclass.html?c=6" class="chip-item">🚀 Khoa Huyễn</a>
+    <a href="/book/bookclass.html?c=7" class="chip-item">⚡ Dị Năng</a>
+</nav>
 <div style="height: 40px;">
     <div style="line-height: 50px;width: 120px;float:left;padding-left: 10px"><img style="width: 150px;"
                                                                                    th:src="${application.website.logo}">
@@ -140,6 +152,9 @@
 </div>
 
 
+<div th:replace="common/monthly_ticket :: home_widget"></div>
+<div th:replace="common/monthly_ticket :: ticker_widget"></div>
+
 <div class="layui-container" style="padding-left: 2%">
     <div class="layui-row mobile-search-row">
 
@@ -149,7 +164,7 @@
                    class="layui-input">
         </div>
         <div class="layui-col-xs1 mobile-search-action">
-            <button onclick="searchBooks()" class="layui-btn" lay-submit lay-filter="formDemo" th:text="#{common.search}">Tìm kiếm</button>
+            <button id="mobileHomeSearch" type="button" class="layui-btn" th:text="#{common.search}">Tìm kiếm</button>
         </div>
     </div>
 
@@ -200,7 +215,7 @@
                                 th:text="${book.bookName}"></li>
                             <li style="padding-bottom: 5px;color: #a6a6a6" th:text="#{book.authorBy(${book.authorName})}"></li>
                             <li class='book_desc' style="color: #a6a6a6;padding-right:10px;"
-                                th:utext="${book.bookDesc}"></li>
+                                th:text="${book.bookDesc}"></li>
                         </ul>
                     </div>
                     <div style="font-style: italic;color: red"
@@ -218,7 +233,7 @@
 <div style="height: 1px" class="layui-col-lg1"></div>
 <div class="layui-colla-item layui-col-lg10"
      style="border-width: 1px;border-style: solid;border-radius: 2px;border-top-width: 0px"><a
-        href="javascript:moreNewBooks()">
+        href="/book/book_ranking.html?sortBy=last_index_update_time">
     <blockquote class="layui-elem-quote" style="text-align: left;color: #000;font-size: 16px"><span th:text="#{home.latest}">Mới cập nhật</span>
         <div style="float: right; margin-right: 20px"><i style="font-size: 14px;color:#666"
                                                          class="layui-icon"><span th:text="#{common.more}">Xem thêm</span>&#xe65b;</i>
@@ -246,79 +261,9 @@
 <script src="/mobile/js/wap_collect.js"></script>
 
 
-<script th:inline="javascript">
+<script src="/mobile/js/mobile-home-page.js"></script>
 
-    const descriptionLabel = /*[[#{book.description}]]*/ 'Giới thiệu';
-    const networkErrorText = /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng';
-
-
-    // Tải danh sách truyện mới cập nhật.
-    $.ajax({
-        type: "get",
-        url: "/book/listUpdateRank",
-        data: {},
-        dataType: "json",
-        success: function (data) {
-            if (data.code == 200) {
-                var updateRankBooks = data.data;
-                var updateRankBookHtml = "";
-                for (var i = 0; i < updateRankBooks.length; i++) {
-
-                    var updateRankBook = updateRankBooks[i];
-                    if (updateRankBook.bookDesc) {
-                        updateRankBook.bookDesc = updateRankBook.bookDesc.replace(/<[^>]+>/g, "").replace(/\s+/g, "");
-                    }
-
-                    updateRankBookHtml += ("<div style=\"padding-bottom: 30px\"\n" +
-                        "                     class=\"layui-col-xs12 layui-col-sm6 layui-col-md6 layui-col-lg6\">\n" +
-                        "\n" +
-                        "                    <a href=\"/book/" + updateRankBook.id + ".html\">\n" +
-                        "                        <div class=\"line-limit-length layui-col-xs8 layui-col-sm6 layui-col-md6 layui-col-lg6\"><span '>" + (i + 1) + "." + updateRankBook.bookName + "</span> - <span class=\"layui-elip\" style='color: #a6a6a6;'>" + updateRankBook.authorName + "</span>\n" +
-                        "                        </div>\n" +
-                        "                        <div class=\"layui-col-sm3 layui-col-md3 layui-col-lg3\"\n" +
-                        "                             style=\"color: #FF5722;float: right;margin-right:5px\"><i>" + updateRankBook.lastIndexUpdateTime + "</i></div>\n" +
-                        "\n" +
-                        "                        <div style=\"clear: both\"></div>\n" +
-                        "                        <div style=\"color: #a6a6a6;padding-left: 5px;padding-top: 5px\"\n" +
-                        "                             class=\"layui-elip layui-col-md11 layui-col-sm11 layui-col-lg11\">" + descriptionLabel + ": " + (updateRankBook.bookDesc || '') + "" +
-                        "                    </div></a>\n" +
-                        "                </div>");
-
-
-                }
-                $("#updateRankBooks").html(updateRankBookHtml);
-            } else {
-                layer.alert(data.msg);
-            }
-
-        }
-        ,
-        error: function () {
-            layer.alert(networkErrorText);
-        }
-    })
-
-
-    function moreNewBooks(event) {
-        window.location.href = "/book/book_ranking.html?sortBy=last_index_update_time";
-    }
-
-    function searchBooks() {
-        var keywords = $("#title").val();
-        window.location.href = "/book/book_ranking.html?keyword=" + encodeURI(keywords);
-    }
-
-    function toMyCollect() {
-        var token = localStorage.getItem("token");
-        if (token) {
-            window.location.href = "/book/book_ranking.html?token=" + token;
-        } else {
-            window.location.href = "/user/login.html";
-        }
-    }
-
-</script>
-
-
+<script src="/javascript/theme-toggle.js"></script>
+<script src="/javascript/index-expansion.js"></script>
 </body>
 </html>

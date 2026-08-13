@@ -33,9 +33,9 @@ public interface AuthorFinanceReviewDao {
                                  @Param("targetStatus") String targetStatus,
                                  @Param("reviewerId") long reviewerId, @Param("reason") String reason);
     int markWithdrawalProcessing(@Param("id") long id, @Param("expectedVersion") long expectedVersion,
-                                 @Param("reviewerId") long reviewerId);
+                                 @Param("executorId") long executorId);
     int requestWithdrawalSettlement(@Param("id") long id, @Param("expectedVersion") long expectedVersion,
-                                    @Param("reviewerId") long reviewerId,
+                                    @Param("executorId") long executorId,
                                     @Param("providerReference") String providerReference);
     int insertWithdrawalAudit(@Param("withdrawal") AuthorWithdrawalReviewDO withdrawal,
                               @Param("eventType") String eventType, @Param("toStatus") String toStatus,

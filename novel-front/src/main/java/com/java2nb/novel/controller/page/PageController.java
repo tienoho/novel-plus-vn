@@ -2,6 +2,7 @@ package com.java2nb.novel.controller.page;
 
 import com.java2nb.novel.controller.BaseController;
 import com.java2nb.novel.core.bean.UserDetails;
+import com.java2nb.novel.core.config.GamificationProperties;
 import com.java2nb.novel.core.config.VnpayProperties;
 import com.java2nb.novel.core.enums.ResponseStatus;
 import com.java2nb.novel.core.exception.BusinessException;
@@ -10,6 +11,9 @@ import com.java2nb.novel.core.utils.ThreadLocalUtil;
 import com.java2nb.novel.entity.*;
 import com.java2nb.novel.service.*;
 import com.java2nb.novel.service.recommendation.RecommendationService;
+import com.java2nb.novel.service.chapter.ChapterAccessDecision;
+import com.java2nb.novel.service.chapter.ChapterCommercialPolicyService;
+import com.java2nb.novel.service.entitlement.ReadingTicketService;
 import com.java2nb.novel.vo.BookCommentVO;
 import com.java2nb.novel.vo.BookSettingVO;
 import io.github.xxyopen.model.page.PageBean;
@@ -27,6 +31,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -48,11 +53,17 @@ public class PageController extends BaseController {
 
     private final RecommendationService recommendationService;
 
+    private final ChapterCommercialPolicyService chapterCommercialPolicyService;
+
+    private final ReadingTicketService readingTicketService;
+
     private final ThreadPoolExecutor threadPoolExecutor;
 
     private final Map<String, BookContentService> bookContentServiceMap;
 
     private final VnpayProperties vnpayProperties;
+
+    private final GamificationProperties gamificationProperties;
 
     @RequestMapping("{url}.html")
     public String module(@PathVariable("url") String url) {
@@ -155,6 +166,30 @@ public class PageController extends BaseController {
     @RequestMapping("user/read_history.html")
     public String readHistory() {
         return ThreadLocalUtil.getTemplateDir() + "user/read_history";
+    }
+
+    /** Trang hồ sơ gamification và nhiệm vụ của độc giả. */
+    @RequestMapping("user/quests.html")
+    public String userQuests() {
+        return ThreadLocalUtil.getTemplateDir() + "user/quests";
+    }
+
+    /** Trang đổi mã quà của độc giả. */
+    @RequestMapping("user/gift_codes.html")
+    public String userGiftCodes(HttpServletRequest request) {
+        if (getUserDetails(request) == null) {
+            return "redirect:/user/login.html?originUrl=/user/gift_codes.html";
+        }
+        return ThreadLocalUtil.getTemplateDir() + "user/gift_codes";
+    }
+
+    /** Trang số dư Vé đọc và quyền lợi thuê bao của độc giả. */
+    @RequestMapping("user/reading_tickets.html")
+    public String userReadingTickets(HttpServletRequest request) {
+        if (getUserDetails(request) == null) {
+            return "redirect:/user/login.html?originUrl=/user/reading_tickets.html";
+        }
+        return ThreadLocalUtil.getTemplateDir() + "user/reading_tickets";
     }
 
     /**
@@ -308,27 +343,18 @@ public class PageController extends BaseController {
             }, threadPoolExecutor);
 
         //Luồng kiểm tra yêu cầu mua chương chạy sau khi tải xong thông tin chương
-        CompletableFuture<Boolean> needBuyCompletableFuture = bookIndexCompletableFuture.thenApplyAsync((bookIndex) -> {
-            //Kiểm tra mục lục có thu phí hay không
-            if (bookIndex.getIsVip() != null && bookIndex.getIsVip() == 1) {
-                //Có thu phí
+        CompletableFuture<ChapterAccessDecision> accessCompletableFuture = bookIndexCompletableFuture
+            .thenApplyAsync(bookIndex -> {
                 UserDetails user = getUserDetails(request);
-                if (user == null) {
-                    //Chưa đăng nhập và cần mua chương
-                    return true;
-                }
-                //Kiểm tra người dùng đã mua mục lục hay chưa
-                boolean isBuy = userService.queryIsBuyBookIndex(user.getId(), bookIndexId);
-                if (!isBuy) {
-                    //Chưa mua nên cần thanh toán
-                    return true;
-                }
-            }
-
-            log.debug("Đã kiểm tra xong yêu cầu mua chương của người dùng");
-            return false;
-
-        }, threadPoolExecutor);
+                Date now = new Date();
+                boolean purchased = user != null && userService.queryIsBuyBookIndex(user.getId(), bookIndexId);
+                boolean entitled = user != null && !purchased
+                    && readingTicketService.hasActiveChapterEntitlement(user.getId(), bookIndexId, now);
+                ChapterAccessDecision decision = chapterCommercialPolicyService.evaluate(
+                    bookIndex, purchased || entitled, now);
+                log.debug("Đã kiểm tra xong quyền đọc chương của người dùng");
+                return decision;
+            }, threadPoolExecutor);
 
         Book book = bookCompletableFuture.get();
         requirePublicBookAccess(book, currentUserProfile(request));
@@ -344,7 +370,11 @@ public class PageController extends BaseController {
         model.addAttribute("preBookIndexId", preBookIndexIdCompletableFuture.get());
         model.addAttribute("nextBookIndexId", nextBookIndexIdCompletableFuture.get());
         model.addAttribute("bookContent", bookContentCompletableFuture.get());
-        model.addAttribute("needBuy", needBuyCompletableFuture.get());
+        ChapterAccessDecision access = accessCompletableFuture.get();
+        model.addAttribute("needBuy", access.purchaseRequired());
+        model.addAttribute("offlineEligible", access.offlineEligible());
+        model.addAttribute("temporaryFree", access.temporaryFree());
+        model.addAttribute("readingHeartbeatEnabled", gamificationProperties.isReadingHeartbeatEnabled());
 
         return ThreadLocalUtil.getTemplateDir() + "book/book_content";
     }
@@ -394,6 +424,21 @@ public class PageController extends BaseController {
         return "about/news_info";
     }
 
+
+    /**
+     * Trang lịch sử thưởng xếp hạng tháng của tác giả.
+     */
+    @RequestMapping("author/monthly_rewards.html")
+    public String authorMonthlyRewards(HttpServletRequest request) {
+        UserDetails user = getUserDetails(request);
+        if (user == null) {
+            return "redirect:/user/login.html?originUrl=/author/monthly_rewards.html";
+        }
+        if (!authorService.isAuthor(user.getId())) {
+            return "redirect:/author/register.html";
+        }
+        return "author/monthly_rewards";
+    }
 
     /**
      * Trang đăng ký tác giả

@@ -82,15 +82,9 @@ function load(deptId) {
 						field : 'id',
 						align : 'center',
 						formatter : function(value, row, index) {
-							var e = '<a  class="btn btn-primary btn-sm ' + s_edit_h + '" href="#" mce_href="#" title="' + adminMessage('edit', 'Sửa') + '" onclick="edit(\''
-								+ row.userId
-								+ '\')"><i class="fa fa-edit "></i></a> ';
-							var d = '<a class="btn btn-warning btn-sm ' + s_remove_h + '" href="#" title="' + adminMessage('deleteLabel', 'Xóa') + '"  mce_href="#" onclick="remove(\''
-								+ row.userId
-								+ '\')"><i class="fa fa-remove"></i></a> ';
-							var f = '<a class="btn btn-success btn-sm ' + s_resetPwd_h + '" href="#" title="' + adminMessage('resetPassword', 'Đặt lại mật khẩu') + '"  mce_href="#" onclick="resetPwd(\''
-								+ row.userId
-								+ '\')"><i class="fa fa-key"></i></a> ';
+							var e = adminRowAction({action: 'edit', args: [row.userId], variant: 'primary', visibility: s_edit_h, title: adminMessage('edit', 'Sửa'), icon: 'edit'});
+							var d = adminRowAction({action: 'remove', args: [row.userId], variant: 'warning', visibility: s_remove_h, title: adminMessage('deleteLabel', 'Xóa'), icon: 'remove'});
+							var f = adminRowAction({action: 'reset-password', args: [row.userId], variant: 'success', visibility: s_resetPwd_h, title: adminMessage('resetPassword', 'Đặt lại mật khẩu'), icon: 'key'});
 							return e + d + f;
 						}
 					} ]

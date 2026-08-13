@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.java2nb.novel.mapper.ReadingSubscriptionMandateMapper">
+    <sql id="columns">
+        id, user_id AS userId, provider, merchant_reference AS merchantReference,
+        client_request_id AS clientRequestId, request_hash AS requestHash,
+        plan_code_snapshot AS planCodeSnapshot,
+        accepted_plan_version AS acceptedPlanVersion,
+        provider_recurring_id AS providerRecurringId,
+        provider_data_key_ciphertext AS providerDataKeyCiphertext,
+        provider_token_ciphertext AS providerTokenCiphertext,
+        token_expire_at AS tokenExpireAt, status, consented_at AS consentedAt,
+        revoked_at AS revokedAt, revoke_requested_at AS revokeRequestedAt,
+        revoke_next_attempt_at AS revokeNextAttemptAt,
+        revoke_lease_until AS revokeLeaseUntil,
+        revoke_attempt_count AS revokeAttemptCount,
+        revoke_last_error AS revokeLastError, version
+    </sql>
+    <insert id="insertPending">
+        INSERT INTO reading_subscription_mandate
+            (user_id, provider, merchant_reference, client_request_id, request_hash,
+             plan_code_snapshot, accepted_plan_version, status)
+        VALUES (#{userId}, 'VNPAY_RECURRING', #{merchantReference}, #{clientRequestId},
+                #{requestHash}, #{planCodeSnapshot}, #{acceptedPlanVersion}, 'PENDING')
+    </insert>
+    <select id="selectByClientRequestId"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionMandateRow">
+        SELECT <include refid="columns"/> FROM reading_subscription_mandate
+        WHERE user_id=#{userId} AND client_request_id=#{clientRequestId}
+        LIMIT 1
+    </select>
+    <select id="selectByMerchantReferenceForUpdate"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionMandateRow">
+        SELECT <include refid="columns"/> FROM reading_subscription_mandate
+        WHERE merchant_reference=#{merchantReference} LIMIT 1 FOR UPDATE
+    </select>
+    <select id="selectByMerchantReference"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionMandateRow">
+        SELECT <include refid="columns"/> FROM reading_subscription_mandate
+        WHERE merchant_reference=#{merchantReference} LIMIT 1
+    </select>
+    <select id="selectActiveByUser"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionMandateRow">
+        SELECT <include refid="columns"/> FROM reading_subscription_mandate
+        WHERE user_id=#{userId} AND provider='VNPAY_RECURRING' AND status='ACTIVE'
+        LIMIT 1
+    </select>
+    <select id="selectOpenByUser"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionMandateRow">
+        SELECT <include refid="columns"/> FROM reading_subscription_mandate
+        WHERE user_id=#{userId} AND provider='VNPAY_RECURRING'
+          AND status IN ('PENDING', 'ACTIVE', 'REVOKE_PENDING')
+        ORDER BY id DESC LIMIT 1
+    </select>
+    <update id="registerProviderInitialization">
+        UPDATE reading_subscription_mandate
+        SET provider_recurring_id=#{providerRecurringId},
+            provider_data_key_ciphertext=#{providerDataKeyCiphertext},
+            version=version+1
+        WHERE merchant_reference=#{merchantReference} AND status='PENDING'
+          AND provider_recurring_id IS NULL AND provider_data_key_ciphertext IS NULL
+    </update>
+    <update id="activate">
+        UPDATE reading_subscription_mandate
+        SET provider_token_ciphertext=#{providerTokenCiphertext},
+            provider_data_key_ciphertext=NULL,
+            token_expire_at=#{tokenExpireAt}, status='ACTIVE', consented_at=#{consentedAt},
+            version=version+1
+        WHERE id=#{id} AND version=#{expectedVersion} AND status='PENDING'
+          AND provider_recurring_id IS NOT NULL
+    </update>
+    <update id="fail">
+        UPDATE reading_subscription_mandate
+        SET status='FAILED', provider_data_key_ciphertext=NULL, version=version+1
+        WHERE id=#{id} AND version=#{expectedVersion} AND status='PENDING'
+    </update>
+    <update id="requestRevocation">
+        UPDATE reading_subscription_mandate
+        SET status='REVOKE_PENDING', revoke_requested_at=#{now},
+            revoke_next_attempt_at=#{now}, revoke_lease_until=NULL,
+            revoke_last_error=NULL, version=version+1
+        WHERE user_id=#{userId} AND provider='VNPAY_RECURRING' AND status='ACTIVE'
+    </update>
+    <select id="selectDueRevocationIds" resultType="java.lang.Long">
+        SELECT id FROM reading_subscription_mandate
+        WHERE status='REVOKE_PENDING' AND revoke_next_attempt_at&lt;=#{now}
+          AND (revoke_lease_until IS NULL OR revoke_lease_until&lt;=#{now})
+        ORDER BY revoke_next_attempt_at, id
+        LIMIT #{limit}
+    </select>
+    <update id="claimRevocation">
+        UPDATE reading_subscription_mandate
+        SET revoke_lease_until=#{leaseUntil},
+            revoke_attempt_count=revoke_attempt_count+1,
+            version=version+1
+        WHERE id=#{id} AND status='REVOKE_PENDING'
+          AND revoke_next_attempt_at&lt;=#{now}
+          AND (revoke_lease_until IS NULL OR revoke_lease_until&lt;=#{now})
+    </update>
+    <select id="selectById"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionMandateRow">
+        SELECT <include refid="columns"/> FROM reading_subscription_mandate
+        WHERE id=#{id} LIMIT 1
+    </select>
+    <update id="markRevoked">
+        UPDATE reading_subscription_mandate
+        SET status='REVOKED', provider_token_ciphertext=NULL, token_expire_at=NULL,
+            revoked_at=#{revokedAt}, revoke_next_attempt_at=NULL,
+            revoke_lease_until=NULL, revoke_last_error=NULL, version=version+1
+        WHERE id=#{id} AND version=#{expectedVersion} AND status='REVOKE_PENDING'
+    </update>
+    <update id="scheduleRevocationRetry">
+        UPDATE reading_subscription_mandate
+        SET revoke_next_attempt_at=#{nextAttemptAt}, revoke_lease_until=NULL,
+            revoke_last_error=#{lastError}, version=version+1
+        WHERE id=#{id} AND version=#{expectedVersion} AND status='REVOKE_PENDING'
+    </update>
+    <select id="selectMandateQueue"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionMandateQueueItem">
+        SELECT id AS mandateId, user_id AS userId,
+               merchant_reference AS merchantReference,
+               provider_recurring_id AS providerRecurringId, status,
+               revoke_requested_at AS revokeRequestedAt,
+               revoke_next_attempt_at AS revokeNextAttemptAt,
+               revoke_lease_until AS revokeLeaseUntil,
+               revoke_attempt_count AS revokeAttemptCount,
+               revoke_last_error AS revokeLastError,
+               update_time AS updateTime, version
+        FROM reading_subscription_mandate
+        WHERE status=#{status}
+        ORDER BY update_time ASC, id ASC
+        LIMIT #{limit}
+    </select>
+    <select id="selectByIdForUpdate"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionMandateRow">
+        SELECT <include refid="columns"/> FROM reading_subscription_mandate
+        WHERE id=#{id} LIMIT 1 FOR UPDATE
+    </select>
+    <update id="adminScheduleRevocationRetry">
+        UPDATE reading_subscription_mandate
+        SET revoke_next_attempt_at=#{now}, revoke_lease_until=NULL, version=version+1
+        WHERE id=#{id} AND version=#{expectedVersion} AND status='REVOKE_PENDING'
+          AND (revoke_lease_until IS NULL OR revoke_lease_until&lt;=#{now})
+    </update>
+    <select id="selectMandateAdminAudits"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionMandateAdminAuditRow">
+        SELECT id, mandate_id AS mandateId, user_id AS userId,
+               operator_id AS operatorId, action,
+               before_status AS beforeStatus, after_status AS afterStatus,
+               reason, create_time AS createTime
+        FROM reading_subscription_mandate_admin_audit
+        WHERE mandate_id=#{mandateId}
+        ORDER BY id DESC
+        LIMIT #{limit}
+    </select>
+    <insert id="insertMandateAdminAudit">
+        INSERT INTO reading_subscription_mandate_admin_audit
+            (mandate_id, user_id, operator_id, action, before_status,
+             after_status, reason, create_time)
+        VALUES (#{mandateId}, #{userId}, #{operatorId}, #{action}, #{beforeStatus},
+                #{afterStatus}, #{reason}, #{now})
+    </insert>
+    <select id="countPendingRevocations" resultType="long">
+        SELECT COUNT(*) FROM reading_subscription_mandate WHERE status='REVOKE_PENDING'
+    </select>
+</mapper>

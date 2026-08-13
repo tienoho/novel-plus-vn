@@ -12,6 +12,7 @@ import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.lang.reflect.Method;
 import java.util.Base64;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -68,6 +69,8 @@ class AuthorFinanceReviewServiceImplTest {
     @Test
     void recordsBankReferenceBeforeLedgerSettlement() {
         AuthorWithdrawalReviewDO withdrawal = withdrawal("PROCESSING", 5L);
+        setActor(withdrawal, "setApprovedBy", 88L);
+        setActor(withdrawal, "setExecutedBy", 99L);
         when(dao.getWithdrawal(10L)).thenReturn(withdrawal);
         when(dao.requestWithdrawalSettlement(10L, 5L, 99L, "BANK-REF-001")).thenReturn(1);
 
@@ -75,6 +78,34 @@ class AuthorFinanceReviewServiceImplTest {
 
         verify(dao).insertWithdrawalAudit(withdrawal, "PAYMENT_RECORDED", "SETTLEMENT_PENDING", 99L,
             "BANK-REF-001");
+    }
+
+    @Test
+    void refusesApproverExecutingTheSameWithdrawalBeforeCallingMapper() {
+        AuthorWithdrawalReviewDO withdrawal = withdrawal("APPROVED", 4L);
+        setActor(withdrawal, "setApprovedBy", 99L);
+        when(dao.getWithdrawal(10L)).thenReturn(withdrawal);
+        when(dao.markWithdrawalProcessing(10L, 4L, 99L)).thenReturn(1);
+
+        assertThatThrownBy(() -> service.markProcessing(10L, 4L, 99L))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("khác người duyệt");
+
+        verify(dao, never()).markWithdrawalProcessing(anyLong(), anyLong(), anyLong());
+    }
+
+    @Test
+    void refusesDifferentActorRecordingResultForTheExecutor() {
+        AuthorWithdrawalReviewDO withdrawal = withdrawal("PROCESSING", 5L);
+        setActor(withdrawal, "setApprovedBy", 88L);
+        setActor(withdrawal, "setExecutedBy", 99L);
+        when(dao.getWithdrawal(10L)).thenReturn(withdrawal);
+
+        assertThatThrownBy(() -> service.markPaid(10L, 5L, "BANK-REF-001", 100L))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("người thực hiện");
+
+        verify(dao, never()).requestWithdrawalSettlement(anyLong(), anyLong(), anyLong(), anyString());
     }
 
     @Test
@@ -121,6 +152,15 @@ class AuthorFinanceReviewServiceImplTest {
         row.setStatus(status);
         row.setVersion(version);
         return row;
+    }
+
+    private void setActor(AuthorWithdrawalReviewDO withdrawal, String setter, long actorId) {
+        try {
+            Method method = AuthorWithdrawalReviewDO.class.getMethod(setter, Long.class);
+            method.invoke(withdrawal, actorId);
+        } catch (ReflectiveOperationException exception) {
+            throw new AssertionError("Read model chưa lưu actor riêng cho từng phase payout", exception);
+        }
     }
 
     private String encrypt(String plaintext) throws Exception {

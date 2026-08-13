@@ -21,10 +21,10 @@ function update() {
 		},
 		success : function(data) {
 			if (data.code == 0) {
-				parent.layer.msg(data.msg);
+				parent.layer.msg(HtmlUtil.htmlEncode(data.msg || ""));
 
 			} else {
-				parent.layer.msg(data.msg);
+				parent.layer.msg(HtmlUtil.htmlEncode(data.msg || ""));
 			}
 
 		}

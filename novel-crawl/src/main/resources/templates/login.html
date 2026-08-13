@@ -43,6 +43,7 @@
 <body>
 <div class="container">
     <form class="form-signin" method="post" action="/login">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
         <h4 style="text-align: center" class="form-signin-heading" th:text="#{crawl.title}+' - '+#{auth.login}">Quản lý trình thu thập - Đăng nhập</h4>
         <p>
             <label for="username" class="sr-only" th:text="#{auth.username}">Tên đăng nhập</label>

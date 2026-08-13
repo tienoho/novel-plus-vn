@@ -70,14 +70,35 @@ Khóa idempotency phải ổn định cho cùng một thao tác. Retry trả l�
 
 Giá trị mặc định không phải kết luận về thuế hay hợp đồng. Trước production phải phê duyệt tỷ giá, mức tối thiểu, lịch chốt và cách tính thuế bằng chính sách kinh doanh/pháp lý chính thức. Không dùng file “chứng từ” do hệ thống xuất như hóa đơn điện tử nếu chưa tích hợp nhà cung cấp hóa đơn và hoàn tất thủ tục pháp lý tương ứng.
 
+## Định dạng PDF chứng từ
+
+PDF chứng từ được tạo bằng PDFBox `3.0.8` và nhúng trực tiếp Open Sans `6.1.0` Regular/Bold để
+hiển thị tiếng Việt độc lập với font cài trên máy chạy. Số tiền dùng định dạng `vi-VN`; thời gian phát
+hành dùng múi giờ `Asia/Ho_Chi_Minh`. Nội dung dài được ngắt dòng và phân trang thay vì tràn khỏi
+khổ A4.
+
+Font Open Sans được phân phối theo Open Font License; bản giấy phép nằm trong dependency tại
+`fonts/ttf/OpenSans/OFL.txt` và được đóng gói cùng fat JAR. Nếu thiếu font hoặc PDFBox không thể tạo
+tài liệu hợp lệ, service ném lỗi và không trả một tệp giả có tiền tố `%PDF`; endpoint vì vậy thất bại
+đóng thay vì phát hành chứng từ hỏng. Test hồi quy mở lại PDF, trích xuất các nhãn tiếng Việt và xác
+nhận mọi font được sử dụng đều đã nhúng.
+
+## Phân quyền chứng từ tác giả
+
+Các API `/author/finance/receipts`, chi tiết, PDF, JSON và CSV luôn lọc theo `author_id` lấy từ phiên
+đăng nhập. Ownership được xác định qua
+`financial_voucher.reference_id → author_withdrawal_request.id → author_id`; không dùng bút danh vì
+bút danh có thể trùng hoặc thay đổi. Chứng từ không thuộc tác giả hiện tại được xử lý giống chứng từ
+không tồn tại, không để lộ metadata cho phép dò mã.
+
 ## Luồng yêu cầu rút
 
 1. Tác giả phải có KYC `VERIFIED`.
 2. Request phải nằm trong kỳ, đạt mức tối thiểu và không vượt số dư ví tác giả.
 3. Hệ thống snapshot ngân hàng/tỷ giá, tạo yêu cầu `PENDING_REVIEW`.
 4. Ledger ghi `AUTHOR_WITHDRAWAL_HOLD`: trừ ví tác giả và cộng `PAYOUT_CLEARING`.
-5. Quản trị viên duyệt KYC, xem snapshot tài khoản có audit, nhập thuế khấu trừ và chuyển yêu cầu qua `APPROVED` rồi `PROCESSING`.
-6. Khi ngân hàng xác nhận chuyển khoản, quản trị viên ghi mã tham chiếu; yêu cầu chuyển sang `SETTLEMENT_PENDING`.
+5. Quản trị viên có quyền approve nhập thuế khấu trừ và chuyển yêu cầu sang `APPROVED`; một quản trị viên khác có quyền execute mới được nhận xử lý và chuyển sang `PROCESSING`.
+6. Chính executor đã nhận xử lý ghi mã tham chiếu ngân hàng; yêu cầu chuyển sang `SETTLEMENT_PENDING`.
 7. Worker tất toán `PAYOUT_CLEARING` bằng giao dịch `AUTHOR_WITHDRAWAL_SETTLED`, sau đó chuyển yêu cầu sang `PAID`.
 8. Khi từ chối hoặc chuyển khoản thất bại, yêu cầu chuyển sang `RELEASE_PENDING`; worker tạo giao dịch đảo hold rồi kết thúc ở `REJECTED`, `FAILED` hoặc `CANCELLED`. Không sửa entry cũ.
 
@@ -92,7 +113,8 @@ Trang `/novel/authorFinance` dùng các quyền tách biệt:
 | `novel:authorFinance:view` | Xem danh sách KYC và yêu cầu rút đã che dữ liệu nhạy cảm |
 | `novel:authorFinance:pii` | Giải mã KYC hoặc snapshot tài khoản nhận tiền; mỗi lần xem đều ghi audit |
 | `novel:authorFinance:kyc` | Duyệt hoặc từ chối KYC |
-| `novel:authorFinance:payout` | Duyệt, từ chối, bắt đầu chuyển khoản, ghi nhận thành công/thất bại |
+| `novel:authorFinance:payout:approve` | Duyệt số tiền/thuế hoặc từ chối yêu cầu chưa chuyển khoản |
+| `novel:authorFinance:payout:execute` | Nhận xử lý payout và ghi nhận thành công/thất bại |
 
 Các endpoint quản trị chính:
 
@@ -110,7 +132,7 @@ POST /novel/authorFinance/withdrawals/{id}/failed
 POST /novel/authorFinance/withdrawals/{id}/reject
 ```
 
-Không cấp quyền `pii` hoặc `payout` chỉ vì người dùng có quyền sửa hồ sơ tác giả. Tài khoản vận hành phải dùng người dùng riêng; không dùng tài khoản seed `admin/admin` trong production.
+Không cấp quyền `pii`, `payout:approve` hoặc `payout:execute` chỉ vì người dùng có quyền sửa hồ sơ tác giả. Một tài khoản có thể được gán cả hai quyền để dự phòng nhưng backend và database vẫn từ chối tài khoản đó tự approve rồi execute cùng yêu cầu. Tài khoản vận hành phải dùng người dùng riêng; không dùng tài khoản seed `admin/admin` trong production.
 
 ## Migration và kiểm toán
 
@@ -120,6 +142,11 @@ Migration [sql/20260718_author_payout.sql](sql/20260718_author_payout.sql) tạo
 - `author_kyc_audit`;
 - `author_withdrawal_request`;
 - `author_withdrawal_audit`.
+
+Migration [sql/20260817_author_payout_four_eyes.sql](sql/20260817_author_payout_four_eyes.sql) lưu riêng
+`approved_by`/`executed_by`, thêm check constraint ngăn hai actor trùng nhau và seed hai quyền approve/execute.
+Yêu cầu legacy thiếu `approved_by` bị fail-closed; không suy đoán người duyệt từ `reviewed_by` vì cột legacy
+có thể đã bị phase sau ghi đè.
 
 Kiểm tra plaintext không xuất hiện trong cột mã hóa và mọi yêu cầu có audit:
 
@@ -141,5 +168,6 @@ Trước khi bật payout, chạy tối thiểu hai kịch bản trên bản sao
 
 - từ chối: `PENDING_REVIEW → RELEASE_PENDING → REJECTED`, ví tác giả được hoàn đủ Xu và `PAYOUT_CLEARING` về 0;
 - thành công: `PENDING_REVIEW → APPROVED → PROCESSING → SETTLEMENT_PENDING → PAID`, `PAYOUT_CLEARING` về 0 và giao dịch settlement cân bằng.
+- bốn mắt: actor A approve; A bị từ chối khi execute; actor B execute thành công; hai executor cạnh tranh chỉ một người nhận được yêu cầu.
 
 Mọi `ledger_transaction` phải có tổng `wallet_entry.amount = 0`. Retry cùng `idempotencyKey` phải trả lại cùng `withdrawal_no`, không tạo hold thứ hai.

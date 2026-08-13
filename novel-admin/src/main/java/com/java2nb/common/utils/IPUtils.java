@@ -3,7 +3,7 @@ package com.java2nb.common.utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 public class IPUtils {
 	private static Logger logger = LoggerFactory.getLogger(IPUtils.class);

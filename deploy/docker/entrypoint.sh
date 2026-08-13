@@ -1,6 +1,35 @@
 #!/bin/sh
 set -eu
 
+load_secret_file() {
+    variable=$1
+    eval "file=\${${variable}_FILE:-}"
+    if [ -z "$file" ]; then
+        return
+    fi
+    if [ ! -r "$file" ]; then
+        echo "Không thể đọc secret file cho $variable: $file" >&2
+        exit 1
+    fi
+    value=$(cat "$file")
+    if [ -z "$value" ]; then
+        echo "Secret file cho $variable đang trống" >&2
+        exit 1
+    fi
+    export "$variable=$value"
+}
+
+for variable in DB_PASSWORD SPRING_DATA_REDIS_PASSWORD SPRING_REDIS_PASSWORD \
+    JWT_SECRET CACHE_MANAGER_PASSWORD PII_ENCRYPTION_KEY \
+    ADMIN_BOOTSTRAP_PASSWORD CRAWLER_ADMIN_PASSWORD \
+    VNPAY_HASH_SECRET VNPAY_RECURRING_PASSWORD VNPAY_RECURRING_CLIENT_SECRET \
+    VNPAY_RECURRING_HASH_SECRET VIETQR_WEBHOOK_SECRET; do
+    load_secret_file "$variable"
+done
+
+. /usr/local/lib/novel/validate-secrets.sh
+validate_production_secrets
+
 required_vars="DB_HOST DB_PORT DB_NAME DB_USERNAME DB_PASSWORD"
 for variable in $required_vars; do
     eval "value=\${$variable:-}"

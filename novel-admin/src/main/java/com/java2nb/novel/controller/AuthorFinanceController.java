@@ -87,7 +87,7 @@ public class AuthorFinanceController extends BaseController {
 
     @ResponseBody
     @PostMapping("/withdrawals/{id}/approve")
-    @RequiresPermissions("novel:authorFinance:payout")
+    @RequiresPermissions("novel:authorFinance:payout:approve")
     public R approveWithdrawal(@PathVariable long id, @RequestParam long expectedVersion,
                                @RequestParam(defaultValue = "0") long withheldTaxVnd) {
         service.approveWithdrawal(id, expectedVersion, withheldTaxVnd, getUserId());
@@ -96,7 +96,7 @@ public class AuthorFinanceController extends BaseController {
 
     @ResponseBody
     @PostMapping("/withdrawals/{id}/reject")
-    @RequiresPermissions("novel:authorFinance:payout")
+    @RequiresPermissions("novel:authorFinance:payout:approve")
     public R rejectWithdrawal(@PathVariable long id, @RequestParam long expectedVersion,
                               @RequestParam String reason) {
         service.rejectWithdrawal(id, expectedVersion, reason, getUserId());
@@ -105,7 +105,7 @@ public class AuthorFinanceController extends BaseController {
 
     @ResponseBody
     @PostMapping("/withdrawals/{id}/processing")
-    @RequiresPermissions("novel:authorFinance:payout")
+    @RequiresPermissions("novel:authorFinance:payout:execute")
     public R markProcessing(@PathVariable long id, @RequestParam long expectedVersion) {
         service.markProcessing(id, expectedVersion, getUserId());
         return R.ok();
@@ -113,7 +113,7 @@ public class AuthorFinanceController extends BaseController {
 
     @ResponseBody
     @PostMapping("/withdrawals/{id}/paid")
-    @RequiresPermissions("novel:authorFinance:payout")
+    @RequiresPermissions("novel:authorFinance:payout:execute")
     public R markPaid(@PathVariable long id, @RequestParam long expectedVersion,
                       @RequestParam String providerReference) {
         service.markPaid(id, expectedVersion, providerReference, getUserId());
@@ -122,7 +122,7 @@ public class AuthorFinanceController extends BaseController {
 
     @ResponseBody
     @PostMapping("/withdrawals/{id}/failed")
-    @RequiresPermissions("novel:authorFinance:payout")
+    @RequiresPermissions("novel:authorFinance:payout:execute")
     public R markFailed(@PathVariable long id, @RequestParam long expectedVersion, @RequestParam String reason) {
         service.markFailed(id, expectedVersion, reason, getUserId());
         return R.ok();
@@ -130,7 +130,7 @@ public class AuthorFinanceController extends BaseController {
 
     @ResponseBody
     @PostMapping("/withdrawals/{id}/auto-payout")
-    @RequiresPermissions("novel:authorFinance:payout")
+    @RequiresPermissions("novel:authorFinance:payout:execute")
     public R autoPayout(@PathVariable long id) {
         service.executeAutoPayout(id, getUserId());
         return R.ok();

@@ -33,8 +33,10 @@ class AuthorAnalyticsPackagingTest {
             repository.resolve("templates/green/html/author/index.html"),
             repository.resolve("templates/orange/html/author/index.html")
         }) {
-            assertThat(read(index)).contains("/author/author_analytics.html?bookId=");
+            assertThat(read(index)).contains("/javascript/author-index-page.js", "data-analytics=#{author.analytics.query}");
         }
+        assertThat(read(module.resolve("src/main/resources/static/javascript/author-index-page.js")))
+            .contains("/author/author_analytics.html?bookId=");
     }
 
     private String read(Path path) throws Exception {

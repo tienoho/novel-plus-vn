@@ -68,14 +68,7 @@
             <if test="crawlLastTime != null and crawlLastTime != ''">and crawl_last_time = #{crawlLastTime}</if>
             <if test="crawlIsStop != null and crawlIsStop != ''">and crawl_is_stop = #{crawlIsStop}</if>
         </where>
-        <choose>
-            <when test="sort != null and sort.trim() != ''">
-                order by ${sort} ${order}
-            </when>
-            <otherwise>
-                order by id desc
-            </otherwise>
-        </choose>
+        order by id desc
         <if test="offset != null and limit != null">
             limit #{offset}, #{limit}
         </if>

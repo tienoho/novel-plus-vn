@@ -1,0 +1,24 @@
+spring:
+  config:
+    import: classpath:application-common-dev.yml
+
+
+pic:
+  save:
+    type: 1 #Cách lưu ảnh: 1 không lưu, dùng ảnh nguồn; 2 lưu vào phương tiện của hệ thống
+    storage: local #Phương tiện lưu trữ: local cục bộ, OSS lưu trữ đối tượng Alibaba Cloud
+    path: /Users/xiongxiaoyang/java/  #Đường dẫn lưu ảnh
+
+
+
+#Cấu hình thread pool
+thread:
+  pool:
+    #Số luồng lõi
+    core-pool-size: 10
+    #Số luồng tối đa
+    maximum-pool-size: 20
+    #Thời gian hết hạn luồng (giây)
+    keep-alive-time: 10
+    #Kích thước hàng đợi
+    queue-size: 100

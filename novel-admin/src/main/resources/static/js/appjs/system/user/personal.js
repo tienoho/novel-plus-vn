@@ -24,7 +24,7 @@ $("#base_save").click(function () {
                     if (data.code == 0) {
                         parent.layer.msg(adminMessage('updateSuccess', 'Cập nhật thành công'));
                     } else {
-                        parent.layer.alert(data.msg)
+                        parent.layer.alert(HtmlUtil.htmlEncode(data.msg || ""))
                     }
                 }
             });
@@ -47,7 +47,7 @@ $("#pwd_save").click(function () {
                     parent.layer.alert(adminMessage('updateSuccess', 'Cập nhật thành công'));
                     $("#photo_info").click();
                 } else {
-                    parent.layer.alert(data.msg)
+                    parent.layer.alert(HtmlUtil.htmlEncode(data.msg || ""))
                 }
             }
         });

@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.java2nb.novel.mapper.ReadingSubscriptionRenewalMapper">
+    <sql id="subscriptionColumns">
+        id, user_id AS userId, plan_id AS planId,
+        plan_code_snapshot AS planCodeSnapshot,
+        plan_version_snapshot AS planVersionSnapshot,
+        price_vnd_snapshot AS priceVndSnapshot,
+        price_xu_snapshot AS priceXuSnapshot,
+        accepted_plan_version AS acceptedPlanVersion,
+        tickets_per_period_snapshot AS ticketsPerPeriodSnapshot,
+        period_months_snapshot AS periodMonthsSnapshot,
+        ticket_validity_days_snapshot AS ticketValidityDaysSnapshot,
+        start_at AS startAt, current_period_start AS currentPeriodStart,
+        current_period_end AS currentPeriodEnd, next_renewal_at AS nextRenewalAt,
+        next_grant_at AS nextGrantAt, end_at AS endAt, status,
+        auto_renew AS autoRenew, primary_funding_source AS primaryFundingSource,
+        fallback_funding_source AS fallbackFundingSource,
+        price_consent_at AS priceConsentAt, cancel_requested_at AS cancelRequestedAt,
+        source_type AS sourceType, source_ref AS sourceRef,
+        policy_version AS policyVersion, version
+    </sql>
+    <sql id="cycleColumns">
+        id, subscription_id AS subscriptionId, user_id AS userId,
+        period_start AS periodStart, period_end AS periodEnd, grace_end_at AS graceEndAt,
+        plan_version_snapshot AS planVersionSnapshot,
+        price_vnd_snapshot AS priceVndSnapshot, price_xu_snapshot AS priceXuSnapshot,
+        status, attempt_count AS attemptCount, next_attempt_at AS nextAttemptAt,
+        settled_source AS settledSource, settled_reference AS settledReference,
+        settled_at AS settledAt, idempotency_key AS idempotencyKey, version
+    </sql>
+
+    <select id="selectDueSubscriptionIds" resultType="java.lang.Long">
+        SELECT id FROM user_reading_subscription
+        WHERE auto_renew=1 AND status IN ('ACTIVE', 'PAST_DUE')
+          AND next_renewal_at&lt;=#{now}
+        ORDER BY next_renewal_at ASC, id ASC LIMIT #{limit}
+    </select>
+    <select id="lockDueSubscription"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionRow">
+        SELECT <include refid="subscriptionColumns"/>
+        FROM user_reading_subscription
+        WHERE id=#{subscriptionId} AND auto_renew=1
+          AND status IN ('ACTIVE', 'PAST_DUE') AND next_renewal_at&lt;=#{now}
+        LIMIT 1 FOR UPDATE
+    </select>
+    <update id="markPriceConsentRequired">
+        UPDATE user_reading_subscription
+        SET auto_renew=0, next_renewal_at=NULL, end_at=current_period_end,
+            status='PENDING_PRICE_CONSENT', cancel_requested_at=#{now}, version=version+1
+        WHERE id=#{subscriptionId} AND version=#{expectedVersion} AND auto_renew=1
+    </update>
+    <insert id="insertCycle">
+        INSERT INTO reading_subscription_renewal_cycle
+            (subscription_id, user_id, period_start, period_end, grace_end_at,
+             plan_version_snapshot, price_vnd_snapshot, price_xu_snapshot,
+             status, attempt_count, next_attempt_at, idempotency_key)
+        VALUES (#{subscription.id}, #{subscription.userId}, #{periodStart}, #{periodEnd},
+                #{graceEndAt}, #{subscription.planVersionSnapshot},
+                #{subscription.priceVndSnapshot}, #{subscription.priceXuSnapshot},
+                'DUE', 0, #{now}, #{idempotencyKey})
+    </insert>
+    <select id="selectDueCycleIds" resultType="java.lang.Long">
+        SELECT id FROM reading_subscription_renewal_cycle
+        WHERE status IN ('DUE', 'RETRY_WAIT') AND next_attempt_at&lt;=#{now}
+        ORDER BY next_attempt_at ASC, id ASC LIMIT #{limit}
+    </select>
+    <select id="selectProviderPendingCycleIds" resultType="java.lang.Long">
+        SELECT id FROM reading_subscription_renewal_cycle
+        WHERE status='PROVIDER_PENDING' AND next_attempt_at&lt;=#{now}
+        ORDER BY next_attempt_at ASC, id ASC LIMIT #{limit}
+    </select>
+    <select id="countCyclesByStatus" resultType="long">
+        SELECT COUNT(*) FROM reading_subscription_renewal_cycle WHERE status=#{status}
+    </select>
+    <select id="countPastDueSubscriptions" resultType="long">
+        SELECT COUNT(*) FROM user_reading_subscription WHERE status='PAST_DUE'
+    </select>
+    <select id="lockCycle"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionRenewalCycleRow">
+        SELECT <include refid="cycleColumns"/>
+        FROM reading_subscription_renewal_cycle WHERE id=#{cycleId} LIMIT 1 FOR UPDATE
+    </select>
+    <select id="lockSubscription"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionRow">
+        SELECT <include refid="subscriptionColumns"/>
+        FROM user_reading_subscription WHERE id=#{subscriptionId} LIMIT 1 FOR UPDATE
+    </select>
+    <insert id="insertAttempt">
+        INSERT INTO reading_subscription_renewal_attempt
+            (cycle_id, attempt_no, funding_source, status, request_hash, started_at)
+        VALUES (#{cycleId}, #{attemptNo}, #{fundingSource}, #{status}, #{requestHash}, #{now})
+    </insert>
+    <insert id="insertProviderAttempt">
+        INSERT INTO reading_subscription_renewal_attempt
+            (cycle_id, attempt_no, funding_source, provider_request_id,
+             status, request_hash, started_at)
+        VALUES (#{cycleId}, #{attemptNo}, 'VNPAY_RECURRING', #{providerRequestId},
+                'STARTED', #{requestHash}, #{now})
+    </insert>
+    <update id="markProviderProcessing">
+        UPDATE reading_subscription_renewal_cycle
+        SET status='PROCESSING', attempt_count=#{attemptNo}, next_attempt_at=#{now},
+            version=version+1
+        WHERE id=#{cycleId} AND version=#{expectedVersion}
+          AND status IN ('DUE', 'RETRY_WAIT')
+    </update>
+    <select id="selectProviderCharge"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionProviderCharge">
+        SELECT c.id AS cycleId, c.subscription_id AS subscriptionId, c.user_id AS userId,
+               a.attempt_no AS attemptNo, c.price_vnd_snapshot AS amountVnd,
+               c.period_start AS periodStart, a.provider_request_id AS providerRequestId,
+               m.provider_recurring_id AS providerRecurringId,
+               m.provider_token_ciphertext AS providerTokenCiphertext,
+               m.token_expire_at AS tokenExpireAt
+        FROM reading_subscription_renewal_cycle c
+        JOIN reading_subscription_renewal_attempt a
+          ON a.cycle_id=c.id AND a.attempt_no=c.attempt_count AND a.status='STARTED'
+        LEFT JOIN reading_subscription_mandate m
+          ON m.user_id=c.user_id AND m.provider='VNPAY_RECURRING' AND m.status='ACTIVE'
+        WHERE c.id=#{cycleId} AND c.status='PROCESSING'
+        LIMIT 1
+    </select>
+    <update id="claimProviderQuery">
+        UPDATE reading_subscription_renewal_cycle
+        SET next_attempt_at=#{nextQueryAt}, version=version+1
+        WHERE id=#{cycleId} AND status='PROVIDER_PENDING' AND next_attempt_at&lt;=#{now}
+    </update>
+    <select id="selectProviderQuery"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionProviderQuery">
+        SELECT c.id AS cycleId, a.attempt_no AS attemptNo,
+               a.provider_request_id AS providerRequestId,
+               c.price_vnd_snapshot AS amountVnd, a.started_at AS merchantDate
+        FROM reading_subscription_renewal_cycle c
+        JOIN reading_subscription_renewal_attempt a
+          ON a.cycle_id=c.id AND a.attempt_no=c.attempt_count AND a.status='UNKNOWN'
+        WHERE c.id=#{cycleId} AND c.status='PROVIDER_PENDING'
+        LIMIT 1
+    </select>
+    <update id="markAttemptSettled">
+        UPDATE reading_subscription_renewal_attempt
+        SET status='SETTLED', provider_transaction_id=#{reference}, completed_at=#{now},
+            version=version+1
+        WHERE cycle_id=#{cycleId} AND attempt_no=#{attemptNo} AND status='STARTED'
+    </update>
+    <update id="markCycleSettled">
+        UPDATE reading_subscription_renewal_cycle
+        SET status='SETTLED', attempt_count=attempt_count+1,
+            settled_source=#{fundingSource}, settled_reference=#{reference},
+            settled_at=#{now}, version=version+1
+        WHERE id=#{cycleId} AND version=#{expectedVersion}
+          AND status IN ('DUE', 'RETRY_WAIT')
+    </update>
+    <update id="advanceSubscription">
+        UPDATE user_reading_subscription
+        SET current_period_start=#{cycle.periodStart}, current_period_end=#{cycle.periodEnd},
+            next_renewal_at=#{cycle.periodEnd}, end_at=NULL, status='ACTIVE', version=version+1
+        WHERE id=#{cycle.subscriptionId} AND version=#{expectedVersion} AND auto_renew=1
+          AND current_period_end=#{cycle.periodStart}
+    </update>
+    <update id="markProviderPending">
+        UPDATE reading_subscription_renewal_cycle
+        SET status='PROVIDER_PENDING', attempt_count=#{attemptNo}, version=version+1,
+            next_attempt_at=#{now}
+        WHERE id=#{cycleId} AND version=#{expectedVersion} AND status='PROCESSING'
+    </update>
+    <update id="markProviderAttemptUnknown">
+        UPDATE reading_subscription_renewal_attempt
+        SET status='UNKNOWN', response_code=#{responseCode}, completed_at=#{now},
+            version=version+1
+        WHERE cycle_id=#{cycleId} AND attempt_no=#{attemptNo} AND status='STARTED'
+    </update>
+    <update id="markProviderAttemptFailed">
+        UPDATE reading_subscription_renewal_attempt
+        SET status='FAILED', response_code=#{responseCode}, completed_at=#{now},
+            version=version+1
+        WHERE cycle_id=#{cycleId} AND attempt_no=#{attemptNo} AND status='STARTED'
+    </update>
+    <update id="scheduleProviderRetry">
+        UPDATE reading_subscription_renewal_cycle
+        SET status='RETRY_WAIT', next_attempt_at=#{nextAttemptAt}, version=version+1
+        WHERE id=#{cycleId} AND version=#{expectedVersion} AND status='PROCESSING'
+    </update>
+    <update id="markProviderAttemptSettled">
+        UPDATE reading_subscription_renewal_attempt
+        SET status='SETTLED', provider_transaction_id=#{reference}, completed_at=#{now},
+            version=version+1
+        WHERE cycle_id=#{cycleId} AND attempt_no=#{attemptNo} AND status='STARTED'
+    </update>
+    <update id="markProviderCycleSettled">
+        UPDATE reading_subscription_renewal_cycle
+        SET status='SETTLED', settled_source='VNPAY_RECURRING',
+            settled_reference=#{reference}, settled_at=#{now}, version=version+1
+        WHERE id=#{cycleId} AND version=#{expectedVersion} AND status='PROCESSING'
+    </update>
+    <update id="markUnknownProviderAttemptSettled">
+        UPDATE reading_subscription_renewal_attempt
+        SET status='SETTLED', provider_transaction_id=#{reference}, completed_at=#{now},
+            version=version+1
+        WHERE cycle_id=#{cycleId} AND attempt_no=#{attemptNo} AND status='UNKNOWN'
+    </update>
+    <update id="markPendingProviderCycleSettled">
+        UPDATE reading_subscription_renewal_cycle
+        SET status='SETTLED', settled_source='VNPAY_RECURRING',
+            settled_reference=#{reference}, settled_at=#{now}, version=version+1
+        WHERE id=#{cycleId} AND version=#{expectedVersion} AND status='PROVIDER_PENDING'
+    </update>
+    <update id="markUnknownProviderAttemptFailed">
+        UPDATE reading_subscription_renewal_attempt
+        SET status='FAILED', response_code=#{responseCode}, completed_at=#{now},
+            version=version+1
+        WHERE cycle_id=#{cycleId} AND attempt_no=#{attemptNo} AND status='UNKNOWN'
+    </update>
+    <update id="scheduleProviderQueryRetry">
+        UPDATE reading_subscription_renewal_cycle
+        SET status='RETRY_WAIT', next_attempt_at=#{nextAttemptAt}, version=version+1
+        WHERE id=#{cycleId} AND version=#{expectedVersion} AND status='PROVIDER_PENDING'
+    </update>
+    <update id="markAttemptFailed">
+        UPDATE reading_subscription_renewal_attempt
+        SET status='FAILED', response_message=#{message}, completed_at=#{now},
+            version=version+1
+        WHERE cycle_id=#{cycleId} AND attempt_no=#{attemptNo} AND status='STARTED'
+    </update>
+    <update id="scheduleRetry">
+        UPDATE reading_subscription_renewal_cycle
+        SET status='RETRY_WAIT', attempt_count=#{attemptCount},
+            next_attempt_at=#{nextAttemptAt}, version=version+1
+        WHERE id=#{cycleId} AND version=#{expectedVersion}
+          AND status IN ('DUE', 'RETRY_WAIT')
+    </update>
+    <update id="markSubscriptionPastDue">
+        UPDATE user_reading_subscription
+        SET status='PAST_DUE', version=version+1
+        WHERE id=#{subscriptionId} AND version=#{expectedVersion}
+          AND status IN ('ACTIVE', 'PAST_DUE') AND auto_renew=1
+    </update>
+    <update id="expireCycle">
+        UPDATE reading_subscription_renewal_cycle
+        SET status='GRACE_EXPIRED', version=version+1
+        WHERE id=#{cycleId} AND version=#{expectedVersion}
+          AND status IN ('DUE', 'RETRY_WAIT')
+    </update>
+    <update id="expireSubscription">
+        UPDATE user_reading_subscription
+        SET auto_renew=0, primary_funding_source=NULL, fallback_funding_source=NULL,
+            next_renewal_at=NULL, end_at=current_period_end, status='CANCELLED',
+            cancel_requested_at=#{now}, version=version+1
+        WHERE id=#{subscriptionId} AND version=#{expectedVersion}
+          AND status IN ('ACTIVE', 'PAST_DUE')
+    </update>
+    <select id="selectRenewalQueue"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionRenewalQueueItem">
+        SELECT cycle.id AS cycleId, cycle.subscription_id AS subscriptionId,
+               cycle.user_id AS userId, subscription.plan_code_snapshot AS planCode,
+               cycle.status, cycle.attempt_count AS attemptCount,
+               cycle.next_attempt_at AS nextAttemptAt, cycle.grace_end_at AS graceEndAt,
+               cycle.price_vnd_snapshot AS priceVnd, cycle.price_xu_snapshot AS priceXu,
+               attempt.funding_source AS fundingSource, attempt.status AS attemptStatus,
+               attempt.response_code AS responseCode,
+               attempt.provider_transaction_id AS providerTransactionId,
+               attempt.update_time AS attemptUpdatedAt, cycle.version
+        FROM reading_subscription_renewal_cycle cycle
+        JOIN user_reading_subscription subscription ON subscription.id=cycle.subscription_id
+        LEFT JOIN reading_subscription_renewal_attempt attempt
+          ON attempt.cycle_id=cycle.id AND attempt.attempt_no=cycle.attempt_count
+        WHERE cycle.status=#{status}
+        ORDER BY cycle.update_time ASC, cycle.id ASC
+        LIMIT #{limit}
+    </select>
+    <select id="selectRenewalAttempts"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionRenewalAttemptRow">
+        SELECT id, cycle_id AS cycleId, attempt_no AS attemptNo,
+               funding_source AS fundingSource, provider_request_id AS providerRequestId,
+               provider_transaction_id AS providerTransactionId, status,
+               response_code AS responseCode, response_message AS responseMessage,
+               started_at AS startedAt, completed_at AS completedAt, version
+        FROM reading_subscription_renewal_attempt
+        WHERE cycle_id=#{cycleId}
+        ORDER BY attempt_no DESC, id DESC
+        LIMIT #{limit}
+    </select>
+    <select id="selectRenewalAdminAudits"
+            resultType="com.java2nb.novel.service.subscription.ReadingSubscriptionRenewalAdminAuditRow">
+        SELECT id, cycle_id AS cycleId, user_id AS userId, operator_id AS operatorId,
+               action, before_status AS beforeStatus, after_status AS afterStatus,
+               reason, create_time AS createTime
+        FROM reading_subscription_renewal_admin_audit
+        WHERE cycle_id=#{cycleId}
+        ORDER BY id DESC
+        LIMIT #{limit}
+    </select>
+    <update id="adminScheduleRetry">
+        UPDATE reading_subscription_renewal_cycle
+        SET next_attempt_at=#{now}, version=version+1
+        WHERE id=#{cycleId} AND version=#{expectedVersion} AND status='RETRY_WAIT'
+    </update>
+    <insert id="insertRenewalAdminAudit">
+        INSERT INTO reading_subscription_renewal_admin_audit
+            (cycle_id, user_id, operator_id, action, before_status,
+             after_status, reason, create_time)
+        VALUES (#{cycleId}, #{userId}, #{operatorId}, #{action}, #{beforeStatus},
+                #{afterStatus}, #{reason}, #{now})
+    </insert>
+</mapper>

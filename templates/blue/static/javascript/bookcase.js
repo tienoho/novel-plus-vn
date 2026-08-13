@@ -125,6 +125,84 @@ layui.use(['layer', 'jquery'], function () {
 
     window.lastread = new LastRead();
 
+    function appendShelfCell(row, className, text, bold) {
+        var cell = $('<span>').addClass(className);
+        var content = bold ? $('<b>') : cell;
+        content.text(String(text == null ? '' : text));
+        if (bold) {
+            cell.append(content);
+        }
+        row.append(cell);
+        return cell;
+    }
+
+    function safeShelfId(value) {
+        var id = String(value == null ? '' : value);
+        return /^\d+$/.test(id) ? id : null;
+    }
+
+    function safeShelfUrl(rule, replacements) {
+        var value = String(rule == null ? '' : rule);
+        for (var key in replacements) {
+            if (Object.prototype.hasOwnProperty.call(replacements, key)) {
+                value = value.replace('{' + key + '}', replacements[key]);
+            }
+        }
+        try {
+            var parsed = new URL(value, window.location.origin);
+            if (parsed.origin !== window.location.origin || !/^https?:$/.test(parsed.protocol)) {
+                return null;
+            }
+            return parsed.pathname + parsed.search + parsed.hash;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    function appendShelfHeader(list) {
+        var row = $('<li>');
+        appendShelfCell(row, 's1', novelMessage('bookCategory', 'Danh mục truyện'), true);
+        appendShelfCell(row, 's2', novelMessage('bookName', 'Tên truyện'), true);
+        appendShelfCell(row, 's3', novelMessage('blueLastChapter', 'Chương đọc gần nhất'), true);
+        appendShelfCell(row, 's4', novelMessage('author', 'Tác giả'), true);
+        appendShelfCell(row, 's5', novelMessage('actions', 'Thao tác'), true);
+        appendShelfCell(row, 's6', '\u00a0', true);
+        appendShelfCell(row, 's7', '\u00a0', true);
+        list.append(row);
+    }
+
+    function appendShelfBook(list, book) {
+        var articleId = safeShelfId(book[1]);
+        var chapterId = safeShelfId(book[3]);
+        var sourceId = safeShelfId(book[6]);
+        if (!articleId || !chapterId || !sourceId) {
+            return;
+        }
+        var articleUrl = safeShelfUrl(article_rule, {article_id: articleId});
+        var chapterUrl = safeShelfUrl(chapter_rule, {article_id: sourceId, chapter_id: chapterId});
+        if (!articleUrl || !chapterUrl) {
+            return;
+        }
+
+        var row = $('<li>');
+        appendShelfCell(row, 's1', book[5], false);
+        var titleCell = appendShelfCell(row, 's2', '', false);
+        titleCell.append($('<a>').attr({href: articleUrl, target: '_blank', rel: 'noopener noreferrer'}).text(String(book[0] == null ? '' : book[0])));
+        var chapterCell = appendShelfCell(row, 's3', '', false);
+        chapterCell.append($('<a>').attr({href: chapterUrl, target: '_blank', rel: 'noopener noreferrer'}).text(String(book[2] == null ? '' : book[2])));
+        appendShelfCell(row, 's4', book[4], false);
+        var actionCell = appendShelfCell(row, 's5', '', false);
+        actionCell.append($('<a>')
+            .attr('href', '#remove-book')
+            .attr('data-id', articleId)
+            .attr('title', novelMessage('blueRemoveTitle', 'Xóa “{0}”?').replace('{0}', String(book[0] == null ? '' : book[0])))
+            .addClass('remove-book')
+            .text(novelMessage('blueRemove', 'Xóa')));
+        appendShelfCell(row, 's6', '\u00a0', false);
+        appendShelfCell(row, 's7', '\u00a0', false);
+        list.append(row);
+    }
+
     $(function () {
 
         $(".link-bookshelf").on("click",function() {
@@ -147,31 +225,19 @@ layui.use(['layer', 'jquery'], function () {
                 html += "</div>";
                 $("body").append(html);
 
-                var book_html = '<li><span class="s1"><b>' + novelMessage('bookCategory', 'Danh mục truyện') + '</b></span><span class="s2"><b>' + novelMessage('bookName', 'Tên truyện') + '</b></span><span class="s3"><b>' + novelMessage('blueLastChapter', 'Chương đọc gần nhất') + '</b></span><span class="s4"><b>' + novelMessage('author', 'Tác giả') + '</b></span><span class="s5"><b>' + novelMessage('actions', 'Thao tác') + '</b></span><span class="s6"><b>&nbsp;</b></span><span class="s7"><b>&nbsp;</b></span></li>';
+                var bookList = $(".bookshelf-list");
+                appendShelfHeader(bookList);
 
                 if (books.length) {
                     for (var i = 0; i < books.length; i++) {
                         if (i <= 100) {
-
-                            var title = books[i][0];
-                            var article_id = books[i][1];
-                            var chapter_title = books[i][2];
-                            var chapter_id = books[i][3];
-                            var author = books[i][4];
-                            var category = books[i][5];
-                            var sourceid = books[i][6];
-                            var article_url = article_rule.replace('{article_id}', article_id);
-                            var chapter_url = chapter_rule.replace('{article_id}', sourceid);
-                            chapter_url = chapter_url.replace('{chapter_id}', chapter_id);
-
-                            book_html += '<li><span class="s1">' + category + '</span><span class="s2"><a href="' + article_url + '" target="_blank">' + title + '</a></span><span class="s3"><a href="' + chapter_url + '" target="_blank">' + chapter_title + '</a></span><span class="s4">' + author + '</span><span class="s5"><a href="javascript:void(0)" class="remove-book" data-id="' + article_id + '" title="' + novelMessage('blueRemoveTitle', 'Xóa “{0}”?').replace('{0}', title) + '">' + novelMessage('blueRemove', 'Xóa') + '</a></span><span class="s6">&nbsp;</span><span class="s7">&nbsp;</span></li>';
-
+                            appendShelfBook(bookList, books[i]);
                         }
                     }
                 } else {
-                    book_html += '<div style="height:100px;line-height:100px; text-align:center">' + novelMessage('blueShelfEmpty', 'Chưa có truyện nào trong tủ sách.') + '</div>';
+                    bookList.append($('<div>').css({height: '100px', lineHeight: '100px', textAlign: 'center'})
+                        .text(novelMessage('blueShelfEmpty', 'Chưa có truyện nào trong tủ sách.')));
                 }
-                $(".bookshelf-list").append(book_html);
 
             }
         });
@@ -188,7 +254,7 @@ layui.use(['layer', 'jquery'], function () {
                 _this.parent().parent().slideUp(300, function(){
                     $(this).remove();
                     var books = lastread.getBook().reverse();
-                    $(".bookshelf-head h4").html(novelMessage('blueShelfTitle', 'Tủ sách của tôi ({0} truyện)').replace('{0}', books.length));
+                    $(".bookshelf-head h4").text(novelMessage('blueShelfTitle', 'Tủ sách của tôi ({0} truyện)').replace('{0}', books.length));
                 });
 
                 layer.close(index);

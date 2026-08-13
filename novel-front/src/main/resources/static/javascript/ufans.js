@@ -17,44 +17,44 @@
         }
     },
     startSupport: function () {
-        var rStr = '<a class="closePopup" href="javascript:void(0);" onclick="javascript:uFans.closeBox();"></a>';
+        var rStr = '<a class="closePopup" href="#close-support" data-ufans-action="close"></a>';
         rStr += '<div class="popupTit">';
         rStr += '	<h3>' + novelMessage('supportTitle', 'Ủng hộ tác phẩm') + '</h3>';
         rStr += '</div>';
         rStr += '<div class="propsList cf">';
         rStr += '	<ul>';
         rStr += '		<li vals="100">';
-        rStr += '			<a class="propWrap" href="javascript:void(0);">';
+        rStr += '			<a class="propWrap" href="#support-100">';
         rStr += '				<i class="icon_check"></i>';
         rStr += '				<span class="propsBox">100 ' + novelMessage('currency', 'Xu') + '</span>';
         rStr += '			</a>';
         rStr += '		</li>';
         rStr += '		<li class="on"  vals="500">';
-        rStr += '			<a class="propWrap" href="javascript:void(0);">';
+        rStr += '			<a class="propWrap" href="#support-500">';
         rStr += '				<i class="icon_check"></i>';
         rStr += '				<span class="propsBox">500 ' + novelMessage('currency', 'Xu') + '</span>';
         rStr += '			</a>';
         rStr += '		</li>';
         rStr += '		<li vals="2000">';
-        rStr += '			<a class="propWrap" href="javascript:void(0);">';
+        rStr += '			<a class="propWrap" href="#support-2000">';
         rStr += '				<i class="icon_check"></i>';
         rStr += '				<span class="propsBox">2000 ' + novelMessage('currency', 'Xu') + '</span>';
         rStr += '			</a>';
         rStr += '		</li>';
         rStr += '		<li vals="5000">';
-        rStr += '			<a class="propWrap" href="javascript:void(0);">';
+        rStr += '			<a class="propWrap" href="#support-5000">';
         rStr += '				<i class="icon_check"></i>';
         rStr += '				<span class="propsBox">5000 ' + novelMessage('currency', 'Xu') + '</span>';
         rStr += '			</a>';
         rStr += '		</li>';
         rStr += '		<li vals="10000">';
-        rStr += '			<a class="propWrap" href="javascript:void(0);">';
+        rStr += '			<a class="propWrap" href="#support-10000">';
         rStr += '				<i class="icon_check"></i>';
         rStr += '				<span class="propsBox">10000 ' + novelMessage('currency', 'Xu') + '</span>';
         rStr += '			</a>';
         rStr += '		</li>';
         rStr += '		<li vals="100000">';
-        rStr += '			<a class="propWrap" href="javascript:void(0);">';
+        rStr += '			<a class="propWrap" href="#support-100000">';
         rStr += '				<i class="icon_check"></i>';
         rStr += '				<span class="propsBox">100000 ' + novelMessage('currency', 'Xu') + '</span>';
         rStr += '			</a>';
@@ -63,14 +63,15 @@
         rStr += '</div>';
         rStr += '<p class="have_num">' + novelMessage('supportBalance', 'Số dư hiện tại') + ': <span class="red">' + spmymoney + '</span> ' + novelMessage('currency', 'Xu') + '&nbsp;&nbsp;' + novelMessage('supportCurrent', 'Lần này ủng hộ') + ': <span class="red" id="pcTotal">500</span> ' + novelMessage('currency', 'Xu') + ' <a class="red" href="../pay/">[' + novelMessage('supportRecharge', 'Nạp Xu') + ']</a></p>';
         rStr += '<p><textarea class="popup_text" id="sendSupportNote" placeholder="' + novelMessage('supportPlaceholder', 'Cảm ơn bạn đã ủng hộ. Hãy để lại lời nhắn động viên tác giả!') + '"></textarea></p>';
-        rStr += '<p class="tc"><a class="btn_red btn_send_pc" href="javascript:void(0);" onclick="javascript:uFans.SendSupport();">' + novelMessage('supportNow', 'Ủng hộ ngay') + '</a></p>';
+        rStr += '<p class="tc"><a class="btn_red btn_send_pc" href="#send-support" data-ufans-action="send">' + novelMessage('supportNow', 'Ủng hộ ngay') + '</a></p>';
         $("#showPC").html(rStr);
         $("#showPC").show();
         $(".maskBox").show();
-        $(".pcBox .propsList li").click(function () {
+        $(".pcBox .propsList li").click(function (event) {
+            event.preventDefault();
             $(".pcBox .propsList li").removeClass("on");
             $(this).addClass("on");
-            $("#pcTotal").html($(this).attr("vals"));
+            $("#pcTotal").text($(this).attr("vals"));
         })
     },
     closeBox: function () {
@@ -80,7 +81,7 @@
         var uname = jQuery.cookie("waplogname");
         if (uname != undefined && uname != "") {
             var moneyTotal = spmymoney;
-            var moneySupport = parseInt($("#pcTotal").html());
+            var moneySupport = parseInt($("#pcTotal").text(), 10);
             var sendNote = $("#sendSupportNote").val();
             var clearSendNote = sendNote.replace(/[\ |\~|\`|\!|\@|\#|\$|\%|\^|\&|\*|\(|\)|\-|\_|\+|\=|\||\\|\[|\]|\{|\}|\;|\:|\"|\'|\,|\<|\.|\>|\/|\?]/g, "");
             if (sendNote == "") {
@@ -126,7 +127,7 @@
     showNote: function (noteClass) {
         uFans.closeBox();
         $(".maskBox").show();
-        var rStr = '<a class="closePopup" href="javascript:void(0);" onclick="javascript:uFans.closeBox();"></a>';
+        var rStr = '<a class="closePopup" href="#close-message" data-ufans-action="close"></a>';
         rStr += '<div class="popupTit">';
         rStr += '	<h3>' + novelMessage('supportMessage', 'Thông báo') + '</h3>';
         rStr += '</div>';
@@ -137,7 +138,7 @@
             rStr += '<div class="tipWrap suc_txt_flw">' + novelMessage('supportLikeSuccess', 'Thích tác phẩm thành công.') + '</div>';
         }
         rStr += '<div class="tc">';
-        rStr += '	<a href="javascript:void(0);" class="btn_red btn_sure" onclick="javascript:uFans.closeBox();">' + novelMessage('confirm', 'Đồng ý') + '</a>';
+        rStr += '	<a href="#confirm-message" class="btn_red btn_sure" data-ufans-action="close">' + novelMessage('confirm', 'Đồng ý') + '</a>';
         rStr += '</div>';
         $("#showNote").html(rStr);
         $("#showNote").show();
@@ -164,4 +165,13 @@
             return "";
         }
     }
-}
+};
+
+$(document).off('click.novelSupport', '[data-ufans-action]').on('click.novelSupport', '[data-ufans-action]', function (event) {
+    event.preventDefault();
+    if ($(this).attr('data-ufans-action') === 'send') {
+        uFans.SendSupport();
+    } else {
+        uFans.closeBox();
+    }
+});

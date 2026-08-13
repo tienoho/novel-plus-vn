@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.java2nb.novel.mapper.QuestCampaignConfigMapper">
+    <insert id="insertDraft">
+        INSERT INTO quest_campaign
+            (campaign_code, start_at, end_at, status, policy_version)
+        VALUES (#{command.campaignCode}, #{command.startAt}, #{command.endAt}, 'DRAFT',
+                #{command.policyVersion})
+    </insert>
+
+    <sql id="campaignColumns">
+        id, campaign_code AS campaignCode, start_at AS startAt, end_at AS endAt,
+        status, policy_version AS policyVersion, create_time AS createTime,
+        update_time AS updateTime
+    </sql>
+
+    <select id="selectByCode"
+            resultType="com.java2nb.novel.service.gamification.QuestCampaignRow">
+        SELECT <include refid="campaignColumns"/>
+        FROM quest_campaign WHERE campaign_code = #{campaignCode} LIMIT 1
+    </select>
+
+    <select id="selectById"
+            resultType="com.java2nb.novel.service.gamification.QuestCampaignRow">
+        SELECT <include refid="campaignColumns"/>
+        FROM quest_campaign WHERE id = #{campaignId} LIMIT 1
+    </select>
+
+    <select id="lockById"
+            resultType="com.java2nb.novel.service.gamification.QuestCampaignRow">
+        SELECT <include refid="campaignColumns"/>
+        FROM quest_campaign WHERE id = #{campaignId} LIMIT 1 FOR UPDATE
+    </select>
+
+    <select id="countQuest" resultType="int">
+        SELECT COUNT(*) FROM quest_definition WHERE quest_code = #{questCode} AND active = 1
+    </select>
+
+    <delete id="deleteRewardTypes">
+        DELETE FROM quest_reward WHERE campaign_code = #{campaignCode} AND quest_code = #{questCode}
+    </delete>
+
+    <insert id="insertReward">
+        INSERT INTO quest_reward (quest_code, campaign_code, reward_type, amount)
+        VALUES (#{questCode}, #{campaignCode}, #{rewardType}, #{amount})
+    </insert>
+
+    <select id="countRewards" resultType="int">
+        SELECT COUNT(*) FROM quest_reward WHERE campaign_code = #{campaignCode}
+    </select>
+
+    <select id="countOverlappingActive" resultType="int">
+        SELECT COUNT(*)
+        FROM quest_campaign
+        WHERE id &lt;&gt; #{campaignId}
+          AND status = 'ACTIVE'
+          AND start_at &lt; #{endAt}
+          AND end_at &gt; #{startAt}
+    </select>
+
+    <update id="updateStatus">
+        UPDATE quest_campaign SET status = #{status}
+        WHERE id = #{campaignId} AND status = #{expectedStatus}
+    </update>
+</mapper>

@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.java2nb.novel.mapper.AuthorFinanceMapper">
+
+    <select id="selectKycByAuthorId" resultType="com.java2nb.novel.service.finance.AuthorKycRow">
+        SELECT id,
+               author_id                    AS authorId,
+               user_id                      AS userId,
+               legal_name_ciphertext        AS legalNameCiphertext,
+               date_of_birth_ciphertext     AS dateOfBirthCiphertext,
+               identity_type                AS identityType,
+               identity_number_ciphertext   AS identityNumberCiphertext,
+               identity_number_hash         AS identityNumberHash,
+               identity_number_last4        AS identityNumberLast4,
+               tax_code_ciphertext          AS taxCodeCiphertext,
+               bank_code                    AS bankCode,
+               bank_account_ciphertext      AS bankAccountCiphertext,
+               bank_account_hash            AS bankAccountHash,
+               bank_account_last4           AS bankAccountLast4,
+               bank_account_name_ciphertext AS bankAccountNameCiphertext,
+               consent_version              AS consentVersion,
+               consented_at                 AS consentedAt,
+               status,
+               submission_version           AS submissionVersion,
+               submitted_at                 AS submittedAt,
+               rejection_reason             AS rejectionReason
+        FROM author_kyc_profile
+        WHERE author_id = #{authorId}
+        LIMIT 1
+    </select>
+
+    <insert id="insertKyc">
+        INSERT INTO author_kyc_profile
+            (author_id, user_id, legal_name_ciphertext, date_of_birth_ciphertext, identity_type,
+             identity_number_ciphertext, identity_number_hash, identity_number_last4, tax_code_ciphertext,
+             bank_code, bank_account_ciphertext, bank_account_hash, bank_account_last4,
+             bank_account_name_ciphertext, consent_version, consented_at, status, submission_version, submitted_at)
+        VALUES (#{authorId}, #{userId}, #{legalNameCiphertext}, #{dateOfBirthCiphertext}, #{identityType},
+                #{identityNumberCiphertext}, #{identityNumberHash}, #{identityNumberLast4}, #{taxCodeCiphertext},
+                #{bankCode}, #{bankAccountCiphertext}, #{bankAccountHash}, #{bankAccountLast4},
+                #{bankAccountNameCiphertext}, #{consentVersion}, #{consentedAt}, 'PENDING', 1, #{submittedAt})
+    </insert>
+
+    <update id="updateRejectedKyc">
+        UPDATE author_kyc_profile
+        SET legal_name_ciphertext = #{legalNameCiphertext},
+            date_of_birth_ciphertext = #{dateOfBirthCiphertext},
+            identity_type = #{identityType},
+            identity_number_ciphertext = #{identityNumberCiphertext},
+            identity_number_hash = #{identityNumberHash},
+            identity_number_last4 = #{identityNumberLast4},
+            tax_code_ciphertext = #{taxCodeCiphertext},
+            bank_code = #{bankCode},
+            bank_account_ciphertext = #{bankAccountCiphertext},
+            bank_account_hash = #{bankAccountHash},
+            bank_account_last4 = #{bankAccountLast4},
+            bank_account_name_ciphertext = #{bankAccountNameCiphertext},
+            consent_version = #{consentVersion},
+            consented_at = #{consentedAt},
+            status = 'PENDING',
+            submission_version = submission_version + 1,
+            submitted_at = #{submittedAt},
+            reviewed_at = NULL,
+            reviewed_by = NULL,
+            rejection_reason = NULL
+        WHERE id = #{id}
+          AND author_id = #{authorId}
+          AND status = 'REJECTED'
+          AND submission_version = #{submissionVersion}
+    </update>
+
+    <insert id="insertKycAudit">
+        INSERT INTO author_kyc_audit
+            (kyc_profile_id, author_id, user_id, event_type, from_status, to_status,
+             actor_type, actor_id, reason)
+        VALUES (#{kycProfileId}, #{authorId}, #{userId}, #{eventType}, #{fromStatus}, #{toStatus},
+                #{actorType}, #{actorId}, #{reason})
+    </insert>
+
+    <select id="selectWithdrawalByIdempotencyKey"
+            resultType="com.java2nb.novel.service.finance.AuthorWithdrawalRow">
+        SELECT id,
+               withdrawal_no      AS withdrawalNo,
+               idempotency_key    AS idempotencyKey,
+               hold_idempotency_key AS holdIdempotencyKey,
+               author_id          AS authorId,
+               user_id            AS userId,
+               requested_xu       AS requestedXu,
+               gross_amount_vnd   AS grossAmountVnd,
+               withheld_tax_vnd   AS withheldTaxVnd,
+               net_amount_vnd     AS netAmountVnd,
+               bank_code          AS bankCode,
+               bank_account_last4 AS bankAccountLast4,
+               status,
+               release_target_status AS releaseTargetStatus,
+               payout_provider    AS payoutProvider,
+               requested_at       AS requestedAt,
+               rejection_reason   AS rejectionReason,
+               version
+        FROM author_withdrawal_request
+        WHERE idempotency_key = #{idempotencyKey}
+        LIMIT 1
+    </select>
+
+    <insert id="insertWithdrawal">
+        INSERT INTO author_withdrawal_request
+            (withdrawal_no, idempotency_key, author_id, user_id, kyc_profile_id,
+             requested_xu, vnd_per_xu, gross_amount_vnd, withheld_tax_vnd, net_amount_vnd,
+             bank_code, bank_account_ciphertext, bank_account_last4, bank_account_name_ciphertext,
+             hold_idempotency_key, status, payout_provider, requested_at)
+        VALUES (#{withdrawalNo}, #{idempotencyKey}, #{authorId}, #{userId}, #{kycProfileId},
+                #{requestedXu}, #{vndPerXu}, #{grossAmountVnd}, 0, #{grossAmountVnd},
+                #{bankCode}, #{bankAccountCiphertext}, #{bankAccountLast4}, #{bankAccountNameCiphertext},
+                #{holdIdempotencyKey}, 'PENDING_REVIEW', 'MANUAL_BANK', CURRENT_TIMESTAMP(3))
+    </insert>
+
+    <insert id="insertWithdrawalAudit">
+        INSERT INTO author_withdrawal_audit
+            (withdrawal_request_id, withdrawal_no, event_type, from_status, to_status,
+             actor_type, actor_id, reason)
+        VALUES (#{withdrawalRequestId}, #{withdrawalNo}, #{eventType}, #{fromStatus}, #{toStatus},
+                #{actorType}, #{actorId}, #{reason})
+    </insert>
+
+    <sql id="withdrawalColumns">
+        id,
+        withdrawal_no AS withdrawalNo,
+        idempotency_key AS idempotencyKey,
+        hold_idempotency_key AS holdIdempotencyKey,
+        author_id AS authorId,
+        user_id AS userId,
+        requested_xu AS requestedXu,
+        gross_amount_vnd AS grossAmountVnd,
+        withheld_tax_vnd AS withheldTaxVnd,
+        net_amount_vnd AS netAmountVnd,
+        bank_code AS bankCode,
+        bank_account_last4 AS bankAccountLast4,
+        status,
+        release_target_status AS releaseTargetStatus,
+        payout_provider AS payoutProvider,
+        requested_at AS requestedAt,
+        rejection_reason AS rejectionReason,
+        version
+    </sql>
+
+    <select id="listPendingWithdrawalActions"
+            resultType="com.java2nb.novel.service.finance.AuthorWithdrawalRow">
+        SELECT <include refid="withdrawalColumns"/>
+        FROM author_withdrawal_request
+        WHERE status IN ('RELEASE_PENDING', 'SETTLEMENT_PENDING')
+        ORDER BY update_time, id
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectWithdrawalById" resultType="com.java2nb.novel.service.finance.AuthorWithdrawalRow">
+        SELECT <include refid="withdrawalColumns"/>
+        FROM author_withdrawal_request
+        WHERE id = #{id}
+        LIMIT 1
+    </select>
+
+    <update id="claimWithdrawalAction">
+        UPDATE author_withdrawal_request
+        SET version = version + 1
+        WHERE id = #{id}
+          AND status = #{status}
+          AND version = #{expectedVersion}
+    </update>
+
+    <update id="completeWithdrawalAction">
+        UPDATE author_withdrawal_request
+        SET status = #{toStatus},
+            release_target_status = NULL,
+            version = version + 1
+        WHERE id = #{id}
+          AND status = #{fromStatus}
+          AND version = #{expectedVersion}
+    </update>
+
+</mapper>

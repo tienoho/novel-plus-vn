@@ -276,9 +276,9 @@ $(function(){
           }
 
           this.$avatarInput.val('');
-          this.alert(1,data.msg);
+          this.alert(1, HtmlUtil.htmlEncode(data.msg || ""));
         } else if (data.msg) {
-          this.alert(2,data.msg);
+          this.alert(2, HtmlUtil.htmlEncode(data.msg || ""));
         }
       } else {
         this.alert(2,'Failed to response');

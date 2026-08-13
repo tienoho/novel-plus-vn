@@ -5,4 +5,15 @@
 **/*.iml
 **/.DS_Store
 /.env
+/.env.uat
+/.env.release
+/.env.rc-smoke
+/.vnpay-uat-registration.txt
+/secrets/*
+!/secrets/README.md
 
+tmp/*
+e2e/node_modules/
+e2e/.auth/
+e2e/playwright-report/
+e2e/test-results/

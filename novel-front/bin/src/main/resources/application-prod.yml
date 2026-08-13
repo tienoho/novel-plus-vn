@@ -1,0 +1,38 @@
+spring:
+  config:
+    import: classpath:application-common-prod.yml
+
+  #Cấu hình đường dẫn tệp tĩnh
+  #Đường dẫn mẫu Thymeleaf
+  thymeleaf:
+    prefix: file:${user.dir}/templates/${templates.name}/html/
+    suffix: .html
+  web:
+    resources:
+      static-locations: file:${user.dir}/templates/${templates.name}/static/
+
+#Cấu hình template
+templates:
+  name: green
+
+
+pic:
+  save:
+    type: 2 #Cách lưu ảnh: 1 không lưu, dùng ảnh nguồn; 2 lưu vào phương tiện của hệ thống
+    storage: local #Phương tiện lưu trữ: local cục bộ, OSS lưu trữ đối tượng Alibaba Cloud
+    path: /var/pic  #Đường dẫn lưu ảnh
+
+
+#Cấu hình thread pool
+thread:
+  pool:
+    #Số luồng lõi
+    core-pool-size: 10
+    #Số luồng tối đa
+    maximum-pool-size: 20
+    #Thời gian hết hạn luồng (giây)
+    keep-alive-time: 10
+    #Kích thước hàng đợi
+    queue-size: 1000
+
+

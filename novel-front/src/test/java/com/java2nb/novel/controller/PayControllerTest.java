@@ -1,19 +1,30 @@
 package com.java2nb.novel.controller;
 
 import com.java2nb.novel.core.config.VnpayProperties;
+import com.java2nb.novel.core.config.VietQrProperties;
 import com.java2nb.novel.core.i18n.Messages;
+import com.java2nb.novel.core.observability.NovelBusinessMetrics;
+import com.java2nb.novel.core.payment.PaymentAdapterFactory;
+import com.java2nb.novel.core.bean.UserDetails;
 import com.java2nb.novel.service.OrderService;
+import com.java2nb.novel.service.PayOrderCreation;
 import com.java2nb.novel.service.PayOrderState;
 import com.java2nb.novel.service.PayOrderUpdateResult;
 import com.java2nb.novel.service.VnpayService;
+import com.java2nb.novel.service.payment.impl.VietQrPaymentAdapter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -32,7 +43,9 @@ class PayControllerTest {
     private static final String HASH_SECRET = "test-vnpay-secret";
 
     private VnpayProperties properties;
+    private VietQrProperties vietQrProperties;
     private OrderService orderService;
+    private Messages messages;
     private PayController controller;
 
     @BeforeEach
@@ -43,8 +56,12 @@ class PayControllerTest {
         properties.setHashSecret(HASH_SECRET);
         properties.setPayUrl("https://sandbox.vnpayment.vn/paymentv2/vpcpay.html");
         properties.setReturnUrl("https://merchant.example/pay/vnpay/return");
+        vietQrProperties = configuredVietQrProperties();
         orderService = mock(OrderService.class);
-        controller = new PayController(properties, new VnpayService(properties), orderService, mock(Messages.class));
+        messages = mock(Messages.class);
+        when(messages.get(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        controller = controller(new PaymentAdapterFactory(List.of(
+            new VietQrPaymentAdapter(vietQrProperties))), null);
     }
 
     @Test
@@ -105,6 +122,143 @@ class PayControllerTest {
         controller.vnpayReturn(validIpnRequest(), response);
 
         assertThat(response.getRedirectedUrl()).isEqualTo("/pay/index.html?payment=vnpay-failed");
+    }
+
+    @Test
+    void statusEndpointInspectsTheStoredOrderWithoutTrustingAClientAmount() {
+        when(orderService.inspectPayOrder(123L, (byte) 4, 0)).thenReturn(PayOrderState.SUCCESS);
+
+        assertThat(controller.queryStatus(123L))
+            .containsEntry("outTradeNo", 123L)
+            .containsEntry("status", "SUCCESS");
+        verify(orderService).inspectPayOrder(123L, (byte) 4, 0);
+    }
+
+    @Test
+    void jsonCheckoutUsesServerAmountAndReturnsSignedPaymentUrl() {
+        UserDetails user = mock(UserDetails.class);
+        when(user.getId()).thenReturn(11L);
+        controller = controller(new PaymentAdapterFactory(List.of(
+            new VietQrPaymentAdapter(vietQrProperties))), user);
+        Date createTime = new Date();
+        when(orderService.createPayOrder((byte) 4, 10_000, 1_000, 11L))
+            .thenReturn(new PayOrderCreation(123L, createTime));
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/pay/vnpay");
+        request.addHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+
+        ResponseEntity<?> response = controller.vnpay(10_000, request);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        assertThat(response.getBody()).isInstanceOf(Map.class);
+        Map<?, ?> body = (Map<?, ?>) response.getBody();
+        assertThat(body.get("code")).isEqualTo(200);
+        assertThat(body.get("paymentUrl").toString())
+            .startsWith("https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?");
+        verify(orderService).createPayOrder((byte) 4, 10_000, 1_000, 11L);
+    }
+
+    @Test
+    void jsonCheckoutRejectsAmountOutsideServerAllowlist() {
+        UserDetails user = mock(UserDetails.class);
+        controller = controller(new PaymentAdapterFactory(List.of(
+            new VietQrPaymentAdapter(vietQrProperties))), user);
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/pay/vnpay");
+        request.addHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+
+        ResponseEntity<?> response = controller.vnpay(12_345, request);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(400);
+        verify(orderService, never()).createPayOrder(anyByte(), anyInt(), anyInt(), any());
+    }
+
+    @Test
+    void browserFormCheckoutKeepsRedirectBehavior() {
+        UserDetails user = mock(UserDetails.class);
+        when(user.getId()).thenReturn(11L);
+        controller = controller(new PaymentAdapterFactory(List.of(
+            new VietQrPaymentAdapter(vietQrProperties))), user);
+        when(orderService.createPayOrder((byte) 4, 10_000, 1_000, 11L))
+            .thenReturn(new PayOrderCreation(123L, new Date()));
+
+        ResponseEntity<?> response = controller.vnpay(10_000,
+            new MockHttpServletRequest("POST", "/pay/vnpay"));
+
+        assertThat(response.getStatusCode().value()).isEqualTo(302);
+        assertThat(response.getHeaders().getLocation()).hasScheme("https");
+    }
+
+    @Test
+    void browserFormErrorDoesNotChangeIntoJsonContract() {
+        UserDetails user = mock(UserDetails.class);
+        controller = controller(new PaymentAdapterFactory(List.of(
+            new VietQrPaymentAdapter(vietQrProperties))), user);
+
+        ResponseEntity<?> response = controller.vnpay(12_345,
+            new MockHttpServletRequest("POST", "/pay/vnpay"));
+
+        assertThat(response.getStatusCode().value()).isEqualTo(400);
+        assertThat(response.getBody()).isEqualTo("payment.amount.invalid");
+        verify(orderService, never()).createPayOrder(anyByte(), anyInt(), anyInt(), any());
+    }
+
+    @Test
+    void vietQrWebhookFailsClosedWhenAdapterIsMissing() {
+        controller = controller(new PaymentAdapterFactory(List.of()), null);
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/pay/vietqr/webhook");
+        request.addParameter("outTradeNo", "1002003004");
+        request.addParameter("amount", "50000");
+
+        Map<String, Object> response = controller.vietqrWebhook(request, null);
+
+        assertThat(response).containsEntry("code", 503);
+        verify(orderService, never()).processPayOrder(any(), any(), anyByte(), anyInt(), anyBoolean());
+    }
+
+    @Test
+    void vietQrChannelAndOrderCreationStayDisabledWithoutSafeConfiguration() {
+        vietQrProperties.setEnabled(false);
+        UserDetails user = mock(UserDetails.class);
+        when(user.getId()).thenReturn(11L);
+        controller = controller(new PaymentAdapterFactory(List.of(
+            new VietQrPaymentAdapter(vietQrProperties))), user);
+
+        assertThat(controller.listChannels()).filteredOn(channel -> channel.get("code").equals(5))
+            .singleElement().satisfies(channel -> assertThat(channel).containsEntry("enabled", false));
+        assertThat(controller.vietqr(50_000, new MockHttpServletRequest()))
+            .containsEntry("code", 503);
+        verify(orderService, never()).createPayOrder(anyByte(), anyInt(), anyInt(), any());
+    }
+
+    @Test
+    void vietQrOrderCreationUsesTheServerAmountAllowlist() {
+        UserDetails user = mock(UserDetails.class);
+        when(user.getId()).thenReturn(11L);
+        controller = controller(new PaymentAdapterFactory(List.of(
+            new VietQrPaymentAdapter(vietQrProperties))), user);
+
+        assertThat(controller.vietqr(12_345, new MockHttpServletRequest()))
+            .containsEntry("code", 400);
+        verify(orderService, never()).createPayOrder(anyByte(), anyInt(), anyInt(), any());
+    }
+
+    private PayController controller(PaymentAdapterFactory factory, UserDetails user) {
+        return new PayController(properties, new VnpayService(properties), orderService, messages,
+            vietQrProperties, factory, new NovelBusinessMetrics(new SimpleMeterRegistry())) {
+            @Override
+            protected UserDetails getUserDetails(jakarta.servlet.http.HttpServletRequest request) {
+                return user;
+            }
+        };
+    }
+
+    private VietQrProperties configuredVietQrProperties() {
+        VietQrProperties configured = new VietQrProperties();
+        configured.setEnabled(true);
+        configured.setBankBin("970422");
+        configured.setAccountNo("1234567890");
+        configured.setAccountName("NOVEL PLUS");
+        configured.setSecretToken("0123456789abcdef0123456789abcdef");
+        return configured;
     }
 
     private MockHttpServletRequest validIpnRequest() {

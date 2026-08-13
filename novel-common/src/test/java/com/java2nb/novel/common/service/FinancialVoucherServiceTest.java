@@ -5,9 +5,13 @@ import com.java2nb.novel.common.entity.FinancialVoucherDO;
 import com.java2nb.novel.common.service.impl.FinancialVoucherServiceImpl;
 import com.java2nb.novel.common.tax.PitTaxCalculatorService;
 import com.java2nb.novel.common.tax.VatTaxCalculatorService;
+import com.java2nb.novel.core.exception.BusinessException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.nio.charset.StandardCharsets;
@@ -101,14 +105,16 @@ public class FinancialVoucherServiceTest {
     }
 
     @Test
-    public void testExportVoucherPdf() {
+    public void testExportVoucherPdf() throws Exception {
         FinancialVoucherDO voucher = FinancialVoucherDO.builder()
                 .voucherNo("INV-20260725-99999")
                 .voucherType("RECHARGE_RECEIPT")
                 .referenceType("ORDER_PAY")
                 .referenceId("ORD-8888")
-                .payerName("Test Payer")
-                .payeeName("Novel-Plus")
+                .payerName("Nguyễn Văn Á")
+                .payerTaxCode("0123456789")
+                .payeeName("Công ty Novel Plus")
+                .payeeTaxCode("0987654321")
                 .grossAmountVnd(110_000L)
                 .taxAmountVnd(10_000L)
                 .netAmountVnd(100_000L)
@@ -120,8 +126,48 @@ public class FinancialVoucherServiceTest {
         byte[] pdfBytes = voucherService.exportVoucherPdf("INV-20260725-99999");
         assertNotNull(pdfBytes);
         assertTrue(pdfBytes.length > 0);
-        String pdfStr = new String(pdfBytes, StandardCharsets.ISO_8859_1);
-        assertTrue(pdfStr.startsWith("%PDF-1.4"));
+        try (PDDocument document = Loader.loadPDF(pdfBytes)) {
+            String text = new PDFTextStripper().getText(document);
+            assertTrue(text.contains("BIÊN NHẬN NẠP XU"));
+            assertTrue(text.contains("Số chứng từ"));
+            assertTrue(text.contains("Nguyễn Văn Á"));
+            assertTrue(text.contains("Thuế GTGT"));
+            assertTrue(text.contains("Mã kiểm tra"));
+            boolean embeddedFontFound = false;
+            var resources = document.getPage(0).getResources();
+            for (var fontName : resources.getFontNames()) {
+                embeddedFontFound = true;
+                assertTrue(resources.getFont(fontName).isEmbedded());
+            }
+            assertTrue(embeddedFontFound);
+        }
+    }
+
+    @Test
+    public void authorVoucherQueriesAlwaysCarryTheImmutableAuthorId() {
+        FinancialVoucherDO voucher = FinancialVoucherDO.builder()
+                .voucherNo("VOUCHER-OWNER-1")
+                .referenceType("AUTHOR_WITHDRAWAL_REQUEST")
+                .referenceId("500")
+                .build();
+        when(voucherDao.selectAuthorVoucherByNo("VOUCHER-OWNER-1", 77L)).thenReturn(voucher);
+        when(voucherDao.selectAuthorVouchers(77L)).thenReturn(List.of(voucher));
+
+        assertSame(voucher, voucherService.getAuthorVoucher("VOUCHER-OWNER-1", 77L));
+        assertEquals(List.of(voucher), voucherService.listAuthorVouchers(77L));
+
+        verify(voucherDao).selectAuthorVoucherByNo("VOUCHER-OWNER-1", 77L);
+        verify(voucherDao).selectAuthorVouchers(77L);
+    }
+
+    @Test
+    public void authorPdfExportRejectsVoucherOutsideOwnerScope() {
+        when(voucherDao.selectAuthorVoucherByNo("VOUCHER-OTHER", 77L)).thenReturn(null);
+
+        assertThrows(BusinessException.class,
+                () -> voucherService.exportAuthorVoucherPdf("VOUCHER-OTHER", 77L));
+
+        verify(voucherDao, never()).selectByVoucherNo("VOUCHER-OTHER");
     }
 
     @Test

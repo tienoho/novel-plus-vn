@@ -120,13 +120,11 @@ function load() {
                         align: 'center',
                         formatter: function (value, row, index) {
                             if(row.status==1) {
-                                var e = '<a class="btn btn-primary btn-sm ' + s_edit_h + '" href="#" mce_href="#" title="' + adminMessage('authorRestore', 'Khôi phục hoạt động') + '" onclick="edit(\''
-                                    + row.id
-                                    + '\',0)"><i >' + adminMessage('authorRestore', 'Khôi phục hoạt động') + '</i></a> ';
+                                var e = adminRowAction({action: 'edit', args: [row.id, 0], variant: 'primary', visibility: s_edit_h,
+                                    title: adminMessage('authorRestore', 'Khôi phục hoạt động'), label: adminMessage('authorRestore', 'Khôi phục hoạt động'), icon: 'none'});
                             }else{
-                                var e = '<a class="btn btn-primary btn-sm ' + s_edit_h + '" href="#" mce_href="#" title="' + adminMessage('authorBlocked', 'Đã khóa') + '" onclick="edit(\''
-                                    + row.id
-                                    + '\',1)"><i >' + adminMessage('authorBlocked', 'Đã khóa') + '</i></a> ';
+                                var e = adminRowAction({action: 'edit', args: [row.id, 1], variant: 'primary', visibility: s_edit_h,
+                                    title: adminMessage('authorBlocked', 'Đã khóa'), label: adminMessage('authorBlocked', 'Đã khóa'), icon: 'none'});
                             }
                             return  e ;
                         }
@@ -176,7 +174,7 @@ function edit(id,status) {
                 reLoad();
 
             } else {
-                parent.layer.alert(data.msg)
+                parent.layer.alert(HtmlUtil.htmlEncode(data.msg || ""))
             }
 
         }

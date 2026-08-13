@@ -59,12 +59,8 @@ function load() {
 									field : 'roleId',
 									align : 'center',
 									formatter : function(value, row, index) {
-										var e = '<a class="btn btn-primary btn-sm '+s_edit_h+'" href="#" mce_href="#" title="' + adminMessage('edit', 'Sửa') + '" onclick="edit(\''
-												+ row.roleId
-												+ '\')"><i class="fa fa-edit"></i></a> ';
-										var d = '<a class="btn btn-warning btn-sm '+s_remove_h+'" href="#" title="' + adminMessage('deleteLabel', 'Xóa') + '"  mce_href="#" onclick="remove(\''
-												+ row.roleId
-												+ '\')"><i class="fa fa-remove"></i></a> ';
+										var e = adminRowAction({action: 'edit', args: [row.roleId], variant: 'primary', visibility: s_edit_h, title: adminMessage('edit', 'Sửa'), icon: 'edit'});
+										var d = adminRowAction({action: 'remove', args: [row.roleId], variant: 'warning', visibility: s_remove_h, title: adminMessage('deleteLabel', 'Xóa'), icon: 'remove'});
 										return e + d;
 									}
 								} ]

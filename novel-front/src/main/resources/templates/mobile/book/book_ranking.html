@@ -4,328 +4,49 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <title th:text="${application.website.name}+' - '+#{book.list}"></title>
-
-    <meta name="keywords"
-          th:content="${application.website.name}+','+#{book.seo.list.keywords}">
-
-    <meta name="description"
-          th:content="#{book.seo.list.description(${application.website.name})}">
-
-
+    <meta name="keywords" th:content="${application.website.name}+','+#{book.seo.list.keywords}">
+    <meta name="description" th:content="#{book.seo.list.description(${application.website.name})}">
     <div th:include="mobile/common/css :: css"></div>
-
-    <style type="text/css">
-
-
-        .line-limit-length {
-
-            overflow: hidden;
-
-            text-overflow: ellipsis;
-
-            white-space: nowrap;
-
-        }
-
-        .indexP p a {
-            color: #4c6978;
-        }
-
-        .Readarea {
-            font-size: 18px;
-            line-height: 35px;
-            padding: 10px;
-            color: #333;
-        }
-
-        div, p {
-            wrap-work: break-word;
-            word-break: break-all;
-            word-wrap: break-word;
-            word-break: normal;
-            -moz-box-sizing: border-box;
-            -webkit-box-sizing: border-box;
-            box-sizing: border-box;
-            -ms-box-sizing: border-box;
-        }
-
-        .indexDiv a {
-            margin-left: 20px;
-        }
-
-        img {
-            width: 130px;
-            height: 180px;
-        }
-
-        .book_desc {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            white-space: pre-wrap;
-        }
-
-    </style>
+    <link rel="stylesheet" href="/mobile/css/mobile-book-ranking-page.css">
 </head>
-<body>
-
-
-<input type="hidden" id="limit" th:value="${limit}"/>
-<input type="hidden" id="curr" th:value="${curr}"/>
-<input type="hidden" id="total" th:value="${total}"/>
-<input type="hidden" id="ids" th:value="${ids}"/>
-<input type="hidden" id="bookStatus" th:value="${bookStatus}"/>
-<input type="hidden" id="token" th:value="${token}"/>
-<input type="hidden" id="keyword" th:value="${keyword}"/>
-<input type="hidden" id="catId" th:value="${catId}"/>
-<input type="hidden" id="sortBy" th:value="${sortBy}"/>
-<input type="hidden" id="sort" th:value="${sort}"/>
-
-<div style="height: 50px;line-height: 50px;text-align: center" class="layui-header header header-doc  layui-bg-cyan">
-
-    <div style="float: left;margin-left: 10px">
-        <a href="javascript:history.go(-1)">
-            <i style="font-size: 20px;color: #fff;" class="layui-icon">&#xe65c;</i></a>
+<body data-mobile-book-ranking-page
+      th:attr="data-author-label=#{book.author},
+               data-category-label=#{book.category},
+               data-status-label=#{book.status},
+               data-serializing-label=#{book.status.serializing},
+               data-completed-label=#{book.status.completed},
+               data-updated-label=#{reader.updated},
+               data-description-label=#{book.description},
+               data-network-error-text=#{auth.networkError}">
+<div class="layui-header header header-doc layui-bg-cyan"
+     style="height:50px;line-height:50px;text-align:center">
+    <div style="float:left;margin-left:10px">
+        <a href="/" data-mobile-book-ranking-back th:attr="aria-label=#{reader.back}">
+            <i class="layui-icon" style="font-size:20px;color:#fff">&#xe65c;</i>
+        </a>
     </div>
     <b class="layui-icon" th:text="#{book.list}">Danh sách truyện</b>
-    <div style="float: right;margin-right: 10px">
-        <a href="/"><i style="font-size: 20px;color: #fff;" class="layui-icon">&#xe68e;</i></a>
+    <div style="float:right;margin-right:10px">
+        <a href="/" th:attr="aria-label=#{site.home}">
+            <i class="layui-icon" style="font-size:20px;color:#fff">&#xe68e;</i>
+        </a>
     </div>
 </div>
 
-<div class="layui-container">
-    <div class="layui-row">
+<div th:replace="common/monthly_ticket :: ranking_widget"></div>
 
-        <div class="layui-col-xs10 layui-col-sm10 layui-col-md11 layui-col-lg11" style="padding-top:1%">
-            <input id="title" type="text" name="title" required lay-verify="required" th:placeholder="#{book.search.placeholder}"
-                   autocomplete="off"
-                   class="layui-input" th:value="${keyword}">
-        </div>
-        <div class="layui-col-xs1" style="padding: 1%">
-            <button onclick="search(1,20)" class="layui-btn" lay-submit lay-filter="formDemo" th:text="#{common.search}">Tìm kiếm</button>
-        </div>
-    </div>
-
+<div class="mobile-ranking-search">
+    <input id="title" type="search" name="title" autocomplete="off" class="layui-input"
+           th:placeholder="#{book.search.placeholder}" th:value="${keyword}">
+    <button id="mobileBookRankingSearch" type="button" class="layui-btn"
+            th:text="#{common.search}">Tìm kiếm</button>
 </div>
 
-<div id="bookList">
+<div id="bookList"></div>
+<div id="books"></div>
 
-
-</div>
-
-
-<div id="books" style="text-align: center"></div>
-
-
-<div th:replace="mobile/common/footer :: footer">
-</div>
-
-<a name="buttom"></a>
-</body>
-
+<div th:replace="mobile/common/footer :: footer"></div>
 <div th:replace="mobile/common/js :: js"></div>
-
-<script th:inline="javascript">
-
-    const authorLabel = /*[[#{book.author}]]*/ 'Tác giả';
-    const categoryLabel = /*[[#{book.category}]]*/ 'Danh mục truyện';
-    const statusLabel = /*[[#{book.status}]]*/ 'Trạng thái';
-    const serializingLabel = /*[[#{book.status.serializing}]]*/ 'Đang ra';
-    const completedLabel = /*[[#{book.status.completed}]]*/ 'Đã hoàn thành';
-    const updatedLabel = /*[[#{reader.updated}]]*/ 'Cập nhật';
-    const descriptionLabel = /*[[#{book.description}]]*/ 'Giới thiệu';
-    const networkErrorText = /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng';
-
-    var catId = getQueryVariable("catId");
-    var bookStatus = getQueryVariable("bookStatus");
-    var sortBy = getQueryVariable("sortBy");
-    var keyword = getQueryVariable("keyword");
-
-    if (keyword != false) {
-        $("#title").val(decodeURI(keyword));
-    } else {
-        keyword = "";
-    }
-
-
-    search(1, 20);
-
-    function search(curr, limit) {
-
-
-        var searchData = {};
-
-        searchData.curr = curr;
-        searchData.limit = limit;
-
-        keyword = $("#title").val();
-
-        if (catId != false) {
-            searchData.catId = catId;
-        }
-
-        if (bookStatus != false) {
-            searchData.bookStatus = bookStatus;
-        }
-
-        if (sortBy != false) {
-            searchData.sort = sortBy;
-        } else if (!keyword) {
-            sortBy = "last_index_update_time";
-        }
-
-        if (keyword) {
-            searchData.keyword = keyword;
-        }
-
-        $.ajax({
-            type: "get",
-            url: "/book/searchByPage",
-            data: searchData,
-            dataType: "json",
-            success: function (data) {
-                if (data.code == 200) {
-                    var bookList = data.data.list;
-                    var bookListHtml = "";
-                    for (var i = 0; i < bookList.length; i++) {
-                        var book = bookList[i];
-
-                        /*var end = book.bookDesc.indexOf("<");
-                        if(end != -1) {
-                            book.bookDesc = book.bookDesc.substring(0,end);
-                        }*/
-
-                        if (book.bookDesc) {
-                            book.bookDesc = book.bookDesc.replace(/<[^>]+>/g, "").replace(/\s+/g, "").replace(/&nbsp;/g, "");
-                        }
-
-                        bookListHtml += ("<div class=\"layui-row\" style=\"margin-bottom:10px;padding:5px 0px;background: #f2f2f2\">\n" +
-                            "        <a href=\"/book/" + book.id + ".html\">\n" +
-                            "            <div class=\"layui-col-xs5 layui-col-sm3 layui-col-md2 layui-col-lg2\" style=\"text-align: center\">\n" +
-                            "                <img style='width: 130px;height: 190px' align=\"center\"\n" +
-                            "                     src=\"" + book.picUrl + "\"/>\n" +
-                            "\n" +
-                            "            </div>\n" +
-                            "        </a>\n" +
-                            "        <div style=\"padding: 0px 10px 0px 0px\" class=\"layui-col-xs7 layui-col-sm9 layui-col-md10 layui-col-lg10\">\n" +
-                            "            <a href=\"/book/" + book.id + ".html\">\n" +
-                            "                <div class=\"line-limit-length\" style=\";color: #000;font-size: 15px\">" + book.bookName + "</div>\n" +
-                            "            </a>\n" +
-                            "            <div style=\"height: 5px;color: #4c6978;\"><i style=\"color: red\"></i></div>\n" +
-                            "            <a href=\"/book/book_ranking.html?keyword=" + encodeURI(book.authorName) + "\">\n" +
-                            "                <div style=\"color: #a6a6a6;\" class=\"line-limit-length\">" + authorLabel + ": " + book.authorName + "</div>\n" +
-                            "            </a>\n" +
-                            "            <div style=\"margin-top: 5px;color: #a6a6a6;\">" + categoryLabel + ": " + book.catName + "</div>\n" +
-                            "            <div style=\"margin-top: 5px;color: #a6a6a6;\">" + statusLabel + ": " + (book.bookStatus == 0 ? serializingLabel : completedLabel) + "</div>\n" +
-                            "            <div style=\"margin-top: 5px;color: #a6a6a6;\">" + updatedLabel + ": <i style='color: red'>" + book.lastIndexUpdateTime.substr(0, 11) + "</i>\n" +
-                            "            </div>\n" +
-                            "            <div class='book_desc' style=\"margin-top: 5px;color: #a6a6a6;\">" + descriptionLabel + ": " + (book.bookDesc || '') + "</div>\n" +
-                            "\n" +
-                            "\n" +
-                            "        </div>\n" +
-                            "\n" +
-                            "    </div>");
-                    }
-                    $("#bookList").html(bookListHtml);
-
-                    layui.use('laypage', function () {
-                        var laypage = layui.laypage;
-
-                        // Khởi tạo phân trang Layui.
-                        laypage.render({
-                            elem: 'books' // ID phần tử, không thêm dấu #.
-                            , count: data.data.total // Tổng số bản ghi từ máy chủ.
-                            , curr: data.data.pageNum
-                            , limit: data.data.pageSize
-                            , jump: function (obj, first) {
-
-
-                                // obj chứa các tham số phân trang hiện tại.
-                                console.log(obj.curr); // Trang hiện tại.
-                                console.log(obj.limit); // Số bản ghi mỗi trang.
-
-
-                                // Không gọi lại trong lần khởi tạo đầu tiên.
-                                if (!first) {
-                                    search(obj.curr, obj.limit);
-                                } else {
-
-                                }
-                            }
-                        });
-                    });
-                } else {
-                    layer.alert(data.msg);
-                }
-
-            },
-            error: function () {
-                layer.alert(networkErrorText);
-            }
-        })
-
-    }
-
-
-    function searchByAllCondition(curr, limit, newKeyword) {
-        var toUrl = "/book/search?curr=" + curr + "&limit=" + limit;
-        var ids = $("#ids").val();
-        if (ids) {
-            toUrl += ("&historyBookIds=" + ids);
-        }
-        var token = $("#token").val();
-        if (token) {
-            toUrl += ("&token=" + token);
-        }
-        var keyword = $("#keyword").val();
-        if (newKeyword) {
-            toUrl += encodeURI("&keyword=" + newKeyword);
-        } else if (keyword) {
-            toUrl += encodeURI("&keyword=" + keyword);
-        }
-        var bookStatus = $("#bookStatus").val();
-        if (bookStatus) {
-            toUrl += ("&bookStatus=" + bookStatus);
-        }
-        var catId = $("#catId").val();
-        if (catId) {
-            toUrl += ("&catId=" + catId);
-        }
-
-        var sortBy = $("#sortBy").val();
-        if (sortBy) {
-            toUrl += ("&sortBy=" + sortBy);
-        }
-
-        var sort = $("#sort").val();
-        if (sort) {
-            toUrl += ("&sort=" + sort);
-        }
-
-        window.location.href = toUrl;
-    }
-
-    function searchBooks() {
-        var keywords = $("#title").val();
-        $("#keyword").val("");
-        searchByAllCondition(1, 20, keywords);
-    }
-
-</script>
-<script>
-
-
-    function toMyCollect() {
-        var token = localStorage.getItem("token");
-        if (token) {
-            window.location.href = "/book/search?token=" + token;
-        } else {
-            window.location.href = "/user/login.html";
-        }
-    }
-</script>
-
-
+<script src="/mobile/js/mobile-book-ranking-page.js"></script>
+</body>
 </html>

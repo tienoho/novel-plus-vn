@@ -1,0 +1,73 @@
+{
+  "annotations": {"list": []},
+  "editable": false,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {"type": "prometheus", "uid": "novel-prometheus"},
+      "fieldConfig": {"defaults": {"unit": "percentunit"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 8, "x": 0, "y": 0},
+      "id": 1,
+      "targets": [{"expr": "sum by (application) (rate(http_server_requests_seconds_count{status=~\"5..\"}[5m])) / clamp_min(sum by (application) (rate(http_server_requests_seconds_count[5m])), 0.001)", "legendFormat": "{{application}}", "refId": "A"}],
+      "title": "Tỷ lệ HTTP 5xx",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "novel-prometheus"},
+      "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 8, "x": 8, "y": 0},
+      "id": 2,
+      "targets": [{"expr": "histogram_quantile(0.95, sum by (application, le) (rate(http_server_requests_seconds_bucket[5m])))", "legendFormat": "{{application}}", "refId": "A"}],
+      "title": "HTTP p95",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "novel-prometheus"},
+      "fieldConfig": {"defaults": {}, "overrides": []},
+      "gridPos": {"h": 8, "w": 8, "x": 16, "y": 0},
+      "id": 3,
+      "targets": [{"expr": "hikaricp_connections_active", "legendFormat": "{{application}} / {{pool}} active", "refId": "A"}, {"expr": "hikaricp_connections_max", "legendFormat": "{{application}} / {{pool}} max", "refId": "B"}],
+      "title": "Pool database",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "novel-prometheus"},
+      "fieldConfig": {"defaults": {}, "overrides": []},
+      "gridPos": {"h": 8, "w": 8, "x": 0, "y": 8},
+      "id": 4,
+      "targets": [{"expr": "novel_ledger_mismatch_records", "legendFormat": "{{check}}", "refId": "A"}],
+      "title": "Sai lệch ledger/projection",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "novel-prometheus"},
+      "fieldConfig": {"defaults": {}, "overrides": []},
+      "gridPos": {"h": 8, "w": 8, "x": 8, "y": 8},
+      "id": 5,
+      "targets": [{"expr": "novel_subscription_renewal_queue", "legendFormat": "{{state}}", "refId": "A"}],
+      "title": "Hàng đợi gia hạn",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "novel-prometheus"},
+      "fieldConfig": {"defaults": {}, "overrides": []},
+      "gridPos": {"h": 8, "w": 8, "x": 16, "y": 8},
+      "id": 6,
+      "targets": [{"expr": "novel_gamification_queue", "legendFormat": "{{state}}", "refId": "A"}],
+      "title": "Hàng đợi gamification",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 41,
+  "tags": ["novel-plus", "production"],
+  "templating": {"list": []},
+  "time": {"from": "now-6h", "to": "now"},
+  "timezone": "browser",
+  "title": "Novel Plus - Tổng quan vận hành",
+  "uid": "novel-plus-overview",
+  "version": 1
+}

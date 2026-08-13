@@ -1,0 +1,187 @@
+:root {
+    --np-motion-fast: 140ms;
+    --np-motion-medium: 220ms;
+    --np-motion-ease: cubic-bezier(0.2, 0, 0, 1);
+    --np-focus-color: var(--accent-emerald, #2563eb);
+    --np-focus-glow: var(--accent-glow, rgba(37, 99, 235, 0.24));
+}
+
+.np-interactive {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transform-origin: center;
+    transition-property: color, background-color, border-color, box-shadow, opacity, transform !important;
+    transition-duration: var(--np-motion-fast) !important;
+    transition-timing-function: var(--np-motion-ease) !important;
+}
+
+.np-interactive:focus-visible,
+.np-control:focus-visible {
+    outline: 2px solid var(--np-focus-color) !important;
+    outline-offset: 3px !important;
+    box-shadow: 0 0 0 4px var(--np-focus-glow) !important;
+}
+
+.np-control {
+    transition-property: color, background-color, border-color, box-shadow, opacity !important;
+    transition-duration: var(--np-motion-fast) !important;
+    transition-timing-function: var(--np-motion-ease) !important;
+}
+
+.np-tapped:not([disabled]):not([aria-disabled="true"]) {
+    transform: scale(0.98) !important;
+}
+
+.np-busy {
+    cursor: progress !important;
+    opacity: 0.72 !important;
+}
+
+a.np-busy,
+[role="button"].np-busy {
+    pointer-events: none !important;
+}
+
+.np-spinner {
+    display: inline-block;
+    width: 0.9em;
+    height: 0.9em;
+    margin-inline-start: 0.55em;
+    vertical-align: -0.1em;
+    border: 2px solid currentColor;
+    border-inline-end-color: transparent;
+    border-radius: 50%;
+    animation: np-spin 700ms linear infinite;
+}
+
+.np-live-region {
+    position: fixed !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+.np-toast-region {
+    position: fixed;
+    inset-block-start: max(16px, env(safe-area-inset-top));
+    inset-inline-end: max(16px, env(safe-area-inset-right));
+    z-index: 11000;
+    display: grid;
+    gap: 8px;
+    width: min(360px, calc(100vw - 32px));
+    pointer-events: none;
+}
+
+.np-toast {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1px solid var(--border-glass, rgba(148, 163, 184, 0.35));
+    border-inline-start: 3px solid var(--np-focus-color);
+    border-radius: 10px;
+    background: var(--bg-surface, #ffffff);
+    color: var(--text-main, #0f172a);
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
+    pointer-events: auto;
+}
+
+.np-toast[data-tone="success"] {
+    border-inline-start-color: #16a34a;
+}
+
+.np-toast[data-tone="error"] {
+    border-inline-start-color: #dc2626;
+}
+
+.np-toast__message {
+    min-width: 0;
+    flex: 1;
+    overflow-wrap: anywhere;
+}
+
+.np-toast__close {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.np-feedback {
+    overflow-wrap: anywhere;
+}
+
+@keyframes np-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .np-toast {
+        animation: np-toast-in var(--np-motion-medium) var(--np-motion-ease) both;
+    }
+
+    @keyframes np-toast-in {
+        from {
+            opacity: 0;
+            transform: translateY(-8px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html:focus-within {
+        scroll-behavior: auto !important;
+    }
+
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    .np-spinner,
+    .rank-tag-gold::after,
+    .rank-tag-silver::after,
+    .rank-tag-bronze::after {
+        animation: none !important;
+    }
+
+    .np-tapped {
+        transform: none !important;
+    }
+}
+
+@media (prefers-contrast: more) {
+    .np-interactive:focus-visible,
+    .np-control:focus-visible {
+        outline-width: 3px !important;
+        box-shadow: none !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .np-toast-region {
+        inset-inline: 12px;
+        width: auto;
+    }
+}

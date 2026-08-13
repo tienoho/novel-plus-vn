@@ -13,6 +13,10 @@ public interface FinancialVoucherService {
 
     FinancialVoucherDO getByVoucherNo(String voucherNo);
 
+    FinancialVoucherDO getAuthorVoucher(String voucherNo, long authorId);
+
+    List<FinancialVoucherDO> listAuthorVouchers(long authorId);
+
     FinancialVoucherDO getByReference(String referenceType, String referenceId);
 
     List<FinancialVoucherDO> listVouchers(Map<String, Object> params);
@@ -20,6 +24,8 @@ public interface FinancialVoucherService {
     int countVouchers(Map<String, Object> params);
 
     byte[] exportVoucherPdf(String voucherNo);
+
+    byte[] exportAuthorVoucherPdf(String voucherNo, long authorId);
 
     byte[] exportVouchersCsv(List<FinancialVoucherDO> list);
 

@@ -27,7 +27,7 @@
                                                    id="validityTime"
                                                    name="validityTime"
                                                    th:value="${authorCode.validityTime}==null?null:${#dates.format(authorCode.validityTime,'yyyy-MM-dd HH:mm:ss')}"
-                                                   onclick="laydate({istime: true, format: 'YYYY-MM-DD hh:mm:ss'})"
+                                                   data-admin-laydate="datetime"
                                                    style="background-color: #fff;" readonly="readonly"/>
                                                                             </div>
                                 </div>
@@ -47,7 +47,7 @@
                                                    id="createTime"
                                                    name="createTime"
                                                    th:value="${authorCode.createTime}==null?null:${#dates.format(authorCode.createTime,'yyyy-MM-dd HH:mm:ss')}"
-                                                   onclick="laydate({istime: true, format: 'YYYY-MM-DD hh:mm:ss'})"
+                                                   data-admin-laydate="datetime"
                                                    style="background-color: #fff;" readonly="readonly"/>
                                                                             </div>
                                 </div>

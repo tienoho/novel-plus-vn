@@ -7,6 +7,9 @@ public interface WalletLedgerService {
     WalletPostResult purchaseChapter(long userId, long authorId, long amount, long authorAmount,
                                      String businessId, String idempotencyKey);
 
+    WalletPostResult chargeReaderSubscription(long userId, long amount, String businessId,
+                                              String idempotencyKey);
+
     WalletPostResult creditReaderReward(long userId, long amount, String businessId, String idempotencyKey,
                                         String description);
 
@@ -25,6 +28,12 @@ public interface WalletLedgerService {
     WalletPostResult holdAuthorWithdrawal(long authorId, long amount, String withdrawalNo, String idempotencyKey);
 
     WalletPostResult settleAuthorWithdrawal(long amount, String withdrawalNo, String idempotencyKey);
+
+    WalletPostResult creditAuthorRewardPending(long authorId, long amount, String allocationNo,
+                                               String idempotencyKey, String description);
+
+    WalletPostResult releaseAuthorReward(long authorId, long amount, String allocationNo,
+                                         String idempotencyKey, String description);
 
     long getAuthorAvailableBalance(long authorId);
 

@@ -14,47 +14,54 @@
 <div style="height: 50px;line-height: 50px;text-align: center" class="layui-header header header-doc  layui-bg-cyan">
 
     <div style="width:10%;float: left;margin-left: 10px">
-        <a href="javascript:history.go(-1)">
+        <a href="/" id="registerBack" th:attr="aria-label=#{reader.back},title=#{reader.back}">
             <i style="font-size: 20px;color: #fff;" class="layui-icon">&#xe65c;</i></a>
     </div>
     <b class="layui-icon" th:text="#{site.register}">Đăng ký</b>
-    <div style="width:10%;float: right;margin-right: 10px"><a href="/">
+    <div style="width:10%;float: right;margin-right: 10px"><a href="/" th:attr="aria-label=#{site.home},title=#{site.home}">
         <i style="font-size: 20px;color: #fff;" class="layui-icon">&#xe68e;</i>
     </a>
     </div>
 </div>
 <form lay-filter="loginForm" id="form1" style="height: 500px;padding-top:30px;padding-right: 20px" class="layui-form"
-      action="">
+      action="/user/register" method="post" data-register-form
+      data-phone-required="" data-phone-invalid="" data-password-required=""
+      data-captcha-required="" data-network-error=""
+      th:attr="data-phone-required=#{auth.phone.required},data-phone-invalid=#{auth.phone.invalid},
+               data-password-required=#{auth.password.required},data-captcha-required=#{auth.captcha.required},
+               data-network-error=#{auth.networkError}">
     <input type="hidden" id="bookIdHidden" name="bookId" th:value="${bookId}"/>
+    <div id="LabErr" role="alert" aria-live="polite" class="layui-text" style="color:#ff5722;text-align:center"></div>
 
     <div class="layui-form-item">
         <label class="layui-form-label" th:text="#{auth.phone}">Số điện thoại</label>
         <div class="layui-input-inline">
-            <input name="txtUName" type="text" id="txtUName" th:placeholder="#{auth.phone}"
-                   autocomplete="off" class="layui-input">
+            <input name="username" type="text" id="txtUName" th:placeholder="#{auth.phone}"
+                   th:aria-label="#{auth.phone}" autocomplete="username" spellcheck="false" class="layui-input">
         </div>
     </div>
     <div class="layui-form-item">
         <label class="layui-form-label" th:text="#{auth.password}">Mật khẩu</label>
         <div class="layui-input-inline">
-            <input name="txtPassword" type="password" id="txtPassword" th:placeholder="#{auth.password.hint}"
-                   autocomplete="off" class="layui-input">
+            <input name="password" type="password" id="txtPassword" th:placeholder="#{auth.password.hint}"
+                   th:aria-label="#{auth.password.hint}" autocomplete="new-password" class="layui-input">
         </div>
 
     </div>
     <div class="layui-form-item ">
         <label class="layui-form-label" th:text="#{auth.captcha}">Mã xác minh</label>
         <div class="layui-input-inline">
-            <input name="txtUName" type="text" id="TxtChkCode" th:placeholder="#{auth.captcha}"
-                   autocomplete="off" class="layui-input">
+            <input name="velCode" type="text" maxlength="4" id="TxtChkCode" th:placeholder="#{auth.captcha}"
+                   th:aria-label="#{auth.captcha}" autocomplete="off" class="layui-input">
         </div>
         <div class="layui-input-inline"><img
-                style="border: 1px solid #eee" class="code_pic" src="" id="chkd"
-                onclick="getVerify(this);"/></div>
+                style="border: 1px solid #eee" class="code_pic" src="/file/getVerify" id="chkd"
+                role="button" tabindex="0" th:alt="#{auth.captcha.refresh}"
+                th:attr="aria-label=#{auth.captcha.refresh},title=#{auth.captcha.refresh}"/></div>
     </div>
     <div class="layui-form-item">
         <div class="layui-input-block">
-            <input type="button" th:value="#{site.register}" id="btnRegister" class="layui-btn"/>
+            <button type="submit" id="btnRegister" class="layui-btn" th:text="#{site.register}">Đăng ký</button>
             <a class="layui-btn layui-btn-primary" href="/user/login.html" th:text="#{site.login}">Đăng nhập</a>
         </div>
     </div>
@@ -63,58 +70,8 @@
 
 <div th:replace="mobile/common/footer :: footer">
 </div>
-</body>
 <div th:replace="mobile/common/js :: js">
 </div>
-<script type="text/javascript" th:inline="javascript">
-    $("#chkd").click();
-
-    $("#btnRegister").click(function () {
-        var username = $("#txtUName").val();
-        if (username.isBlank()) {
-            layer.alert(/*[[#{auth.phone.required}]]*/ 'Vui lòng nhập số điện thoại!');
-            return;
-        }
-        if (!username.isPhone()) {
-            layer.alert(/*[[#{auth.phone.invalid}]]*/ 'Số điện thoại không đúng định dạng!');
-            return;
-        }
-        var password = $("#txtPassword").val();
-        if (password.isBlank()) {
-            layer.alert(/*[[#{auth.password.required}]]*/ 'Vui lòng nhập mật khẩu!');
-            return;
-        }
-        var velCode = $("#TxtChkCode").val();
-        if (velCode.isBlank()) {
-            layer.alert(/*[[#{auth.captcha.required}]]*/ 'Vui lòng nhập mã xác minh!');
-            return;
-        }
-        $.ajax({
-            type: "POST",
-            url: "/user/register",
-            data: {"username": username, "password": password, "velCode": velCode},
-            dataType: "json",
-            success: function (data) {
-                if (data.code == 200) {
-                    $.cookie('Authorization', data.data.token, {path: '/'});
-                    window.location.href = "/";
-                } else {
-                    layer.alert(data.msg);
-                }
-
-            },
-            error: function () {
-                layer.alert(/*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng');
-            }
-        })
-
-    })
-
-    // Lấy mã xác minh mới.
-    function getVerify(obj) {
-        obj.src = "/file/getVerify?" + Math.random();
-    }
-</script>
-
-
+<script src="/javascript/user-register-page.js"></script>
+</body>
 </html>

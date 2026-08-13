@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta charset="utf-8">
+<head th:include="include :: header"></head>
+<body class="gray-bg">
+<div class="wrapper wrapper-content">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="ibox">
+                <div class="ibox-title"><h5 th:text="#{admin.subscription.title}">Quản trị thuê bao Vé đọc</h5></div>
+                <div class="ibox-content" shiro:hasPermission="novel:readingSubscription:config">
+                    <form id="planForm" class="form-inline">
+                        <input id="planId" type="hidden"><input id="planVersion" type="hidden">
+                        <input id="planCode" name="planCode" required maxlength="32" pattern="[A-Za-z0-9_]{3,32}"
+                               class="form-control" th:placeholder="#{admin.subscription.planCode}">
+                        <input id="planName" name="planName" required minlength="3" maxlength="100"
+                               class="form-control" th:placeholder="#{admin.subscription.planName}">
+                        <input id="priceVnd" name="priceVnd" type="number" min="1000" max="100000000" step="1000"
+                               required class="form-control" th:placeholder="#{admin.subscription.priceVnd}">
+                        <input id="ticketsPerPeriod" name="ticketsPerPeriod" type="number" min="1" max="100000"
+                               required class="form-control" th:placeholder="#{admin.subscription.tickets}">
+                        <input id="periodMonths" name="periodMonths" type="number" min="1" max="12" value="1"
+                               required class="form-control" th:placeholder="#{admin.subscription.periodMonths}">
+                        <input id="ticketValidityDays" name="ticketValidityDays" type="number" min="1" max="366"
+                               value="45" required class="form-control"
+                               th:placeholder="#{admin.subscription.validityDays}">
+                        <button type="submit" class="btn btn-primary" th:text="#{common.save}">Lưu</button>
+                        <button id="resetPlan" type="button" class="btn btn-default"
+                                th:text="#{common.reset}">Đặt lại</button>
+                    </form>
+                </div>
+                <div class="ibox-content table-responsive">
+                    <table class="table table-striped" id="plansTable">
+                        <thead><tr>
+                            <th th:text="#{admin.subscription.planCode}">Mã gói</th>
+                            <th th:text="#{admin.subscription.planName}">Tên gói</th>
+                            <th th:text="#{admin.subscription.priceVnd}">Giá VND</th>
+                            <th th:text="#{admin.subscription.tickets}">Vé/kỳ</th>
+                            <th th:text="#{admin.subscription.periodMonths}">Số tháng/kỳ</th>
+                            <th th:text="#{admin.subscription.validityDays}">Hạn Vé</th>
+                            <th th:text="#{admin.subscription.status}">Trạng thái</th>
+                            <th th:text="#{admin.subscription.actions}">Thao tác</th>
+                        </tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row" shiro:hasPermission="novel:readingSubscription:review">
+        <div class="col-sm-12">
+            <div class="ibox">
+                <div class="ibox-title">
+                    <h5 th:text="#{admin.subscription.review.title}">Đơn thuê bao cần xử lý</h5>
+                </div>
+                <div class="ibox-content">
+                    <form id="purchaseReviewFilter" class="form-inline m-b-sm">
+                        <label for="purchaseReviewStatus"
+                               th:text="#{admin.subscription.review.queue}">Hàng đợi</label>
+                        <select id="purchaseReviewStatus" class="form-control">
+                            <option value="PAID_REVIEW"
+                                    th:text="#{admin.subscription.status.paidReview}">Chờ xử lý</option>
+                            <option value="REFUND_PENDING"
+                                    th:text="#{admin.subscription.status.refundPending}">Chờ hoàn tiền</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary"
+                                th:text="#{common.query}">Tra cứu</button>
+                    </form>
+                    <p class="help-block" th:text="#{admin.subscription.review.help}">
+                        Thử kích hoạt chỉ dùng snapshot đã thanh toán. Chuyển hoàn tiền không tự sửa ví hay gọi ngân hàng.
+                    </p>
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="purchaseReviewsTable">
+                            <thead><tr>
+                                <th th:text="#{admin.subscription.tradeNo}">Mã giao dịch</th>
+                                <th th:text="#{admin.subscription.userId}">Mã người dùng</th>
+                                <th th:text="#{admin.subscription.planName}">Tên gói</th>
+                                <th th:text="#{admin.subscription.priceVnd}">Giá VND</th>
+                                <th th:text="#{admin.subscription.payChannel}">Kênh</th>
+                                <th th:text="#{admin.subscription.status}">Trạng thái</th>
+                                <th th:text="#{admin.subscription.settledAt}">Đã thanh toán</th>
+                                <th th:text="#{admin.subscription.version}">Phiên bản</th>
+                                <th th:text="#{admin.subscription.actions}">Thao tác</th>
+                            </tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div>
+                        <button id="purchaseReviewPrevious" type="button" class="btn btn-default btn-sm"
+                                th:text="#{admin.subscription.previous}">Trước</button>
+                        <span id="purchaseReviewPageInfo" class="m-l-sm m-r-sm"></span>
+                        <button id="purchaseReviewNext" type="button" class="btn btn-default btn-sm"
+                                th:text="#{admin.subscription.next}">Sau</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row" shiro:hasPermission="novel:readingSubscription:review">
+        <div class="col-sm-12">
+            <div class="ibox">
+                <div class="ibox-title">
+                    <h5 th:text="#{admin.subscription.mandate.title}">Ủy quyền VNPAY cần xử lý</h5>
+                </div>
+                <div class="ibox-content">
+                    <form id="mandateQueueFilter" class="form-inline m-b-sm">
+                        <label for="mandateQueueStatus"
+                               th:text="#{admin.subscription.status}">Trạng thái</label>
+                        <select id="mandateQueueStatus" class="form-control">
+                            <option value="REVOKE_PENDING"
+                                    th:text="#{admin.subscription.status.revokePending}">Chờ thu hồi</option>
+                            <option value="FAILED"
+                                    th:text="#{admin.subscription.status.failed}">Thất bại</option>
+                            <option value="PENDING"
+                                    th:text="#{admin.subscription.status.pending}">Chờ xác nhận</option>
+                            <option value="REVOKED"
+                                    th:text="#{admin.subscription.status.revoked}">Đã thu hồi</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary"
+                                th:text="#{common.query}">Tra cứu</button>
+                    </form>
+                    <p class="help-block" th:text="#{admin.subscription.mandate.help}">
+                        Retry chỉ đưa mandate về lịch xử lý; không sửa token hay trạng thái provider.
+                    </p>
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="mandateQueueTable">
+                            <thead><tr>
+                                <th th:text="#{admin.subscription.mandate.id}">Mandate</th>
+                                <th th:text="#{admin.subscription.userId}">Người dùng</th>
+                                <th th:text="#{admin.subscription.mandate.merchantReference}">Mã tham chiếu</th>
+                                <th th:text="#{admin.subscription.mandate.providerRecurringId}">Mã provider</th>
+                                <th th:text="#{admin.subscription.status}">Trạng thái</th>
+                                <th th:text="#{admin.subscription.mandate.attempt}">Lần thử</th>
+                                <th th:text="#{admin.subscription.mandate.lastError}">Lỗi gần nhất</th>
+                                <th th:text="#{admin.subscription.mandate.nextAttempt}">Thử tiếp</th>
+                                <th th:text="#{admin.subscription.mandate.updatedAt}">Cập nhật</th>
+                                <th th:text="#{admin.subscription.actions}">Thao tác</th>
+                            </tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <pre id="mandateQueueDetail" class="m-t-md"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row" shiro:hasPermission="novel:readingSubscription:review">
+        <div class="col-sm-12">
+            <div class="ibox">
+                <div class="ibox-title">
+                    <h5 th:text="#{admin.subscription.renewal.title}">Hàng đợi gia hạn tự động</h5>
+                </div>
+                <div class="ibox-content">
+                    <form id="renewalQueueFilter" class="form-inline m-b-sm">
+                        <label for="renewalQueueStatus"
+                               th:text="#{admin.subscription.status}">Trạng thái</label>
+                        <select id="renewalQueueStatus" class="form-control">
+                            <option value="PROVIDER_PENDING"
+                                    th:text="#{admin.subscription.status.providerPending}">Chờ tra soát provider</option>
+                            <option value="PROCESSING"
+                                    th:text="#{admin.subscription.status.processing}">Đang xử lý</option>
+                            <option value="RETRY_WAIT"
+                                    th:text="#{admin.subscription.status.retryWait}">Chờ thử lại</option>
+                            <option value="FAILED"
+                                    th:text="#{admin.subscription.status.failed}">Thất bại</option>
+                            <option value="GRACE_EXPIRED"
+                                    th:text="#{admin.subscription.status.graceExpired}">Hết grace period</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary"
+                                th:text="#{common.query}">Tra cứu</button>
+                    </form>
+                    <p class="help-block" th:text="#{admin.subscription.renewal.help}">
+                        Cycle chờ provider chỉ được quan sát; không retry hoặc chạy fallback khi chưa tra soát.
+                    </p>
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="renewalQueueTable">
+                            <thead><tr>
+                                <th th:text="#{admin.subscription.renewal.cycleId}">Cycle</th>
+                                <th th:text="#{admin.subscription.userId}">Người dùng</th>
+                                <th th:text="#{admin.subscription.planCode}">Gói</th>
+                                <th th:text="#{admin.subscription.status}">Trạng thái</th>
+                                <th th:text="#{admin.subscription.renewal.attempt}">Lần thử</th>
+                                <th th:text="#{admin.subscription.renewal.source}">Nguồn</th>
+                                <th th:text="#{admin.subscription.renewal.responseCode}">Mã phản hồi</th>
+                                <th th:text="#{admin.subscription.renewal.nextAttempt}">Thử tiếp</th>
+                                <th th:text="#{admin.subscription.renewal.graceEnd}">Hết grace</th>
+                                <th th:text="#{admin.subscription.actions}">Thao tác</th>
+                            </tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <pre id="renewalQueueDetail" class="m-t-md"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-7" shiro:hasPermission="novel:readingSubscription:activate">
+            <div class="ibox"><div class="ibox-title"><h5 th:text="#{admin.subscription.manualActivation}">Kích hoạt thủ công</h5></div>
+                <div class="ibox-content">
+                    <form id="activationForm" class="form-inline">
+                        <input name="userId" type="number" min="1" required class="form-control"
+                               th:placeholder="#{admin.subscription.userId}">
+                        <input name="planCode" required maxlength="32" class="form-control"
+                               th:placeholder="#{admin.subscription.planCode}">
+                        <input name="startAt" type="datetime-local" required class="form-control">
+                        <input name="endAt" type="datetime-local" class="form-control">
+                        <input name="clientRequestId" required minlength="8" maxlength="64" class="form-control"
+                               th:placeholder="#{admin.subscription.requestId}">
+                        <button type="submit" class="btn btn-warning"
+                                th:text="#{admin.subscription.activate}">Kích hoạt</button>
+                    </form>
+                    <p class="help-block" th:text="#{admin.subscription.activationHelp}">
+                        Chỉ dùng cho nghiệp vụ nội bộ đã được phê duyệt; retry bằng cùng mã yêu cầu.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-5">
+            <div class="ibox"><div class="ibox-title"><h5 th:text="#{admin.subscription.lookup}">Tra cứu thuê bao</h5></div>
+                <div class="ibox-content">
+                    <form id="lookupForm" class="form-inline">
+                        <input name="userId" type="number" min="1" required class="form-control"
+                               th:placeholder="#{admin.subscription.userId}">
+                        <button type="submit" class="btn btn-success" th:text="#{common.query}">Tra cứu</button>
+                    </form>
+                    <pre id="currentSubscription" class="m-t-md"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div th:include="include::footer"></div>
+<script th:inline="javascript">
+    window.ReadingSubscriptionI18n = {
+        edit: /*[[#{common.edit}]]*/ 'Sửa',
+        activate: /*[[#{admin.subscription.activate}]]*/ 'Kích hoạt',
+        retire: /*[[#{admin.subscription.retire}]]*/ 'Ngừng',
+        saved: /*[[#{admin.subscription.saved}]]*/ 'Đã lưu',
+        activated: /*[[#{admin.subscription.activated}]]*/ 'Đã kích hoạt',
+        noSubscription: /*[[#{admin.subscription.noSubscription}]]*/ 'Không có thuê bao đang mở',
+        planCode: /*[[#{admin.subscription.planCode}]]*/ 'Mã gói',
+        status: /*[[#{admin.subscription.status}]]*/ 'Trạng thái',
+        nextGrantAt: /*[[#{admin.subscription.nextGrantAt}]]*/ 'Kỳ cấp tiếp theo',
+        endAt: /*[[#{admin.subscription.endAt}]]*/ 'Kết thúc',
+        statusDraft: /*[[#{admin.subscription.status.draft}]]*/ 'Bản nháp',
+        statusActive: /*[[#{admin.subscription.status.active}]]*/ 'Hoạt động',
+        statusPaused: /*[[#{admin.subscription.status.paused}]]*/ 'Tạm dừng',
+        statusCancelled: /*[[#{admin.subscription.status.cancelled}]]*/ 'Đã hủy',
+        statusExpired: /*[[#{admin.subscription.status.expired}]]*/ 'Đã hết hạn',
+        statusRetired: /*[[#{admin.subscription.status.retired}]]*/ 'Ngừng cung cấp',
+        statusPaidReview: /*[[#{admin.subscription.status.paidReview}]]*/ 'Chờ xử lý',
+        statusRefundPending: /*[[#{admin.subscription.status.refundPending}]]*/ 'Chờ hoàn tiền',
+        statusProcessing: /*[[#{admin.subscription.status.processing}]]*/ 'Đang xử lý',
+        statusProviderPending: /*[[#{admin.subscription.status.providerPending}]]*/ 'Chờ tra soát provider',
+        statusRetryWait: /*[[#{admin.subscription.status.retryWait}]]*/ 'Chờ thử lại',
+        statusFailed: /*[[#{admin.subscription.status.failed}]]*/ 'Thất bại',
+        statusGraceExpired: /*[[#{admin.subscription.status.graceExpired}]]*/ 'Hết grace period',
+        statusPending: /*[[#{admin.subscription.status.pending}]]*/ 'Chờ xác nhận',
+        statusRevokePending: /*[[#{admin.subscription.status.revokePending}]]*/ 'Chờ thu hồi',
+        statusRevoked: /*[[#{admin.subscription.status.revoked}]]*/ 'Đã thu hồi',
+        retryActivation: /*[[#{admin.subscription.review.retry}]]*/ 'Thử kích hoạt',
+        sendToRefund: /*[[#{admin.subscription.review.refund}]]*/ 'Chuyển hoàn tiền',
+        reviewReasonPrompt: /*[[#{admin.subscription.review.reasonPrompt}]]*/ 'Nhập lý do xử lý (8–500 ký tự)',
+        refundConfirm: /*[[#{admin.subscription.review.refundConfirm}]]*/ 'Chuyển giao dịch sang quy trình hoàn tiền?',
+        retryActivated: /*[[#{admin.subscription.review.retryActivated}]]*/ 'Đã kích hoạt thuê bao',
+        retryBlocked: /*[[#{admin.subscription.review.retryBlocked}]]*/ 'Người dùng vẫn còn thuê bao đang mở',
+        refundPending: /*[[#{admin.subscription.review.refundPending}]]*/ 'Đã chuyển sang hàng đợi hoàn tiền',
+        pageInfo: /*[[#{admin.subscription.review.pageInfo}]]*/ 'Trang {0}/{1} · {2} giao dịch',
+        emptyReviews: /*[[#{admin.subscription.review.empty}]]*/ 'Không có giao dịch trong hàng đợi',
+        payVnpay: /*[[#{admin.subscription.pay.vnpay}]]*/ 'VNPAY',
+        payVietQr: /*[[#{admin.subscription.pay.vietqr}]]*/ 'VietQR',
+        renewalEmpty: /*[[#{admin.subscription.renewal.empty}]]*/ 'Không có cycle trong hàng đợi',
+        renewalDetails: /*[[#{admin.subscription.renewal.details}]]*/ 'Chi tiết',
+        renewalRetry: /*[[#{admin.subscription.renewal.retry}]]*/ 'Thử lại ngay',
+        renewalRetryReason: /*[[#{admin.subscription.renewal.retryReason}]]*/ 'Nhập lý do retry (8–500 ký tự)',
+        renewalRetryScheduled: /*[[#{admin.subscription.renewal.retryScheduled}]]*/ 'Đã đưa cycle vào lịch retry',
+        mandateEmpty: /*[[#{admin.subscription.mandate.empty}]]*/ 'Không có mandate trong hàng đợi',
+        mandateDetails: /*[[#{admin.subscription.mandate.details}]]*/ 'Audit',
+        mandateRetry: /*[[#{admin.subscription.mandate.retry}]]*/ 'Thử thu hồi lại',
+        mandateRetryReason: /*[[#{admin.subscription.mandate.retryReason}]]*/ 'Nhập lý do retry (8–500 ký tự)',
+        mandateRetryScheduled: /*[[#{admin.subscription.mandate.retryScheduled}]]*/ 'Đã đưa mandate vào lịch retry',
+        requestFailed: /*[[#{common.failed}]]*/ 'Thao tác thất bại'
+    };
+    window.ReadingSubscriptionPermissions = {config: false, review: false};
+</script>
+<script shiro:hasPermission="novel:readingSubscription:review">
+    window.ReadingSubscriptionPermissions.review = true;
+</script>
+<script shiro:hasPermission="novel:readingSubscription:config">
+    window.ReadingSubscriptionPermissions.config = true;
+</script>
+<script src="/js/appjs/novel/readingSubscription/readingSubscription.js"></script>
+</body>
+</html>

@@ -53,7 +53,7 @@
         id, withdrawal_no, author_id, user_id, requested_xu, vnd_per_xu,
         gross_amount_vnd, withheld_tax_vnd, net_amount_vnd, bank_code, bank_account_last4,
         status, payout_provider, provider_reference, requested_at, reviewed_at, paid_at,
-        rejection_reason, version
+        reviewed_by, approved_by, executed_by, rejection_reason, version
     </sql>
 
     <select id="listWithdrawals" resultType="com.java2nb.novel.domain.AuthorWithdrawalReviewDO">
@@ -83,7 +83,8 @@
     <update id="approveWithdrawal">
         UPDATE author_withdrawal_request
         SET status = 'APPROVED', withheld_tax_vnd = #{withheldTaxVnd}, net_amount_vnd = #{netAmountVnd},
-            reviewed_at = CURRENT_TIMESTAMP(3), reviewed_by = #{reviewerId}, version = version + 1
+            reviewed_at = CURRENT_TIMESTAMP(3), reviewed_by = #{reviewerId}, approved_by = #{reviewerId},
+            version = version + 1
         WHERE id = #{id} AND status = 'PENDING_REVIEW' AND version = #{expectedVersion}
     </update>
 
@@ -97,16 +98,18 @@
 
     <update id="markWithdrawalProcessing">
         UPDATE author_withdrawal_request
-        SET status = 'PROCESSING', reviewed_at = CURRENT_TIMESTAMP(3), reviewed_by = #{reviewerId},
-            version = version + 1
+        SET status = 'PROCESSING', executed_by = #{executorId}, version = version + 1
         WHERE id = #{id} AND status = 'APPROVED' AND version = #{expectedVersion}
+          AND approved_by IS NOT NULL AND approved_by &lt;&gt; #{executorId} AND executed_by IS NULL
     </update>
 
     <update id="requestWithdrawalSettlement">
         UPDATE author_withdrawal_request
         SET status = 'SETTLEMENT_PENDING', provider_reference = #{providerReference},
-            paid_at = CURRENT_TIMESTAMP(3), reviewed_by = #{reviewerId}, version = version + 1
+            paid_at = CURRENT_TIMESTAMP(3), version = version + 1
         WHERE id = #{id} AND status = 'PROCESSING' AND version = #{expectedVersion}
+          AND approved_by IS NOT NULL AND approved_by &lt;&gt; #{executorId}
+          AND executed_by = #{executorId}
     </update>
 
     <insert id="insertWithdrawalAudit">

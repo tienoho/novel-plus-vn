@@ -14,14 +14,7 @@
 		  		  <if test="roleId != null and roleId != ''"> and role_id = #{roleId} </if>
 		  		  <if test="permId != null and permId != ''"> and perm_id = #{permId} </if>
 		  		</where>
-        <choose>
-            <when test="sort != null and sort.trim() != ''">
-                order by ${sort} ${order}
-            </when>
-			<otherwise>
-                order by id desc
-			</otherwise>
-        </choose>
+        order by id desc
 		<if test="offset != null and limit != null">
 			limit #{offset}, #{limit}
 		</if>

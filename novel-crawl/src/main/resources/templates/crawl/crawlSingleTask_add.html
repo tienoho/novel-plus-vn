@@ -67,7 +67,7 @@
                                            placeholder="URL danh sách cập nhật truyện"></li>-->
 
 
-                                <li><input type="button" onclick="addCrawlSingleTask()" name="btnRegister" th:value="#{crawl.submit}" value="Gửi"
+                                <li><input type="button" name="btnRegister" th:value="#{crawl.submit}" value="Gửi"
                                            id="btnRegister" class="btn_red"></li>
                             </ul>
                         </div>
@@ -101,12 +101,19 @@
                 if (data.code == 200) {
                     var crawlSourceList = data.data.list;
                     if (crawlSourceList.length > 0) {
-                        var crawlSourceListHtml = "";
+                        var sourceOptions = document.createDocumentFragment();
                         for (var i = 0; i < crawlSourceList.length; i++) {
                             var crawlSource = crawlSourceList[i];
-                            crawlSourceListHtml += ("<option value=\"" + crawlSource.id + "\">" + crawlSource.sourceName + "</option>");
+                            var sourceId = String(crawlSource.id == null ? "" : crawlSource.id);
+                            if (!/^\d+$/.test(sourceId)) {
+                                continue;
+                            }
+                            var option = document.createElement("option");
+                            option.value = sourceId;
+                            option.textContent = String(crawlSource.sourceName == null ? "" : crawlSource.sourceName);
+                            sourceOptions.appendChild(option);
                         }
-                        $("#sourceId").html(crawlSourceListHtml);
+                        document.getElementById("sourceId").replaceChildren(sourceOptions);
 
 
                     }
@@ -117,7 +124,7 @@
                     location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
 
                 } else {
-                    layer.alert(data.msg);
+                    layer.alert(crawlEscapeHtml(data.msg || ""));
                 }
 
             },
@@ -128,13 +135,15 @@
     });
 
 
+    $("#btnRegister").on("click", addCrawlSingleTask);
+
     function addCrawlSingleTask() {
 
         var sourceId = $("#sourceId").find("option:selected").val();
 
         var catId = $("#catId").find("option:selected").val();
 
-        var sourceName = $("#sourceId").find("option:selected").html();
+        var sourceName = $("#sourceId").find("option:selected").text();
 
 
         var sourceBookId = $("#sourceBookId").val();
@@ -177,7 +186,7 @@
 
 
                 } else {
-                    layer.alert(data.msg);
+                    layer.alert(crawlEscapeHtml(data.msg || ""));
                 }
 
             },

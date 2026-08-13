@@ -56,14 +56,100 @@ Array.prototype.indexOf = function (val) {
 };
 
 
-var token = $.cookie('Authorization');
-if (!token) {
+function novelReadCookie(name) {
+    var prefix = name + '=';
+    var cookies = document.cookie ? document.cookie.split(';') : [];
+    for (var i = 0; i < cookies.length; i++) {
+        var cookie = cookies[i].trim();
+        if (cookie.indexOf(prefix) === 0) {
+            var value = cookie.substring(prefix.length);
+            try {
+                return decodeURIComponent(value);
+            } catch (ignored) {
+                return value;
+            }
+        }
+    }
+    return null;
+}
+
+function novelCsrfToken() {
+    return novelReadCookie('XSRF-TOKEN');
+}
+
+$(document).ajaxSend(function (event, xhr, settings) {
+    var method = (settings.type || 'GET').toUpperCase();
+    if (!/^(GET|HEAD|OPTIONS|TRACE)$/.test(method)) {
+        var csrf = novelCsrfToken();
+        if (csrf) {
+            xhr.setRequestHeader('X-XSRF-TOKEN', csrf);
+        }
+    }
+});
+
+(function (originalFetch) {
+    if (!originalFetch) {
+        return;
+    }
+    window.fetch = function (input, options) {
+        options = options || {};
+        var method = (options.method || 'GET').toUpperCase();
+        var target = typeof input === 'string' ? input : input.url;
+        var sameOrigin = new URL(target, window.location.href).origin === window.location.origin;
+        if (sameOrigin && !/^(GET|HEAD|OPTIONS|TRACE)$/.test(method)) {
+            var headers = new Headers(options.headers || {});
+            var csrf = novelCsrfToken();
+            if (csrf) {
+                headers.set('X-XSRF-TOKEN', csrf);
+            }
+            options.headers = headers;
+        }
+        return originalFetch(input, options);
+    };
+})(window.fetch);
+
+
+function renderAnonymousUserLinks() {
+    $('.user_link').each(function () {
+        $(this).empty()
+            .append($('<i>').addClass('line mr20').text('|'))
+            .append($('<a>').attr('href', '/user/login.html').addClass('mr15').text(novelMessage('login', 'Đăng nhập')))
+            .append($('<a>').attr('href', '/user/register.html').text(novelMessage('register', 'Đăng ký')));
+    });
+}
+
+function renderAuthenticatedUserLinks(nickName) {
+    $('.user_link').each(function () {
+        $(this).empty()
+            .append($('<i>').addClass('line mr20').text('|'))
+            .append($('<a>').attr('href', '/user/userinfo.html').addClass('mr15').text(String(nickName == null ? '' : nickName)))
+            .append($('<a>').attr('href', '#logout').attr('data-user-action', 'logout').text(novelMessage('logout', 'Đăng xuất')));
+    });
+}
+
+$(document).off('click.userLogout', '[data-user-action="logout"]').on('click.userLogout', '[data-user-action="logout"]', function (event) {
+    event.preventDefault();
+    logout();
+});
+
+function handleAnonymousSession() {
     if (needLoginPath.indexOf(window.location.pathname) != -1) {
         location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
     }
+    renderAnonymousUserLinks();
+}
 
-    $(".user_link").html("<i class=\"line mr20\">|</i><a href=\"/user/login.html\" class=\"mr15\">" + novelMessage('login', 'Đăng nhập') + "</a><a href=\"/user/register.html\">" + novelMessage('register', 'Đăng ký') + "</a>");
-} else {
+function handleAuthenticatedSession(user) {
+    renderAuthenticatedUserLinks(user && user.nickName);
+    if ("/user/login.html" == window.location.pathname) {
+        var orginUrl = getSearchString("originUrl");
+        window.location.href = orginUrl == undefined || orginUrl.isBlank() ? "/" : orginUrl;
+        return;
+    }
+    isLogin = true;
+}
+
+function refreshSession() {
     $.ajax({
         type: "POST",
         url: "/user/refreshToken",
@@ -71,33 +157,40 @@ if (!token) {
         dataType: "json",
         success: function (data) {
             if (data.code == 200) {
-                $(".user_link").html("<i class=\"line mr20\">|</i>" +
-                    "<a href=\"/user/userinfo.html\"  class=\"mr15\">" + data.data.nickName + "</a>" +
-                    "<a href=\"javascript:logout()\">" + novelMessage('logout', 'Đăng xuất') + "</a>");
-                ;
-                if ("/user/login.html" == window.location.pathname) {
-                    var orginUrl = getSearchString("originUrl");
-                    window.location.href = orginUrl == undefined || orginUrl.isBlank() ? "/" : orginUrl;
-                    return;
-                }
-                isLogin = true;
-                if (localStorage.getItem("autoLogin") == 1) {
-                    $.cookie('Authorization', data.data.token, {expires: 7, path: '/'});
-                } else {
-                    $.cookie('Authorization', data.data.token, {path: '/'});
-                }
+                handleAuthenticatedSession(data.data);
             } else {
-                if (needLoginPath.indexOf(window.location.pathname) != -1) {
-                    location.href = '/user/login.html';
-                }
-                $(".user_link").html("<i class=\"line mr20\">|</i><a href=\"/user/login.html\" class=\"mr15\">" + novelMessage('login', 'Đăng nhập') + "</a><a href=\"/user/register.html\">" + novelMessage('register', 'Đăng ký') + "</a>");
+                handleAnonymousSession();
             }
         },
         error: function () {
             layer.alert(novelMessage('networkError', 'Không thể kết nối mạng'));
         }
-
     });
+}
+
+function resolveSession() {
+    $.ajax({
+        type: "GET",
+        url: "/user/userInfo",
+        dataType: "json",
+        success: function (data) {
+            if (data.code == 200) {
+                handleAuthenticatedSession(data.data);
+            } else {
+                refreshSession();
+            }
+        },
+        error: function () {
+            layer.alert(novelMessage('networkError', 'Không thể kết nối mạng'));
+        }
+    });
+}
+
+var token = novelReadCookie('NovelSession');
+if (!token) {
+    handleAnonymousSession();
+} else {
+    resolveSession();
 }
 
 
@@ -125,8 +218,9 @@ String.prototype.isNickName = function () {
 
 
 function logout() {
-    $.cookie('Authorization', null, {path: '/'});
-    location.reload();
+    $.post('/user/logout').always(function () {
+        location.reload();
+    });
 }
 
 
@@ -158,5 +252,15 @@ function checkPicUpload(file) {
         return false;
     }
     return true;
+}
+
+function novelEscapeHtml(value) {
+    var container = document.createElement("div");
+    container.textContent = value == null ? "" : String(value);
+    return container.innerHTML;
+}
+
+function novelAlertText(value) {
+    layer.alert(novelEscapeHtml(value));
 }
 

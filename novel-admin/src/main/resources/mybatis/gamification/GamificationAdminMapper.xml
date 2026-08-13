@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.java2nb.novel.dao.GamificationAdminDao">
+
+    <select id="listAccounts" resultType="map">
+        SELECT a.user_id           AS userId,
+               u.username          AS username,
+               u.nick_name         AS nickName,
+               a.available_balance AS availableBalance,
+               a.lifetime_granted  AS lifetimeGranted,
+               a.lifetime_spent    AS lifetimeSpent,
+               a.lifetime_expired  AS lifetimeExpired,
+               a.lifetime_revoked  AS lifetimeRevoked,
+               a.status,
+               a.update_time       AS updateTime
+        FROM monthly_ticket_account a
+                 LEFT JOIN `user` u ON u.id = a.user_id
+        <where>
+            <if test="userId != null and userId != ''">a.user_id = #{userId}</if>
+            <if test="status != null and status != ''">AND a.status = #{status}</if>
+        </where>
+        ORDER BY a.update_time DESC, a.user_id DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countAccounts" resultType="int">
+        SELECT COUNT(*)
+        FROM monthly_ticket_account a
+        <where>
+            <if test="userId != null and userId != ''">a.user_id = #{userId}</if>
+            <if test="status != null and status != ''">AND a.status = #{status}</if>
+        </where>
+    </select>
+
+    <select id="listLedger" resultType="map">
+        SELECT l.id,
+               l.entry_no       AS entryNo,
+               l.user_id        AS userId,
+               l.entry_type     AS entryType,
+               l.amount,
+               l.balance_after  AS balanceAfter,
+               l.business_type  AS businessType,
+               l.business_id    AS businessId,
+               l.operator_type  AS operatorType,
+               l.operator_id    AS operatorId,
+               l.reason,
+               l.policy_version AS policyVersion,
+               l.create_time    AS createTime
+        FROM monthly_ticket_ledger l
+        <where>
+            <if test="userId != null and userId != ''">l.user_id = #{userId}</if>
+            <if test="entryType != null and entryType != ''">AND l.entry_type = #{entryType}</if>
+        </where>
+        ORDER BY l.id DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countLedger" resultType="int">
+        SELECT COUNT(*)
+        FROM monthly_ticket_ledger l
+        <where>
+            <if test="userId != null and userId != ''">l.user_id = #{userId}</if>
+            <if test="entryType != null and entryType != ''">AND l.entry_type = #{entryType}</if>
+        </where>
+    </select>
+
+    <select id="listJobs" resultType="map">
+        SELECT j.id,
+               j.job_type        AS jobType,
+               j.scope_type      AS scopeType,
+               j.scope_key       AS scopeKey,
+               j.status,
+               j.attempt,
+               j.checkpoint,
+               j.processed_count AS processedCount,
+               j.owner_instance  AS ownerInstance,
+               j.heartbeat_at    AS heartbeatAt,
+               j.finished_at     AS finishedAt,
+               j.error_message   AS errorMessage
+        FROM scheduled_job_run j
+        <where>
+            <if test="jobType != null and jobType != ''">j.job_type = #{jobType}</if>
+            <if test="status != null and status != ''">AND j.status = #{status}</if>
+        </where>
+        ORDER BY j.id DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countJobs" resultType="int">
+        SELECT COUNT(*)
+        FROM scheduled_job_run j
+        <where>
+            <if test="jobType != null and jobType != ''">j.job_type = #{jobType}</if>
+            <if test="status != null and status != ''">AND j.status = #{status}</if>
+        </where>
+    </select>
+
+    <select id="listSeasons" resultType="map">
+        SELECT season.id,
+               season.period_code    AS periodCode,
+               season.season_type    AS seasonType,
+               season.zone_id        AS zoneId,
+               season.start_at       AS startAt,
+               season.end_at         AS endAt,
+               season.vote_cutoff_at AS voteCutoffAt,
+               season.status,
+               season.snapshot_id    AS snapshotId,
+               season.closing_at     AS closingAt,
+               season.review_at      AS reviewAt,
+               season.finalized_at   AS finalizedAt,
+               season.finalized_by   AS finalizedBy,
+               season.version
+        FROM monthly_ticket_season season
+        <where>
+            <if test="periodCode != null and periodCode != ''">
+                season.period_code = #{periodCode}
+            </if>
+            <if test="status != null and status != ''">
+                AND season.status = #{status}
+            </if>
+        </where>
+        ORDER BY season.start_at DESC, season.id DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countSeasons" resultType="int">
+        SELECT COUNT(*)
+        FROM monthly_ticket_season season
+        <where>
+            <if test="periodCode != null and periodCode != ''">
+                season.period_code = #{periodCode}
+            </if>
+            <if test="status != null and status != ''">
+                AND season.status = #{status}
+            </if>
+        </where>
+    </select>
+
+    <select id="listRewardCampaigns" resultType="map">
+        SELECT campaign.id,
+               campaign.period_code AS periodCode,
+               campaign.status,
+               campaign.enabled,
+               campaign.budget_xu AS budgetXu,
+               campaign.structure_json AS structureJson,
+               campaign.policy_version AS policyVersion,
+               campaign.approved_by AS approvedBy,
+               campaign.approved_at AS approvedAt,
+               campaign.update_time AS updateTime
+        FROM reward_fund_campaign campaign
+        <where>
+            <if test="periodCode != null and periodCode != ''">campaign.period_code = #{periodCode}</if>
+            <if test="status != null and status != ''">AND campaign.status = #{status}</if>
+        </where>
+        ORDER BY campaign.id DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countRewardCampaigns" resultType="int">
+        SELECT COUNT(*) FROM reward_fund_campaign campaign
+        <where>
+            <if test="periodCode != null and periodCode != ''">campaign.period_code = #{periodCode}</if>
+            <if test="status != null and status != ''">AND campaign.status = #{status}</if>
+        </where>
+    </select>
+
+    <select id="listRewardAllocations" resultType="map">
+        SELECT allocation.id,
+               allocation.allocation_no AS allocationNo,
+               allocation.campaign_id AS campaignId,
+               allocation.season_id AS seasonId,
+               allocation.book_id AS bookId,
+               book.book_name AS bookName,
+               allocation.author_id AS authorId,
+               author.pen_name AS authorName,
+               allocation.rank_no AS rankNo,
+               allocation.amount_xu AS amountXu,
+               allocation.rounding_adjustment_xu AS roundingAdjustmentXu,
+               allocation.status,
+               allocation.posted_at AS postedAt,
+               allocation.released_at AS releasedAt,
+               allocation.clawed_back_at AS clawedBackAt,
+               allocation.reason
+        FROM author_reward_allocation allocation
+                 LEFT JOIN book ON book.id = allocation.book_id
+                 LEFT JOIN author ON author.id = allocation.author_id
+        <where>
+            <if test="campaignId != null and campaignId != ''">allocation.campaign_id = #{campaignId}</if>
+            <if test="authorId != null and authorId != ''">AND allocation.author_id = #{authorId}</if>
+            <if test="status != null and status != ''">AND allocation.status = #{status}</if>
+        </where>
+        ORDER BY allocation.id DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countRewardAllocations" resultType="int">
+        SELECT COUNT(*) FROM author_reward_allocation allocation
+        <where>
+            <if test="campaignId != null and campaignId != ''">allocation.campaign_id = #{campaignId}</if>
+            <if test="authorId != null and authorId != ''">AND allocation.author_id = #{authorId}</if>
+            <if test="status != null and status != ''">AND allocation.status = #{status}</if>
+        </where>
+    </select>
+
+    <select id="listQuestCampaigns" resultType="map">
+        SELECT id, campaign_code AS campaignCode, start_at AS startAt, end_at AS endAt,
+               status, policy_version AS policyVersion, create_time AS createTime,
+               update_time AS updateTime
+        FROM quest_campaign
+        <where>
+            <if test="campaignCode != null and campaignCode != ''">
+                campaign_code = #{campaignCode}
+            </if>
+            <if test="status != null and status != ''">AND status = #{status}</if>
+        </where>
+        ORDER BY start_at DESC, id DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countQuestCampaigns" resultType="int">
+        SELECT COUNT(*) FROM quest_campaign
+        <where>
+            <if test="campaignCode != null and campaignCode != ''">
+                campaign_code = #{campaignCode}
+            </if>
+            <if test="status != null and status != ''">AND status = #{status}</if>
+        </where>
+    </select>
+
+    <select id="listQuestRewards" resultType="map">
+        SELECT reward.id, reward.campaign_code AS campaignCode,
+               reward.quest_code AS questCode, definition.name_key AS nameKey,
+               reward.reward_type AS rewardType, reward.amount,
+               reward.create_time AS createTime
+        FROM quest_reward reward
+                 LEFT JOIN quest_definition definition
+                           ON definition.quest_code = reward.quest_code
+        <where>
+            <if test="campaignCode != null and campaignCode != ''">
+                reward.campaign_code = #{campaignCode}
+            </if>
+            <if test="questCode != null and questCode != ''">
+                AND reward.quest_code = #{questCode}
+            </if>
+        </where>
+        ORDER BY reward.campaign_code DESC, reward.quest_code ASC, reward.reward_type ASC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countQuestRewards" resultType="int">
+        SELECT COUNT(*) FROM quest_reward reward
+        <where>
+            <if test="campaignCode != null and campaignCode != ''">
+                reward.campaign_code = #{campaignCode}
+            </if>
+            <if test="questCode != null and questCode != ''">
+                AND reward.quest_code = #{questCode}
+            </if>
+        </where>
+    </select>
+
+    <select id="listTickerNicknames" resultType="map">
+        SELECT p.user_id         AS userId,
+               u.username        AS username,
+               u.nick_name       AS nickName,
+               p.ticker_opt_out  AS tickerOptOut,
+               p.version         AS version,
+               p.update_time     AS updateTime
+        FROM gamification_profile p
+                 LEFT JOIN `user` u ON u.id = p.user_id
+        <where>
+            <if test="userId != null and userId != ''">p.user_id = #{userId}</if>
+            <if test="nickname != null and nickname != ''">
+                AND u.nick_name LIKE CONCAT('%', #{nickname}, '%')
+            </if>
+            <if test="optedIn != null and optedIn != ''">AND p.ticker_opt_out = 0</if>
+        </where>
+        ORDER BY p.update_time DESC, p.user_id DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countTickerNicknames" resultType="int">
+        SELECT COUNT(*)
+        FROM gamification_profile p
+                 LEFT JOIN `user` u ON u.id = p.user_id
+        <where>
+            <if test="userId != null and userId != ''">p.user_id = #{userId}</if>
+            <if test="nickname != null and nickname != ''">
+                AND u.nick_name LIKE CONCAT('%', #{nickname}, '%')
+            </if>
+            <if test="optedIn != null and optedIn != ''">AND p.ticker_opt_out = 0</if>
+        </where>
+    </select>
+
+    <select id="listRiskReviews" resultType="map">
+        SELECT assessment.id,
+               assessment.user_id AS userId,
+               user.username,
+               user.nick_name AS nickName,
+               assessment.season_id AS seasonId,
+               assessment.book_id AS bookId,
+               assessment.risk_score AS riskScore,
+               assessment.action,
+               assessment.matched_rules AS matchedRules,
+               LEFT(assessment.device_hash, 12) AS deviceHashPrefix,
+               LEFT(assessment.ip_hash, 12) AS ipHashPrefix,
+               assessment.policy_version AS policyVersion,
+               assessment.assessed_at AS assessedAt,
+               review.status AS reviewStatus,
+               review.version
+        FROM gamification_risk_review review
+                 JOIN gamification_risk_assessment assessment ON assessment.id = review.assessment_id
+                 LEFT JOIN `user` user ON user.id = assessment.user_id
+        <where>
+            <if test="status != null and status != ''">review.status = #{status}</if>
+            <if test="action != null and action != ''">AND assessment.action = #{action}</if>
+            <if test="userId != null and userId != ''">AND assessment.user_id = #{userId}</if>
+        </where>
+        ORDER BY assessment.risk_score DESC, assessment.id ASC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countRiskReviews" resultType="int">
+        SELECT COUNT(*)
+        FROM gamification_risk_review review
+                 JOIN gamification_risk_assessment assessment ON assessment.id = review.assessment_id
+        <where>
+            <if test="status != null and status != ''">review.status = #{status}</if>
+            <if test="action != null and action != ''">AND assessment.action = #{action}</if>
+            <if test="userId != null and userId != ''">AND assessment.user_id = #{userId}</if>
+        </where>
+    </select>
+
+    <select id="listPublicPolicies" resultType="map">
+        SELECT id, policy_version AS policyVersion, title, status,
+               published_by AS publishedBy, published_at AS publishedAt,
+               version, create_time AS createTime
+        FROM gamification_public_policy
+        <where>
+            <if test="status != null and status != ''">status = #{status}</if>
+            <if test="policyVersion != null and policyVersion != ''">
+                AND policy_version = #{policyVersion}
+            </if>
+        </where>
+        ORDER BY id DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countPublicPolicies" resultType="int">
+        SELECT COUNT(*) FROM gamification_public_policy
+        <where>
+            <if test="status != null and status != ''">status = #{status}</if>
+            <if test="policyVersion != null and policyVersion != ''">
+                AND policy_version = #{policyVersion}
+            </if>
+        </where>
+    </select>
+
+</mapper>

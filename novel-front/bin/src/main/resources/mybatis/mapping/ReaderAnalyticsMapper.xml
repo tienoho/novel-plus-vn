@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.java2nb.novel.mapper.ReaderAnalyticsMapper">
+
+    <insert id="insertEvent">
+        INSERT IGNORE INTO reader_chapter_event
+            (client_event_id, reader_key_hash, book_id, index_id, event_type,
+             progress_percent, duration_seconds)
+        VALUES
+            (#{clientEventId}, #{readerKeyHash}, #{bookId}, #{indexId}, #{eventType},
+             #{progressPercent}, #{durationSeconds})
+    </insert>
+
+    <select id="selectSummary" resultType="com.java2nb.novel.service.analytics.AuthorAnalyticsSummary">
+        WITH event_reader AS (
+            SELECT e.index_id,
+                   e.reader_key_hash,
+                   MAX(e.event_type = 'COMPLETE') AS completed,
+                   MAX(e.progress_percent) AS max_progress,
+                   MAX(e.duration_seconds) AS max_duration
+            FROM reader_chapter_event e
+            WHERE e.book_id = #{bookId}
+              AND e.create_time &gt;= #{startTime}
+              AND e.create_time &lt; #{endTime}
+            GROUP BY e.index_id, e.reader_key_hash
+        ),
+        eligible_retention AS (
+            SELECT er.index_id, er.reader_key_hash, next_bi.id AS next_index_id
+            FROM event_reader er
+            JOIN book_index current_bi ON current_bi.id = er.index_id
+            JOIN book_index next_bi
+              ON next_bi.book_id = current_bi.book_id
+             AND next_bi.index_num = current_bi.index_num + 1
+        ),
+        retained AS (
+            SELECT DISTINCT eligible_retention.index_id, eligible_retention.reader_key_hash
+            FROM eligible_retention
+            JOIN event_reader next_reader
+              ON next_reader.index_id = eligible_retention.next_index_id
+             AND next_reader.reader_key_hash = eligible_retention.reader_key_hash
+        )
+        SELECT b.id AS bookId,
+               b.book_name AS bookName,
+               COALESCE((SELECT COUNT(DISTINCT reader_key_hash) FROM event_reader), 0) AS uniqueReaders,
+               COALESCE((SELECT COUNT(*) FROM event_reader), 0) AS chapterStarts,
+               COALESCE((SELECT SUM(completed) FROM event_reader), 0) AS chapterCompletions,
+               COALESCE((SELECT ROUND(100.0 * SUM(completed) / NULLIF(COUNT(*), 0), 2)
+                         FROM event_reader), 0) AS completionRate,
+               COALESCE((SELECT ROUND(100.0 * (SELECT COUNT(*) FROM retained) / NULLIF(COUNT(*), 0), 2)
+                         FROM eligible_retention), 0) AS nextChapterRetentionRate,
+               COALESCE((SELECT SUM(max_duration) FROM event_reader), 0) AS readingSeconds,
+               COALESCE((SELECT COUNT(*) FROM user_buy_record ubr
+                         WHERE ubr.book_id = #{bookId}
+                           AND ubr.create_time &gt;= #{startTime}
+                           AND ubr.create_time &lt; #{endTime}), 0) AS purchaseCount,
+               COALESCE((SELECT COUNT(DISTINCT ubr.user_id) FROM user_buy_record ubr
+                         WHERE ubr.book_id = #{bookId}
+                           AND ubr.create_time &gt;= #{startTime}
+                           AND ubr.create_time &lt; #{endTime}), 0) AS buyerCount,
+               COALESCE((SELECT SUM(ubr.buy_amount) FROM user_buy_record ubr
+                         WHERE ubr.book_id = #{bookId}
+                           AND ubr.create_time &gt;= #{startTime}
+                           AND ubr.create_time &lt; #{endTime}), 0) AS grossRevenueXu,
+               COALESCE((SELECT SUM(we.amount)
+                         FROM ledger_transaction lt
+                         JOIN wallet_entry we ON we.ledger_transaction_id = lt.id
+                         JOIN wallet_account wa ON wa.id = we.wallet_account_id
+                         JOIN book_index bi ON CAST(lt.business_id AS UNSIGNED) = bi.id
+                         WHERE lt.business_type = 'CHAPTER_PURCHASE'
+                           AND bi.book_id = #{bookId}
+                           AND wa.owner_type = 'AUTHOR'
+                           AND wa.owner_id = #{authorId}
+                           AND wa.account_type = 'AUTHOR_REVENUE_XU'
+                           AND we.amount &gt; 0
+                           AND lt.create_time &gt;= #{startTime}
+                           AND lt.create_time &lt; #{endTime}), 0) AS authorRevenueXu
+        FROM book b
+        WHERE b.id = #{bookId}
+    </select>
+
+    <select id="selectChapterAnalytics"
+            resultType="com.java2nb.novel.service.analytics.AuthorChapterAnalyticsRow">
+        WITH event_reader AS (
+            SELECT e.index_id,
+                   e.reader_key_hash,
+                   MAX(e.event_type = 'COMPLETE') AS completed,
+                   MAX(e.progress_percent) AS max_progress,
+                   MAX(e.duration_seconds) AS max_duration
+            FROM reader_chapter_event e
+            WHERE e.book_id = #{bookId}
+              AND e.create_time &gt;= #{startTime}
+              AND e.create_time &lt; #{endTime}
+            GROUP BY e.index_id, e.reader_key_hash
+        ),
+        event_agg AS (
+            SELECT index_id,
+                   COUNT(*) AS readers,
+                   SUM(completed) AS completions,
+                   ROUND(100.0 * SUM(completed) / NULLIF(COUNT(*), 0), 2) AS completion_rate,
+                   ROUND(AVG(max_progress), 2) AS average_progress,
+                   ROUND(AVG(max_duration), 0) AS average_duration_seconds
+            FROM event_reader
+            GROUP BY index_id
+        ),
+        retention_agg AS (
+            SELECT current_reader.index_id,
+                   ROUND(100.0 * COUNT(next_reader.reader_key_hash) / NULLIF(COUNT(*), 0), 2)
+                       AS next_retention_rate
+            FROM event_reader current_reader
+            JOIN book_index current_bi ON current_bi.id = current_reader.index_id
+            JOIN book_index next_bi
+              ON next_bi.book_id = current_bi.book_id
+             AND next_bi.index_num = current_bi.index_num + 1
+            LEFT JOIN event_reader next_reader
+              ON next_reader.index_id = next_bi.id
+             AND next_reader.reader_key_hash = current_reader.reader_key_hash
+            GROUP BY current_reader.index_id
+        ),
+        purchase_agg AS (
+            SELECT ubr.book_index_id AS index_id,
+                   COUNT(*) AS purchase_count,
+                   COUNT(DISTINCT ubr.user_id) AS buyer_count,
+                   SUM(ubr.buy_amount) AS gross_revenue_xu
+            FROM user_buy_record ubr
+            WHERE ubr.book_id = #{bookId}
+              AND ubr.create_time &gt;= #{startTime}
+              AND ubr.create_time &lt; #{endTime}
+            GROUP BY ubr.book_index_id
+        ),
+        revenue_agg AS (
+            SELECT CAST(lt.business_id AS UNSIGNED) AS index_id,
+                   SUM(we.amount) AS author_revenue_xu
+            FROM ledger_transaction lt
+            JOIN wallet_entry we ON we.ledger_transaction_id = lt.id
+            JOIN wallet_account wa ON wa.id = we.wallet_account_id
+            JOIN book_index revenue_bi ON CAST(lt.business_id AS UNSIGNED) = revenue_bi.id
+            WHERE lt.business_type = 'CHAPTER_PURCHASE'
+              AND revenue_bi.book_id = #{bookId}
+              AND wa.owner_type = 'AUTHOR'
+              AND wa.owner_id = #{authorId}
+              AND wa.account_type = 'AUTHOR_REVENUE_XU'
+              AND we.amount &gt; 0
+              AND lt.create_time &gt;= #{startTime}
+              AND lt.create_time &lt; #{endTime}
+            GROUP BY CAST(lt.business_id AS UNSIGNED)
+        )
+        SELECT bi.id AS indexId,
+               bi.index_name AS indexName,
+               bi.index_num AS indexNum,
+               COALESCE(ea.readers, 0) AS readers,
+               COALESCE(ea.completions, 0) AS completions,
+               COALESCE(ea.completion_rate, 0) AS completionRate,
+               COALESCE(ra.next_retention_rate, 0) AS nextChapterRetentionRate,
+               COALESCE(ea.average_progress, 0) AS averageProgress,
+               COALESCE(ea.average_duration_seconds, 0) AS averageDurationSeconds,
+               COALESCE(pa.purchase_count, 0) AS purchaseCount,
+               COALESCE(pa.buyer_count, 0) AS buyerCount,
+               COALESCE(pa.gross_revenue_xu, 0) AS grossRevenueXu,
+               COALESCE(reva.author_revenue_xu, 0) AS authorRevenueXu
+        FROM book_index bi
+        LEFT JOIN event_agg ea ON ea.index_id = bi.id
+        LEFT JOIN retention_agg ra ON ra.index_id = bi.id
+        LEFT JOIN purchase_agg pa ON pa.index_id = bi.id
+        LEFT JOIN revenue_agg reva ON reva.index_id = bi.id
+        WHERE bi.book_id = #{bookId}
+        ORDER BY bi.index_num
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countChapters" resultType="long">
+        SELECT COUNT(*) FROM book_index WHERE book_id = #{bookId}
+    </select>
+</mapper>

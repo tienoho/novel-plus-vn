@@ -16,6 +16,11 @@ public class AuthorChapterDraft {
     private String indexName;
     private String content;
     private Byte isVip;
+    private Integer bookPrice;
+    private Integer customPrice;
+    private Date unlockAt;
+    private Date freeFrom;
+    private Date freeUntil;
     private String status;
     private Long version;
     private Date scheduledAt;

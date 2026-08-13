@@ -37,12 +37,15 @@ import org.mybatis.dynamic.sql.util.mybatis3.MyBatis3Utils;
 
 @Mapper
 public interface BookIndexMapper {
-    @Select("SELECT id, book_id, index_name, word_count, content_hash FROM book_index WHERE id = #{indexId} FOR UPDATE")
+    @Select("SELECT id, book_id, index_name, word_count, is_vip, book_price, content_hash "
+        + "FROM book_index WHERE id = #{indexId} FOR UPDATE")
     @Results({
         @Result(column = "id", property = "id", id = true),
         @Result(column = "book_id", property = "bookId"),
         @Result(column = "index_name", property = "indexName"),
         @Result(column = "word_count", property = "wordCount"),
+        @Result(column = "is_vip", property = "isVip"),
+        @Result(column = "book_price", property = "bookPrice"),
         @Result(column = "content_hash", property = "contentHash")
     })
     BookIndex lockById(Long indexId);

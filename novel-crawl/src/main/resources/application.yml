@@ -12,8 +12,15 @@ spring:
 # Tài khoản đăng nhập.
 admin:
   username: ${CRAWLER_ADMIN_USERNAME:admin}
-  password: ${CRAWLER_ADMIN_PASSWORD:change-me-crawler-password}
+  password: ${CRAWLER_ADMIN_PASSWORD:}
 
+security:
+  csrf:
+    cookie-secure: ${AUTH_COOKIE_SECURE:false}
+  csp:
+    enabled: ${CSP_ENABLED:true}
+    # Có thể chuyển tạm sang false để điều tra tương thích mà không nới policy.
+    enforce: ${CSP_ENFORCE:true}
 
 
 crawl:

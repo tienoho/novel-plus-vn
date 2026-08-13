@@ -64,8 +64,9 @@ class RecommendationPackagingTest {
             "idx_user_buy_recommendation",
             "information_schema.statistics"
         );
-        assertThat(read(repository.resolve("compose.yaml")))
-            .contains("/migrations/20260727_recommendation.sql");
+        assertThat(read(repository.resolve("deploy/flyway/Dockerfile")))
+            .contains("COPY --chmod=0444 doc/sql/20260727_recommendation.sql "
+                + "/flyway/sql/V2026072701__recommendation.sql");
         assertThat(read(repository.resolve(
             "novel-common/src/main/java/com/java2nb/novel/core/cache/CacheKey.java")))
             .contains("indexBookSettingsKey:v3");

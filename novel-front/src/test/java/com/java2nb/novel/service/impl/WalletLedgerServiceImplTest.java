@@ -242,6 +242,80 @@ class WalletLedgerServiceImplTest {
         verify(mapper, never()).syncUserBalance(anyLong(), anyLong());
     }
 
+    @Test
+    void postsPendingAuthorRewardOnlyIntoSystemClearing() {
+        WalletAccountRow issuance = wallet(1L, "SYSTEM", 0L, "SYSTEM_ISSUANCE", -1_000L, 2L);
+        WalletAccountRow clearing = wallet(2L, "SYSTEM", 0L, "REWARD_CLEARING", 0L, 1L);
+        addWallet(issuance);
+        addWallet(clearing);
+        String allocationNo = "2026-08:101:1:22";
+        when(mapper.selectTransactionByIdempotencyKey("MONTHLY_AUTHOR_REWARD:" + allocationNo))
+            .thenReturn(null, transaction(100L, null, "MONTHLY_AUTHOR_REWARD", allocationNo, 200L));
+        when(mapper.lockWalletAccounts(List.of(1L, 2L))).thenReturn(List.of(issuance, clearing));
+
+        assertThat(service.creditAuthorRewardPending(22L, 200L, allocationNo,
+            "MONTHLY_AUTHOR_REWARD:" + allocationNo, "Thưởng xếp hạng tháng"))
+            .isEqualTo(WalletPostResult.POSTED);
+
+        verify(mapper).insertEntry(100L, 1L, -200L, -1_200L);
+        verify(mapper).insertEntry(100L, 2L, 200L, 200L);
+        verify(mapper, never()).syncUserBalance(anyLong(), anyLong());
+    }
+
+    @Test
+    void releasesAuthorRewardFromClearingIntoWithdrawableWallet() {
+        WalletAccountRow clearing = wallet(1L, "SYSTEM", 0L, "REWARD_CLEARING", 200L, 1L);
+        WalletAccountRow author = wallet(2L, "AUTHOR", 22L, "AUTHOR_REVENUE_XU", 10L, 3L);
+        addWallet(clearing);
+        addWallet(author);
+        String allocationNo = "2026-08:101:1:22";
+        when(mapper.selectTransactionByIdempotencyKey("MONTHLY_AUTHOR_REWARD_RELEASE:" + allocationNo))
+            .thenReturn(null, transaction(101L, null, "MONTHLY_AUTHOR_REWARD_RELEASE", allocationNo, 200L));
+        when(mapper.lockWalletAccounts(List.of(1L, 2L))).thenReturn(List.of(clearing, author));
+
+        assertThat(service.releaseAuthorReward(22L, 200L, allocationNo,
+            "MONTHLY_AUTHOR_REWARD_RELEASE:" + allocationNo, "Giải phóng thưởng xếp hạng tháng"))
+            .isEqualTo(WalletPostResult.POSTED);
+
+        verify(mapper).insertEntry(101L, 1L, -200L, 0L);
+        verify(mapper).insertEntry(101L, 2L, 200L, 210L);
+        verify(mapper, never()).syncUserBalance(anyLong(), anyLong());
+    }
+
+    @Test
+    void allocationNumberMustContainTheRewardedAuthor() {
+        assertThatThrownBy(() -> service.creditAuthorRewardPending(22L, 200L,
+            "2026-08:101:1:23", "MONTHLY_AUTHOR_REWARD:mismatch", "Thưởng tháng"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("không khớp");
+        verify(mapper, never()).insertTransaction(anyString(), anyString(), anyString(), anyString(),
+            anyString(), anyLong(), any(), anyString());
+    }
+
+    @Test
+    void twoAuthorsWithSamePeriodBookAndRankProduceDifferentRequestHashes() {
+        WalletAccountRow issuance = wallet(1L, "SYSTEM", 0L, "SYSTEM_ISSUANCE", -1_000L, 2L);
+        WalletAccountRow clearing = wallet(2L, "SYSTEM", 0L, "REWARD_CLEARING", 0L, 1L);
+        addWallet(issuance);
+        addWallet(clearing);
+        String first = "2026-08:101:1:22";
+        String second = "2026-08:101:1:23";
+        when(mapper.selectTransactionByIdempotencyKey("REWARD:" + first))
+            .thenReturn(null, transaction(102L, null, "MONTHLY_AUTHOR_REWARD", first, 200L));
+        when(mapper.selectTransactionByIdempotencyKey("REWARD:" + second))
+            .thenReturn(null, transaction(103L, null, "MONTHLY_AUTHOR_REWARD", second, 200L));
+        when(mapper.lockWalletAccounts(List.of(1L, 2L))).thenReturn(List.of(issuance, clearing));
+
+        service.creditAuthorRewardPending(22L, 200L, first, "REWARD:" + first, "Thưởng tháng");
+        service.creditAuthorRewardPending(23L, 200L, second, "REWARD:" + second, "Thưởng tháng");
+
+        ArgumentCaptor<String> hashes = ArgumentCaptor.forClass(String.class);
+        verify(mapper, times(2)).insertTransaction(anyString(), anyString(), hashes.capture(),
+            eq("MONTHLY_AUTHOR_REWARD"), anyString(), eq(200L), eq(null), anyString());
+        assertThat(hashes.getAllValues()).hasSize(2);
+        assertThat(hashes.getAllValues().get(0)).isNotEqualTo(hashes.getAllValues().get(1));
+    }
+
     private void addWallet(WalletAccountRow wallet) {
         wallets.put(key(wallet.getOwnerType(), wallet.getOwnerId(), wallet.getAccountType()), wallet);
     }

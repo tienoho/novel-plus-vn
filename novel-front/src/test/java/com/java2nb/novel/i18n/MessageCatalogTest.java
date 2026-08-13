@@ -28,10 +28,6 @@ class MessageCatalogTest {
     private static final Pattern MESSAGE_KEY = Pattern.compile("^([^#!\\s][^=]*)=");
     private static final Pattern HAN_TEXT = Pattern.compile("[\\u4E00-\\u9FA5]+");
     private static final Map<String, AllowedHan> TEMPLATE_HAN_ALLOWLIST = Map.of(
-        "mobile/book/mh_book_search.html", new AllowedHan(Set.of("已完成"),
-            "Giá trị contract của tham số bookStatus và phép so sánh dữ liệu nguồn."),
-        "mobile/book/soft_book_search.html", new AllowedHan(Set.of("已完成"),
-            "Giá trị contract của tham số bookStatus và phép so sánh dữ liệu nguồn."),
         "author/book_add.html", new AllowedHan(Set.of("玄幻奇幻"),
             "Tên category mặc định được gửi về backend qua input ẩn catName; không phải nhãn hiển thị.")
     );

@@ -27,5 +27,13 @@ class MyBatisMapperPackagingTest {
         assertThat(mapping.resolve("FinancialVoucherMapper.xml")).exists();
         assertThat(mapping.resolve("SysAuditLogMapper.xml")).exists();
         assertThat(mapping.resolve("User2faMapper.xml")).exists();
+        assertThat(mapping.resolve("MonthlyTicketMapper.xml")).exists();
+        assertThat(mapping.resolve("MonthlyRankingMapper.xml")).exists();
+        assertThat(mapping.resolve("AuthorRewardMapper.xml")).exists();
+        assertThat(mapping.resolve("GamificationProgressMapper.xml")).exists();
+        assertThat(mapping.resolve("ReadingTicketMapper.xml")).exists();
+        assertThat(mapping.resolve("ReadingSubscriptionMapper.xml")).exists();
+        assertThat(mapping.resolve("ReadingSubscriptionPurchaseMapper.xml")).exists();
+        assertThat(mapping.resolve("GiftCodeMapper.xml")).exists();
     }
 }

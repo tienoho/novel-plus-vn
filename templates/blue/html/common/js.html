@@ -1,12 +1,17 @@
 <th:block th:fragment="js">
+    <link rel="stylesheet" href="/css/micro-interactions.css?v=1">
     <script th:inline="javascript">
         window.NovelI18n = Object.assign(window.NovelI18n || {}, {
             login: /*[[#{site.login}]]*/ 'Đăng nhập',
             register: /*[[#{site.register}]]*/ 'Đăng ký',
             logout: /*[[#{site.logout}]]*/ 'Đăng xuất',
             networkError: /*[[#{auth.networkError}]]*/ 'Không thể kết nối mạng',
+            continueReading: /*[[#{user.continueReading}]]*/ 'Đọc tiếp',
+            currentlyReading: /*[[#{user.currentlyReading}]]*/ 'Đang đọc dở',
+            lastReadChapter: /*[[#{user.lastReadChapter}]]*/ 'Chương vừa đọc',
             notice: /*[[#{common.notice}]]*/ 'Thông báo',
             cancel: /*[[#{common.cancel}]]*/ 'Hủy',
+            processing: /*[[#{common.processingShort}]]*/ 'Đang xử lý…',
             loginFirst: /*[[#{header.loginFirst}]]*/ 'Vui lòng đăng nhập trước',
             expand: /*[[#{book.expand}]]*/ 'Mở rộng',
             collapse: /*[[#{book.collapse}]]*/ 'Thu gọn',
@@ -86,6 +91,15 @@
             readerTtsRate: /*[[#{reader.tts.rate}]]*/ 'Tốc độ',
             readerTtsVoice: /*[[#{reader.tts.voice}]]*/ 'Giọng đọc',
             readerTtsVoiceAuto: /*[[#{reader.tts.voiceAuto}]]*/ 'Tự động',
+            readerFont: /*[[#{reader.font}]]*/ 'Phông chữ',
+            readerFontSystem: /*[[#{reader.font.system}]]*/ 'Không chân',
+            readerFontSerif: /*[[#{reader.font.serif}]]*/ 'Có chân',
+            readerFontReadable: /*[[#{reader.font.readable}]]*/ 'Dễ đọc',
+            readerTheme: /*[[#{reader.theme}]]*/ 'Giao diện đọc',
+            readerThemeLight: /*[[#{reader.theme.white}]]*/ 'Trắng',
+            readerThemeSepia: /*[[#{reader.theme.sepia}]]*/ 'Giấy ngà',
+            readerThemeNight: /*[[#{reader.theme.night}]]*/ 'Ban đêm',
+            readerAppearanceDefault: /*[[#{reader.appearance.default}]]*/ 'Theo giao diện',
             readerLineHeight: /*[[#{reader.lineHeight}]]*/ 'Giãn dòng',
             readerOfflineSave: /*[[#{reader.offline.save}]]*/ 'Lưu offline',
             readerOfflineSaving: /*[[#{reader.offline.saving}]]*/ 'Đang lưu chương...',
@@ -95,6 +109,26 @@
             readerOfflineLibrary: /*[[#{reader.offline.library}]]*/ 'Thư viện offline',
             readerDataSaverOn: /*[[#{reader.dataSaver.on}]]*/ 'Tiết kiệm dữ liệu: Bật',
             readerDataSaverOff: /*[[#{reader.dataSaver.off}]]*/ 'Tiết kiệm dữ liệu: Tắt',
+            readerSyncSave: /*[[#{reader.sync.save}]]*/ 'Lưu vị trí',
+            readerSyncSaved: /*[[#{reader.sync.saved}]]*/ 'Đã đồng bộ vị trí đọc.',
+            readerSyncError: /*[[#{reader.sync.error}]]*/ 'Không thể đồng bộ vị trí đọc.',
+            readerSyncLogin: /*[[#{reader.sync.login}]]*/ 'Đăng nhập để đồng bộ vị trí và ghi chú.',
+            readerSyncResume: /*[[#{reader.sync.resume}]]*/ 'Tiếp tục từ vị trí đã lưu',
+            readerBookmarkAdd: /*[[#{reader.bookmark.add}]]*/ 'Đánh dấu đoạn',
+            readerBookmarkSaved: /*[[#{reader.bookmark.saved}]]*/ 'Đã đánh dấu đoạn này.',
+            readerNoteAdd: /*[[#{reader.note.add}]]*/ 'Ghi chú',
+            readerNoteEdit: /*[[#{reader.note.edit}]]*/ 'Sửa ghi chú',
+            readerNotePrompt: /*[[#{reader.note.prompt}]]*/ 'Nhập ghi chú cho đoạn đã chọn:',
+            readerNoteSelection: /*[[#{reader.note.selection}]]*/ 'Hãy chọn một đoạn văn trước khi tạo ghi chú.',
+            readerNoteSaved: /*[[#{reader.note.saved}]]*/ 'Đã lưu ghi chú.',
+            readerAnnotations: /*[[#{reader.annotation.list}]]*/ 'Dấu trang và ghi chú',
+            readerAnnotationsShow: /*[[#{reader.annotation.show}]]*/ 'Xem dấu trang/ghi chú',
+            readerAnnotationsHide: /*[[#{reader.annotation.hide}]]*/ 'Ẩn dấu trang/ghi chú',
+            readerAnnotationsEmpty: /*[[#{reader.annotation.empty}]]*/ 'Chưa có dấu trang hoặc ghi chú trong chương này.',
+            readerAnnotationDelete: /*[[#{reader.annotation.delete}]]*/ 'Xóa',
+            readerAnnotationDeleted: /*[[#{reader.annotation.deleted}]]*/ 'Đã xóa dấu trang hoặc ghi chú.',
+            readerAnnotationBookmark: /*[[#{reader.annotation.bookmark}]]*/ 'Dấu trang',
+            readerAnnotationNote: /*[[#{reader.annotation.note}]]*/ 'Ghi chú',
             blueShelfTitle: /*[[#{user.bookshelf.localTitle('{0}')}]]*/ 'Tủ sách của tôi ({0} truyện)',
             blueShelfNote: /*[[#{user.bookshelf.localNote}]]*/ 'Truyện đã đọc được tự động lưu trên thiết bị này.',
             blueLastChapter: /*[[#{user.bookshelf.lastChapter}]]*/ 'Chương đọc gần nhất',
@@ -116,6 +150,10 @@
     <script src="/layui/layui.all.js" type="text/javascript"></script>
     <script src="/javascript/layer-i18n.js" type="text/javascript"></script>
     <script src="/javascript/header.js" type="text/javascript"></script>
-    <script src="/javascript/common.js" type="text/javascript"></script>
+    <script src="/javascript/safe-dom.js?v=1" type="text/javascript"></script>
+    <script src="/javascript/micro-interactions.js?v=1" type="text/javascript"></script>
+    <script src="/javascript/common.js?v=5" type="text/javascript"></script>
+    <script src="/javascript/csp-actions.js" type="text/javascript"></script>
     <script src="/javascript/pwa-register.js" type="text/javascript"></script>
+    <script src="/javascript/back-to-top.js" defer></script>
 </th:block>

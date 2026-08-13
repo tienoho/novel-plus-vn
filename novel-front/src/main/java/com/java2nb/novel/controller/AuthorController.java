@@ -1,20 +1,19 @@
 package com.java2nb.novel.controller;
 
-import io.github.xxyopen.model.page.PageBean;
-
 import com.java2nb.novel.core.bean.UserDetails;
 import com.java2nb.novel.core.enums.ResponseStatus;
-import io.github.xxyopen.model.resp.RestResult;
-import io.github.xxyopen.web.exception.BusinessException;
-import com.java2nb.novel.entity.Author;
-import com.java2nb.novel.entity.AuthorIncome;
-import com.java2nb.novel.entity.AuthorIncomeDetail;
-import com.java2nb.novel.entity.Book;
+import com.java2nb.novel.core.enums.CopyrightReportStatusEnum;
+import com.java2nb.novel.core.utils.ContentHashUtil;
+import com.java2nb.novel.dto.author.AuthorAiRequest;
 import com.java2nb.novel.dto.author.DraftAutosaveRequest;
 import com.java2nb.novel.dto.author.DraftScheduleRequest;
+import com.java2nb.novel.entity.*;
+import com.java2nb.novel.mapper.*;
 import com.java2nb.novel.service.AuthorChapterDraftService;
 import com.java2nb.novel.service.AuthorService;
 import com.java2nb.novel.service.BookService;
+import com.java2nb.novel.service.ai.AuthorAiOperation;
+import com.java2nb.novel.service.ai.AuthorAiService;
 import com.java2nb.novel.service.analytics.AuthorAnalyticsPage;
 import com.java2nb.novel.service.analytics.AuthorAnalyticsService;
 import com.java2nb.novel.service.analytics.AuthorAnalyticsSummary;
@@ -23,44 +22,40 @@ import com.java2nb.novel.service.finance.AuthorKycStatus;
 import com.java2nb.novel.service.finance.AuthorWithdrawalRow;
 import com.java2nb.novel.service.finance.KycSubmissionRequest;
 import com.java2nb.novel.service.finance.WithdrawalRequestInput;
+import com.java2nb.novel.service.chapter.ChapterCommercialPolicyService;
+import com.java2nb.novel.service.chapter.ChapterCommercialPolicyView;
+import com.java2nb.novel.service.transfer.AuthorBookTransferService;
+import com.java2nb.novel.service.transfer.BookExportFile;
+import com.java2nb.novel.service.transfer.BookImportResult;
+import com.java2nb.novel.service.transfer.BookTransferFormat;
+import io.github.xxyopen.model.page.PageBean;
+import io.github.xxyopen.model.resp.RestResult;
+import io.github.xxyopen.web.exception.BusinessException;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.chat.model.ChatModel;
-import org.springframework.ai.chat.model.ChatResponse;
-import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.openai.OpenAiChatModel;
-import io.swagger.v3.oas.annotations.Operation;
-import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.chat.model.ChatModel;
-import org.springframework.ai.chat.model.ChatResponse;
-import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.openai.OpenAiChatModel;
-import org.springframework.http.MediaType;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
-
-import java.util.Date;
-import java.time.LocalDate;
-
-import com.java2nb.novel.core.enums.CopyrightReportStatusEnum;
-import com.java2nb.novel.core.utils.ContentHashUtil;
-import com.java2nb.novel.entity.*;
-import com.java2nb.novel.mapper.*;
-import static org.mybatis.dynamic.sql.SqlBuilder.isEqualTo;
-import static org.mybatis.dynamic.sql.select.SelectDSL.select;
 import org.mybatis.dynamic.sql.render.RenderingStrategies;
 import org.mybatis.dynamic.sql.select.render.SelectStatementProvider;
+import org.springframework.http.CacheControl;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+
+import static org.mybatis.dynamic.sql.SqlBuilder.isEqualTo;
+import static org.mybatis.dynamic.sql.select.SelectDSL.select;
 
 /**
  * @author 11797
@@ -77,13 +72,15 @@ public class AuthorController extends BaseController {
 
     private final AuthorChapterDraftService chapterDraftService;
 
-    private final ChatClient chatClient;
+    private final AuthorBookTransferService bookTransferService;
 
-    private final OpenAiChatModel chatModel;
+    private final AuthorAiService authorAiService;
 
     private final AuthorFinanceService authorFinanceService;
 
     private final AuthorAnalyticsService authorAnalyticsService;
+
+    private final ChapterCommercialPolicyService chapterCommercialPolicyService;
 
     private final CopyrightAppealMapper copyrightAppealMapper;
 
@@ -207,12 +204,57 @@ public class AuthorController extends BaseController {
         return RestResult.ok(bookService.compareChapterHistory(indexId, v1, v2, author.getId()));
     }
 
+    /** Đọc cấu hình giá và thời gian mở khóa của một chương thuộc phạm vi tác giả. */
+    @GetMapping("chapter-commercial-policy/{indexId}")
+    public RestResult<ChapterCommercialPolicyView> getChapterCommercialPolicy(
+        @PathVariable("indexId") Long indexId, HttpServletRequest request) {
+        Author author = checkAuthor(request);
+        return RestResult.ok(chapterCommercialPolicyService.getForAuthor(author.getId(), indexId));
+    }
+
     /** Tự lưu bản nháp theo khóa idempotency của trình soạn thảo. */
     @PostMapping("drafts/autosave")
     public RestResult<AuthorChapterDraft> autosaveDraft(@RequestBody DraftAutosaveRequest input,
                                                          HttpServletRequest request) {
         Author author = checkAuthor(request);
         return RestResult.ok(chapterDraftService.autosave(author.getId(), input));
+    }
+
+    /** Nhập TXT, DOCX hoặc EPUB thành các bản nháp riêng tư; không tự xuất bản. */
+    @PostMapping(value = "books/{bookId}/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public RestResult<BookImportResult> importBook(
+        @PathVariable("bookId") long bookId,
+        @RequestPart("file") MultipartFile file,
+        HttpServletRequest request) {
+        Author author = checkAuthor(request);
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Tệp nhập đang trống");
+        }
+        try {
+            return RestResult.ok(bookTransferService.importBook(
+                author.getId(), bookId, file.getOriginalFilename(), file.getBytes()));
+        } catch (IOException exception) {
+            throw new IllegalArgumentException("Không thể đọc tệp nhập", exception);
+        }
+    }
+
+    /** Xuất các chương đã duyệt theo đúng thứ tự mục lục. */
+    @GetMapping("books/{bookId}/export")
+    public ResponseEntity<byte[]> exportBook(
+        @PathVariable("bookId") long bookId,
+        @RequestParam("format") String format,
+        HttpServletRequest request) {
+        Author author = checkAuthor(request);
+        BookExportFile file = bookTransferService.exportBook(
+            author.getId(), bookId, BookTransferFormat.parse(format));
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType(file.contentType()));
+        headers.setContentLength(file.content().length);
+        headers.setContentDisposition(ContentDisposition.attachment()
+            .filename(file.filename(), StandardCharsets.UTF_8).build());
+        headers.setCacheControl(CacheControl.noStore());
+        headers.set("X-Content-Type-Options", "nosniff");
+        return ResponseEntity.ok().headers(headers).body(file.content());
     }
 
     /** Đọc một bản nháp thuộc tác giả hiện tại. */
@@ -487,100 +529,36 @@ public class AuthorController extends BaseController {
         return RestResult.ok(bookService.queryAiGenPic(bookId));
     }
 
-    /** Mở rộng nội dung bằng AI. */
+    /** Mở rộng nội dung bằng AI; bản thảo chỉ được nhận trong request body. */
     @PostMapping("ai/expand")
-    public RestResult<String> expandText(@RequestParam("text") String text, @RequestParam("ratio") Double ratio) {
-        String prompt = "Hãy mở rộng đoạn văn tiếng Việt sau lên khoảng " + ratio / 100
-            + " lần độ dài ban đầu. Giữ nguyên ý, giọng văn và tên riêng; chỉ trả về nội dung đã viết lại: " + text;
-        return RestResult.ok(chatClient.prompt()
-            .user(prompt)
-            .call()
-            .content());
+    public RestResult<String> expandText(@Valid @RequestBody AuthorAiRequest input,
+                                         HttpServletRequest request) {
+        Author author = checkAuthor(request);
+        return RestResult.ok(authorAiService.generate(author.getId(), AuthorAiOperation.EXPAND, input));
     }
 
     /** Rút gọn nội dung bằng AI. */
     @PostMapping("ai/condense")
-    public RestResult<String> condenseText(@RequestParam("text") String text, @RequestParam("ratio") Integer ratio) {
-        String prompt = "Hãy rút gọn đoạn văn tiếng Việt sau còn khoảng 1/" + 100 / ratio
-            + " độ dài ban đầu. Giữ nguyên ý chính và tên riêng; chỉ trả về nội dung đã viết lại: " + text;
-        return RestResult.ok(chatClient.prompt()
-            .user(prompt)
-            .call()
-            .content());
+    public RestResult<String> condenseText(@Valid @RequestBody AuthorAiRequest input,
+                                           HttpServletRequest request) {
+        Author author = checkAuthor(request);
+        return RestResult.ok(authorAiService.generate(author.getId(), AuthorAiOperation.CONDENSE, input));
     }
 
     /** Viết tiếp nội dung bằng AI. */
     @PostMapping("ai/continue")
-    public RestResult<String> continueText(@RequestParam("text") String text, @RequestParam("length") Integer length) {
-        String prompt = "Hãy viết tiếp đoạn văn tiếng Việt sau với độ dài khoảng " + length
-            + " ký tự. Giữ nhất quán nhân vật, ngôi kể và giọng văn; chỉ trả về phần viết tiếp: " + text;
-        return RestResult.ok(chatClient.prompt()
-            .user(prompt)
-            .call()
-            .content());
+    public RestResult<String> continueText(@Valid @RequestBody AuthorAiRequest input,
+                                           HttpServletRequest request) {
+        Author author = checkAuthor(request);
+        return RestResult.ok(authorAiService.generate(author.getId(), AuthorAiOperation.CONTINUE, input));
     }
 
     /** Trau chuốt nội dung bằng AI. */
     @PostMapping("ai/polish")
-    public RestResult<String> polishText(@RequestParam("text") String text) {
-        String prompt = "Hãy trau chuốt đoạn văn tiếng Việt sau cho tự nhiên, mạch lạc; giữ nguyên ý và tên riêng, "
-            + "chỉ trả về nội dung đã chỉnh sửa: " + text;
-        return RestResult.ok(chatClient.prompt()
-            .user(prompt)
-            .call()
-            .content());
-    }
-
-    /**
-     * Mở rộng nội dung bằng AI theo luồng.
-     */
-    @GetMapping(value = "ai/stream/expand", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> streamExpandText(@RequestParam("text") String text, @RequestParam("ratio") Double ratio) {
-        String prompt = "Hãy mở rộng đoạn văn tiếng Việt sau lên khoảng " + ratio / 100
-            + " lần độ dài ban đầu. Giữ nguyên ý, giọng văn và tên riêng; chỉ trả về nội dung đã viết lại: " + text;
-        return chatClient.prompt()
-            .user(prompt)
-            .stream()
-            .content();
-    }
-
-    /**
-     * Rút gọn nội dung bằng AI theo luồng.
-     */
-    @GetMapping(value = "ai/stream/condense", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> streamCondenseText(@RequestParam("text") String text, @RequestParam("ratio") Integer ratio) {
-        String prompt = "Hãy rút gọn đoạn văn tiếng Việt sau còn khoảng 1/" + 100 / ratio
-            + " độ dài ban đầu. Giữ nguyên ý chính và tên riêng; chỉ trả về nội dung đã viết lại: " + text;
-        return chatClient.prompt()
-            .user(prompt)
-            .stream()
-            .content();
-    }
-
-    /**
-     * Viết tiếp nội dung bằng AI theo luồng.
-     */
-    @GetMapping(value = "ai/stream/continue", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> streamContinueText(@RequestParam("text") String text, @RequestParam("length") Integer length) {
-        String prompt = "Hãy viết tiếp đoạn văn tiếng Việt sau với độ dài khoảng " + length
-            + " ký tự. Giữ nhất quán nhân vật, ngôi kể và giọng văn; chỉ trả về phần viết tiếp: " + text;
-        return chatClient.prompt()
-            .user(prompt)
-            .stream()
-            .content();
-    }
-
-    /**
-     * Trau chuốt nội dung bằng AI theo luồng.
-     */
-    @GetMapping(value = "/ai/stream/polish", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> streamPolishText(@RequestParam("text") String text) {
-        String prompt = "Hãy trau chuốt đoạn văn tiếng Việt sau cho tự nhiên, mạch lạc; giữ nguyên ý và tên riêng, "
-            + "chỉ trả về nội dung đã chỉnh sửa: " + text;
-        return chatClient.prompt()
-            .user(prompt)
-            .stream()
-            .content();
+    public RestResult<String> polishText(@Valid @RequestBody AuthorAiRequest input,
+                                         HttpServletRequest request) {
+        Author author = checkAuthor(request);
+        return RestResult.ok(authorAiService.generate(author.getId(), AuthorAiOperation.POLISH, input));
     }
 
 }

@@ -4,16 +4,42 @@ server:
   #        max-threads: 1000
   #        min-spare-threads: 30
   port: 80
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,metrics,prometheus"
+  endpoint:
+    health:
+      show-details: never
+  metrics:
+    tags:
+      application: ${spring.application.name:novel-admin}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
 #    uri-encoding: utf-8
 #security:
 #  basic:
 #    enabled: false
+security:
+  csp:
+    enabled: ${CSP_ENABLED:true}
+    # Chỉ chuyển sang true khi verifier không còn inline handler/script thiếu nonce.
+    enforce: ${CSP_ENFORCE:true}
+  admin-bootstrap:
+    username: ${ADMIN_BOOTSTRAP_USERNAME:admin}
+    password: ${ADMIN_BOOTSTRAP_PASSWORD:}
+  csrf:
+    cookie-secure: ${AUTH_COOKIE_SECURE:false}
+  pii:
+    encryption-key: ${PII_ENCRYPTION_KEY:disabled}
 spring:
   datasource:
     driverClassName: org.apache.shardingsphere.driver.ShardingSphereDriver
     url: jdbc:shardingsphere:absolutepath:${user.dir}/config/shardingsphere-jdbc.yml
   thymeleaf:
-    mode: LEGACYHTML5
+    mode: HTML
     cache: false
   jackson:
     time-zone: GMT+8
@@ -35,16 +61,39 @@ mybatis:
     #Tự ánh xạ cột có dấu gạch dưới sang thuộc tính camelCase của Java
     map-underscore-to-camel-case: true
   mapper-locations: classpath*:mybatis/**/*Mapper.xml
-  typeAliasesPackage: com.java2nb.**.domain
 
 logging:
   config: classpath:logback-boot.xml
 
-security:
-  pii:
-    encryption-key: ${PII_ENCRYPTION_KEY:disabled}
-
 novel:
+  gift-code:
+    enabled: ${GIFT_CODE_ENABLED:false}
+    hmac-key-id: ${GIFT_CODE_HMAC_KEY_ID:legacy-v1}
+    hmac-secret: ${GIFT_CODE_HMAC_SECRET:disabled}
+    hmac-verification-keys: ${GIFT_CODE_HMAC_VERIFICATION_KEYS:}
+    policy-version: ${GIFT_CODE_POLICY_VERSION:v1}
+  reader-subscription:
+    # Kích hoạt thủ công là thao tác cấp quyền; luôn để tắt cho đến khi quy trình nội bộ được duyệt.
+    activation-enabled: ${READING_SUBSCRIPTION_ADMIN_ACTIVATION_ENABLED:false}
+    policy-version: ${READING_TICKET_POLICY_VERSION:v1}
+  gamification:
+    policy-version: ${GAMIFICATION_POLICY_VERSION:v1}
+    zone-id: ${GAMIFICATION_ZONE_ID:Asia/Ho_Chi_Minh}
+    event:
+      enabled: ${GAMIFICATION_EVENT_ENABLED:false}
+    ticket:
+      enabled: ${GAMIFICATION_TICKET_ENABLED:false}
+      lot-validity-days: ${GAMIFICATION_TICKET_LOT_DAYS:60}
+      max-grant-per-batch: ${GAMIFICATION_TICKET_MAX_GRANT_BATCH:1000}
+    season:
+      enabled: ${GAMIFICATION_SEASON_ENABLED:false}
+      close-drain-seconds: ${GAMIFICATION_SEASON_DRAIN_SECONDS:60}
+    job:
+      lease-seconds: ${GAMIFICATION_JOB_LEASE_SECONDS:300}
+      batch-size: ${GAMIFICATION_JOB_BATCH_SIZE:500}
+    reward:
+      enabled: ${GAMIFICATION_REWARD_ENABLED:false}
+      claim-window-days: ${GAMIFICATION_REWARD_CLAIM_WINDOW_DAYS:7}
   common:
     i18n:
       enabled: false

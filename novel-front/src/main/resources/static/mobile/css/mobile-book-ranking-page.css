@@ -1,0 +1,80 @@
+[data-mobile-book-ranking-page] *,
+[data-mobile-book-ranking-page] *::before,
+[data-mobile-book-ranking-page] *::after {
+    box-sizing: border-box;
+}
+
+[data-mobile-book-ranking-page] .line-limit-length {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+[data-mobile-book-ranking-page] .mobile-ranking-search {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 15px;
+}
+
+[data-mobile-book-ranking-page] .mobile-ranking-search .layui-input {
+    min-width: 0;
+}
+
+[data-mobile-book-ranking-page] .mobile-ranking-search .layui-btn {
+    flex: 0 0 auto;
+}
+
+[data-mobile-book-ranking-page] .mobile-ranking-card {
+    margin-bottom: 10px;
+    padding: 5px 0;
+    background: #f2f2f2;
+}
+
+[data-mobile-book-ranking-page] .mobile-ranking-cover-link {
+    text-align: center;
+}
+
+[data-mobile-book-ranking-page] .mobile-ranking-cover {
+    width: 130px;
+    height: 190px;
+    max-width: 100%;
+    object-fit: cover;
+}
+
+[data-mobile-book-ranking-page] .mobile-ranking-info {
+    padding-right: 10px;
+}
+
+[data-mobile-book-ranking-page] .mobile-ranking-title {
+    color: #000;
+    font-size: 15px;
+}
+
+[data-mobile-book-ranking-page] .mobile-ranking-detail {
+    margin-top: 5px;
+    color: #a6a6a6;
+}
+
+[data-mobile-book-ranking-page] .mobile-ranking-updated {
+    color: red;
+}
+
+[data-mobile-book-ranking-page] .book_desc {
+    display: -webkit-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: pre-wrap;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+}
+
+[data-mobile-book-ranking-page] #books {
+    text-align: center;
+}
+
+@media (max-width: 360px) {
+    [data-mobile-book-ranking-page] .mobile-ranking-cover {
+        height: 165px;
+    }
+}

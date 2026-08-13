@@ -1,0 +1,4 @@
+services:
+  mysql:
+    volumes:
+      - ./e2e/fixtures:/e2e/fixtures:ro

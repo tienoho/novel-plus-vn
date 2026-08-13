@@ -66,16 +66,16 @@
     $("#btnLogin").click(function () {
         var username = $("#txtUName").val();
         if(username.isBlank()){
-            $("#LabErr").html(loginMessages.phoneRequired);
+            $("#LabErr").text(loginMessages.phoneRequired);
             return;
         }
         if(!username.isPhone()){
-            $("#LabErr").html(loginMessages.phoneInvalid);
+            $("#LabErr").text(loginMessages.phoneInvalid);
             return;
         }
         var password = $("#txtPassword").val();
         if(password.isBlank()){
-            $("#LabErr").html(loginMessages.passwordRequired);
+            $("#LabErr").text(loginMessages.passwordRequired);
             return;
         }
         $.ajax({
@@ -86,16 +86,14 @@
             success: function (data) {
                 if (data.code == 200) {
                     if($("#autoLogin").is(':checked')){
-                        $.cookie('Authorization', data.data.token, { expires: 7 ,path: '/'  });
                         localStorage.setItem("autoLogin","1");
                     }else {
-                        $.cookie('Authorization', data.data.token,{ path: '/'  });
                         localStorage.setItem("autoLogin","0");
                     }
                     var orginUrl = getSearchString("originUrl");
                     window.location.href = orginUrl == undefined || orginUrl.isBlank() ? "/" : orginUrl;
                 } else {
-                    $("#LabErr").html(data.msg);
+                    $("#LabErr").text(data.msg || "");
                 }
 
             },

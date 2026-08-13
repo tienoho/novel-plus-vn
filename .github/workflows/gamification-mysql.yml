@@ -1,0 +1,82 @@
+name: Gamification MySQL invariants
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/gamification-mysql.yml'
+      - 'compose.yaml'
+      - 'pom.xml'
+      - 'scripts/verify-gamification.ps1'
+      - 'doc/sql/**'
+      - 'novel-common/**'
+      - 'novel-front/**'
+      - 'novel-admin/**'
+  push:
+    branches:
+      - main
+      - master
+      - 'codex/**'
+    paths:
+      - '.github/workflows/gamification-mysql.yml'
+      - 'compose.yaml'
+      - 'pom.xml'
+      - 'scripts/verify-gamification.ps1'
+      - 'doc/sql/**'
+      - 'novel-common/**'
+      - 'novel-front/**'
+      - 'novel-admin/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gamification-mysql-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mysql-invariants:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      MYSQL_DATABASE: novel_plus
+      MYSQL_USER: novel
+      MYSQL_HOST_PORT: '3307'
+      MAVEN_CMD: mvn
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@d7793b545071e98d581d3bf084a51c3213318a07 # v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Sinh secret integration dùng một lần
+        shell: bash
+        run: |
+          {
+            echo "MYSQL_ROOT_PASSWORD=$(openssl rand -hex 48)"
+            echo "MYSQL_APP_PASSWORD=$(openssl rand -hex 48)"
+            echo "REDIS_PASSWORD=$(openssl rand -hex 48)"
+            echo "JWT_SECRET=$(openssl rand -hex 64)"
+            echo "CACHE_MANAGER_PASSWORD=$(openssl rand -hex 48)"
+            echo "CRAWLER_ADMIN_PASSWORD=CiCrawler!$(openssl rand -hex 24)"
+            echo "ADMIN_BOOTSTRAP_PASSWORD=CiAdmin!$(openssl rand -hex 24)"
+            echo "PII_ENCRYPTION_KEY=$(openssl rand -base64 32)"
+          } >> "$GITHUB_ENV"
+
+      - name: Verify migration, triggers and concurrent writes
+        shell: pwsh
+        run: ./scripts/verify-gamification.ps1 -StopAfter
+
+      - name: Diễn tập backup và restore trên database tạm
+        shell: pwsh
+        run: ./scripts/verify-backup-restore.ps1
+
+      - name: Capture MySQL diagnostics on failure
+        if: failure()
+        run: docker compose --project-name novel-plus-verify -f compose.yaml -f compose.test.yaml logs --no-color mysql

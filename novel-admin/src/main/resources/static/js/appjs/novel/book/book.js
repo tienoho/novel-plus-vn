@@ -144,12 +144,10 @@ function load() {
                         align: 'center',
                         formatter: function (value, row, index) {
                             // Thêm nút tải xuống
-                            var d = '<a class="btn btn-primary btn-sm" href="#" mce_href="#" title="' + adminMessage('bookDownloadTxt', 'Tải TXT') + '" onclick="downloadBook(\''
-                                + row.id
-                                + '\',\'' + row.bookName + '\')"><i class="fa fa-cloud-download"></i></a><br><br> ';
-                            var r = '<a class="btn btn-warning btn-sm ' + s_remove_h + '" href="#" title="' + adminMessage('deleteLabel', 'Xóa') + '"  mce_href="#" onclick="remove(\''
-                                + row.id
-                                + '\')"><i class="fa fa-remove"></i></a> ';
+                            var d = adminRowAction({action: 'download-book', args: [row.id, row.bookName], variant: 'primary',
+                                title: adminMessage('bookDownloadTxt', 'Tải TXT'), icon: 'download'}) + '<br><br> ';
+                            var r = adminRowAction({action: 'remove', args: [row.id], variant: 'warning', visibility: s_remove_h,
+                                title: adminMessage('deleteLabel', 'Xóa'), icon: 'remove'});
                             return d + r;
                         }
                     }

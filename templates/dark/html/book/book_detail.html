@@ -118,10 +118,10 @@
 <div style="height: 50px;line-height: 50px;text-align: center" class="layui-header header header-doc  layui-bg-cyan">
 
     <div style="float: left;margin-left: 10px">
-        <a href="javascript:history.go(-1)">
+        <a href="#" data-csp-action="history-back">
             <i style="font-size: 20px;color: #92B8B1;" class="layui-icon">&#xe65c;</i></a>
     </div>
-    <b class="layui-icon" th:utext="${book.bookName}"></b>
+    <b class="layui-icon" th:text="${book.bookName}"></b>
     <div style="float: right;margin-right: 10px">
         <a href="/"><i style="font-size: 20px;color: #92B8B1;" class="layui-icon">&#xe68e;</i></a>
     </div>
@@ -133,7 +133,7 @@
 
     </div>
         <div style="position:relative;padding: 10px 20px" class="layui-col-xs8 layui-col-sm8 layui-col-md8 layui-col-lg8">
-            <a th:href="'javascript:searchBooks(\''+ ${book.authorName}+'\')'"><div style="color: #4c6978;"><span th:text="#{book.author}+'：'">Tác giả:</span><span th:text="${book.authorName}"></span></div></a>
+            <a th:href="@{/book/bookclass.html(k=${book.authorName})}"><div style="color: #4c6978;"><span th:text="#{book.author}+'：'">Tác giả:</span><span th:text="${book.authorName}"></span></div></a>
             <a th:href="'/book/book_ranking.html?catId='+${book.catId}"><div style="margin-top: 5px;color: #4c6978;"><span th:text="#{book.category}+'：'">Danh mục:</span><span th:text="${book.catName}"></span></div></a>
             <div style="margin-top: 5px;color: #4c6978;"><span th:text="#{book.status}+'：'">Trạng thái:</span><span th:if="${book.bookStatus==0}" th:text="#{book.status.serializing}">Đang ra</span><span th:unless="${book.bookStatus==0}" th:text="#{book.status.completed}">Đã hoàn thành</span></div>
             <div style="margin-top: 5px;color: #4c6978;"><span th:text="#{reader.update}+'：'">Cập nhật:</span><i th:text="${#dates.format(book.lastIndexUpdateTime, 'dd-MM-yy')}"></i></div>
@@ -151,13 +151,12 @@
     <button th:if="${book.authorId != null}" type="button" data-author-follow class="layui-btn layui-btn-sm layui-btn-radius"
             th:attr="data-author-id=${book.authorId},data-text-follow=#{notification.followAuthor},data-text-following=#{notification.followingAuthor},data-text-unfollow=#{notification.unfollowAuthor},data-network-error=#{auth.networkError}"
             th:text="#{notification.followAuthor}">Theo dõi tác giả</button>
-<!--
-    <button type="button" onclick="downloadFile()" class="layui-btn layui-btn-sm layui-btn-radius layui-bg-normal" th:text="#{book.downloadTxt}">Tải TXT</button>
--->
 </div>
-<p style="line-height: 23px;padding: 10px;font-size: 14px;color: #4c6978;" th:utext="${book.bookDesc}">
+<p style="line-height: 23px;padding: 10px;font-size: 14px;color: #4c6978;" th:text="${book.bookDesc}">
 
 </p>
+
+<div th:replace="common/monthly_ticket :: book_widget(${book.id})"></div>
 
 <div class="layui-collapse">
     <div class="layui-colla-item" >
@@ -203,7 +202,11 @@
         success: function (data) {
             if (data.code == 200) {
                 if (data.data) {
-                    $("#cFavs").html("<button type=\"button\" id=\"cFavs\" class=\"layui-btn layui-btn-sm layui-btn-radius layui-btn-warm\">" + novelMessage('book.inShelf', 'Đã lưu') + "</button>");
+            $("#cFavs").empty().append($("<button>", {
+                type: "button",
+                id: "cFavs",
+                "class": "layui-btn layui-btn-sm layui-btn-radius layui-btn-warm"
+            }).text(novelMessage('book.inShelf', 'Đã lưu')));
                 }
 
 
@@ -211,7 +214,7 @@
                 // Chưa đăng nhập
 
             } else {
-                layer.alert(data.msg);
+                novelAlertText(data.msg);
             }
 
         },
@@ -228,13 +231,25 @@
         dataType: "json",
         success: function (data) {
             if (data.code == 200) {
-                var indexListHtml = "";
+                var fragment = document.createDocumentFragment();
+                var bookId = NovelSafeDom.positiveId($("#bookIdHidden").val());
+                if (!bookId) {
+                    return;
+                }
                 for(var i = 0 ; i < data.data.length ; i++){
                     var bookIndex = data.data[i];
-                    indexListHtml+=("<p class=\"line-limit-length layui-col-xs12 layui-col-sm4 layui-col-md3 layui-col-lg2\" style=\"padding-left:10px;height: 50px;line-height: 50px;\"><a href=\"/book/"+$("#bookIdHidden").val()+"/"+bookIndex.id+".html\">"+bookIndex.indexName+"</a></p>");
+                    var indexId = NovelSafeDom.positiveId(bookIndex.id);
+                    if (!indexId) continue;
+                    var paragraph = NovelSafeDom.element('p',
+                        'line-limit-length layui-col-xs12 layui-col-sm4 layui-col-md3 layui-col-lg2');
+                    paragraph.style.paddingLeft = '10px';
+                    paragraph.style.height = '50px';
+                    paragraph.style.lineHeight = '50px';
+                    paragraph.appendChild(NovelSafeDom.link(
+                        '/book/' + bookId + '/' + indexId + '.html', null, bookIndex.indexName));
+                    fragment.appendChild(paragraph);
                 }
-
-                $("#indexList").html(indexListHtml);
+                document.getElementById('indexList').replaceChildren(fragment);
 
 
 
@@ -242,7 +257,7 @@
                 // Chưa đăng nhập
 
             } else {
-                layer.alert(data.msg);
+                novelAlertText(data.msg);
             }
 
         },
@@ -259,7 +274,11 @@
             dataType: "json",
             success: function (data) {
                 if (data.code == 200) {
-                        $("#cFavs").html("<button type=\"button\" id=\"cFavs\" class=\"layui-btn layui-btn-sm layui-btn-radius layui-btn-warm\">" + novelMessage('book.inShelf', 'Đã lưu') + "</button>");
+                        $("#cFavs").empty().append($("<button>", {
+                            type: "button",
+                            id: "cFavs",
+                            "class": "layui-btn layui-btn-sm layui-btn-radius layui-btn-warm"
+                        }).text(novelMessage('book.inShelf', 'Đã lưu')));
 
 
                 } else if (data.code == 1001) {
@@ -267,7 +286,7 @@
                     location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
 
                 } else {
-                    layer.alert(data.msg);
+                    novelAlertText(data.msg);
                 }
 
             },
@@ -283,67 +302,8 @@
 
     $("#content").css("min-height",($(window).height()-60)+"px");
 
-    function downloadFile() {
-        var fileUrl = '/book/download?bookId='+$("#bookIdHidden").val()+'&bookName='+$("#bookNamedHidden").val();
-        window.location.href=fileUrl;
-
-
-    }
-
-
-
-
     function toMyCollect(){
-        var token = localStorage.getItem("token");
-        if(token) {
-            window.location.href = "/book/search?token=" + token;
-        }else{
-            window.location.href = "/user/login.html";
-        }
-    }
-
-    function addToCollect(){
-        var token = localStorage.getItem("token");
-
-        if(token) {
-            $.get("/user/addToCollect",{"bookId":$("#bookIdHidden").val(),"token":token},function(data){
-                    layer.alert(data.desc);
-                    if(data.code == 1) {
-                        $('#collectButton').unbind("click");
-                        $("#collectButton").text(novelMessage('book.removeShelf', 'Xóa khỏi tủ sách'));
-                        $("#collectButton").click(function () {
-                            cancelToCollect();
-                        });
-                    }
-            });
-        }else{
-            window.location.href = "/user/login.html?bookId="+$("#bookIdHidden").val();
-        }
-
-
-
-    }
-
-
-    function cancelToCollect(){
-        var token = localStorage.getItem("token");
-
-        if(token) {
-            $.get("/user/cancelToCollect",{"bookId":$("#bookIdHidden").val(),"token":token},function(data){
-                    layer.alert(data.desc);
-                if(data.code == 1) {
-                    $('#collectButton').unbind("click");
-                    $("#collectButton").text(novelMessage('book.addShelf', 'Thêm vào tủ sách'));
-                    $("#collectButton").click(function () {
-                        addToCollect();
-                    });
-                }
-
-            });
-        }else{
-            window.location.href = "/user/login.html?bookId="+$("#bookIdHidden").val();
-        }
-
+        window.location.href = "/user/favorites.html";
     }
 
     function searchBooks(keyword) {

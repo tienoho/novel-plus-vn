@@ -52,6 +52,33 @@
         WHERE voucher_no = #{voucherNo}
     </select>
 
+    <select id="selectAuthorVoucherByNo" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM financial_voucher
+        WHERE voucher_no = #{voucherNo}
+          AND reference_type = 'AUTHOR_WITHDRAWAL_REQUEST'
+          AND EXISTS (
+              SELECT 1
+              FROM author_withdrawal_request withdrawal
+              WHERE withdrawal.id = CAST(financial_voucher.reference_id AS UNSIGNED)
+                AND withdrawal.author_id = #{authorId}
+          )
+        LIMIT 1
+    </select>
+
+    <select id="selectAuthorVouchers" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM financial_voucher
+        WHERE reference_type = 'AUTHOR_WITHDRAWAL_REQUEST'
+          AND EXISTS (
+              SELECT 1
+              FROM author_withdrawal_request withdrawal
+              WHERE withdrawal.id = CAST(financial_voucher.reference_id AS UNSIGNED)
+                AND withdrawal.author_id = #{authorId}
+          )
+        ORDER BY id DESC
+    </select>
+
     <select id="selectByReference" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List" />
         FROM financial_voucher

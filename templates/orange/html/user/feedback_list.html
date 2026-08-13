@@ -65,15 +65,20 @@
                 if (data.code == 200) {
                     var feedbackList = data.data.list;
                     if (feedbackList.length > 0) {
-                        var feedbackListHtml = "";
+                        var feedbackFragment = document.createDocumentFragment();
                         for (var i = 0; i < feedbackList.length; i++) {
                             var feedback = feedbackList[i];
-                            feedbackListHtml += (" <div class=\"comment_list clear\" ><ul>\n" +
-                                "                                <li class=\"li_1\"><span class=\"user_name fl\"></span><span class=\"time fl\">" + feedback.createTime + "</span></li>\n" +
-                                "                                <li class=\"li_2\">" + feedback.content + "</li>\n" +
-                                "                            </ul></div>");
+                            var feedbackItem = NovelSafeDom.element("div", "comment_list clear");
+                            var feedbackListNode = NovelSafeDom.element("ul");
+                            var meta = NovelSafeDom.element("li", "li_1");
+                            meta.appendChild(NovelSafeDom.element("span", "user_name fl"));
+                            meta.appendChild(NovelSafeDom.element("span", "time fl", feedback.createTime));
+                            feedbackListNode.appendChild(meta);
+                            feedbackListNode.appendChild(NovelSafeDom.element("li", "li_2", feedback.content));
+                            feedbackItem.appendChild(feedbackListNode);
+                            feedbackFragment.appendChild(feedbackItem);
                         }
-                        $("#feedbackList").html(feedbackListHtml);
+                        document.getElementById("feedbackList").replaceChildren(feedbackFragment);
 
                         layui.use('laypage', function () {
                             var laypage = layui.laypage;
@@ -110,7 +115,7 @@
                     location.href = '/user/login.html?originUrl=' + encodeURIComponent(location.href);
 
                 } else {
-                    layer.alert(data.msg);
+                    novelAlertText(data.msg);
                 }
 
             },
