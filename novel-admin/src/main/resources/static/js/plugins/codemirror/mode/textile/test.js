@@ -77,7 +77,7 @@
       'Question? is not a citation.');
 
   MT('codeBogus',
-      'user@example.com');
+      'user@khoithu.vn');
 
   MT('subBogus',
       '~username');
@@ -92,13 +92,13 @@
       '3 + 3 = 6');
 
   MT('image',
-      'An image: [string !http://www.example.com/image.png!]');
+      'An image: [string !http://www.khoithu.vn/image.png!]');
 
   MT('imageWithAltText',
-      'An image: [string !http://www.example.com/image.png (Alt Text)!]');
+      'An image: [string !http://www.khoithu.vn/image.png (Alt Text)!]');
 
   MT('imageWithUrl',
-      'An image: [string !http://www.example.com/image.png!:http://www.example.com/]');
+      'An image: [string !http://www.khoithu.vn/image.png!:http://www.khoithu.vn/]');
 
   /*
    * Headers
@@ -378,7 +378,7 @@
       '[variable-2 * Item one]',
       '[variable-2 * Item two]',
       '',
-      '[comment <a href="http://example.com">Example</a>]',
+      '[comment <a href="http://khoithu.vn">Example</a>]',
       '',
       '[comment </section>]',
       '[comment </div>]');

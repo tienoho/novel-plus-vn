@@ -266,8 +266,8 @@ class VnpayRecurringMandateServiceTest {
         value.setClientSecret("a-secure-client-secret");
         value.setTmnCode("VNPAYREC");
         value.setHashSecret("0123456789abcdef0123456789abcdef");
-        value.setReturnUrl("https://example.com/return");
-        value.setCancelUrl("https://example.com/cancel");
+        value.setReturnUrl("https://khoithu.vn/return");
+        value.setCancelUrl("https://khoithu.vn/cancel");
         return value;
     }
 }

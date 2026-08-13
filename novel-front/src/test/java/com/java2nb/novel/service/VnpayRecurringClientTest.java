@@ -31,8 +31,8 @@ class VnpayRecurringClientTest {
         properties.setClientSecret("a-secure-client-secret");
         properties.setTmnCode("VNPAYREC");
         properties.setHashSecret("0123456789abcdef0123456789abcdef");
-        properties.setReturnUrl("https://example.com/return");
-        properties.setCancelUrl("https://example.com/cancel");
+        properties.setReturnUrl("https://khoithu.vn/return");
+        properties.setCancelUrl("https://khoithu.vn/cancel");
         signer = new VnpayRecurringSigner(properties);
         client = new VnpayRecurringClient(properties, signer, new ObjectMapper(), HttpClient.newHttpClient());
         command = new VnpayRecurringMandateCommand("17000000000000001", "NP123", 123L,

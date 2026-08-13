@@ -36,8 +36,8 @@ class VnpayRecurringRevocationProcessorTest {
         properties.setClientSecret("a-secure-client-secret");
         properties.setTmnCode("VNPAYREC");
         properties.setHashSecret("0123456789abcdef0123456789abcdef");
-        properties.setReturnUrl("https://example.com/return");
-        properties.setCancelUrl("https://example.com/cancel");
+        properties.setReturnUrl("https://khoithu.vn/return");
+        properties.setCancelUrl("https://khoithu.vn/cancel");
         mapper = mock(ReadingSubscriptionMandateMapper.class);
         crypto = mock(PiiCryptoService.class);
         client = mock(VnpayRecurringClient.class);

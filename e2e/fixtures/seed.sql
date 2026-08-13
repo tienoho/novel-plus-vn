@@ -48,7 +48,7 @@ SELECT
     0, 60, 180, 0, 24,
     1, '0 5 0 1 * ?', 60, 30000, 72,
     0, 7, '0 40 3 * * ?', 300, 500,
-    SHA2('novel-plus-e2e-gamification-config-v1', 256),
+    SHA2('khoi-thu-e2e-gamification-config-v1', 256),
     1, 1, 2, 2, 'Revision chỉ dùng cho Playwright E2E',
     NOW(3), NOW(3), NOW(3), NOW(3)
 WHERE NOT EXISTS (

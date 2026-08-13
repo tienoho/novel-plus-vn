@@ -1,9 +1,9 @@
 # Cấu hình website
 website:
   # Tên website
-  name: Novel Plus
+  name: Khởi Thư
   # Tên miền
-  domain: www.xxyopen.com
+  domain: khoithu.vn
   # Từ khóa SEO
   keyword: ${website.name},truyện,đọc truyện,CMS truyện,nền tảng văn học
   # Mô tả SEO

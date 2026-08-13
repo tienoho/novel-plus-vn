@@ -67,6 +67,6 @@ This will be available in future sessions.
 ```
 /remember I prefer using bun instead of npm
 /remember Our API uses JWT with httpOnly cookies
-/remember The production server is at api.example.com:8080
+/remember The production server is at api.khoithu.vn:8080
 /remember I like concise responses with tables
 ```

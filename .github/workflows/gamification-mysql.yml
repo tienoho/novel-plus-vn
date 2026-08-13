@@ -79,4 +79,4 @@ jobs:
 
       - name: Capture MySQL diagnostics on failure
         if: failure()
-        run: docker compose --project-name novel-plus-verify -f compose.yaml -f compose.test.yaml logs --no-color mysql
+        run: docker compose --project-name khoi-thu-verify -f compose.yaml -f compose.test.yaml logs --no-color mysql

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Database Backup Script for Novel-Plus MySQL Database
+# Database Backup Script for Khoi-Thu MySQL Database
 set -e
 
 BACKUP_DIR="${BACKUP_DIR:-./backups}"
@@ -16,9 +16,9 @@ mkdir -p "${BACKUP_DIR}"
 
 echo "[INFO] Starting database backup for database '${DB_NAME}' at ${TIMESTAMP}..."
 
-if command -v docker &> /dev/null && docker ps | grep -q novel-plus-mysql; then
-    echo "[INFO] Performing dump via Docker container 'novel-plus-mysql'..."
-    docker exec novel-plus-mysql mysqldump --default-character-set=utf8mb4 --routines --triggers --single-transaction -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" | gzip > "${BACKUP_FILE}"
+if command -v docker &> /dev/null && docker ps | grep -q khoi-thu-mysql; then
+    echo "[INFO] Performing dump via Docker container 'khoi-thu-mysql'..."
+    docker exec khoi-thu-mysql mysqldump --default-character-set=utf8mb4 --routines --triggers --single-transaction -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" | gzip > "${BACKUP_FILE}"
 else
     echo "[INFO] Performing dump via local mysqldump command..."
     mysqldump --host="${DB_HOST}" --port="${DB_PORT}" --default-character-set=utf8mb4 --routines --triggers --single-transaction -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" | gzip > "${BACKUP_FILE}"

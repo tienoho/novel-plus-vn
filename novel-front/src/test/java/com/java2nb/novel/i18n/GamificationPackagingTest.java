@@ -398,8 +398,8 @@ class GamificationPackagingTest {
         String provider = read("novel-common/src/main/java/com/java2nb/novel/service/gamification/config/DatabaseBackedGamificationConfigProvider.java");
         String activation = read("novel-common/src/main/java/com/java2nb/novel/service/gamification/config/GamificationConfigActivationWorker.java");
         String scheduler = read("novel-front/src/main/java/com/java2nb/novel/core/schedule/GamificationDynamicScheduler.java");
-        String alerts = read("deploy/observability/rules/novel-plus-alerts.yml");
-        String dashboard = read("deploy/observability/grafana/dashboards/novel-plus-overview.json");
+        String alerts = read("deploy/observability/rules/khoi-thu-alerts.yml");
+        String dashboard = read("deploy/observability/grafana/dashboards/khoi-thu-overview.json");
 
         assertThat(provider)
             .contains("gamification.config.revision", "gamification.config.snapshot.age.seconds")

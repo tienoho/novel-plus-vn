@@ -11,14 +11,14 @@ class RichTextSanitizerTest {
     @Test
     void keepsApprovedFormattingAndRemovesExecutableMarkup() {
         String result = sanitizer.sanitize(
-            "<p onclick=\"steal()\"><strong>Chương một</strong>"
-                + "<script>alert(1)</script>"
-                + "<img src=\"javascript:alert(2)\" onerror=\"steal()\">"
-                + "<a href=\"https://example.com\">Nguồn</a></p>");
+                "<p onclick=\"steal()\"><strong>Chương một</strong>"
+                        + "<script>alert(1)</script>"
+                        + "<img src=\"javascript:alert(2)\" onerror=\"steal()\">"
+                        + "<a href=\"https://khoithu.vn\">Nguồn</a></p>");
 
         assertThat(result)
-            .contains("<p>", "<strong>Chương một</strong>", "https://example.com")
-            .doesNotContain("<script", "onclick", "onerror", "javascript:");
+                .contains("<p>", "<strong>Chương một</strong>", "https://khoithu.vn")
+                .doesNotContain("<script", "onclick", "onerror", "javascript:");
     }
 
     @Test
@@ -29,7 +29,7 @@ class RichTextSanitizerTest {
     @Test
     void plainTextRemovesMarkupButKeepsVisibleText() {
         assertThat(sanitizer.sanitizeText(
-            "Xin chào <img src=x onerror=steal()> <b>độc giả</b>"))
-            .isEqualTo("Xin chào  độc giả");
+                "Xin chào <img src=x onerror=steal()> <b>độc giả</b>"))
+                .isEqualTo("Xin chào  độc giả");
     }
 }

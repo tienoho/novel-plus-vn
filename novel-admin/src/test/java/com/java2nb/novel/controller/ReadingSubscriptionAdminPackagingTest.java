@@ -31,7 +31,7 @@ class ReadingSubscriptionAdminPackagingTest {
 
         assertThat(compose)
             .contains("dockerfile: deploy/flyway/Dockerfile")
-            .contains("image: ${NOVEL_MIGRATIONS_IMAGE:-novel-plus/migrations:${IMAGE_TAG:-local}}")
+            .contains("image: ${NOVEL_MIGRATIONS_IMAGE:-khoi-thu/migrations:${IMAGE_TAG:-local}}")
             .contains("condition: service_completed_successfully")
             .contains("READING_SUBSCRIPTION_ADMIN_ACTIVATION_ENABLED: "
                 + "${READING_SUBSCRIPTION_ADMIN_ACTIVATION_ENABLED:-false}");

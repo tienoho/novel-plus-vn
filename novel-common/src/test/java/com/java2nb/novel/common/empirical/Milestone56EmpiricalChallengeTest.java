@@ -131,10 +131,11 @@ public class Milestone56EmpiricalChallengeTest {
     @Test
     @DisplayName("VAT Task 2: Invariant test across multiple top-up amounts")
     public void testVatInvariantAcrossAmounts() {
-        long[] testAmounts = {10_000L, 50_000L, 100_000L, 200_000L, 500_000L, 1_000_000L, 10_000_000L};
+        long[] testAmounts = { 10_000L, 50_000L, 100_000L, 200_000L, 500_000L, 1_000_000L, 10_000_000L };
         for (long gross : testAmounts) {
             VatTaxResult res = vatService.calculateVat(gross);
-            assertEquals(gross, res.getNetAmountVnd() + res.getVatAmountVnd(), "Net + VAT must equal Gross for " + gross);
+            assertEquals(gross, res.getNetAmountVnd() + res.getVatAmountVnd(),
+                    "Net + VAT must equal Gross for " + gross);
             assertTrue(res.getVatAmountVnd() >= 0);
             assertTrue(res.getNetAmountVnd() > 0);
         }
@@ -153,7 +154,7 @@ public class Milestone56EmpiricalChallengeTest {
                 .referenceType("ORDER_PAY")
                 .referenceId("ORD-999")
                 .payerName("Payer")
-                .payeeName("Novel-Plus")
+                .payeeName("Khoi-Thu")
                 .grossAmountVnd(110_000L)
                 .taxAmountVnd(10_000L)
                 .netAmountVnd(100_000L)
@@ -211,8 +212,8 @@ public class Milestone56EmpiricalChallengeTest {
     @DisplayName("TOTP Task 5: QR Code URI formatting according to spec")
     public void testTotpQrCodeUriFormatting() {
         String secret = "JBSWY3DPEHPK3PXP";
-        String uri = totpService.getQrCodeUri("user@example.com", secret);
-        assertEquals("otpauth://totp/NovelPlus:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=NovelPlus", uri);
+        String uri = totpService.getQrCodeUri("user@khoithu.vn", secret);
+        assertEquals("otpauth://totp/NovelPlus:user@khoithu.vn?secret=JBSWY3DPEHPK3PXP&issuer=NovelPlus", uri);
     }
 
     @Test
@@ -225,17 +226,17 @@ public class Milestone56EmpiricalChallengeTest {
 
         assertTotpOffset(generateMethod, secret, 0, true, "Current window code must be valid");
         assertTotpOffset(generateMethod, secret, -1, true,
-            "Window T-1 code must be valid (30s skew)");
+                "Window T-1 code must be valid (30s skew)");
         assertTotpOffset(generateMethod, secret, 1, true,
-            "Window T+1 code must be valid (30s skew)");
+                "Window T+1 code must be valid (30s skew)");
         assertTotpOffset(generateMethod, secret, -2, false,
-            "Window T-2 code must be rejected (>30s skew)");
+                "Window T-2 code must be rejected (>30s skew)");
         assertTotpOffset(generateMethod, secret, 2, false,
-            "Window T+2 code must be rejected (>30s skew)");
+                "Window T+2 code must be rejected (>30s skew)");
     }
 
     private void assertTotpOffset(Method generateMethod, String secret, int offset,
-                                  boolean expected, String message) throws Exception {
+            boolean expected, String message) throws Exception {
         for (int attempt = 0; attempt < 3; attempt++) {
             long windowBefore = System.currentTimeMillis() / 1000L / 30L;
             String code = (String) generateMethod.invoke(totpService, secret, windowBefore + offset);
@@ -298,7 +299,8 @@ public class Milestone56EmpiricalChallengeTest {
             StringBuilder hexString = new StringBuilder();
             for (byte b : hash) {
                 String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) hexString.append('0');
+                if (hex.length() == 1)
+                    hexString.append('0');
                 hexString.append(hex);
             }
             return hexString.toString();

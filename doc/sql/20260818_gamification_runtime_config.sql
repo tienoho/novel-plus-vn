@@ -68,14 +68,14 @@ INSERT INTO `gamification_policy_bundle`
     (`id`, `policy_version`, `status`, `content_hash`, `created_by`, `submitted_by`,
      `approved_by`, `published_by`, `change_reason`, `submitted_at`, `approved_at`, `published_at`)
 VALUES
-    (1, 'v1', 'PUBLISHED', SHA2('novel-plus-gamification-policy-v1', 256),
+    (1, 'v1', 'PUBLISHED', SHA2('khoi-thu-gamification-policy-v1', 256),
      1, 1, 2, 2, 'Backfill policy v1 hiện hành', NOW(3), NOW(3), NOW(3));
 
 INSERT INTO `gamification_policy_bundle_audit`
     (`policy_id`, `event_type`, `from_status`, `to_status`, `operator_id`, `reason`, `after_hash`)
 VALUES
     (1, 'BACKFILLED', NULL, 'PUBLISHED', 1, 'Backfill policy v1 hiện hành',
-     SHA2('novel-plus-gamification-policy-v1', 256));
+     SHA2('khoi-thu-gamification-policy-v1', 256));
 
 CREATE TABLE `gamification_runtime_config`
 (

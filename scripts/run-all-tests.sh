@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Automated Regression Test Runner for Novel-Plus
+# Automated Regression Test Runner for Khoi-Thu
 set -e
 
 echo "==========================================================="
-echo "       Novel-Plus Automated Regression Test Suite          "
+echo "       Khoi-Thu Automated Regression Test Suite          "
 echo "==========================================================="
 
 MAVEN_CMD="mvn"

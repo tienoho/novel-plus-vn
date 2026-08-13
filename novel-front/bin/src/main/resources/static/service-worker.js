@@ -1,6 +1,6 @@
 'use strict';
 
-var CACHE_PREFIX = 'novel-plus-shell-';
+var CACHE_PREFIX = 'khoi-thu-shell-';
 var CACHE_VERSION = 'v6';
 var SHELL_CACHE = CACHE_PREFIX + CACHE_VERSION;
 var OFFLINE_PAGE = '/offline-reader.htm';

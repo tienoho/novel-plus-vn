@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Database Restore Script for Novel-Plus MySQL Database
+# Database Restore Script for Khoi-Thu MySQL Database
 set -e
 
 if [ -z "$1" ]; then
@@ -22,14 +22,14 @@ DB_NAME="${MYSQL_DATABASE:-novel_plus}"
 echo "[INFO] Restoring database '${DB_NAME}' from '${BACKUP_FILE}'..."
 
 if [[ "${BACKUP_FILE}" == *.gz ]]; then
-    if command -v docker &> /dev/null && docker ps | grep -q novel-plus-mysql; then
-        gunzip -c "${BACKUP_FILE}" | docker exec -i novel-plus-mysql mysql --default-character-set=utf8mb4 -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}"
+    if command -v docker &> /dev/null && docker ps | grep -q khoi-thu-mysql; then
+        gunzip -c "${BACKUP_FILE}" | docker exec -i khoi-thu-mysql mysql --default-character-set=utf8mb4 -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}"
     else
         gunzip -c "${BACKUP_FILE}" | mysql --host="${DB_HOST}" --port="${DB_PORT}" --default-character-set=utf8mb4 -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}"
     fi
 else
-    if command -v docker &> /dev/null && docker ps | grep -q novel-plus-mysql; then
-        docker exec -i novel-plus-mysql mysql --default-character-set=utf8mb4 -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" < "${BACKUP_FILE}"
+    if command -v docker &> /dev/null && docker ps | grep -q khoi-thu-mysql; then
+        docker exec -i khoi-thu-mysql mysql --default-character-set=utf8mb4 -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" < "${BACKUP_FILE}"
     else
         mysql --host="${DB_HOST}" --port="${DB_PORT}" --default-character-set=utf8mb4 -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" < "${BACKUP_FILE}"
     fi

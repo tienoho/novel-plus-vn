@@ -1,20 +1,20 @@
-# Novel Plus
+# Khởi Thư
 
 <p align="center">
-  <a href="https://github.com/201206030/novel-plus"><img alt="GitHub stars" src="https://img.shields.io/github/stars/201206030/novel-plus?logo=github"></a>
-  <a href="https://github.com/201206030/novel-plus"><img alt="GitHub forks" src="https://img.shields.io/github/forks/201206030/novel-plus?logo=github"></a>
-  <a href="https://github.com/201206030/novel-plus/releases"><img alt="Lượt tải GitHub" src="https://img.shields.io/github/downloads/201206030/novel-plus/total.svg"></a>
+  <a href="https://github.com/201206030/khoi-thu"><img alt="GitHub stars" src="https://img.shields.io/github/stars/201206030/khoi-thu?logo=github"></a>
+  <a href="https://github.com/201206030/khoi-thu"><img alt="GitHub forks" src="https://img.shields.io/github/forks/201206030/khoi-thu?logo=github"></a>
+  <a href="https://github.com/201206030/khoi-thu/releases"><img alt="Lượt tải GitHub" src="https://img.shields.io/github/downloads/201206030/khoi-thu/total.svg"></a>
   <a href="https://hub.docker.com/u/201206030"><img alt="Lượt kéo Docker" src="https://img.shields.io/docker/pulls/201206030/novel-front"></a>
 </p>
 
-Novel Plus là hệ thống quản lý và đọc truyện đa nền tảng, hỗ trợ giao diện máy tính và thiết bị di động. Dự án gồm cổng đọc, khu vực tác giả, trang quản trị nền tảng và trình quản lý thu thập dữ liệu.
+Khởi Thư là hệ thống quản lý và đọc truyện đa nền tảng, hỗ trợ giao diện máy tính và thiết bị di động. Dự án gồm cổng đọc, khu vực tác giả, trang quản trị nền tảng và trình quản lý thu thập dữ liệu.
 
 Các chức năng chính gồm đề xuất và tìm kiếm tiếng Việt có dấu/không dấu, chịu lỗi chính tả nhẹ, bảng xếp hạng, đọc chương, bình luận, tủ sách, lịch sử đọc, theo dõi tác giả/truyện và thông báo chương mới, quản lý tác giả, nạp Xu, mua chương, tin tức, báo cáo thống kê, nhiều giao diện, nhiều nguồn thu thập và hỗ trợ sáng tác bằng AI.
 
 ## Liên kết
 
-- Mã nguồn: [GitHub](https://github.com/201206030/novel-plus)
-- Bản phát hành: [GitHub Releases](https://github.com/201206030/novel-plus/releases)
+- Mã nguồn: [GitHub](https://github.com/201206030/khoi-thu)
+- Bản phát hành: [GitHub Releases](https://github.com/201206030/khoi-thu/releases)
 - Runbook triển khai: [doc/deployment.md](doc/deployment.md)
 - Hướng dẫn tích hợp VNPAY: [doc/vnpay.md](doc/vnpay.md)
 - Kiến trúc ví và sổ cái: [doc/wallet-ledger.md](doc/wallet-ledger.md)
@@ -41,7 +41,7 @@ Các chức năng chính gồm đề xuất và tìm kiếm tiếng Việt có d
 ## Cấu trúc dự án
 
 ```text
-novel-plus
+khoi-thu
 ├── novel-common   # Mô hình dữ liệu, cấu hình và tiện ích dùng chung
 ├── novel-front    # Cổng đọc, giao diện di động và khu vực tác giả
 ├── novel-crawl    # Quản lý nguồn và tác vụ thu thập dữ liệu
@@ -81,7 +81,7 @@ Các dịch vụ OSS, VNPAY, AI và nguồn thu thập là tùy chọn; chỉ b�
 
 1. Tạo database MySQL 8.4 trống với bộ ký tự `utf8mb4`, hoặc để Compose tạo database từ cấu hình.
 2. Cấu hình secret rồi chạy `docker compose run --rm migrate`.
-3. Image `novel-plus/migrations` dùng Flyway để chạy baseline và toàn bộ migration đúng thứ tự, sau đó validate checksum trước khi các ứng dụng khởi động.
+3. Image `khoi-thu/migrations` dùng Flyway để chạy baseline và toàn bộ migration đúng thứ tự, sau đó validate checksum trước khi các ứng dụng khởi động.
 
 Không chạy thủ công từng tệp trong `doc/sql` trên môi trường do Compose quản lý và không sửa migration lịch sử đã phát hành. Migration Việt hóa chỉ cập nhật giá trị tiếng Trung mặc định khi khớp chính xác, giữ nguyên dữ liệu đã tùy chỉnh.
 

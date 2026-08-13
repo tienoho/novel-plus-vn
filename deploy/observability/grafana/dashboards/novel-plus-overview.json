@@ -87,11 +87,11 @@
   ],
   "refresh": "30s",
   "schemaVersion": 41,
-  "tags": ["novel-plus", "production"],
+  "tags": ["khoi-thu", "production"],
   "templating": {"list": []},
   "time": {"from": "now-6h", "to": "now"},
   "timezone": "browser",
   "title": "Novel Plus - Tổng quan vận hành",
-  "uid": "novel-plus-overview",
+  "uid": "khoi-thu-overview",
   "version": 1
 }

@@ -133,7 +133,7 @@ public class RevenueReportServiceImpl implements RevenueReportService {
             baos.write(0xBB);
             baos.write(0xBF);
 
-            writer.printf("BAO CAO DOANH THU THONG KE - Novel-Plus\n");
+            writer.printf("BAO CAO DOANH THU THONG KE - Khoi-Thu\n");
             writer.printf("Ky bao cao: %s, Tu ngay: %s, Den ngay: %s\n\n", report.getPeriod(), report.getStartDate(), report.getEndDate());
 
             writer.printf("TONG QUAN TAI CHINH\n");
@@ -222,7 +222,7 @@ public class RevenueReportServiceImpl implements RevenueReportService {
             sheet.append("  <sheetData>\n");
 
             int rowIdx = 1;
-            sheet.append(buildXmlRow(rowIdx++, "BAO CAO DOANH THU & THUE - NOVEL-PLUS"));
+            sheet.append(buildXmlRow(rowIdx++, "BAO CAO DOANH THU & THUE - Khoi-Thu"));
             sheet.append(buildXmlRow(rowIdx++, "Ky: " + report.getPeriod() + " | Tu: " + report.getStartDate() + " | Den: " + report.getEndDate()));
             sheet.append(buildXmlRow(rowIdx++)); // Empty row
 
@@ -259,7 +259,7 @@ public class RevenueReportServiceImpl implements RevenueReportService {
         DecimalFormat df = new DecimalFormat("#,###");
         StringBuilder pdfBody = new StringBuilder();
         pdfBody.append("BAO CAO TONG HOP DOANH THU & THUE\n");
-        pdfBody.append("Platform: Novel-Plus Financial Services\n");
+        pdfBody.append("Platform: Khoi-Thu Financial Services\n");
         pdfBody.append(String.format("Ky: %s | Tu: %s | Den: %s\n", report.getPeriod(), report.getStartDate(), report.getEndDate()));
         pdfBody.append("--------------------------------------------------\n");
         pdfBody.append(String.format("1. Tong Gross Recharge VNPAY : %s VND\n", df.format(report.getTotalRechargeGrossVnd())));
@@ -285,7 +285,7 @@ public class RevenueReportServiceImpl implements RevenueReportService {
             ));
         }
 
-        return generatePdfDocument("BAO CAO TAI CHINH NOVEL-PLUS", pdfBody.toString());
+        return generatePdfDocument("BAO CAO TAI CHINH Khoi-Thu", pdfBody.toString());
     }
 
     @Override

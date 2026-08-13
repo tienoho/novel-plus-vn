@@ -120,7 +120,7 @@ Before any deployment:
 - **Platform:** Vercel
 
 ### URLs
-- 🌐 Production: https://app.example.com
+- 🌐 Production: https://app.khoithu.vn
 - 📊 Dashboard: https://vercel.com/project
 
 ### What Changed

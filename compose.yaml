@@ -1,4 +1,4 @@
-name: ${COMPOSE_PROJECT_NAME:-novel-plus}
+name: ${COMPOSE_PROJECT_NAME:-khoi-thu}
 
 x-app-environment: &app-environment
   TZ: ${TZ:-Asia/Ho_Chi_Minh}
@@ -59,7 +59,7 @@ services:
     build:
       context: .
       dockerfile: deploy/mysql/Dockerfile
-    image: ${NOVEL_MYSQL_IMAGE:-novel-plus/mysql:${IMAGE_TAG:-local}}
+    image: ${NOVEL_MYSQL_IMAGE:-khoi-thu/mysql:${IMAGE_TAG:-local}}
     environment:
       TZ: ${TZ:-Asia/Ho_Chi_Minh}
       MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
@@ -89,7 +89,7 @@ services:
     build:
       context: .
       dockerfile: deploy/flyway/Dockerfile
-    image: ${NOVEL_MIGRATIONS_IMAGE:-novel-plus/migrations:${IMAGE_TAG:-local}}
+    image: ${NOVEL_MIGRATIONS_IMAGE:-khoi-thu/migrations:${IMAGE_TAG:-local}}
     environment:
       # Flyway dùng root để tạo trigger bất biến; ứng dụng vẫn dùng MYSQL_USER ít quyền hơn.
       FLYWAY_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-novel_plus}?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=Asia/Ho_Chi_Minh
@@ -133,7 +133,7 @@ services:
     build:
       context: .
       dockerfile: deploy/observability/pushgateway/Dockerfile
-    image: ${NOVEL_PUSHGATEWAY_IMAGE:-novel-plus/pushgateway:${IMAGE_TAG:-local}}
+    image: ${NOVEL_PUSHGATEWAY_IMAGE:-khoi-thu/pushgateway:${IMAGE_TAG:-local}}
     command:
       - --web.listen-address=:9091
       - --persistence.file=/pushgateway/metrics.db
@@ -158,7 +158,7 @@ services:
       context: .
       dockerfile: deploy/docker/Dockerfile
       target: front
-    image: ${NOVEL_FRONT_IMAGE:-novel-plus/front:${IMAGE_TAG:-local}}
+    image: ${NOVEL_FRONT_IMAGE:-khoi-thu/front:${IMAGE_TAG:-local}}
     environment:
       <<: *app-environment
       SPRING_APPLICATION_NAME: novel-front
@@ -270,7 +270,7 @@ services:
       context: .
       dockerfile: deploy/docker/Dockerfile
       target: crawl
-    image: ${NOVEL_CRAWL_IMAGE:-novel-plus/crawl:${IMAGE_TAG:-local}}
+    image: ${NOVEL_CRAWL_IMAGE:-khoi-thu/crawl:${IMAGE_TAG:-local}}
     environment:
       <<: *app-environment
       SPRING_APPLICATION_NAME: novel-crawl
@@ -283,9 +283,9 @@ services:
       AUTH_COOKIE_SECURE: "true"
       CONTENT_SAVE_STORAGE: db
       CONTENT_SAVE_PATH: /data/books
-      MAIL_HOST: ${MAIL_HOST:-smtp.example.com}
+      MAIL_HOST: ${MAIL_HOST:-smtp.khoithu.vn}
       MAIL_PORT: ${MAIL_PORT:-465}
-      MAIL_NICKNAME: ${MAIL_NICKNAME:-novel-plus}
+      MAIL_NICKNAME: ${MAIL_NICKNAME:-khoi-thu}
       SPRING_MAIL_USERNAME: ${MAIL_USERNAME:-disabled}
       SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD:-disabled}
       MANAGEMENT_HEALTH_MAIL_ENABLED: ${CRAWLER_MAIL_HEALTH_ENABLED:-false}
@@ -314,7 +314,7 @@ services:
       context: .
       dockerfile: deploy/docker/Dockerfile
       target: admin
-    image: ${NOVEL_ADMIN_IMAGE:-novel-plus/admin:${IMAGE_TAG:-local}}
+    image: ${NOVEL_ADMIN_IMAGE:-khoi-thu/admin:${IMAGE_TAG:-local}}
     environment:
       <<: *app-environment
       SPRING_APPLICATION_NAME: novel-admin
@@ -351,7 +351,7 @@ services:
     build:
       context: .
       dockerfile: deploy/observability/alertmanager/Dockerfile
-    image: ${NOVEL_ALERTMANAGER_IMAGE:-novel-plus/alertmanager:${IMAGE_TAG:-local}}
+    image: ${NOVEL_ALERTMANAGER_IMAGE:-khoi-thu/alertmanager:${IMAGE_TAG:-local}}
     environment:
       ALERTMANAGER_WEBHOOK_URL_FILE: /run/secrets/alertmanager_webhook_url
       ALERTMANAGER_ALLOW_HTTP: ${ALERTMANAGER_ALLOW_HTTP:-false}
@@ -403,7 +403,7 @@ services:
     build:
       context: .
       dockerfile: deploy/observability/grafana/Dockerfile
-    image: ${NOVEL_GRAFANA_IMAGE:-novel-plus/grafana:${IMAGE_TAG:-local}}
+    image: ${NOVEL_GRAFANA_IMAGE:-khoi-thu/grafana:${IMAGE_TAG:-local}}
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD__FILE: /run/secrets/grafana_admin_password
@@ -440,13 +440,13 @@ services:
     build:
       context: .
       dockerfile: deploy/caddy/Dockerfile
-    image: ${NOVEL_CADDY_IMAGE:-novel-plus/caddy:${IMAGE_TAG:-local}}
+    image: ${NOVEL_CADDY_IMAGE:-khoi-thu/caddy:${IMAGE_TAG:-local}}
     environment:
       NOVEL_DOMAIN: ${NOVEL_DOMAIN:-localhost}
       NOVEL_ADMIN_DOMAIN: ${NOVEL_ADMIN_DOMAIN:-admin.localhost}
       NOVEL_CRAWL_DOMAIN: ${NOVEL_CRAWL_DOMAIN:-crawl.localhost}
       NOVEL_GRAFANA_DOMAIN: ${NOVEL_GRAFANA_DOMAIN:-grafana.localhost}
-      CADDY_ACME_EMAIL: ${CADDY_ACME_EMAIL:-ops@example.com}
+      CADDY_ACME_EMAIL: ${CADDY_ACME_EMAIL:-admin@khoithu.vn}
       CADDY_MAX_UPLOAD_SIZE: ${CADDY_MAX_UPLOAD_SIZE:-25MB}
       CADDY_RATE_LIMIT_REQUESTS: ${CADDY_RATE_LIMIT_REQUESTS:-600}
       CADDY_WRITE_RATE_LIMIT_REQUESTS: ${CADDY_WRITE_RATE_LIMIT_REQUESTS:-120}
@@ -475,7 +475,7 @@ services:
     build:
       context: .
       dockerfile: deploy/backup/Dockerfile
-    image: ${NOVEL_BACKUP_IMAGE:-novel-plus/backup:${IMAGE_TAG:-local}}
+    image: ${NOVEL_BACKUP_IMAGE:-khoi-thu/backup:${IMAGE_TAG:-local}}
     entrypoint: ["/usr/local/bin/novel-backup"]
     environment:
       MYSQL_HOST: mysql
@@ -502,7 +502,7 @@ services:
     build:
       context: .
       dockerfile: deploy/backup/Dockerfile
-    image: ${NOVEL_BACKUP_IMAGE:-novel-plus/backup:${IMAGE_TAG:-local}}
+    image: ${NOVEL_BACKUP_IMAGE:-khoi-thu/backup:${IMAGE_TAG:-local}}
     entrypoint: ["/usr/local/bin/novel-restore"]
     user: "0:0"
     environment:
@@ -532,7 +532,7 @@ services:
     build:
       context: .
       dockerfile: deploy/backup/Dockerfile
-    image: ${NOVEL_BACKUP_IMAGE:-novel-plus/backup:${IMAGE_TAG:-local}}
+    image: ${NOVEL_BACKUP_IMAGE:-khoi-thu/backup:${IMAGE_TAG:-local}}
     entrypoint: ["/usr/local/bin/novel-restore"]
     environment:
       MYSQL_HOST: mysql

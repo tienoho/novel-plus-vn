@@ -1,5 +1,5 @@
 param(
-    [string]$ProjectName = "novel-plus-e2e",
+    [string]$ProjectName = "khoi-thu-e2e",
     [int]$TimeoutSeconds = 900,
     [int]$MySqlHostPort = 14317,
     [int]$CaddyHttpHostPort = 14480,
@@ -140,7 +140,7 @@ function Initialize-AdminSessions {
         }
     }
     if ([string]::IsNullOrWhiteSpace($sessionIds.maker) `
-        -or [string]::IsNullOrWhiteSpace($sessionIds.checker)) {
+            -or [string]::IsNullOrWhiteSpace($sessionIds.checker)) {
         throw "Session fixture Admin E2E không trả đủ maker/checker."
     }
 

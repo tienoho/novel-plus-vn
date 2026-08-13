@@ -186,7 +186,7 @@ chuyển `SUCCESS`, lần replay của harness trả `02`, số Xu tăng đúng,
 sổ cái kép cân bằng. Dừng UAT nhưng giữ dữ liệu bằng:
 
 ```powershell
-docker compose --env-file .env.uat -p novel-plus-uat `
+docker compose --env-file .env.uat -p khoi-thu-uat `
   -f compose.yaml -f compose.e2e.yaml down
 ```
 

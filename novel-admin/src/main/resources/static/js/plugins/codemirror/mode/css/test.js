@@ -74,7 +74,7 @@
      "[tag foo] { [property margin]: [number 0]; [property padding]: [number 0]; }");
 
   MT("tagTwoPropertiesURL",
-     "[tag foo] { [property background]: [atom url]([string //example.com/foo.png]); [property padding]: [number 0]; }");
+     "[tag foo] { [property background]: [atom url]([string //khoithu.vn/foo.png]); [property padding]: [number 0]; }");
 
   MT("commentSGML",
      "[comment <!--comment-->]");

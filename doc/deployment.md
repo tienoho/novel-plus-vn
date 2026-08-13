@@ -13,11 +13,11 @@ Tạo tệp môi trường, thư mục secret và backup bên ngoài repo:
 
 ```bash
 cp .env.example .env
-sudo install -d -m 0700 /etc/novel-plus/secrets
-sudo install -d -o 10002 -g 10002 -m 0700 /var/backups/novel-plus
+sudo install -d -m 0700 /etc/khoi-thu/secrets
+sudo install -d -o 10002 -g 10002 -m 0700 /var/backups/khoi-thu
 ```
 
-Đặt `SECRETS_DIR=/etc/novel-plus/secrets` và `BACKUP_DIR=/var/backups/novel-plus` trong `.env`. Tạo đủ các file được liệt kê tại [secrets/README.md](../secrets/README.md), đặt quyền `0600`, chủ sở hữu là tài khoản vận hành Docker. `pii_encryption_key` phải là Base64 của đúng 32 byte; các secret còn lại phải là chuỗi ngẫu nhiên dài. Không đặt secret trực tiếp trong `.env` và không commit `.env` hay thư mục secret thật.
+Đặt `SECRETS_DIR=/etc/khoi-thu/secrets` và `BACKUP_DIR=/var/backups/khoi-thu` trong `.env`. Tạo đủ các file được liệt kê tại [secrets/README.md](../secrets/README.md), đặt quyền `0600`, chủ sở hữu là tài khoản vận hành Docker. `pii_encryption_key` phải là Base64 của đúng 32 byte; các secret còn lại phải là chuỗi ngẫu nhiên dài. Không đặt secret trực tiếp trong `.env` và không commit `.env` hay thư mục secret thật.
 
 Kiểm tra Compose trước khi build:
 
@@ -126,7 +126,7 @@ Lệnh tạo một gói GPG AES-256 chứa dump nhất quán, trigger/routine/ev
 Diễn tập tự động trên database tạm, không ghi đè dữ liệu hiện tại:
 
 ```bash
-BACKUP_ARCHIVE=novel-plus-YYYYMMDDTHHMMSSZ.tar.gz.gpg \
+BACKUP_ARCHIVE=khoi-thu-YYYYMMDDTHHMMSSZ.tar.gz.gpg \
 docker compose --profile tools run --rm restore-drill
 ```
 
@@ -134,7 +134,7 @@ Phục hồi thật là thao tác phá hủy, phải dừng ba ứng dụng và 
 
 ```bash
 docker compose stop caddy front admin crawl
-BACKUP_ARCHIVE=novel-plus-YYYYMMDDTHHMMSSZ.tar.gz.gpg RESTORE_CONFIRM=RESTORE \
+BACKUP_ARCHIVE=khoi-thu-YYYYMMDDTHHMMSSZ.tar.gz.gpg RESTORE_CONFIRM=RESTORE \
 docker compose --profile tools run --rm restore
 docker compose up -d
 ```
@@ -161,7 +161,7 @@ Sau phục hồi phải chạy `migrate`, kiểm tra checksum Flyway, health và
    docker compose logs --since=10m migrate front crawl admin
    ```
 
-Image `novel-plus/migrations` dùng Flyway 13.1.0 và chỉ giữ các plugin/driver cần cho MySQL; không xóa driver riêng lẻ khi plugin `ServiceLoader` tương ứng vẫn còn. Compose chạy baseline cùng 41 migration tăng dần, từ `20260712_vi_localization.sql` đến `20260819_gamification_dynamic_config_p1_hardening.sql`, sau đó validate checksum trước khi mở các ứng dụng. Không sửa migration đã phát hành, không chạy lại bằng shell loop và không dùng `novel_plus_data.sql.zip` trong image release.
+Image `khoi-thu/migrations` dùng Flyway 13.1.0 và chỉ giữ các plugin/driver cần cho MySQL; không xóa driver riêng lẻ khi plugin `ServiceLoader` tương ứng vẫn còn. Compose chạy baseline cùng 41 migration tăng dần, từ `20260712_vi_localization.sql` đến `20260819_gamification_dynamic_config_p1_hardening.sql`, sau đó validate checksum trước khi mở các ứng dụng. Không sửa migration đã phát hành, không chạy lại bằng shell loop và không dùng `novel_plus_data.sql.zip` trong image release.
 
 Migration VNPAY chủ động dừng nếu phát hiện `out_trade_no` trùng để tránh tự sửa lịch sử thanh toán. Migration sổ cái chỉ backfill số dư đầu kỳ một lần thông qua `platform_migration_history`; các migration KYC, refund, kiểm duyệt, báo cáo và editor tạo schema/audit cần thiết nhưng không tự sinh dữ liệu định danh. Các migration mới bổ sung BCrypt, thuê bao recurring, kỳ gamification đặc biệt, thưởng level, chống lạm dụng và chính sách công khai. Mọi lỗi checksum hoặc invariant phải chặn deploy để vận hành đối soát, không tự bỏ qua.
 

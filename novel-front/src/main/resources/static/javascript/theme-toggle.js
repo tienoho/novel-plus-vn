@@ -1,5 +1,5 @@
 /**
- * Novel-Plus Theme Toggle Script
+ * Khoi-Thu Theme Toggle Script
  * Handles System Preference Detection & LocalStorage Persistence
  */
 (function () {

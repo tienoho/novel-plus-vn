@@ -58,7 +58,8 @@ public class FinancialVoucherServiceTest {
     public void testCreateRechargeReceipt() {
         when(voucherDao.selectByReference("ORDER_PAY", "ORD-1001")).thenReturn(null);
 
-        FinancialVoucherDO voucher = voucherService.createRechargeReceipt("ORD-1001", "Nguyen Van A", "123456789", 110_000L);
+        FinancialVoucherDO voucher = voucherService.createRechargeReceipt("ORD-1001", "Nguyen Van A", "123456789",
+                110_000L);
 
         assertNotNull(voucher);
         assertTrue(voucher.getVoucherNo().startsWith("INV-"));
@@ -76,7 +77,8 @@ public class FinancialVoucherServiceTest {
     public void testCreatePayoutVoucher() {
         when(voucherDao.selectByReference("AUTHOR_WITHDRAWAL_REQUEST", "500")).thenReturn(null);
 
-        FinancialVoucherDO voucher = voucherService.createPayoutVoucher(500L, "Author PenName", "987654321", 5_000_000L, 500_000L);
+        FinancialVoucherDO voucher = voucherService.createPayoutVoucher(500L, "Author PenName", "987654321", 5_000_000L,
+                500_000L);
 
         assertNotNull(voucher);
         assertTrue(voucher.getVoucherNo().startsWith("VOUCHER-"));
@@ -179,7 +181,7 @@ public class FinancialVoucherServiceTest {
                 .referenceType("ORDER_PAY")
                 .referenceId("ORD-1")
                 .payerName("User A")
-                .payeeName("Novel-Plus")
+                .payeeName("Khoi-Thu")
                 .grossAmountVnd(220_000L)
                 .taxAmountVnd(20_000L)
                 .netAmountVnd(200_000L)

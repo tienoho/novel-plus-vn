@@ -123,7 +123,7 @@ public class RevenueReportServiceTest {
 
         byte[] csv = revenueReportService.exportRevenueCsv(report);
         assertNotNull(csv);
-        assertTrue(new String(csv, StandardCharsets.UTF_8).contains("Novel-Plus"));
+        assertTrue(new String(csv, StandardCharsets.UTF_8).contains("Khoi-Thu"));
 
         byte[] xlsx = revenueReportService.exportRevenueXlsx(report);
         assertNotNull(xlsx);

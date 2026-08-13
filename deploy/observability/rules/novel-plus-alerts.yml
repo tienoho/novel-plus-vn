@@ -1,5 +1,5 @@
 groups:
-  - name: novel-plus-availability
+  - name: khoi-thu-availability
     rules:
       - alert: NovelServiceDown
         expr: up{job=~"novel-(front|admin|crawl)"} == 0
@@ -46,7 +46,7 @@ groups:
           summary: "Pool kết nối database gần cạn"
           description: "{{ $labels.application }}/{{ $labels.pool }} dùng trên 85% kết nối trong 5 phút."
 
-  - name: novel-plus-finance
+  - name: khoi-thu-finance
     rules:
       - alert: NovelPaymentFailures
         expr: increase(novel_payment_operations_total{outcome=~"failed|unavailable"}[10m]) > 0
@@ -111,7 +111,7 @@ groups:
           summary: "Không nhận được trạng thái Flyway"
           description: "Pushgateway không có metric kết quả migration trong 10 phút."
 
-  - name: novel-plus-gamification
+  - name: khoi-thu-gamification
     rules:
       - alert: NovelGamificationBacklogHigh
         expr: novel_gamification_queue{state="pending_events"} > 500

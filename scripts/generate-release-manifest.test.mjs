@@ -21,10 +21,10 @@ import {
 const metadata = Object.freeze({
   tag: "v1.2.3",
   commit: "a".repeat(40),
-  repository: "novel-plus/novel-plus",
+  repository: "khoi-thu/khoi-thu",
   imagePrefix: "docker.io/novelplus",
   runId: "123456",
-  runUrl: "https://github.com/novel-plus/novel-plus/actions/runs/123456",
+  runUrl: "https://github.com/khoi-thu/khoi-thu/actions/runs/123456",
   generatedAt: "2026-08-09T00:00:00.000Z",
 });
 const cli = fileURLToPath(new URL("./generate-release-manifest.mjs", import.meta.url));
@@ -34,7 +34,7 @@ function sha(value) {
 }
 
 function createFixture() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "novel-plus-release-manifest-"));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "khoi-thu-release-manifest-"));
   const artifactsDir = path.join(root, "artifacts");
   fs.mkdirSync(artifactsDir);
   for (const [index, image] of RELEASE_IMAGES.entries()) {

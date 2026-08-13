@@ -44,7 +44,7 @@ class ProductionDeploymentPackagingTest {
         assertThat(compose)
             .contains("redis:7-alpine@sha256:e7723ff73d963f5cc6d9c4643ea3d989527a402a319239054e9472a7fb9219a2")
             .contains("quay.io/prometheus/prometheus:v3.13.2@sha256:508729e0e2d18e11fd742a5a5ca70e557b940a93948c3c95fd0123a6fd538b69")
-            .contains("${NOVEL_GRAFANA_IMAGE:-novel-plus/grafana:${IMAGE_TAG:-local}}")
+            .contains("${NOVEL_GRAFANA_IMAGE:-khoi-thu/grafana:${IMAGE_TAG:-local}}")
             .contains("dockerfile: deploy/caddy/Dockerfile")
             .contains("- \"${CADDY_HTTP_PORT:-80}:80\"",
                 "- \"${CADDY_HTTPS_PORT:-443}:443\"",
@@ -52,15 +52,15 @@ class ProductionDeploymentPackagingTest {
             .contains("DB_PASSWORD_FILE: /run/secrets/mysql_app_password")
             .contains("JWT_SECRET_FILE: /run/secrets/jwt_secret")
             .contains("VIETQR_WEBHOOK_SECRET_FILE: /run/secrets/vietqr_webhook_secret")
-            .contains("${NOVEL_FRONT_IMAGE:-novel-plus/front:${IMAGE_TAG:-local}}")
-            .contains("${NOVEL_ADMIN_IMAGE:-novel-plus/admin:${IMAGE_TAG:-local}}")
-            .contains("${NOVEL_CRAWL_IMAGE:-novel-plus/crawl:${IMAGE_TAG:-local}}")
-            .contains("${NOVEL_MIGRATIONS_IMAGE:-novel-plus/migrations:${IMAGE_TAG:-local}}")
-            .contains("${NOVEL_CADDY_IMAGE:-novel-plus/caddy:${IMAGE_TAG:-local}}")
-            .contains("${NOVEL_BACKUP_IMAGE:-novel-plus/backup:${IMAGE_TAG:-local}}")
-            .contains("${NOVEL_ALERTMANAGER_IMAGE:-novel-plus/alertmanager:${IMAGE_TAG:-local}}")
-            .contains("${NOVEL_PUSHGATEWAY_IMAGE:-novel-plus/pushgateway:${IMAGE_TAG:-local}}")
-            .contains("${NOVEL_MYSQL_IMAGE:-novel-plus/mysql:${IMAGE_TAG:-local}}")
+            .contains("${NOVEL_FRONT_IMAGE:-khoi-thu/front:${IMAGE_TAG:-local}}")
+            .contains("${NOVEL_ADMIN_IMAGE:-khoi-thu/admin:${IMAGE_TAG:-local}}")
+            .contains("${NOVEL_CRAWL_IMAGE:-khoi-thu/crawl:${IMAGE_TAG:-local}}")
+            .contains("${NOVEL_MIGRATIONS_IMAGE:-khoi-thu/migrations:${IMAGE_TAG:-local}}")
+            .contains("${NOVEL_CADDY_IMAGE:-khoi-thu/caddy:${IMAGE_TAG:-local}}")
+            .contains("${NOVEL_BACKUP_IMAGE:-khoi-thu/backup:${IMAGE_TAG:-local}}")
+            .contains("${NOVEL_ALERTMANAGER_IMAGE:-khoi-thu/alertmanager:${IMAGE_TAG:-local}}")
+            .contains("${NOVEL_PUSHGATEWAY_IMAGE:-khoi-thu/pushgateway:${IMAGE_TAG:-local}}")
+            .contains("${NOVEL_MYSQL_IMAGE:-khoi-thu/mysql:${IMAGE_TAG:-local}}")
             .contains("dockerfile: deploy/observability/pushgateway/Dockerfile")
             .contains("dockerfile: deploy/observability/grafana/Dockerfile")
             .contains("dockerfile: deploy/mysql/Dockerfile")
@@ -113,7 +113,7 @@ class ProductionDeploymentPackagingTest {
             .contains("entrypoint: [\"/usr/local/bin/novel-restore\"]")
             .contains("backup-work:/work");
         assertThat(read("scripts/verify-backup-restore.ps1"))
-            .contains("'novel-plus-backup-verify'")
+            .contains("'khoi-thu-backup-verify'")
             .contains("@('run', '--rm', 'backup')")
             .contains("@('run', '--rm', 'restore-drill')")
             .contains("@('down', '--volumes', '--remove-orphans')");
@@ -160,7 +160,7 @@ class ProductionDeploymentPackagingTest {
             .contains("node scripts/generate-release-manifest.mjs verify-runtime-reports")
             .contains("runtime-dependency-evidence/*")
             .contains("load: true", "push: false")
-            .contains("SCANNED_IMAGE: novel-plus/release-${{ matrix.image }}:scan")
+            .contains("SCANNED_IMAGE: khoi-thu/release-${{ matrix.image }}:scan")
             .contains("tag_id=\"$(docker image inspect")
             .contains("push_output=\"$(docker push")
             .contains("tag_digest=\"$(sed -nE")
@@ -266,7 +266,7 @@ class ProductionDeploymentPackagingTest {
 
     @Test
     void alertsWhenMandateRevocationQueueRemainsPending() throws Exception {
-        assertThat(read("deploy/observability/rules/novel-plus-alerts.yml"))
+        assertThat(read("deploy/observability/rules/khoi-thu-alerts.yml"))
             .contains("VnpayRecurringMandateRevocationPending")
             .contains("novel_subscription_renewal_queue{state=\"mandate_revoke_pending\"} > 0")
             .contains("for: 15m");

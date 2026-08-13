@@ -16,7 +16,7 @@ version: 1.0.0
 
 | Script | Purpose | Usage |
 |--------|---------|-------|
-| `scripts/playwright_runner.py` | Basic browser test | `python scripts/playwright_runner.py https://example.com` |
+| `scripts/playwright_runner.py` | Basic browser test | `python scripts/playwright_runner.py https://khoithu.vn` |
 | | With screenshot | `python scripts/playwright_runner.py <url> --screenshot` |
 | | Accessibility check | `python scripts/playwright_runner.py <url> --a11y` |
 
