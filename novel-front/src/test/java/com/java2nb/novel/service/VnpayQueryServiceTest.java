@@ -123,7 +123,7 @@ class VnpayQueryServiceTest {
         response.put("vnp_TransactionNo", "456");
         response.put("vnp_TransactionType", "01");
         response.put("vnp_TransactionStatus", transactionStatus);
-        response.put("vnp_OrderInfo", "Nap Xu Novel Plus 123");
+        response.put("vnp_OrderInfo", "Nap Xu Khởi Thư 123");
         response.put("vnp_PromotionCode", "");
         response.put("vnp_PromotionAmount", "");
         String hashData = RESPONSE_HASH_FIELDS.stream()

@@ -266,7 +266,7 @@ Tiếng Việt là ngôn ngữ hiển thị mặc định. Catalog tiếng Trung
 
 ## AI
 
-Novel Plus hỗ trợ mở rộng, rút gọn, viết tiếp, trau chuốt nội dung và sinh ảnh bìa. Prompt first-party yêu cầu đầu ra tiếng Việt tự nhiên.
+Khởi Thư hỗ trợ mở rộng, rút gọn, viết tiếp, trau chuốt nội dung và sinh ảnh bìa. Prompt first-party yêu cầu đầu ra tiếng Việt tự nhiên.
 
 Ví dụ cấu hình dùng endpoint tương thích OpenAI:
 

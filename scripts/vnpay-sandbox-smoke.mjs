@@ -46,7 +46,7 @@ if (!Number.isInteger(expectedAmountVnd) || expectedAmountVnd <= 0
 async function login(page) {
     const response = await page.goto(`${baseUrl}/user/login.html`, { waitUntil: 'domcontentloaded' });
     if (!response || response.status() >= 400) {
-        throw new Error('Không mở được trang đăng nhập Novel Plus');
+        throw new Error('Không mở được trang đăng nhập Khởi Thư');
     }
     const result = await page.evaluate(async credentials => {
         const loginResponse = await fetch('/user/login', {

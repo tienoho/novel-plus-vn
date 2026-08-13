@@ -1,6 +1,6 @@
 # PWA, đọc offline và TTS tiếng Việt
 
-Novel Plus cung cấp PWA cho khu vực độc giả, chế độ tiết kiệm dữ liệu, kho chương miễn phí đọc offline và TTS tiếng Việt dùng chung trên desktop/mobile.
+Khởi Thư cung cấp PWA cho khu vực độc giả, chế độ tiết kiệm dữ liệu, kho chương miễn phí đọc offline và TTS tiếng Việt dùng chung trên desktop/mobile.
 
 ## Ranh giới bảo mật
 

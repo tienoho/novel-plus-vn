@@ -1,9 +1,9 @@
 apiVersion: 1
 
 providers:
-  - name: Novel Plus
+  - name: Khởi Thư
     orgId: 1
-    folder: Novel Plus
+    folder: Khởi Thư
     type: file
     disableDeletion: true
     allowUiUpdates: false

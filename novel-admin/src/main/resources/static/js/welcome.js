@@ -28,8 +28,8 @@ layer.ready(function () {
     function logs() {
         parent.layer.open({
             title: typeof adminMessage === 'function'
-                ? adminMessage('welcomeTitle', 'Chào mừng đến với Novel Plus')
-                : 'Chào mừng đến với Novel Plus',
+                ? adminMessage('welcomeTitle', 'Chào mừng đến với Khởi Thư')
+                : 'Chào mừng đến với Khởi Thư',
             type: 1,
             area: ['700px', 'auto'],
             content: html,
@@ -41,7 +41,7 @@ layer.ready(function () {
     }
 
     console.log(typeof adminMessage === 'function'
-        ? adminMessage('welcomeMessage', 'Cảm ơn bạn đã sử dụng Novel Plus.')
-        : 'Cảm ơn bạn đã sử dụng Novel Plus.');
+        ? adminMessage('welcomeMessage', 'Cảm ơn bạn đã sử dụng Khởi Thư.')
+        : 'Cảm ơn bạn đã sử dụng Khởi Thư.');
 
 });

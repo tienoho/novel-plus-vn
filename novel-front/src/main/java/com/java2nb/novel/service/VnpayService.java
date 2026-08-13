@@ -38,7 +38,7 @@ public class VnpayService {
         params.put("vnp_Amount", String.valueOf(Math.multiplyExact(amountVnd, 100)));
         params.put("vnp_CurrCode", "VND");
         params.put("vnp_TxnRef", String.valueOf(outTradeNo));
-        params.put("vnp_OrderInfo", "Nap Xu Novel Plus " + outTradeNo);
+        params.put("vnp_OrderInfo", "Nap Xu Khởi Thư " + outTradeNo);
         params.put("vnp_OrderType", properties.getOrderType());
         params.put("vnp_Locale", properties.getLocale());
         params.put("vnp_ReturnUrl", properties.getReturnUrl());

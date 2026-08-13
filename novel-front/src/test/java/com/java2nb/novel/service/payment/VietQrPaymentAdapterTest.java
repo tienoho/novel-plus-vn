@@ -24,7 +24,7 @@ class VietQrPaymentAdapterTest {
         properties.setEnabled(true);
         properties.setBankBin("970422");
         properties.setAccountNo("1234567890");
-        properties.setAccountName("NOVEL PLUS");
+        properties.setAccountName("KHOI THU");
         properties.setSecretToken("0123456789abcdef0123456789abcdef");
 
         adapter = new VietQrPaymentAdapter(properties);

@@ -256,7 +256,7 @@ class PayControllerTest {
         configured.setEnabled(true);
         configured.setBankBin("970422");
         configured.setAccountNo("1234567890");
-        configured.setAccountName("NOVEL PLUS");
+        configured.setAccountName("KHOI THU");
         configured.setSecretToken("0123456789abcdef0123456789abcdef");
         return configured;
     }

@@ -38,7 +38,7 @@ public class FinancialVoucherServiceTest {
         pitCalculatorService = new PitTaxCalculatorService();
         voucherService = new FinancialVoucherServiceImpl(voucherDao, vatCalculatorService, pitCalculatorService);
         ReflectionTestUtils.setField(voucherService, "issuanceEnabled", true);
-        ReflectionTestUtils.setField(voucherService, "platformLegalName", "Công ty kiểm thử Novel Plus");
+        ReflectionTestUtils.setField(voucherService, "platformLegalName", "Công ty kiểm thử Khởi Thư");
         ReflectionTestUtils.setField(voucherService, "platformTaxCode", "0123456789");
     }
 
@@ -115,7 +115,7 @@ public class FinancialVoucherServiceTest {
                 .referenceId("ORD-8888")
                 .payerName("Nguyễn Văn Á")
                 .payerTaxCode("0123456789")
-                .payeeName("Công ty Novel Plus")
+                .payeeName("Công ty Khởi Thư")
                 .payeeTaxCode("0987654321")
                 .grossAmountVnd(110_000L)
                 .taxAmountVnd(10_000L)

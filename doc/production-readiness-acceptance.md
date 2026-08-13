@@ -1,4 +1,4 @@
-# Biên bản sẵn sàng production Novel Plus
+# Biên bản sẵn sàng production Khởi Thư
 
 Ngày tái xác minh kỹ thuật: **10/08/2026**. Cập nhật audit secret lịch sử: **09/08/2026**.
 

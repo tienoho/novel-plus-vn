@@ -29,13 +29,13 @@ is_exist(){
 start(){
   is_exist
   if [ $? -eq "0" ]; then 
-    echo ">>> Trang quản trị Novel Plus đang chạy PID = ${pid} <<<"
+    echo ">>> Trang quản trị Khởi Thư đang chạy PID = ${pid} <<<"
   else 
-    echo ">>> �?ang khởi động trang quản trị Novel Plus <<<"
+    echo ">>> Đang khởi động trang quản trị Khởi Thư <<<"
     nohup java -jar -Dspring.profiles.active=prod $JAR_NAME >/dev/null 2>&1 &
     sleep 20
     echo $! > $PID
-    echo ">>> �?ã khởi động trang quản trị Novel Plus PID = $! <<<"
+    echo ">>> Đã khởi động trang quản trị Khởi Thư PID = $! <<<"
     status
    fi
   }
@@ -45,13 +45,13 @@ stop(){
   #is_exist
   pidf=$(cat $PID)
   #echo "$pidf"  
-  echo ">>> Trang quản trị Novel Plus PID = $pidf bắt đầu dừng <<<"
+  echo ">>> Trang quản trị Khởi Thư PID = $pidf bắt đầu dừng <<<"
   kill $pidf
   rm -rf $PID
   sleep 2
   is_exist
   if [ $? -eq "0" ]; then 
-    echo ">>> Trang quản trị Novel Plus PID = $pid bắt đầu buộc dừng <<<"
+    echo ">>> Trang quản trị Khởi Thư PID = $pid bắt đầu buộc dừng <<<"
     kill -9  $pid
     sleep 2
     status 
@@ -64,9 +64,9 @@ stop(){
 status(){
   is_exist
   if [ $? -eq "0" ]; then
-    echo ">>> Trang quản trị Novel Plus đang chạy PID = ${pid} <<<"
+    echo ">>> Trang quản trị Khởi Thư đang chạy PID = ${pid} <<<"
   else
-    echo ">>> Trang quản trị Novel Plus chưa chạy <<<"
+    echo ">>> Trang quản trị Khởi Thư chưa chạy <<<"
   fi
 }
 
@@ -76,7 +76,7 @@ restart(){
   start
 }
 
-#Ch�?n hàm theo tham số đầu vào; nếu không có thì hiển thị hướng dẫn
+#ChĐn hàm theo tham số đầu vào; nếu không có thì hiển thị hướng dẫn
 case "$1" in
   "start")
     start

@@ -84,7 +84,7 @@ Danh sách dưới đây là điểm bắt đầu cho luật sư/chuyên gia ph�
 - [Luật Thuế thu nhập cá nhân 109/2025/QH15](https://vanban.chinhphu.vn/?docid=216495&pageid=27160),
   có hiệu lực từ 01/07/2026; cách phân loại khoản trả cho tác giả phải có ý kiến thuế riêng.
 - [Luật Phòng, chống rửa tiền 14/2022/QH15](https://vanban.chinhphu.vn/?classid=1&docid=207710&pageid=27160&typegroupid=3).
-  Pháp lý phải xác định Novel Plus có phải đối tượng báo cáo hay chỉ cần xác minh người nhận tiền theo
+  Pháp lý phải xác định Khởi Thư có phải đối tượng báo cáo hay chỉ cần xác minh người nhận tiền theo
   hợp đồng/kiểm soát gian lận; không tự gọi quy trình nội bộ là KYC tuân thủ AML nếu chưa có kết luận.
 
 Người rà soát phải ghi thêm văn bản mới, văn bản chuyển tiếp hoặc văn bản chuyên ngành áp dụng tại

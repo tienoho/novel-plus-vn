@@ -128,7 +128,7 @@ INSERT INTO `book`
      `crawl_is_stop`, `age_rating`, `audit_status`, `audit_reason`)
 VALUES
     (@book_id, 0, 1, 'Kỳ ảo Việt Nam', '/images/smlcover.png', 'Hành Trình Sao Việt',
-     @author_id, 'Tác giả Sao Việt', 'Tác phẩm fixture ổn định cho kiểm thử trình duyệt Novel Plus.',
+     @author_id, 'Tác giả Sao Việt', 'Tác phẩm fixture ổn định cho kiểm thử trình duyệt Khởi Thư.',
      9.5, 0, 1200, 3600, 0, @ticket_chapter_id, 'Chương 3: Vé đọc', NOW(), 1,
      1, NOW(), NOW() - INTERVAL 60 DAY, NULL, NULL, NULL, 0, 0, 1, NULL)
 ON DUPLICATE KEY UPDATE

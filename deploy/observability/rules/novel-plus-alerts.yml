@@ -7,7 +7,7 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: "Dịch vụ Novel Plus không được scrape"
+          summary: "Dịch vụ Khởi Thư không được scrape"
           description: "{{ $labels.job }} đã down hoặc endpoint metric không truy cập được trong 2 phút."
 
       - alert: NovelHttpErrorRateHigh

@@ -1,4 +1,4 @@
-# Runbook triển khai Novel Plus
+# Runbook triển khai Khởi Thư
 
 Tài liệu này áp dụng cho bộ Docker Compose tại thư mục gốc. Stack gồm MySQL, Redis, service migration one-shot, `front`, `crawl`, `admin`, Prometheus, Alertmanager, Pushgateway, Grafana và Caddy làm cổng vào HTTPS duy nhất. Các công cụ backup/restore nằm trong profile `tools` và không tự khởi động cùng ứng dụng.
 
@@ -375,7 +375,7 @@ vẫn xanh. Với volume development cũ được tạo trước thay đổi nà
 Grafana được build thành image first-party từ đúng tag `v13.1.3`, commit
 `45a27d64b64a82d666b06aa5c5bb3521587edb0d` và Go 1.26.5. Patch chỉ bỏ backend Tempo không dùng;
 runtime bỏ Tempo, Elasticsearch và Zipkin, tắt plugin preinstall mặc định và xóa đúng ba thư mục này
-khỏi volume plugin cũ trước khi chạy. Novel Plus chỉ provision Prometheus. Image phải chạy UID 472,
+khỏi volume plugin cũ trước khi chạy. Khởi Thư chỉ provision Prometheus. Image phải chạy UID 472,
 không được tải plugin lúc khởi động và phải qua scan, SBOM, attestation cùng smoke dashboard trước RC.
 
 Job `runtime-dependencies` phải quét đúng hai reference có digest của Redis và

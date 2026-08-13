@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project 
+    xmlns="http://maven.apache.org/POM/4.0.0"
+         
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>novel</artifactId>
@@ -8,48 +10,38 @@
         <version>5.3.3</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-
     <artifactId>novel-common</artifactId>
     <packaging>jar</packaging>
     <name>novel-common</name>
-    <description>Mô-đun dùng chung Novel Plus</description>
-
-
+    <description>Mô-đun dùng chung Khởi Thư</description>
     <dependencies>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-
         <!-- Thành phần liên quan đến AOP. -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-cache</artifactId>
         </dependency>
-
         <!-- Tích hợp Redis. -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
-
         <!-- Xuất metric Prometheus thống nhất cho front, admin và crawler. -->
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
-
         <!-- Driver MySQL. -->
         <dependency>
             <groupId>com.mysql</groupId>
@@ -60,7 +52,6 @@
             <artifactId>mybatis-spring-boot-starter</artifactId>
             <version>${mybatis.version}</version>
         </dependency>
-
         <!-- Phân mảnh cơ sở dữ liệu. -->
         <!-- ShardingSphere-JDBC -->
         <dependency>
@@ -73,15 +64,12 @@
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
         </dependency>
-
-
         <!-- Starter hỗ trợ phân trang. -->
         <dependency>
             <groupId>com.github.pagehelper</groupId>
             <artifactId>pagehelper-spring-boot-starter</artifactId>
             <version>${pagehelper.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
@@ -114,13 +102,11 @@
             <groupId>org.apache.httpcomponents.client5</groupId>
             <artifactId>httpclient5</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.mybatis.dynamic-sql</groupId>
             <artifactId>mybatis-dynamic-sql</artifactId>
             <version>${mybatis-dynamic-sql.version}</version>
         </dependency>
-
         <!-- Bộ sinh mã MyBatis. -->
         <dependency>
             <groupId>org.mybatis.generator</groupId>
@@ -128,40 +114,32 @@
             <version>${mybatis-generator.version}</version>
             <optional>true</optional>
         </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
         </dependency>
-
         <!-- Xác thực tham số yêu cầu. -->
         <dependency>
             <groupId>org.hibernate.validator</groupId>
             <artifactId>hibernate-validator</artifactId>
         </dependency>
-
         <dependency>
             <groupId>io.github.xxyopen</groupId>
             <artifactId>xxy-model</artifactId>
             <version>${xxyopen.version}</version>
         </dependency>
-
         <dependency>
             <groupId>io.github.xxyopen</groupId>
             <artifactId>xxy-web</artifactId>
             <version>${xxyopen.version}</version>
         </dependency>
-
         <dependency>
             <groupId>io.github.xxyopen</groupId>
             <artifactId>xxy-util</artifactId>
             <version>${xxyopen.version}</version>
         </dependency>
-
-
     </dependencies>
-
     <build>
         <plugins>
             <plugin>
@@ -185,6 +163,4 @@
             </plugin>
         </plugins>
     </build>
-
-
 </project>

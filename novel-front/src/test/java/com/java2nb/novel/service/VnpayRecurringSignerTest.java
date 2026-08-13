@@ -24,9 +24,9 @@ class VnpayRecurringSignerTest {
     @Test
     void signsMandateFieldsInDocumentedOrder() {
         List<Object> fields = List.of(
-            "17000000000000001", "recurring", "NP123", "Dang ky gia han goi doc Novel Plus",
+            "17000000000000001", "recurring", "NP123", "Dang ky gia han goi doc Khởi Thư",
             "other", "VNPAYREC", 10_000_000L, 1, "month", 0, "20260901", "20260901",
-            "99991231", 0, "VND", "", 123, "", "", "127.0.0.1", "NovelPlusWeb",
+            "99991231", 0, "VND", "", 123, "", "", "127.0.0.1", "KhoiThuWeb",
             "https://khoithu.vn/return", "https://khoithu.vn/cancel", "2.1.0", "vn",
             "20260801120000");
 

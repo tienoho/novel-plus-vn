@@ -248,11 +248,11 @@ public class VnpayRecurringMandateService {
 
     private String normalizeUserAgent(String value) {
         if (value == null || value.isBlank()) {
-            return "NovelPlusWeb";
+            return "KhoiThuWeb";
         }
         String normalized = value.replaceAll("[^A-Za-z0-9 ]", " ").replaceAll(" +", " ").trim();
         if (normalized.isBlank()) {
-            return "NovelPlusWeb";
+            return "KhoiThuWeb";
         }
         return normalized.substring(0, Math.min(normalized.length(), 255));
     }

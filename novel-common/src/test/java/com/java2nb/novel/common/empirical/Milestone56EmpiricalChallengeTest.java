@@ -213,7 +213,7 @@ public class Milestone56EmpiricalChallengeTest {
     public void testTotpQrCodeUriFormatting() {
         String secret = "JBSWY3DPEHPK3PXP";
         String uri = totpService.getQrCodeUri("user@khoithu.vn", secret);
-        assertEquals("otpauth://totp/NovelPlus:user@khoithu.vn?secret=JBSWY3DPEHPK3PXP&issuer=NovelPlus", uri);
+        assertEquals("otpauth://totp/KhoiThu:user@khoithu.vn?secret=JBSWY3DPEHPK3PXP&issuer=KhoiThu", uri);
     }
 
     @Test

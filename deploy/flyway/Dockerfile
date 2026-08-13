@@ -1,14 +1,14 @@
 FROM flyway/flyway:13.1.0
 
-# Novel Plus chỉ dùng MySQL. Flyway nạp plugin qua ServiceLoader, vì vậy driver
+# Khởi Thư chỉ dùng MySQL. Flyway nạp plugin qua ServiceLoader, vì vậy driver
 # tùy chọn phải được loại cùng plugin tương ứng để không làm hỏng CLI.
 RUN rm -f \
-      /flyway/drivers/databricks-jdbc-*.jar \
-      /flyway/drivers/mssql-jdbc-*.jar \
-      /flyway/lib/flyway/flyway-database-databricks-*.jar \
-      /flyway/lib/flyway/flyway-sqlserver-*.jar \
-      /flyway/lib/flyway/flyway-database-nc-couchbase-*.jar \
-    && rm -rf /flyway/drivers/couchbase
+  /flyway/drivers/databricks-jdbc-*.jar \
+  /flyway/drivers/mssql-jdbc-*.jar \
+  /flyway/lib/flyway/flyway-database-databricks-*.jar \
+  /flyway/lib/flyway/flyway-sqlserver-*.jar \
+  /flyway/lib/flyway/flyway-database-nc-couchbase-*.jar \
+  && rm -rf /flyway/drivers/couchbase
 
 COPY --chmod=0444 doc/sql/novel_plus.sql /flyway/sql/V0001__baseline.sql
 COPY --chmod=0444 doc/sql/20260712_vi_localization.sql /flyway/sql/V2026071201__vi_localization.sql

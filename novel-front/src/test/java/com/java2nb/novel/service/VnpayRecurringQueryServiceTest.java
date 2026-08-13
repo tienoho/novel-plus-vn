@@ -120,7 +120,7 @@ class VnpayRecurringQueryServiceTest {
         response.put("vnp_TransactionNo", "666821925535879168");
         response.put("vnp_TransactionType", "01");
         response.put("vnp_TransactionStatus", transactionStatus);
-        response.put("vnp_OrderInfo", "Tra soat gia han Novel Plus NPR81A1");
+        response.put("vnp_OrderInfo", "Tra soat gia han Khởi Thư NPR81A1");
         response.put("vnp_PromotionCode", "");
         response.put("vnp_PromotionAmount", "");
         response.put("vnp_SecureHash", signer.signFields(List.copyOf(response.values())));

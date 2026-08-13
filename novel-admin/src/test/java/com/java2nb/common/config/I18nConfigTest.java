@@ -12,7 +12,7 @@ class I18nConfigTest {
     @Test
     void vietnameseIsDefaultAndChineseRemainsAvailable() {
         MessageSource source = new I18nConfig().messageSource();
-        assertEquals("Quản trị Novel Plus",
+        assertEquals("Quản trị Khởi Thư",
             source.getMessage("admin.title", null, Locale.forLanguageTag("vi-VN")));
         assertEquals("小说精品屋后台管理",
             source.getMessage("admin.title", null, Locale.SIMPLIFIED_CHINESE));

@@ -22,7 +22,7 @@ class VietnameseResidualSeedPackagingTest {
             StandardCharsets.UTF_8);
 
         assertThat(migration)
-            .contains("SET `link_name` = 'Novel Plus nguồn mở'")
+            .contains("SET `link_name` = 'Khởi Thư nguồn mở'")
             .contains("WHERE `id` = 5")
             .contains("AND `link_url` = 'https://novel.xxyopen.com'")
             .contains("AND `link_name` = '\u5c0f\u8bf4\u7cbe\u54c1\u5c4b'");

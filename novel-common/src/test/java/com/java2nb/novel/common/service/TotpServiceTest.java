@@ -38,9 +38,9 @@ public class TotpServiceTest {
         String uri = totpService.getQrCodeUri("user_test", secret);
 
         assertNotNull(uri);
-        assertTrue(uri.startsWith("otpauth://totp/NovelPlus:user_test"));
+        assertTrue(uri.startsWith("otpauth://totp/KhoiThu:user_test"));
         assertTrue(uri.contains("secret=JBSWY3DPEHPK3PXP"));
-        assertTrue(uri.contains("issuer=NovelPlus"));
+        assertTrue(uri.contains("issuer=KhoiThu"));
     }
 
     @Test

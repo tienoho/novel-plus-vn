@@ -87,7 +87,7 @@ UPDATE bản ACTIVE/ARCHIVED cũ, xóa audit hoặc chạy down-migration.
 
 ## Mã cảnh báo
 
-Compose có Prometheus, Alertmanager và dashboard Grafana `Novel Plus - Tổng quan vận hành`. Worker cập nhật các gauge `novel_gamification_queue` và `novel_ledger_mismatch_records`; rule trong `deploy/observability/rules/khoi-thu-alerts.yml` cảnh báo backlog event, reward chờ, job stale, kỳ review quá hạn và sai lệch ledger. Các mã log dưới đây vẫn được giữ để điều tra chi tiết và đối chiếu audit.
+Compose có Prometheus, Alertmanager và dashboard Grafana `Khởi Thư - Tổng quan vận hành`. Worker cập nhật các gauge `novel_gamification_queue` và `novel_ledger_mismatch_records`; rule trong `deploy/observability/rules/khoi-thu-alerts.yml` cảnh báo backlog event, reward chờ, job stale, kỳ review quá hạn và sai lệch ledger. Các mã log dưới đây vẫn được giữ để điều tra chi tiết và đối chiếu audit.
 
 Mã nằm ở **đầu** thông điệp để cấu hình grep phía thu thập log.
 

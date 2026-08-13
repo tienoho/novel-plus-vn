@@ -157,7 +157,7 @@ public class VnpayRecurringClient {
 
     Map<String, Object> buildChargePayload(VnpayRecurringChargeCommand command) {
         long amount = Math.multiplyExact(command.amountVnd(), 100L);
-        String orderInfo = "Gia han goi doc Novel Plus " + command.orderReference();
+        String orderInfo = "Gia han goi doc Khởi Thư " + command.orderReference();
         String recurringDate = command.recurringDate().format(DATE);
         String merchantDate = command.merchantDate().format(DATE_TIME);
         Map<String, Object> order = new LinkedHashMap<>();
@@ -218,7 +218,7 @@ public class VnpayRecurringClient {
 
     Map<String, Object> buildMandatePayload(VnpayRecurringMandateCommand command) {
         long amount = Math.multiplyExact(command.recurringAmountVnd(), 100L);
-        String orderInfo = "Dang ky gia han goi doc Novel Plus";
+        String orderInfo = "Dang ky gia han goi doc Khởi Thư";
         String firstDate = command.firstRenewalDate().format(DATE);
         String merchantDate = command.merchantDate().format(DATE_TIME);
 

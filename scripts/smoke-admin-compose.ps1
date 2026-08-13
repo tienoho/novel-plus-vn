@@ -206,7 +206,7 @@ function Assert-Observability {
         --user "${grafanaUser}:$grafanaPassword" `
         "http://grafana:3000/api/search?query=Novel%20Plus"
     if ($LASTEXITCODE -ne 0 -or $dashboardRaw -notmatch 'khoi-thu-overview') {
-        throw "Grafana chưa provision dashboard Novel Plus."
+        throw "Grafana chưa provision dashboard Khởi Thư."
     }
 
     Write-Output "Observability verified: 4 Prometheus targets up, Flyway metric=1 and Grafana dashboard provisioned."

@@ -536,17 +536,17 @@ WHERE menu_id = 246
 
 -- Thông tin website: mỗi cột chỉ đổi khi vẫn giữ nguyên giá trị mặc định.
 UPDATE website_info
-SET name = 'Novel Plus'
+SET name = 'Khởi Thư'
 WHERE id = 1
   AND name = '小说精品屋';
 
 UPDATE website_info
-SET keyword = 'Novel Plus,truyện,đọc truyện,CMS truyện,văn học'
+SET keyword = 'Khởi Thư,truyện,đọc truyện,CMS truyện,văn học'
 WHERE id = 1
   AND keyword = '小说精品屋,小说,小说CMS,原创文学系统,开源小说系统,免费小说建站程序';
 
 UPDATE website_info
-SET description = 'Novel Plus là nền tảng đọc và sáng tác truyện trên máy tính và thiết bị di động, hỗ trợ thành viên, tác giả, thanh toán, tin tức, báo cáo và thu thập nội dung.'
+SET description = 'Khởi Thư là nền tảng đọc và sáng tác truyện trên máy tính và thiết bị di động, hỗ trợ thành viên, tác giả, thanh toán, tin tức, báo cáo và thu thập nội dung.'
 WHERE id = 1
   AND description = '小说精品屋是一个多端（PC、WAP）阅读、功能完善的原创文学CMS系统，由前台门户系统、作家后台管理系统、平台后台管理系统、爬虫管理系统等多个子系统构成，支持会员充值、订阅模式、新闻发布和实时统计报表等功能，新书自动入库，老书自动更新。';
 

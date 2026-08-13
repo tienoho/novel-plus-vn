@@ -85,7 +85,7 @@ class FinancialVoucherOwnershipMySqlIntegrationTest {
                  payer_tax_code, payee_name, payee_tax_code, gross_amount_vnd,
                  tax_amount_vnd, net_amount_vnd, currency, status, issued_at)
             VALUES (?, 'AUTHOR_PAYOUT_VOUCHER', 'AUTHOR_WITHDRAWAL_REQUEST', ?,
-                    'Novel Plus', '0123456789', ?, 'N/A', 100000, 10000, 90000,
+                    'Khởi Thư', '0123456789', ?, 'N/A', 100000, 10000, 90000,
                     'VND', 'ISSUED', NOW(3))
             """, voucherNo, Long.toString(withdrawalId), payeeName);
     }

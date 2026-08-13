@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class VnpayRecurringRevocationProcessor {
     private static final SecureRandom RANDOM = new SecureRandom();
-    private static final String USER_AGENT = "NovelPlusServer";
+    private static final String USER_AGENT = "KhoiThuServer";
 
     private final VnpayRecurringProperties properties;
     private final ReadingSubscriptionMandateMapper mandateMapper;
